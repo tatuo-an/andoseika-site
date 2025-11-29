@@ -1,0 +1,230 @@
+[
+    {
+        "id": "nagaimo-1kg-new",
+        "name": "【新物】鳥取砂丘“とろける”ながいも 1kg（2本前後）",
+        "price": 1200,
+        "description": "鳥取砂丘の砂地で育った、粘りと甘みが特徴の長芋です。新物ならではの瑞々しさをお楽しみください。",
+        "image": {
+            "url": "/images/products/nagaimo_1kg_new.png",
+            "height": 800,
+            "width": 800
+        },
+        "category": "root"
+    },
+    {
+        "id": "nagaimo-1kg-b",
+        "name": "【訳あり】鳥取砂丘“とろける”ながいも 1kg（2本前後）",
+        "price": 1000,
+        "description": "形が不揃いだったり、少し傷があるためお買い得な長芋です。味は正規品と変わりません。",
+        "image": {
+            "url": "/images/products/nagaimo_1kg_b_grade.jpeg",
+            "height": 800,
+            "width": 800
+        },
+        "category": "root"
+    },
+    {
+        "id": "beniharuka-1.5kg-b",
+        "name": "【訳あり】傷あり 採れたて！砂地で育った甘～い”紅はるか”1.5kg",
+        "price": 1500,
+        "description": "砂丘育ちの甘い紅はるか。傷ありですが、焼き芋や天ぷらに最適です。",
+        "image": {
+            "url": "/images/products/beniharuka_1_5kg_b_grade.png",
+            "height": 800,
+            "width": 800
+        },
+        "category": "root"
+    },
+    {
+        "id": "honey-hyakka-600g",
+        "name": "【百花蜜】はちみつ 600g 1瓶",
+        "price": 3000,
+        "description": "鳥取の豊かな自然の中で採れた百花蜜。様々な花の香りが楽しめる奥深い味わいです。",
+        "image": {
+            "url": "/images/products/honey_hyakka_600g.jpeg",
+            "height": 800,
+            "width": 800
+        },
+        "category": "honey"
+    },
+    {
+        "id": "honey-hyakka-600g-2",
+        "name": "【鳥取県産】はちみつ 600g 2瓶セット",
+        "price": 5800,
+        "description": "お得な百花蜜の2瓶セットです。ギフトにもおすすめです。",
+        "image": {
+            "url": "/images/products/honey_hyakka_600g_2bottles.png",
+            "height": 800,
+            "width": 800
+        },
+        "category": "honey"
+    },
+    {
+        "id": "nebarikko-1kg",
+        "name": "【新物】鳥取県産 ねばりっこ 1kg程度",
+        "price": 1300,
+        "description": "鳥取県オリジナルの新品種「ねばりっこ」。従来の長芋よりも粘りが強く、甘みがあります。",
+        "image": {
+            "url": "/images/products/nebarikko_1kg.png",
+            "height": 800,
+            "width": 800
+        },
+        "category": "root"
+    },
+    {
+        "id": "honey-acacia-600g",
+        "name": "【アカシア】はちみつ 600g 1瓶",
+        "price": 3500,
+        "description": "クセが少なく、上品な甘さのアカシア蜂蜜。ヨーグルトや紅茶によく合います。",
+        "image": {
+            "url": "/images/products/honey_acacia_600g.jpeg",
+            "height": 800,
+            "width": 800
+        },
+        "category": "honey"
+    },
+    {
+        "id": "negi-3kg",
+        "name": "【秀品】白ネギ 3kg M/L/2L",
+        "price": 2500,
+        "description": "鳥取砂丘の砂地で育った白ネギ。白身が長く、甘みが強いのが特徴です。",
+        "image": {
+            "url": "/images/products/negi_3kg.jpeg",
+            "height": 800,
+            "width": 800
+        },
+        "category": "leaf"
+    },
+    {
+        "id": "honey-tochi-600g",
+        "name": "【トチ】はちみつ 600g 1瓶",
+        "price": 3500,
+        "description": "トチの花から採れた蜂蜜。フローラルな香りと柔らかな甘みが特徴です。",
+        "image": {
+            "url": "/images/products/honey_tochi_600g.jpeg",
+            "height": 800,
+            "width": 800
+        },
+        "category": "honey"
+    },
+    {
+        "id": "rakkyo-180g",
+        "name": "【鳥取県産】砂丘育ち 甘酢らっきょう 180g",
+        "price": 800,
+        "description": "シャキシャキとした食感がたまらない、鳥取砂丘らっきょうの甘酢漬けです。",
+        "image": {
+            "url": "/images/products/rakkyo_180g.png",
+            "height": 800,
+            "width": 800
+        },
+        "category": "processed"
+    },
+    {
+        "id": "mukago-500g",
+        "name": "【ご自宅用】鳥取県産むかご 500g",
+        "price": 600,
+        "description": "長芋の赤ちゃん「むかご」。塩ゆでやむかごご飯でお楽しみください。",
+        "image": {
+            "url": "/images/products/mukago_500g.png",
+            "height": 800,
+            "width": 800
+        },
+        "category": "root"
+    },
+    {
+        "id": "satoimo-1kg",
+        "name": "【鳥取県産】黄金里芋 1kg",
+        "price": 1000,
+        "description": "ねっとりとした食感と濃厚な旨味が特徴の黄金里芋です。",
+        "image": {
+            "url": "/images/products/satoimo_1kg.png",
+            "height": 800,
+            "width": 800
+        },
+        "category": "root"
+    },
+    {
+        "id": "beniharuka-small-1kg",
+        "name": "【自然派】ちびっこ紅はるか 1kg",
+        "price": 800,
+        "description": "小ぶりで食べきりサイズの紅はるか。おやつにぴったりです。",
+        "image": {
+            "url": "/images/products/beniharuka_small_1kg.jpeg",
+            "height": 800,
+            "width": 800
+        },
+        "category": "root"
+    },
+    {
+        "id": "rakkyo-500g",
+        "name": "【鳥取県産】砂丘育ち 甘酢らっきょう 500g",
+        "price": 1800,
+        "description": "たっぷり入ったお徳用の甘酢らっきょうです。",
+        "image": {
+            "url": "/images/products/rakkyo_500g.png",
+            "height": 800,
+            "width": 800
+        },
+        "category": "processed"
+    },
+    {
+        "id": "beniharuka-1.5kg-new",
+        "name": "【新物】鳥取砂丘“ねっとり甘い”紅はるか 1.5kg",
+        "price": 1800,
+        "description": "収穫したての新鮮な紅はるか。熟成させるとさらに甘みが増します。",
+        "image": {
+            "url": "/images/products/beniharuka_1_5kg_new.png",
+            "height": 800,
+            "width": 800
+        },
+        "category": "root"
+    },
+    {
+        "id": "negi-10kg-b",
+        "name": "【規格外品】白ネギ 10kg程度 ランダム",
+        "price": 5000,
+        "description": "太さや長さが不揃いな白ネギをたっぷり10kgお届け。業務用やシェア用に。",
+        "image": {
+            "url": "/images/products/negi_10kg_b_grade.jpeg",
+            "height": 800,
+            "width": 800
+        },
+        "category": "leaf"
+    },
+    {
+        "id": "mukago-5kg",
+        "name": "【Sサイズ】鳥取県産むかご 5kg",
+        "price": 4000,
+        "description": "小粒なむかごをたっぷり5kg。素揚げやおつまみに最適です。",
+        "image": {
+            "url": "/images/products/mukago_5kg.jpeg",
+            "height": 800,
+            "width": 800
+        },
+        "category": "root"
+    },
+    {
+        "id": "mukago-10kg",
+        "name": "【Sサイズ】鳥取県産むかご 10kg",
+        "price": 7000,
+        "description": "業務用にもおすすめのむかご10kgセット。",
+        "image": {
+            "url": "/images/products/mukago_10kg.jpeg",
+            "height": 800,
+            "width": 800
+        },
+        "category": "root"
+    },
+    {
+        "id": "tokkuri-imo-2kg",
+        "name": "【鳥取県産】とっくり芋 2kg前後",
+        "price": 1600,
+        "description": "とっくりのような形をした粘り気の強い山芋です。とろろご飯に最高です。",
+        "image": {
+            "url": "/images/products/tokkuri_imo_2kg.png",
+            "height": 800,
+            "width": 800
+        },
+        "category": "root"
+    }
+]
