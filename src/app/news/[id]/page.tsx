@@ -6,6 +6,8 @@ import { client } from "@/lib/microcms";
 import { News } from "@/types/microcms";
 import { Calendar, ChevronLeft } from "lucide-react";
 
+export const revalidate = 60;
+
 async function getNewsDetail(id: string): Promise<News | null> {
     try {
         const data = await client.get<News>({

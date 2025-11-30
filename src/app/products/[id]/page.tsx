@@ -9,6 +9,8 @@ import { Product } from "@/types/microcms";
 import { AddToCartButton } from "@/components/products/AddToCartButton";
 import localProducts from "@/data/products.json";
 
+export const revalidate = 60;
+
 async function getProduct(id: string): Promise<Product | null> {
     let data: Product | null = null;
     try {

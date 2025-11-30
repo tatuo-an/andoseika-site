@@ -12,6 +12,8 @@ export const metadata: Metadata = {
     description: "安藤青果からの最新情報、季節の便り、イベント情報などをお届けします。",
 };
 
+export const revalidate = 60;
+
 async function getNews(): Promise<News[]> {
     try {
         const data = await client.getList<News>({

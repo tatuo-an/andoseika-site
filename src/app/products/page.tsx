@@ -12,6 +12,8 @@ export const metadata: Metadata = {
   description: "安藤青果の自慢の野菜と加工品。白ネギ、長芋、里芋、梨、蜂蜜、らっきょうなど、旬の味をお届けします。",
 };
 
+export const revalidate = 60;
+
 async function getProducts(): Promise<Product[]> {
   try {
     const data = await client.getList<Product>({
