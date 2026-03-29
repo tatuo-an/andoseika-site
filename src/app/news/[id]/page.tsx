@@ -5,6 +5,7 @@ import Link from "next/link";
 import { client } from "@/lib/microcms";
 import { News } from "@/types/microcms";
 import { Calendar, ChevronLeft } from "lucide-react";
+import { Metadata } from "next";
 
 export const revalidate = 60;
 
@@ -19,6 +20,27 @@ async function getNewsDetail(id: string): Promise<News | null> {
         console.error("Failed to fetch news detail:", error);
         return null;
     }
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+    const { id } = await params;
+    const news = await getNewsDetail(id);
+
+    if (!news) {
+        return {
+            title: "記事が見つかりません",
+        };
+    }
+
+    return {
+        title: news.title,
+        description: news.content.replace(/<[^>]+>/g, "").slice(0, 100) + "...",
+        openGraph: {
+            title: news.title,
+            description: news.content.replace(/<[^>]+>/g, "").slice(0, 100) + "...",
+            images: [news.thumbnail?.url || ""],
+        },
+    };
 }
 
 export default async function NewsDetailPage({ params }: { params: Promise<{ id: string }> }) {

@@ -40,6 +40,9 @@ export function Header() {
                         <Link href="/news" className="hover:text-primary transition-colors">
                             お知らせ
                         </Link>
+                        <Link href="/supporter" className="text-primary font-bold hover:text-primary/80 transition-colors">
+                            サポーター募集
+                        </Link>
                     </nav>
 
                     <div className="flex items-center gap-4">

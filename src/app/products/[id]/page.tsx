@@ -8,6 +8,7 @@ import { client } from "@/lib/microcms";
 import { Product } from "@/types/microcms";
 import { AddToCartButton } from "@/components/products/AddToCartButton";
 import localProducts from "@/data/products.json";
+import { Metadata } from "next";
 
 export const revalidate = 60;
 
@@ -54,6 +55,27 @@ async function getProduct(id: string): Promise<Product | null> {
     }
 
     return null;
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+    const { id } = await params;
+    const product = await getProduct(id);
+
+    if (!product) {
+        return {
+            title: "商品が見つかりません",
+        };
+    }
+
+    return {
+        title: product.name,
+        description: product.description,
+        openGraph: {
+            title: product.name,
+            description: product.description,
+            images: [product.image?.url || ""],
+        },
+    };
 }
 
 export default async function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
