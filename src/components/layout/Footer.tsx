@@ -46,6 +46,7 @@ export function Footer() {
                         <ul className="space-y-2 text-sm text-stone-600">
                             <li><Link href="/contact" className="hover:text-primary">お問い合わせフォーム</Link></li>
                             <li><Link href="/business" className="hover:text-primary">業務用のお取引について</Link></li>
+                            <li><Link href="/tokusho" className="hover:text-primary">特定商取引法に基づく表示</Link></li>
                         </ul>
                     </div>
                 </div>
