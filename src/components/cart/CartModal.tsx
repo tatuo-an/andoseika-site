@@ -2,6 +2,7 @@
 
 import { useShoppingCart } from "use-shopping-cart";
 import { X, Plus, Minus, Trash2 } from "lucide-react";
+import Link from "next/link";
 
 export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
     const { cartDetails, removeItem, incrementItem, decrementItem, totalPrice, redirectToCheckout, cartCount } = useShoppingCart();
@@ -116,7 +117,11 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                             お支払いへ進む
                         </button>
                         <p className="text-xs text-center text-stone-500">
-                            Stripeのセキュアな決済画面へ移動します
+                            Stripeのセキュアな決済画面へ移動します。ご注文前に
+                            <Link href="/tokusho" className="font-medium text-primary hover:underline">
+                                特定商取引法に基づく表示
+                            </Link>
+                            をご確認ください。
                         </p>
                     </div>
                 )}

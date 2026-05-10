@@ -138,7 +138,7 @@ export default async function SupporterPage({
                                 <p className="text-stone-800 font-bold text-lg">
                                     「住民票」
                                     <span className="font-normal text-stone-600 text-base ml-2">
-                                        ＝ 安藤青果の"まち"の住民になる
+                                        ＝ 安藤青果の「まち」の住民になる
                                     </span>
                                 </p>
                             </div>
@@ -417,7 +417,11 @@ export default async function SupporterPage({
                         <ChevronRight className="h-5 w-5" />
                     </a>
                     <p className="mt-6 text-white/50 text-sm">
-                        Stripeのセキュアな決済画面で、安全にお支払いいただけます。
+                        Stripeのセキュアな決済画面で、安全にお支払いいただけます。お申し込み前に
+                        <Link href="/tokusho" className="underline underline-offset-4 hover:text-white">
+                            特定商取引法に基づく表示
+                        </Link>
+                        をご確認ください。
                     </p>
                 </div>
             </section>

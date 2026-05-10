@@ -25,6 +25,14 @@ const stripe = process.env.STRIPE_SECRET_KEY
     ? new Stripe(process.env.STRIPE_SECRET_KEY)
     : null;
 
+function getBaseUrl(req: NextRequest) {
+    return (
+        req.headers.get("origin") ||
+        process.env.NEXT_PUBLIC_URL ||
+        new URL(req.url).origin
+    );
+}
+
 export async function POST(req: NextRequest) {
     try {
         if (!stripe) {
@@ -39,7 +47,8 @@ export async function POST(req: NextRequest) {
         }
 
         const selectedPlan = PLANS[plan];
-        const origin = req.headers.get("origin") || process.env.NEXT_PUBLIC_URL;
+        const baseUrl = getBaseUrl(req);
+        const legalDisclosureUrl = new URL("/tokusho", baseUrl).toString();
 
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ["card"],
@@ -66,21 +75,31 @@ export async function POST(req: NextRequest) {
             custom_text: {
                 submit: {
                     message:
-                        "ご入会ありがとうございます。登録完了メールをお送りします。年2回の届け物は春（3月頃）と秋（9月頃）にお届けします。",
+                        "ご入会前に、特定商取引法に基づく表示・返金条件をご確認ください。登録完了メールをお送りします。",
                 },
             },
             metadata: {
                 plan,
                 planName: selectedPlan.name,
+                legalDisclosureUrl,
                 source: "ando-seika-supporter",
             },
-            success_url: `${origin}/supporter/success?plan=${plan}`,
-            cancel_url: `${origin}/supporter`,
+            payment_intent_data: {
+                metadata: {
+                    plan,
+                    planName: selectedPlan.name,
+                    legalDisclosureUrl,
+                    source: "ando-seika-supporter",
+                },
+            },
+            success_url: `${baseUrl}/supporter/success?plan=${plan}`,
+            cancel_url: `${baseUrl}/supporter`,
         });
 
         return NextResponse.json({ url: session.url });
-    } catch (err: any) {
+    } catch (err: unknown) {
         console.error("Supporter checkout error:", err);
-        return NextResponse.json({ error: err.message }, { status: 500 });
+        const message = err instanceof Error ? err.message : "Internal server error";
+        return NextResponse.json({ error: message }, { status: 500 });
     }
 }
