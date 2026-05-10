@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { SupporterPlanButton } from "@/components/supporter/SupporterPlanButton";
 import { HeroSlideshow } from "@/components/supporter/HeroSlideshow";
+import { getSupporterFirstViewVariant } from "@/config/supporter-variants";
 
 export const metadata = {
     title: "農家サポーター制度「住民票」| &YOU 安藤青果",
@@ -32,11 +33,18 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 }
 
 /* ════════════════════════════ PAGE ════════════════════════════ */
-export default function SupporterPage() {
+export default async function SupporterPage({
+    searchParams,
+}: {
+    searchParams: Promise<{ fv?: string | string[] }>;
+}) {
+    const { fv } = await searchParams;
+    const heroVariant = getSupporterFirstViewVariant(fv);
+
     return (
         <main className="bg-[#FAFAF9]">
             {/* ───────── 1. HERO (SLIDESHOW) ───────── */}
-            <HeroSlideshow />
+            <HeroSlideshow variant={heroVariant} />
 
             {/* ───────── 2. EMPATHY ───────── */}
             <section className="py-20 md:py-28 bg-gradient-to-b from-amber-50/60 to-white">
