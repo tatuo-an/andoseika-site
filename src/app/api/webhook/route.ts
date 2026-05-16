@@ -46,6 +46,13 @@ export async function POST(req: NextRequest) {
         const now = new Date().toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" });
         const name = session.customer_details?.name ?? "";
         const email = session.customer_details?.email ?? "";
+        const phone = session.customer_details?.phone ?? "";
+        const addr = session.customer_details?.address;
+        const address = addr
+            ? [addr.postal_code, addr.state, addr.city, addr.line1, addr.line2]
+                .filter(Boolean)
+                .join(" ")
+            : "";
         const amount = session.amount_total?.toString() ?? "";
         const sessionId = session.id;
 
@@ -53,7 +60,7 @@ export async function POST(req: NextRequest) {
         const productNames = lineItems.data.map((item) => item.description).join(", ");
 
         try {
-            await appendToSheet([[now, name, email, productNames, amount, sessionId]]);
+            await appendToSheet([[now, name, email, phone, address, productNames, amount, sessionId]]);
             console.log("[webhook] order recorded:", sessionId);
         } catch (err) {
             console.error("[webhook] failed to write to sheet", err);

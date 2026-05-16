@@ -65,6 +65,9 @@ export async function POST(req: NextRequest) {
             shipping_address_collection: {
                 allowed_countries: ["JP"],
             },
+            phone_number_collection: {
+                enabled: true,
+            },
             custom_text: {
                 submit: {
                     message:
