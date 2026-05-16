@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
         const session = event.data.object as Stripe.Checkout.Session;
 
         const now = new Date().toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" });
-        const name = session.shipping_details?.name ?? session.customer_details?.name ?? "";
+        const name = session.customer_details?.name ?? "";
         const email = session.customer_details?.email ?? "";
         const amount = session.amount_total?.toString() ?? "";
         const sessionId = session.id;
