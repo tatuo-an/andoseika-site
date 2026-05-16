@@ -491,6 +491,16 @@ export default async function SupporterPage({
                         >
                             サポーターに申し込む
                         </a>
+                        {process.env.NEXT_PUBLIC_LINE_ADD_FRIEND_URL && (
+                            <a
+                                href={process.env.NEXT_PUBLIC_LINE_ADD_FRIEND_URL}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center justify-center gap-2 bg-[#06C755] text-white font-bold px-8 py-4 rounded-full shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
+                            >
+                                LINEで問い合わせる
+                            </a>
+                        )}
                         <Link
                             href="/"
                             className="inline-flex items-center justify-center gap-2 bg-white text-stone-700 font-bold px-8 py-4 rounded-full border border-stone-200 hover:border-stone-300 hover:shadow-md transition-all"
