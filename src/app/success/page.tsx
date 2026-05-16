@@ -4,15 +4,12 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { CheckCircle } from "lucide-react";
 import Link from "next/link";
-import { useShoppingCart } from "use-shopping-cart";
 import { useEffect } from "react";
 
 export default function SuccessPage() {
-    const { clearCart } = useShoppingCart();
-
     useEffect(() => {
-        clearCart();
-    }, [clearCart]);
+        sessionStorage.removeItem("cart");
+    }, []);
 
     return (
         <div className="min-h-screen flex flex-col font-sans bg-stone-50">
