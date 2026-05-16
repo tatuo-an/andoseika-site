@@ -1,16 +1,13 @@
 "use client";
 
 import { useShoppingCart } from "use-shopping-cart";
-import { useState } from "react";
 import { ShoppingCart, Plus, Minus } from "lucide-react";
 import { Product } from "@/types/microcms";
 
 export function QuickAddButton({ product }: { product: Product }) {
-    const { addItem, removeItem, cartDetails } = useShoppingCart();
-    const [quantity, setQuantity] = useState(0);
+    const { addItem, decrementItem, removeItem, cartDetails } = useShoppingCart();
 
-    const cartItem = cartDetails?.[product.id];
-    const currentQty = cartItem?.quantity ?? 0;
+    const currentQty = cartDetails?.[product.id]?.quantity ?? 0;
 
     const stop = (e: React.MouseEvent) => {
         e.preventDefault();
@@ -28,25 +25,14 @@ export function QuickAddButton({ product }: { product: Product }) {
             description: product.description,
             sku: product.id,
         });
-        setQuantity((q) => q + 1);
     };
 
     const handleRemove = (e: React.MouseEvent) => {
         stop(e);
         if (currentQty <= 1) {
             removeItem(product.id);
-            setQuantity(0);
         } else {
-            addItem({
-                id: product.id,
-                name: product.name,
-                price: product.price,
-                currency: "JPY",
-                image: product.image?.url ?? "",
-                description: product.description,
-                sku: product.id,
-            }, { count: -1 });
-            setQuantity((q) => Math.max(0, q - 1));
+            decrementItem(product.id);
         }
     };
 
