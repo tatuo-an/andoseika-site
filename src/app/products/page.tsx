@@ -6,6 +6,7 @@ import { client } from "@/lib/microcms";
 import { Product } from "@/types/microcms";
 import { Metadata } from "next";
 import localProducts from "@/data/products.json";
+import { QuickAddButton } from "@/components/products/QuickAddButton";
 
 export const metadata: Metadata = {
   title: "商品一覧",
@@ -79,7 +80,7 @@ export default async function ProductsPage() {
                     </span>
                   )}
                 </div>
-                <div className="p-6">
+                <div className="p-6 relative">
                   <div className="flex justify-between items-start mb-2">
                     <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-1 rounded">
                       {product.category === "root" ? "根菜・芋類" :
@@ -94,9 +95,10 @@ export default async function ProductsPage() {
                   <h2 className="font-bold text-stone-900 mb-2 line-clamp-2 group-hover:text-primary transition-colors">
                     {product.name}
                   </h2>
-                  <p className="text-sm text-stone-500 line-clamp-2">
+                  <p className="text-sm text-stone-500 line-clamp-2 pr-12">
                     {product.description}
                   </p>
+                  <QuickAddButton product={product} />
                 </div>
               </div>
             </Link>
