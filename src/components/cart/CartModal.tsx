@@ -5,7 +5,7 @@ import { X, Plus, Minus, Trash2 } from "lucide-react";
 import Link from "next/link";
 
 export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
-    const { cartDetails, removeItem, incrementItem, decrementItem, totalPrice, redirectToCheckout, cartCount } = useShoppingCart();
+    const { cartDetails, removeItem, incrementItem, decrementItem, totalPrice, cartCount } = useShoppingCart();
 
     if (!isOpen) return null;
 
@@ -25,11 +25,9 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                 return;
             }
 
-            const { sessionId } = await response.json();
-            const result = await redirectToCheckout(sessionId);
-
-            if (result?.error) {
-                console.error(result.error);
+            const { url } = await response.json();
+            if (url) {
+                window.location.href = url;
             }
         } catch (error) {
             console.error(error);

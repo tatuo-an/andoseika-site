@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
             },
         });
 
-        return NextResponse.json({ sessionId: session.id });
+        return NextResponse.json({ sessionId: session.id, url: session.url });
     } catch (err: unknown) {
         console.error(err);
         const message = err instanceof Error ? err.message : "Internal server error";
