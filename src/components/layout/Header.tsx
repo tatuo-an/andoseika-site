@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ShoppingCart, Menu } from "lucide-react";
+import { ShoppingCart, Menu, User } from "lucide-react";
 import { useShoppingCart } from "use-shopping-cart";
 import { useState } from "react";
 import { CartModal } from "@/components/cart/CartModal";
@@ -46,6 +46,13 @@ export function Header() {
                     </nav>
 
                     <div className="flex items-center gap-4">
+                        <Link
+                            href="/mypage"
+                            className="p-2 hover:bg-stone-100 rounded-full transition-colors"
+                        >
+                            <User className="h-5 w-5 text-stone-600" />
+                            <span className="sr-only">マイページ</span>
+                        </Link>
                         <button
                             onClick={() => setIsCartOpen(true)}
                             className="relative p-2 hover:bg-stone-100 rounded-full transition-colors"
