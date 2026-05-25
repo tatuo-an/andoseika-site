@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { google } from "googleapis";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+export const dynamic = "force-dynamic";
 
 async function appendToSheet(values: string[][]) {
     const auth = new google.auth.GoogleAuth({
@@ -24,6 +24,7 @@ async function appendToSheet(values: string[][]) {
 }
 
 export async function POST(req: NextRequest) {
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
     const body = await req.text();
     const sig = req.headers.get("stripe-signature");
 
