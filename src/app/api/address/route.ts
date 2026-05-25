@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
             await sheets.spreadsheets.values.append({
                 spreadsheetId: SPREADSHEET_ID,
                 range: `${SHEET_NAME}!A:H`,
-                valueInputOption: "USER_ENTERED",
+                valueInputOption: "RAW",
                 requestBody: { values },
             });
         } else {
@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
             await sheets.spreadsheets.values.update({
                 spreadsheetId: SPREADSHEET_ID,
                 range: `${SHEET_NAME}!A${sheetRow}:H${sheetRow}`,
-                valueInputOption: "USER_ENTERED",
+                valueInputOption: "RAW",
                 requestBody: { values },
             });
         }
