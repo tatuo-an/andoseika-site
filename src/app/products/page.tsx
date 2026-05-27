@@ -16,7 +16,9 @@ export const metadata: Metadata = {
 
 export const revalidate = 60;
 
-async function getInventoryMap(): Promise<Record<string, number>> {
+type InventoryData = { stock: number; nameOverride: string };
+
+async function getInventoryMap(): Promise<Record<string, InventoryData>> {
   try {
     const authClient = new google.auth.GoogleAuth({
       credentials: {
@@ -31,9 +33,12 @@ async function getInventoryMap(): Promise<Record<string, number>> {
       range: "商品在庫!A:C",
     });
     const rows = res.data.values ?? [];
-    const map: Record<string, number> = {};
+    const map: Record<string, InventoryData> = {};
     rows.slice(1).forEach((r) => {
-      if (r[0]) map[r[0]] = parseInt(r[2] ?? "0", 10);
+      if (r[0]) map[r[0]] = {
+        stock: r[2] !== undefined && r[2] !== "" ? parseInt(r[2], 10) : -1,
+        nameOverride: r[1] ?? "",
+      };
     });
     return map;
   } catch {
@@ -85,8 +90,10 @@ export default async function ProductsPage() {
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {items.map((product) => {
-            const stock = inventoryMap[product.id] ?? -1;
+            const inv = inventoryMap[product.id];
+            const stock = inv?.stock ?? -1;
             const isSoldOut = stock !== -1 && stock === 0;
+            const displayName = inv?.nameOverride || product.name;
             return (
             <Link href={`/products/${product.id}`} key={product.id} className={`group ${isSoldOut ? "pointer-events-none" : ""}`}>
               <div className={`bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 ${isSoldOut ? "opacity-70" : ""}`}>
@@ -129,7 +136,7 @@ export default async function ProductsPage() {
                     </span>
                   </div>
                   <h2 className="font-bold text-stone-900 mb-2 line-clamp-2 group-hover:text-primary transition-colors">
-                    {product.name}
+                    {displayName}
                   </h2>
                   <p className="text-sm text-stone-500 line-clamp-2 pr-12">
                     {product.description}

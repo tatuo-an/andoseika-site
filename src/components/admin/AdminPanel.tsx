@@ -130,7 +130,7 @@ export function AdminPanel({
                         <table className="w-full">
                             <thead className="bg-stone-100 text-stone-600 text-xs">
                                 <tr>
-                                    <th className="text-left px-6 py-3">商品名</th>
+                                    <th className="text-left px-4 py-3">商品名</th>
                                     <th className="text-center px-4 py-3 w-28">在庫数<br /><span className="font-normal text-stone-400">-1=管理なし</span></th>
                                     <th className="text-center px-4 py-3 w-32">販売価格<br /><span className="font-normal text-stone-400">空欄=デフォルト</span></th>
                                     <th className="text-center px-4 py-3 w-36">配送区分</th>
@@ -142,7 +142,13 @@ export function AdminPanel({
                                     const isSoldOut = item.stock !== -1 && item.stock === 0;
                                     return (
                                         <tr key={item.id} className="hover:bg-stone-50">
-                                            <td className="px-6 py-3 text-sm font-medium text-stone-900">{item.name}</td>
+                                            <td className="px-4 py-3">
+                                                <input
+                                                    value={item.name}
+                                                    onChange={(e) => updateItem(item.id, "name", e.target.value)}
+                                                    className="w-full border border-stone-200 rounded-lg px-3 py-1.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                                />
+                                            </td>
                                             <td className="px-4 py-3 text-center">
                                                 <input type="number" min={-1} value={item.stock}
                                                     onChange={(e) => updateItem(item.id, "stock", parseInt(e.target.value, 10))}
