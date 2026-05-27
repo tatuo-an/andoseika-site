@@ -13,7 +13,7 @@ import { google } from "googleapis";
 
 export const revalidate = 60;
 
-async function getInventoryRow(id: string): Promise<{ stock: number; hidden: boolean }> {
+async function getInventoryRow(id: string): Promise<{ stock: number; hidden: boolean; deleted: boolean }> {
     try {
         const authClient = new google.auth.GoogleAuth({
             credentials: {
@@ -29,13 +29,14 @@ async function getInventoryRow(id: string): Promise<{ stock: number; hidden: boo
         });
         const rows = res.data.values ?? [];
         const row = rows.slice(1).find((r) => r[0] === id);
-        if (!row) return { stock: -1, hidden: false };
+        if (!row) return { stock: -1, hidden: false, deleted: false };
         return {
             stock: row[2] !== undefined && row[2] !== "" ? parseInt(row[2], 10) : -1,
             hidden: row[5] === "1",
+            deleted: row[6] === "1",
         };
     } catch {
-        return { stock: -1, hidden: false };
+        return { stock: -1, hidden: false, deleted: false };
     }
 }
 
@@ -108,10 +109,10 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 export default async function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
     const [product, inv] = await Promise.all([getProduct(id), getInventoryRow(id)]);
-    const { stock, hidden } = inv;
+    const { stock, hidden, deleted } = inv;
     const isSoldOut = stock !== -1 && stock === 0;
 
-    if (!product || hidden) {
+    if (!product || hidden || deleted) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-stone-50">
                 <p className="text-stone-500">商品が見つかりませんでした。</p>

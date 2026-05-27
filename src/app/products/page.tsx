@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 
 export const revalidate = 60;
 
-type InventoryData = { stock: number; nameOverride: string; hidden: boolean };
+type InventoryData = { stock: number; nameOverride: string; hidden: boolean; deleted: boolean };
 type InventoryResult = { map: Record<string, InventoryData>; order: string[] };
 
 async function getInventoryMap(): Promise<InventoryResult> {
@@ -43,6 +43,7 @@ async function getInventoryMap(): Promise<InventoryResult> {
           stock: r[2] !== undefined && r[2] !== "" ? parseInt(r[2], 10) : -1,
           nameOverride: r[1] ?? "",
           hidden: r[5] === "1",
+          deleted: r[6] === "1",
         };
       }
     });
@@ -87,7 +88,7 @@ export default async function ProductsPage() {
   const sortedProducts = [
     ...inventoryOrder.map((id) => productMap[id]).filter(Boolean),
     ...products.filter((p) => !orderedIds.has(p.id)),
-  ].filter((p) => !inventoryMap[p.id]?.hidden) as Product[];
+  ].filter((p) => !inventoryMap[p.id]?.hidden && !inventoryMap[p.id]?.deleted) as Product[];
 
   // Group products by category
   const rootProducts = sortedProducts.filter(p => p.category === "root");

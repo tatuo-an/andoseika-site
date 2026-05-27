@@ -26,6 +26,7 @@ export type InventoryItem = {
     price: number | null;
     shipType: string;
     hidden: boolean;
+    deleted: boolean; // true = リストから削除済み（シートには残す）
 };
 
 type ShippingItem = {
@@ -74,9 +75,9 @@ export function AdminPanel({
     const productMap = Object.fromEntries(products.map((p) => [p.id, p]));
     const inventoryIds = new Set(initialInventory.map((i) => i.id));
 
-    // シートの行順を優先。シートにない MicroCMS 商品は末尾に追加
+    // items = シート全件（deleted含む） + シートにない新規MicroCMS商品
+    // deleted=true の行は表示しないがシートに保存して復活を防ぐ
     const [items, setItems] = useState<InventoryItem[]>([
-        // 1. シートにある商品（シート順）
         ...initialInventory.map((inv) => ({
             id: inv.id,
             name: inv.name || productMap[inv.id]?.name || inv.id,
@@ -84,19 +85,23 @@ export function AdminPanel({
             price: inv.price,
             shipType: inv.shipType,
             hidden: inv.hidden,
+            deleted: inv.deleted,
         })),
-        // 2. シートにまだない MicroCMS 商品（新規追加分）
         ...products
             .filter((p) => !inventoryIds.has(p.id))
             .map((p) => ({
                 id: p.id,
                 name: p.name,
-                stock: -1,
-                price: null,
+                stock: -1 as number,
+                price: null as number | null,
                 shipType: "",
                 hidden: false,
+                deleted: false,
             })),
     ]);
+
+    // 削除済みを除いた表示用リスト
+    const visibleItems = items.filter((i) => !i.deleted);
 
     const [savingInventory, setSavingInventory] = useState(false);
     const [savedInventory, setSavedInventory] = useState(false);
@@ -114,12 +119,9 @@ export function AdminPanel({
     };
 
     const deleteItem = (id: string) => {
-        const existsInMicrocms = !!productMap[id];
-        const msg = existsInMicrocms
-            ? "この商品をリストから削除しますか？\n※ページを再読み込みすると復活します。サイトから消したい場合は「👁 非表示」を使ってください。"
-            : "この商品を削除しますか？";
-        if (!confirm(msg)) return;
-        setItems((prev) => prev.filter((item) => item.id !== id));
+        if (!confirm("この商品を削除しますか？")) return;
+        // deleted=true にしてシートに残す（そうしないと再読み込みで復活する）
+        setItems((prev) => prev.map((item) => item.id === id ? { ...item, deleted: true } : item));
         setSavedInventory(false);
     };
 
@@ -132,6 +134,7 @@ export function AdminPanel({
             price: null,
             shipType: "",
             hidden: false,
+            deleted: false,
         }]);
         setSavedInventory(false);
     };
@@ -157,7 +160,7 @@ export function AdminPanel({
             const res = await fetch("/api/inventory", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ items }),
+                body: JSON.stringify({ items }), // deleted 含む全件を保存
             });
             if (!res.ok) {
                 const body = await res.json().catch(() => ({}));
@@ -217,14 +220,13 @@ export function AdminPanel({
                                 </tr>
                             </thead>
                             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                                <SortableContext items={items.map((i) => i.id)} strategy={verticalListSortingStrategy}>
+                                <SortableContext items={visibleItems.map((i) => i.id)} strategy={verticalListSortingStrategy}>
                                     <tbody className="divide-y divide-stone-100">
-                                        {items.map((item) => (
+                                        {visibleItems.map((item) => (
                                             <SortableRow
                                                 key={item.id}
                                                 item={item}
                                                 shipTypes={SHIP_TYPES}
-                                                inMicrocms={!!productMap[item.id]}
                                                 onUpdate={updateItem}
                                                 onDelete={deleteItem}
                                             />
@@ -336,13 +338,11 @@ export function AdminPanel({
 function SortableRow({
     item,
     shipTypes,
-    inMicrocms,
     onUpdate,
     onDelete,
 }: {
     item: InventoryItem;
     shipTypes: { value: string; label: string }[];
-    inMicrocms: boolean;
     onUpdate: <K extends keyof InventoryItem>(id: string, field: K, value: InventoryItem[K]) => void;
     onDelete: (id: string) => void;
 }) {
@@ -410,17 +410,15 @@ function SortableRow({
             </td>
             <td className="px-2 py-3 text-center">
                 <div className="flex items-center justify-center gap-1">
-                    {/* 表示/非表示トグル */}
                     <button
                         onClick={() => onUpdate(item.id, "hidden", !item.hidden)}
                         title={item.hidden ? "サイトに表示する" : "サイトから非表示にする"}
                         className={`p-1.5 rounded transition-colors ${item.hidden ? "text-primary hover:text-primary/70" : "text-stone-300 hover:text-stone-600"}`}>
                         {item.hidden ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
-                    {/* 削除 */}
                     <button
                         onClick={() => onDelete(item.id)}
-                        title="リストから削除"
+                        title="削除"
                         className="p-1.5 text-stone-300 hover:text-red-500 rounded transition-colors">
                         <Trash2 className="w-4 h-4" />
                     </button>
