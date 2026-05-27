@@ -25,10 +25,11 @@ export async function POST(req: NextRequest) {
     } catch (err: any) {
         // 404 (already deleted) は成功扱い
         const status = err?.response?.status ?? err?.status ?? err?.statusCode;
-        if (status === 404) {
+        const message = err?.response?.data?.message ?? err?.message ?? String(err);
+        // 404 はすでに存在しない → 成功扱い
+        if (status === 404 || message.includes("404")) {
             return NextResponse.json({ success: true, skipped: true });
         }
-        const message = err?.response?.data?.message ?? err?.message ?? String(err);
         console.error("[microcms-delete]", { status, message, err });
         return NextResponse.json({ error: `MicroCMS error ${status}: ${message}` }, { status: 500 });
     }
