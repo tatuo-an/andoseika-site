@@ -712,6 +712,7 @@ function BadgeSelector({
     const [open, setOpen] = useState(false);
     const [custom, setCustom] = useState("");
     const [openUp, setOpenUp] = useState(false);
+    const [openLeft, setOpenLeft] = useState(false);
     const triggerRef = useRef<HTMLDivElement>(null);
 
     const toggle = (badge: string) => {
@@ -729,8 +730,10 @@ function BadgeSelector({
     const handleOpen = () => {
         if (!open && triggerRef.current) {
             const rect = triggerRef.current.getBoundingClientRect();
-            // ドロップダウンの高さ約220px。下に収まらない場合は上に開く
+            // 下に収まらない場合は上に開く（高さ約220px）
             setOpenUp(rect.bottom + 220 > window.innerHeight);
+            // 右にはみ出す場合は右端揃えにする（幅288px = w-72）
+            setOpenLeft(rect.left + 288 > window.innerWidth);
         }
         setOpen(!open);
     };
@@ -759,7 +762,7 @@ function BadgeSelector({
 
             {/* ドロップダウン */}
             {open && (
-                <div className={`absolute z-[200] left-0 bg-white border border-stone-200 rounded-xl shadow-xl p-3 w-72 ${openUp ? "bottom-8" : "top-8"}`}>
+                <div className={`absolute z-[200] bg-white border border-stone-200 rounded-xl shadow-xl p-3 w-72 ${openUp ? "bottom-8" : "top-8"} ${openLeft ? "right-0" : "left-0"}`}>
                     <p className="text-xs text-stone-400 mb-2 font-bold">バッジを選択（複数可）</p>
                     <div className="flex flex-wrap gap-1.5 mb-3">
                         {allBadges.map((badge) => {
