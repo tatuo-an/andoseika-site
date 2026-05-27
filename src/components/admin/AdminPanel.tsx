@@ -150,14 +150,22 @@ export function AdminPanel({
     const deleteItem = async (id: string) => {
         if (!confirm("この商品を削除しますか？\n※MicroCMSからも完全に削除されます。")) return;
         // MicroCMSから削除（custom-IDはスキップ）
-        try {
-            await fetch("/api/microcms-delete", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ id }),
-            });
-        } catch {
-            // 失敗してもシート側の削除は続行
+        if (!id.startsWith("custom-")) {
+            try {
+                const res = await fetch("/api/microcms-delete", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ id }),
+                });
+                const body = await res.json();
+                if (!res.ok) {
+                    alert(`MicroCMSからの削除に失敗しました。\nMicroCMSのAPIキーにDELETE権限が付与されているか確認してください。\n(${body?.error ?? res.status})`);
+                    return;
+                }
+            } catch {
+                alert("MicroCMSへの接続に失敗しました。");
+                return;
+            }
         }
         setItems((prev) => prev.filter((item) => item.id !== id));
         setSavedInventory(false);
