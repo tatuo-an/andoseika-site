@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 
 export const revalidate = 60;
 
-type InventoryData = { stock: number; nameOverride: string };
+type InventoryData = { stock: number; nameOverride: string; hidden: boolean };
 
 async function getInventoryMap(): Promise<Record<string, InventoryData>> {
   try {
@@ -38,6 +38,7 @@ async function getInventoryMap(): Promise<Record<string, InventoryData>> {
       if (r[0]) map[r[0]] = {
         stock: r[2] !== undefined && r[2] !== "" ? parseInt(r[2], 10) : -1,
         nameOverride: r[1] ?? "",
+        hidden: r[5] === "1",
       };
     });
     return map;
@@ -75,11 +76,14 @@ export default async function ProductsPage() {
     );
   }
 
+  // 非表示の商品を除外
+  const visibleProducts = products.filter(p => !inventoryMap[p.id]?.hidden);
+
   // Group products by category
-  const rootProducts = products.filter(p => p.category === "root");
-  const leafProducts = products.filter(p => p.category === "leaf");
-  const honeyProducts = products.filter(p => p.category === "honey");
-  const otherProducts = products.filter(p => !["root", "leaf", "honey"].includes(p.category));
+  const rootProducts = visibleProducts.filter(p => p.category === "root");
+  const leafProducts = visibleProducts.filter(p => p.category === "leaf");
+  const honeyProducts = visibleProducts.filter(p => p.category === "honey");
+  const otherProducts = visibleProducts.filter(p => !["root", "leaf", "honey"].includes(p.category));
 
   const ProductSection = ({ title, items }: { title: string, items: Product[] }) => {
     if (items.length === 0) return null;

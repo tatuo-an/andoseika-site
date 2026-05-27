@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 const SPREADSHEET_ID = process.env.GOOGLE_SPREADSHEET_ID!;
 const SHEET_NAME = "商品在庫";
-// 列: A=商品ID, B=商品名, C=在庫数, D=価格, E=配送区分(60/80/100/120/140/160/180/200/compact/clickpost)
+// 列: A=商品ID, B=商品名, C=在庫数, D=価格, E=配送区分, F=非表示(1 or "")
 
 function getSheets() {
     const authClient = new google.auth.GoogleAuth({
@@ -25,7 +25,7 @@ export async function GET() {
         const sheets = getSheets();
         const res = await sheets.spreadsheets.values.get({
             spreadsheetId: SPREADSHEET_ID,
-            range: `${SHEET_NAME}!A:E`,
+            range: `${SHEET_NAME}!A:F`,
         });
         const rows = res.data.values ?? [];
         const data = rows.slice(1).map((r) => ({
@@ -34,6 +34,7 @@ export async function GET() {
             stock: r[2] !== undefined && r[2] !== "" ? parseInt(r[2], 10) : -1,
             price: r[3] !== undefined && r[3] !== "" ? parseInt(r[3], 10) : null,
             shipType: r[4] ?? "",
+            hidden: r[5] === "1",
         }));
         return NextResponse.json({ inventory: data });
     } catch (err) {
@@ -49,37 +50,34 @@ export async function POST(req: NextRequest) {
     }
 
     const { items } = await req.json() as {
-        items: { id: string; name: string; stock: number; price: number | null; shipType: string }[]
+        items: { id: string; name: string; stock: number; price: number | null; shipType: string; hidden: boolean }[]
     };
 
     try {
         const sheets = getSheets();
-        const res = await sheets.spreadsheets.values.get({
-            spreadsheetId: SPREADSHEET_ID,
-            range: `${SHEET_NAME}!A:A`,
-        });
-        const existingRows = res.data.values ?? [];
-        const idToRow: Record<string, number> = {};
-        existingRows.forEach((r, i) => { if (i > 0 && r[0]) idToRow[r[0]] = i + 1; });
 
-        for (const item of items) {
-            const values = [[item.id, item.name, item.stock, item.price ?? "", item.shipType]];
-            if (idToRow[item.id]) {
-                const rowNum = idToRow[item.id];
-                await sheets.spreadsheets.values.update({
-                    spreadsheetId: SPREADSHEET_ID,
-                    range: `${SHEET_NAME}!A${rowNum}:E${rowNum}`,
-                    valueInputOption: "RAW",
-                    requestBody: { values },
-                });
-            } else {
-                await sheets.spreadsheets.values.append({
-                    spreadsheetId: SPREADSHEET_ID,
-                    range: `${SHEET_NAME}!A:E`,
-                    valueInputOption: "RAW",
-                    requestBody: { values },
-                });
-            }
+        // 既存データを全削除してから一括書き込み（削除にも対応）
+        await sheets.spreadsheets.values.clear({
+            spreadsheetId: SPREADSHEET_ID,
+            range: `${SHEET_NAME}!A2:F1000`,
+        });
+
+        if (items.length > 0) {
+            await sheets.spreadsheets.values.update({
+                spreadsheetId: SPREADSHEET_ID,
+                range: `${SHEET_NAME}!A2`,
+                valueInputOption: "RAW",
+                requestBody: {
+                    values: items.map((item) => [
+                        item.id,
+                        item.name,
+                        item.stock,
+                        item.price ?? "",
+                        item.shipType,
+                        item.hidden ? "1" : "",
+                    ]),
+                },
+            });
         }
 
         return NextResponse.json({ success: true });

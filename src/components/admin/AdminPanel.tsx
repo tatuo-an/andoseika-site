@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Loader2, Plus, Trash2, GripVertical } from "lucide-react";
+import { Check, Loader2, Plus, Trash2, GripVertical, Eye, EyeOff } from "lucide-react";
 import { Product } from "@/types/microcms";
 import {
     DndContext,
@@ -19,12 +19,13 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
-type InventoryItem = {
+export type InventoryItem = {
     id: string;
     name: string;
     stock: number;
     price: number | null;
     shipType: string;
+    hidden: boolean;
 };
 
 type ShippingItem = {
@@ -50,7 +51,6 @@ const SHIP_TYPES = [
     { value: "clickpost", label: "クリックポスト" },
 ];
 
-// ヤマト運輸 中国エリア発送 税抜き参考値（4ゾーン）
 const DEFAULT_SHIPPING: ShippingItem[] = [
     { region: "北海道", prefectures: "北海道", s60: 1200, s80: 1400, s100: 1600, s120: 1750, s140: 2000, s160: 2200, s180: 2400, s200: 2600, compact: 990, clickpost: 185 },
     { region: "東北", prefectures: "青森県,岩手県,宮城県,秋田県,山形県,福島県", s60: 800, s80: 1000, s100: 1200, s120: 1400, s140: 1600, s160: 1800, s180: 2000, s200: 2200, compact: 790, clickpost: 185 },
@@ -58,7 +58,6 @@ const DEFAULT_SHIPPING: ShippingItem[] = [
     { region: "それ以外", prefectures: "（北海道・東北・沖縄以外の全都道府県）", s60: 600, s80: 700, s100: 800, s120: 1000, s140: 1200, s160: 1400, s180: 1600, s200: 1800, compact: 690, clickpost: 185 },
 ];
 
-const SIZE_KEYS: (keyof ShippingItem)[] = ["s60", "s80", "s100", "s120", "s140", "s160", "s180", "s200", "compact", "clickpost"];
 const SIZE_LABELS = ["60", "80", "100", "120", "140", "160", "180", "200", "コンパクト", "クリックポスト"];
 
 export function AdminPanel({
@@ -73,18 +72,26 @@ export function AdminPanel({
     const [tab, setTab] = useState<"inventory" | "shipping">("inventory");
 
     const inventoryMap = Object.fromEntries(initialInventory.map((i) => [i.id, i]));
-    const [items, setItems] = useState<InventoryItem[]>(
-        products.map((p) => {
+
+    // MicroCMS の商品 + シートにのみ存在する商品（MicroCMSから削除された分）をマージ
+    const productIds = new Set(products.map((p) => p.id));
+    const sheetOnlyItems = initialInventory.filter((i) => !productIds.has(i.id));
+
+    const [items, setItems] = useState<InventoryItem[]>([
+        ...products.map((p) => {
             const inv = inventoryMap[p.id];
             return {
                 id: p.id,
-                name: inv?.name || p.name,   // シートに保存した名前を優先
+                name: inv?.name || p.name,
                 stock: inv?.stock ?? -1,
                 price: inv?.price ?? null,
                 shipType: inv?.shipType ?? "",
+                hidden: inv?.hidden ?? false,
             };
-        })
-    );
+        }),
+        ...sheetOnlyItems.map((i) => ({ ...i })),
+    ]);
+
     const [savingInventory, setSavingInventory] = useState(false);
     const [savedInventory, setSavedInventory] = useState(false);
     const [inventoryError, setInventoryError] = useState("");
@@ -97,6 +104,25 @@ export function AdminPanel({
 
     const updateItem = <K extends keyof InventoryItem>(id: string, field: K, value: InventoryItem[K]) => {
         setItems((prev) => prev.map((item) => item.id === id ? { ...item, [field]: value } : item));
+        setSavedInventory(false);
+    };
+
+    const deleteItem = (id: string) => {
+        if (!confirm("この商品をリストから削除しますか？")) return;
+        setItems((prev) => prev.filter((item) => item.id !== id));
+        setSavedInventory(false);
+    };
+
+    const addItem = () => {
+        const newId = `custom-${Date.now()}`;
+        setItems((prev) => [...prev, {
+            id: newId,
+            name: "新しい商品",
+            stock: -1,
+            price: null,
+            shipType: "",
+            hidden: false,
+        }]);
         setSavedInventory(false);
     };
 
@@ -130,7 +156,7 @@ export function AdminPanel({
             }
             setSavedInventory(true);
             setTimeout(() => setSavedInventory(false), 2000);
-        } catch (e) {
+        } catch {
             setInventoryError("通信エラーが発生しました");
         } finally { setSavingInventory(false); }
     };
@@ -177,6 +203,7 @@ export function AdminPanel({
                                     <th className="text-center px-4 py-3 w-32">販売価格<br /><span className="font-normal text-stone-400">空欄=デフォルト</span></th>
                                     <th className="text-center px-4 py-3 w-36">配送区分</th>
                                     <th className="text-center px-4 py-3 w-20">状態</th>
+                                    <th className="w-20"></th>
                                 </tr>
                             </thead>
                             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
@@ -188,6 +215,7 @@ export function AdminPanel({
                                                 item={item}
                                                 shipTypes={SHIP_TYPES}
                                                 onUpdate={updateItem}
+                                                onDelete={deleteItem}
                                             />
                                         ))}
                                     </tbody>
@@ -195,14 +223,20 @@ export function AdminPanel({
                             </DndContext>
                         </table>
                     </div>
-                    <div className="flex flex-col gap-2">
+
+                    <div className="flex items-center gap-3 mb-2">
                         <button onClick={saveInventory} disabled={savingInventory}
                             className="flex items-center gap-2 bg-stone-900 text-white px-8 py-3 rounded-full font-bold hover:bg-primary transition-colors disabled:opacity-50">
                             {savingInventory ? <Loader2 className="w-4 h-4 animate-spin" /> : savedInventory ? <Check className="w-4 h-4" /> : null}
                             {savedInventory ? "保存しました" : "一括保存"}
                         </button>
-                        {inventoryError && <p className="text-red-500 text-sm">{inventoryError}</p>}
+                        <button onClick={addItem}
+                            className="flex items-center gap-2 border border-stone-300 text-stone-600 px-5 py-3 rounded-full text-sm font-bold hover:bg-stone-100 transition-colors">
+                            <Plus className="w-4 h-4" />
+                            商品を追加
+                        </button>
                     </div>
+                    {inventoryError && <p className="text-red-500 text-sm mt-1">{inventoryError}</p>}
                 </div>
             )}
 
@@ -215,7 +249,6 @@ export function AdminPanel({
                     <div className="space-y-4 mb-6">
                         {shipping.map((row, index) => (
                             <div key={index} className="bg-white rounded-2xl shadow-sm p-5">
-                                {/* ヘッダー行 */}
                                 <div className="flex items-start gap-3 mb-4">
                                     <div className="flex-1 grid grid-cols-2 gap-3">
                                         <div>
@@ -237,7 +270,6 @@ export function AdminPanel({
                                     </button>
                                 </div>
 
-                                {/* 宅配便サイズ */}
                                 <div className="mb-3">
                                     <p className="text-xs font-bold text-stone-500 mb-2">宅配便（サイズ別）</p>
                                     <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
@@ -252,7 +284,6 @@ export function AdminPanel({
                                     </div>
                                 </div>
 
-                                {/* コンパクト・クリックポスト */}
                                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                                     <div className="text-center">
                                         <label className="text-xs text-stone-400 block mb-1">コンパクト</label>
@@ -295,10 +326,12 @@ function SortableRow({
     item,
     shipTypes,
     onUpdate,
+    onDelete,
 }: {
     item: InventoryItem;
     shipTypes: { value: string; label: string }[];
     onUpdate: <K extends keyof InventoryItem>(id: string, field: K, value: InventoryItem[K]) => void;
+    onDelete: (id: string) => void;
 }) {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
     const style = {
@@ -310,7 +343,8 @@ function SortableRow({
     const isSoldOut = item.stock !== -1 && item.stock === 0;
 
     return (
-        <tr ref={setNodeRef} style={style} className={`hover:bg-stone-50 ${isDragging ? "bg-primary/5 shadow-lg" : ""}`}>
+        <tr ref={setNodeRef} style={style}
+            className={`${item.hidden ? "bg-stone-50 opacity-50" : "hover:bg-stone-50"} ${isDragging ? "bg-primary/5 shadow-lg" : ""}`}>
             <td className="px-1 py-3 text-center">
                 <button
                     {...attributes}
@@ -353,11 +387,31 @@ function SortableRow({
                 </select>
             </td>
             <td className="px-4 py-3 text-center">
-                {item.stock === -1
-                    ? <span className="text-xs text-stone-400">管理なし</span>
-                    : isSoldOut
-                        ? <span className="text-xs font-bold text-red-500">売り切れ</span>
-                        : <span className="text-xs font-bold text-green-600">販売中</span>}
+                {item.hidden
+                    ? <span className="text-xs text-stone-400">非表示</span>
+                    : item.stock === -1
+                        ? <span className="text-xs text-stone-400">管理なし</span>
+                        : isSoldOut
+                            ? <span className="text-xs font-bold text-red-500">売り切れ</span>
+                            : <span className="text-xs font-bold text-green-600">販売中</span>}
+            </td>
+            <td className="px-2 py-3 text-center">
+                <div className="flex items-center justify-center gap-1">
+                    {/* 表示/非表示トグル */}
+                    <button
+                        onClick={() => onUpdate(item.id, "hidden", !item.hidden)}
+                        title={item.hidden ? "表示する" : "非表示にする"}
+                        className={`p-1.5 rounded transition-colors ${item.hidden ? "text-stone-400 hover:text-primary" : "text-stone-300 hover:text-stone-600"}`}>
+                        {item.hidden ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                    {/* 削除 */}
+                    <button
+                        onClick={() => onDelete(item.id)}
+                        title="リストから削除"
+                        className="p-1.5 text-stone-300 hover:text-red-500 rounded transition-colors">
+                        <Trash2 className="w-4 h-4" />
+                    </button>
+                </div>
             </td>
         </tr>
     );
