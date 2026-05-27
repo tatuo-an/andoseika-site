@@ -32,7 +32,7 @@ async function getInventoryMap(): Promise<InventoryResult> {
     const sheets = google.sheets({ version: "v4", auth: authClient });
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-      range: "商品在庫!A:H",
+      range: "商品在庫!A:I",
     });
     const rows = res.data.values ?? [];
     const map: Record<string, InventoryData> = {};
