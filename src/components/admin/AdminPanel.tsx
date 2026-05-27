@@ -114,13 +114,14 @@ export function AdminPanel({
     };
 
     const deleteItem = (id: string) => {
-        // MicroCMS 商品は削除しても再ロード時に復活するため、非表示に切り替える
-        // 手動追加(custom-)のみ完全削除
-        if (id.startsWith("custom-")) {
-            if (!confirm("この商品を削除しますか？")) return;
-            setItems((prev) => prev.filter((item) => item.id !== id));
-        } else {
+        const existsInMicrocms = !!productMap[id];
+        if (existsInMicrocms) {
+            // MicroCMS に存在する商品は消しても再読み込みで復活するため非表示にする
             setItems((prev) => prev.map((item) => item.id === id ? { ...item, hidden: true } : item));
+        } else {
+            // MicroCMS にない商品（手動追加・MicroCMS削除済み）は完全削除
+            if (!confirm("この商品をリストから完全に削除しますか？")) return;
+            setItems((prev) => prev.filter((item) => item.id !== id));
         }
         setSavedInventory(false);
     };
@@ -226,6 +227,7 @@ export function AdminPanel({
                                                 key={item.id}
                                                 item={item}
                                                 shipTypes={SHIP_TYPES}
+                                                inMicrocms={!!productMap[item.id]}
                                                 onUpdate={updateItem}
                                                 onDelete={deleteItem}
                                             />
@@ -337,11 +339,13 @@ export function AdminPanel({
 function SortableRow({
     item,
     shipTypes,
+    inMicrocms,
     onUpdate,
     onDelete,
 }: {
     item: InventoryItem;
     shipTypes: { value: string; label: string }[];
+    inMicrocms: boolean;
     onUpdate: <K extends keyof InventoryItem>(id: string, field: K, value: InventoryItem[K]) => void;
     onDelete: (id: string) => void;
 }) {
@@ -416,10 +420,10 @@ function SortableRow({
                         className={`p-1.5 rounded transition-colors ${item.hidden ? "text-primary hover:text-primary/70" : "text-stone-300 hover:text-stone-600"}`}>
                         {item.hidden ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
-                    {/* 削除（手動追加商品のみ完全削除、それ以外は非表示） */}
+                    {/* 削除（MicroCMSにない商品は完全削除、それ以外は非表示） */}
                     <button
                         onClick={() => onDelete(item.id)}
-                        title={item.id.startsWith("custom-") ? "削除" : "非表示にする"}
+                        title={inMicrocms ? "非表示にする" : "削除"}
                         className="p-1.5 text-stone-300 hover:text-red-500 rounded transition-colors">
                         <Trash2 className="w-4 h-4" />
                     </button>
