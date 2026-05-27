@@ -22,28 +22,42 @@ function getSheets() {
     return google.sheets({ version: "v4", auth: authClient });
 }
 
-async function getInventory() {
+async function getInventory(): Promise<{ items: ReturnType<typeof mapRow>[]; deletedIds: string[] }> {
     try {
         const sheets = getSheets();
-        const res = await sheets.spreadsheets.values.get({
-            spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-            range: "商品在庫!A:I",
-        });
-        const rows = res.data.values ?? [];
-        return rows.slice(1)
-            .filter((r) => r[0] && r[6] !== "1") // deleted=1 の旧データを除外
-            .map((r) => ({
-                id: r[0] ?? "",
-                name: r[1] ?? "",
-                stock: r[2] !== undefined && r[2] !== "" ? parseInt(r[2], 10) : -1,
-                price: r[3] !== undefined && r[3] !== "" ? parseInt(r[3], 10) : null,
-                shipType: r[4] ?? "",
-                hidden: r[5] === "1",
-                deleted: false,
-                nextShipment: r[7] ?? "",
-                badges: r[8] ? r[8].split(",").map((b: string) => b.trim()).filter(Boolean) : [],
-            }));
-    } catch { return []; }
+        const [dataRes, deletedRes] = await Promise.all([
+            sheets.spreadsheets.values.get({
+                spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
+                range: "商品在庫!A:I",
+            }),
+            sheets.spreadsheets.values.get({
+                spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
+                range: "商品在庫!K1",
+            }),
+        ]);
+        const rows = dataRes.data.values ?? [];
+        const items = rows.slice(1)
+            .filter((r) => r[0])
+            .map(mapRow);
+        const deletedIds: string[] = deletedRes.data.values?.[0]?.[0]
+            ? deletedRes.data.values[0][0].split(",").map((s: string) => s.trim()).filter(Boolean)
+            : [];
+        return { items, deletedIds };
+    } catch { return { items: [], deletedIds: [] }; }
+}
+
+function mapRow(r: string[]) {
+    return {
+        id: r[0] ?? "",
+        name: r[1] ?? "",
+        stock: r[2] !== undefined && r[2] !== "" ? parseInt(r[2], 10) : -1,
+        price: r[3] !== undefined && r[3] !== "" ? parseInt(r[3], 10) : null,
+        shipType: r[4] ?? "",
+        hidden: r[5] === "1",
+        deleted: r[6] === "1",
+        nextShipment: r[7] ?? "",
+        badges: r[8] ? r[8].split(",").map((b: string) => b.trim()).filter(Boolean) : [],
+    };
 }
 
 function toInt(v: string | undefined) {
@@ -86,7 +100,7 @@ export default async function AdminPage() {
     const session = await auth();
     if (!session?.user || !isAdmin(session.user.email)) redirect("/");
 
-    const [products, inventory, shipping] = await Promise.all([
+    const [products, { items: inventory, deletedIds }, shipping] = await Promise.all([
         getProducts(), getInventory(), getShipping()
     ]);
 
@@ -100,6 +114,7 @@ export default async function AdminPage() {
                     <AdminPanel
                         products={products}
                         initialInventory={inventory}
+                        initialDeletedIds={deletedIds}
                         initialShipping={shipping}
                     />
                 </div>
