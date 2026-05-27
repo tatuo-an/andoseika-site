@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Loader2, Plus, Trash2 } from "lucide-react";
+import { Check, Loader2, Plus, Trash2, ChevronUp, ChevronDown } from "lucide-react";
 import { Product } from "@/types/microcms";
 
 type InventoryItem = {
@@ -81,6 +81,17 @@ export function AdminPanel({
         setSavedInventory(false);
     };
 
+    const moveItem = (index: number, direction: "up" | "down") => {
+        setItems((prev) => {
+            const next = [...prev];
+            const target = direction === "up" ? index - 1 : index + 1;
+            if (target < 0 || target >= next.length) return prev;
+            [next[index], next[target]] = [next[target], next[index]];
+            return next;
+        });
+        setSavedInventory(false);
+    };
+
     const saveInventory = async () => {
         setSavingInventory(true);
         try {
@@ -130,6 +141,7 @@ export function AdminPanel({
                         <table className="w-full">
                             <thead className="bg-stone-100 text-stone-600 text-xs">
                                 <tr>
+                                    <th className="w-10"></th>
                                     <th className="text-left px-4 py-3">商品名</th>
                                     <th className="text-center px-4 py-3 w-28">在庫数<br /><span className="font-normal text-stone-400">-1=管理なし</span></th>
                                     <th className="text-center px-4 py-3 w-32">販売価格<br /><span className="font-normal text-stone-400">空欄=デフォルト</span></th>
@@ -138,10 +150,22 @@ export function AdminPanel({
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-stone-100">
-                                {items.map((item) => {
+                                {items.map((item, index) => {
                                     const isSoldOut = item.stock !== -1 && item.stock === 0;
                                     return (
                                         <tr key={item.id} className="hover:bg-stone-50">
+                                            <td className="px-1 py-3 text-center">
+                                                <div className="flex flex-col items-center gap-0.5">
+                                                    <button onClick={() => moveItem(index, "up")} disabled={index === 0}
+                                                        className="p-0.5 text-stone-300 hover:text-stone-600 disabled:opacity-20 transition-colors">
+                                                        <ChevronUp className="w-4 h-4" />
+                                                    </button>
+                                                    <button onClick={() => moveItem(index, "down")} disabled={index === items.length - 1}
+                                                        className="p-0.5 text-stone-300 hover:text-stone-600 disabled:opacity-20 transition-colors">
+                                                        <ChevronDown className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            </td>
                                             <td className="px-4 py-3">
                                                 <input
                                                     value={item.name}
