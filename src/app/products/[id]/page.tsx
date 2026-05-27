@@ -30,7 +30,7 @@ async function getInventoryRow(id: string): Promise<{ stock: number; hidden: boo
         });
         const rows = res.data.values ?? [];
         const row = rows.slice(1).find((r) => r[0] === id);
-        if (!row) return { stock: -1, hidden: false, deleted: false, nextShipment: "", badges: [] };
+        if (!row) return { stock: -1, hidden: true, deleted: false, nextShipment: "", badges: [] };
         return {
             stock: row[2] !== undefined && row[2] !== "" ? parseInt(row[2], 10) : -1,
             hidden: row[5] === "1",

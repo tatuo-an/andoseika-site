@@ -30,17 +30,19 @@ async function getInventory() {
             range: "商品在庫!A:I",
         });
         const rows = res.data.values ?? [];
-        return rows.slice(1).map((r) => ({
-            id: r[0] ?? "",
-            name: r[1] ?? "",
-            stock: r[2] !== undefined && r[2] !== "" ? parseInt(r[2], 10) : -1,
-            price: r[3] !== undefined && r[3] !== "" ? parseInt(r[3], 10) : null,
-            shipType: r[4] ?? "",
-            hidden: r[5] === "1",
-            deleted: r[6] === "1",
-            nextShipment: r[7] ?? "",
-            badges: r[8] ? r[8].split(",").map((b: string) => b.trim()).filter(Boolean) : [],
-        }));
+        return rows.slice(1)
+            .filter((r) => r[0] && r[6] !== "1") // deleted=1 の旧データを除外
+            .map((r) => ({
+                id: r[0] ?? "",
+                name: r[1] ?? "",
+                stock: r[2] !== undefined && r[2] !== "" ? parseInt(r[2], 10) : -1,
+                price: r[3] !== undefined && r[3] !== "" ? parseInt(r[3], 10) : null,
+                shipType: r[4] ?? "",
+                hidden: r[5] === "1",
+                deleted: false,
+                nextShipment: r[7] ?? "",
+                badges: r[8] ? r[8].split(",").map((b: string) => b.trim()).filter(Boolean) : [],
+            }));
     } catch { return []; }
 }
 

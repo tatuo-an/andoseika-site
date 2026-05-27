@@ -83,20 +83,21 @@ export function AdminPanel({
     const productMap = Object.fromEntries(products.map((p) => [p.id, p]));
     const inventoryIds = new Set(initialInventory.map((i) => i.id));
 
-    // items = シート全件（deleted含む） + シートにない新規MicroCMS商品
-    // deleted=true の行は表示しないがシートに保存して復活を防ぐ
+    // items = シート全件（deleted=1 除く） + シートにない新規MicroCMS商品
     const [items, setItems] = useState<InventoryItem[]>([
-        ...initialInventory.map((inv) => ({
-            id: inv.id,
-            name: inv.name || productMap[inv.id]?.name || inv.id,
-            stock: inv.stock,
-            price: inv.price,
-            shipType: inv.shipType,
-            hidden: inv.hidden,
-            deleted: inv.deleted,
-            nextShipment: inv.nextShipment ?? "",
-            badges: inv.badges ?? [],
-        })),
+        ...initialInventory
+            .filter((inv) => !inv.deleted)
+            .map((inv) => ({
+                id: inv.id,
+                name: inv.name || productMap[inv.id]?.name || inv.id,
+                stock: inv.stock,
+                price: inv.price,
+                shipType: inv.shipType,
+                hidden: inv.hidden,
+                deleted: false,
+                nextShipment: inv.nextShipment ?? "",
+                badges: inv.badges ?? [],
+            })),
         ...products
             .filter((p) => !inventoryIds.has(p.id))
             .map((p) => ({
@@ -112,8 +113,7 @@ export function AdminPanel({
             })),
     ]);
 
-    // 削除済みを除いた表示用リスト
-    const visibleItems = items.filter((i) => !i.deleted);
+    const visibleItems = items;
 
     const [savingInventory, setSavingInventory] = useState(false);
     const [savedInventory, setSavedInventory] = useState(false);
@@ -151,8 +151,7 @@ export function AdminPanel({
 
     const deleteItem = (id: string) => {
         if (!confirm("この商品を削除しますか？")) return;
-        // deleted=true にしてシートに残す（そうしないと再読み込みで復活する）
-        setItems((prev) => prev.map((item) => item.id === id ? { ...item, deleted: true } : item));
+        setItems((prev) => prev.filter((item) => item.id !== id));
         setSavedInventory(false);
     };
 
@@ -193,7 +192,7 @@ export function AdminPanel({
             const res = await fetch("/api/inventory", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ items }), // deleted 含む全件を保存
+                body: JSON.stringify({ items }),
             });
             if (!res.ok) {
                 const body = await res.json().catch(() => ({}));
