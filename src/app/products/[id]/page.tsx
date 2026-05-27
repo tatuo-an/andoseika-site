@@ -25,7 +25,7 @@ async function getInventoryRow(id: string): Promise<{ stock: number; hidden: boo
         const sheets = google.sheets({ version: "v4", auth: authClient });
         const res = await sheets.spreadsheets.values.get({
             spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-            range: "商品在庫!A:C",
+            range: "商品在庫!A:G",
         });
         const rows = res.data.values ?? [];
         const row = rows.slice(1).find((r) => r[0] === id);
