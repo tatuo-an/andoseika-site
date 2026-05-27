@@ -115,14 +115,11 @@ export function AdminPanel({
 
     const deleteItem = (id: string) => {
         const existsInMicrocms = !!productMap[id];
-        if (existsInMicrocms) {
-            // MicroCMS に存在する商品は消しても再読み込みで復活するため非表示にする
-            setItems((prev) => prev.map((item) => item.id === id ? { ...item, hidden: true } : item));
-        } else {
-            // MicroCMS にない商品（手動追加・MicroCMS削除済み）は完全削除
-            if (!confirm("この商品をリストから完全に削除しますか？")) return;
-            setItems((prev) => prev.filter((item) => item.id !== id));
-        }
+        const msg = existsInMicrocms
+            ? "この商品をリストから削除しますか？\n※ページを再読み込みすると復活します。サイトから消したい場合は「👁 非表示」を使ってください。"
+            : "この商品を削除しますか？";
+        if (!confirm(msg)) return;
+        setItems((prev) => prev.filter((item) => item.id !== id));
         setSavedInventory(false);
     };
 
@@ -420,10 +417,10 @@ function SortableRow({
                         className={`p-1.5 rounded transition-colors ${item.hidden ? "text-primary hover:text-primary/70" : "text-stone-300 hover:text-stone-600"}`}>
                         {item.hidden ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
-                    {/* 削除（MicroCMSにない商品は完全削除、それ以外は非表示） */}
+                    {/* 削除 */}
                     <button
                         onClick={() => onDelete(item.id)}
-                        title={inMicrocms ? "非表示にする" : "削除"}
+                        title="リストから削除"
                         className="p-1.5 text-stone-300 hover:text-red-500 rounded transition-colors">
                         <Trash2 className="w-4 h-4" />
                     </button>
