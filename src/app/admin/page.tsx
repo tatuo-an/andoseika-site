@@ -44,14 +44,15 @@ async function getShipping() {
         const sheets = getSheets();
         const res = await sheets.spreadsheets.values.get({
             spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-            range: "送料マスタ!A:D",
+            range: "送料マスタ!A:E",
         });
         const rows = res.data.values ?? [];
         return rows.slice(1).map((r) => ({
             region: r[0] ?? "",
             prefectures: r[1] ?? "",
-            normalFee: r[2] !== undefined && r[2] !== "" ? parseInt(r[2], 10) : 0,
-            coolFee: r[3] !== undefined && r[3] !== "" ? parseInt(r[3], 10) : 0,
+            takkyubinFee: r[2] !== undefined && r[2] !== "" ? parseInt(r[2], 10) : 0,
+            compactFee: r[3] !== undefined && r[3] !== "" ? parseInt(r[3], 10) : 0,
+            clickpostFee: r[4] !== undefined && r[4] !== "" ? parseInt(r[4], 10) : 0,
         }));
     } catch { return []; }
 }

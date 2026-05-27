@@ -14,21 +14,22 @@ type InventoryItem = {
 type ShippingItem = {
     region: string;
     prefectures: string;
-    normalFee: number;
-    coolFee: number;
+    takkyubinFee: number;
+    compactFee: number;
+    clickpostFee: number;
 };
 
 const DEFAULT_SHIPPING: ShippingItem[] = [
-    { region: "北海道", prefectures: "北海道", normalFee: 1500, coolFee: 1800 },
-    { region: "東北", prefectures: "青森県,岩手県,宮城県,秋田県,山形県,福島県", normalFee: 1200, coolFee: 1500 },
-    { region: "関東", prefectures: "茨城県,栃木県,群馬県,埼玉県,千葉県,東京都,神奈川県,山梨県", normalFee: 1100, coolFee: 1400 },
-    { region: "信越・北陸", prefectures: "新潟県,富山県,石川県,福井県,長野県", normalFee: 1100, coolFee: 1400 },
-    { region: "東海", prefectures: "岐阜県,静岡県,愛知県,三重県", normalFee: 1100, coolFee: 1400 },
-    { region: "近畿", prefectures: "滋賀県,京都府,大阪府,兵庫県,奈良県,和歌山県", normalFee: 1000, coolFee: 1300 },
-    { region: "中国", prefectures: "鳥取県,島根県,岡山県,広島県,山口県", normalFee: 900, coolFee: 1200 },
-    { region: "四国", prefectures: "徳島県,香川県,愛媛県,高知県", normalFee: 1000, coolFee: 1300 },
-    { region: "九州", prefectures: "福岡県,佐賀県,長崎県,熊本県,大分県,宮崎県,鹿児島県", normalFee: 1200, coolFee: 1500 },
-    { region: "沖縄", prefectures: "沖縄県", normalFee: 1800, coolFee: 2100 },
+    { region: "北海道", prefectures: "北海道", takkyubinFee: 1500, compactFee: 1100, clickpostFee: 185 },
+    { region: "東北", prefectures: "青森県,岩手県,宮城県,秋田県,山形県,福島県", takkyubinFee: 1200, compactFee: 880, clickpostFee: 185 },
+    { region: "関東", prefectures: "茨城県,栃木県,群馬県,埼玉県,千葉県,東京都,神奈川県,山梨県", takkyubinFee: 1100, compactFee: 880, clickpostFee: 185 },
+    { region: "信越・北陸", prefectures: "新潟県,富山県,石川県,福井県,長野県", takkyubinFee: 1100, compactFee: 880, clickpostFee: 185 },
+    { region: "東海", prefectures: "岐阜県,静岡県,愛知県,三重県", takkyubinFee: 1100, compactFee: 880, clickpostFee: 185 },
+    { region: "近畿", prefectures: "滋賀県,京都府,大阪府,兵庫県,奈良県,和歌山県", takkyubinFee: 1000, compactFee: 880, clickpostFee: 185 },
+    { region: "中国", prefectures: "鳥取県,島根県,岡山県,広島県,山口県", takkyubinFee: 900, compactFee: 770, clickpostFee: 185 },
+    { region: "四国", prefectures: "徳島県,香川県,愛媛県,高知県", takkyubinFee: 1000, compactFee: 880, clickpostFee: 185 },
+    { region: "九州", prefectures: "福岡県,佐賀県,長崎県,熊本県,大分県,宮崎県,鹿児島県", takkyubinFee: 1200, compactFee: 880, clickpostFee: 185 },
+    { region: "沖縄", prefectures: "沖縄県", takkyubinFee: 1800, compactFee: 1100, clickpostFee: 185 },
 ];
 
 export function AdminPanel({
@@ -88,7 +89,7 @@ export function AdminPanel({
     };
 
     const addShippingRow = () => {
-        setShipping((prev) => [...prev, { region: "", prefectures: "", normalFee: 0, coolFee: 0 }]);
+        setShipping((prev) => [...prev, { region: "", prefectures: "", takkyubinFee: 0, compactFee: 0, clickpostFee: 0 }]);
     };
 
     const removeShippingRow = (index: number) => {
@@ -110,6 +111,19 @@ export function AdminPanel({
             setSavingShipping(false);
         }
     };
+
+    const feeInput = (value: number, onChange: (v: number) => void) => (
+        <div className="flex items-center justify-center gap-1">
+            <span className="text-stone-400 text-xs">¥</span>
+            <input
+                type="number"
+                min={0}
+                value={value}
+                onChange={(e) => onChange(parseInt(e.target.value, 10) || 0)}
+                className="w-18 text-center border border-stone-200 rounded-lg px-1.5 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+            />
+        </div>
+    );
 
     return (
         <div>
@@ -200,14 +214,15 @@ export function AdminPanel({
             {tab === "shipping" && (
                 <div>
                     <p className="text-sm text-stone-500 mb-4">都道府県はカンマ区切りで入力してください。例：鳥取県,島根県,岡山県</p>
-                    <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-4">
-                        <table className="w-full">
+                    <div className="bg-white rounded-2xl shadow-sm overflow-x-auto mb-4">
+                        <table className="w-full min-w-[700px]">
                             <thead className="bg-stone-100 text-stone-600 text-xs">
                                 <tr>
                                     <th className="text-left px-4 py-3 w-24">地域名</th>
                                     <th className="text-left px-4 py-3">都道府県</th>
-                                    <th className="text-center px-4 py-3 w-28">通常送料</th>
-                                    <th className="text-center px-4 py-3 w-28">クール便</th>
+                                    <th className="text-center px-3 py-3 w-28">宅配便</th>
+                                    <th className="text-center px-3 py-3 w-28">宅配便<br />コンパクト</th>
+                                    <th className="text-center px-3 py-3 w-28">クリック<br />ポスト</th>
                                     <th className="w-10"></th>
                                 </tr>
                             </thead>
@@ -228,29 +243,14 @@ export function AdminPanel({
                                                 className="w-full border border-stone-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
                                             />
                                         </td>
-                                        <td className="px-4 py-2 text-center">
-                                            <div className="flex items-center justify-center gap-1">
-                                                <span className="text-stone-400 text-sm">¥</span>
-                                                <input
-                                                    type="number"
-                                                    min={0}
-                                                    value={row.normalFee}
-                                                    onChange={(e) => updateShipping(index, "normalFee", parseInt(e.target.value, 10) || 0)}
-                                                    className="w-20 text-center border border-stone-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
-                                                />
-                                            </div>
+                                        <td className="px-3 py-2">
+                                            {feeInput(row.takkyubinFee, (v) => updateShipping(index, "takkyubinFee", v))}
                                         </td>
-                                        <td className="px-4 py-2 text-center">
-                                            <div className="flex items-center justify-center gap-1">
-                                                <span className="text-stone-400 text-sm">¥</span>
-                                                <input
-                                                    type="number"
-                                                    min={0}
-                                                    value={row.coolFee}
-                                                    onChange={(e) => updateShipping(index, "coolFee", parseInt(e.target.value, 10) || 0)}
-                                                    className="w-20 text-center border border-stone-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
-                                                />
-                                            </div>
+                                        <td className="px-3 py-2">
+                                            {feeInput(row.compactFee, (v) => updateShipping(index, "compactFee", v))}
+                                        </td>
+                                        <td className="px-3 py-2">
+                                            {feeInput(row.clickpostFee, (v) => updateShipping(index, "clickpostFee", v))}
                                         </td>
                                         <td className="px-2 py-2 text-center">
                                             <button
