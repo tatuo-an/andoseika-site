@@ -535,15 +535,7 @@ function SortableRow({
                     />
                 </div>
                 {/* ファミリー */}
-                <div className="flex items-center gap-1">
-                    <span className="text-xs text-stone-400 whitespace-nowrap">ファミリー</span>
-                    <input
-                        value={item.family ?? ""}
-                        onChange={(e) => onUpdate(item.id, "family", e.target.value)}
-                        placeholder="例: ながいも"
-                        className="w-24 border border-stone-200 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-primary/30"
-                    />
-                </div>
+                <FamilyInput value={item.family ?? ""} onCommit={(v) => onUpdate(item.id, "family", v)} />
                 {/* バッジ */}
                 <BadgeSelector
                     badges={item.badges}
@@ -552,6 +544,27 @@ function SortableRow({
                     onAddBadge={onAddBadge}
                 />
             </div>
+        </div>
+    );
+}
+
+// ── ファミリー入力（再マウント防止のため内部stateで管理）────────────
+function FamilyInput({ value, onCommit }: { value: string; onCommit: (v: string) => void }) {
+    const [local, setLocal] = useState(value);
+    // 外部から value が変わった場合（保存後など）に同期
+    const prev = useRef(value);
+    if (prev.current !== value) { prev.current = value; setLocal(value); }
+    return (
+        <div className="flex items-center gap-1">
+            <span className="text-xs text-stone-400 whitespace-nowrap">ファミリー</span>
+            <input
+                value={local}
+                onChange={(e) => setLocal(e.target.value)}
+                onBlur={() => onCommit(local)}
+                onKeyDown={(e) => e.key === "Enter" && onCommit(local)}
+                placeholder="例: ながいも"
+                className="w-24 border border-stone-200 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-primary/30"
+            />
         </div>
     );
 }
