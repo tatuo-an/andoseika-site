@@ -85,13 +85,11 @@ export default async function ProductsPage() {
     );
   }
 
-  // シートの順番で並べ替え、シートにない商品は末尾に追加。非表示を除外
+  // シートの順番で並べ替え。シートにない商品は表示しない。非表示を除外
   const productMap = Object.fromEntries(products.map((p) => [p.id, p]));
-  const orderedIds = new Set(inventoryOrder);
-  const sortedProducts = [
-    ...inventoryOrder.map((id) => productMap[id]).filter(Boolean),
-    ...products.filter((p) => !orderedIds.has(p.id)),
-  ].filter((p) => !inventoryMap[p.id]?.hidden) as Product[];
+  const sortedProducts = inventoryOrder
+    .map((id) => productMap[id])
+    .filter((p): p is Product => !!p && !inventoryMap[p.id]?.hidden);
 
   // Group products by category
   const rootProducts = sortedProducts.filter(p => p.category === "root");
