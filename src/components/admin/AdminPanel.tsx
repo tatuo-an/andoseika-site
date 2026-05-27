@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Loader2, Plus, Trash2, GripVertical, Eye, EyeOff } from "lucide-react";
+import { Check, Loader2, Plus, Trash2, GripVertical, Eye, EyeOff, Copy } from "lucide-react";
 import { Product } from "@/types/microcms";
 import {
     DndContext,
@@ -121,6 +121,24 @@ export function AdminPanel({
         setSavedInventory(false);
     };
 
+    const copyItem = (id: string) => {
+        const src = items.find((i) => i.id === id);
+        if (!src) return;
+        const newItem: InventoryItem = {
+            ...src,
+            id: `custom-${Date.now()}`,
+            name: `${src.name} (コピー)`,
+            deleted: false,
+        };
+        setItems((prev) => {
+            const idx = prev.findIndex((i) => i.id === id);
+            const next = [...prev];
+            next.splice(idx + 1, 0, newItem);
+            return next;
+        });
+        setSavedInventory(false);
+    };
+
     const deleteItem = (id: string) => {
         if (!confirm("この商品を削除しますか？")) return;
         // deleted=true にしてシートに残す（そうしないと再読み込みで復活する）
@@ -233,6 +251,7 @@ export function AdminPanel({
                                                 item={item}
                                                 shipTypes={SHIP_TYPES}
                                                 onUpdate={updateItem}
+                                                onCopy={copyItem}
                                                 onDelete={deleteItem}
                                             />
                                         ))}
@@ -344,11 +363,13 @@ function SortableRow({
     item,
     shipTypes,
     onUpdate,
+    onCopy,
     onDelete,
 }: {
     item: InventoryItem;
     shipTypes: { value: string; label: string }[];
     onUpdate: <K extends keyof InventoryItem>(id: string, field: K, value: InventoryItem[K]) => void;
+    onCopy: (id: string) => void;
     onDelete: (id: string) => void;
 }) {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
@@ -428,6 +449,12 @@ function SortableRow({
                         title={item.hidden ? "サイトに表示する" : "サイトから非表示にする"}
                         className={`p-1.5 rounded transition-colors ${item.hidden ? "text-primary hover:text-primary/70" : "text-stone-300 hover:text-stone-600"}`}>
                         {item.hidden ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                    <button
+                        onClick={() => onCopy(item.id)}
+                        title="コピーして追加"
+                        className="p-1.5 text-stone-300 hover:text-blue-500 rounded transition-colors">
+                        <Copy className="w-4 h-4" />
                     </button>
                     <button
                         onClick={() => onDelete(item.id)}
