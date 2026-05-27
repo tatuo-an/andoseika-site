@@ -124,6 +124,16 @@ export function AdminPanel({
         setSavedInventory(false);
     };
 
+    // ファミリー全体を一括非表示/表示切り替え
+    const toggleFamilyHidden = (family: string) => {
+        const familyItems = items.filter((i) => i.family?.trim() === family);
+        const allHidden = familyItems.every((i) => i.hidden);
+        setItems((prev) => prev.map((item) =>
+            item.family?.trim() === family ? { ...item, hidden: !allHidden } : item
+        ));
+        setSavedInventory(false);
+    };
+
     // ファミリーにバリエーションを追加
     const addVariantToFamily = (family: string) => {
         const newId = `custom-${Date.now()}`;
@@ -327,25 +337,37 @@ export function AdminPanel({
                                             rendered.push(
                                                 <div key={`fam-${fam}`} className="bg-white rounded-2xl shadow-sm mb-2 overflow-hidden">
                                                     {/* ── ヘッダー ── */}
-                                                    <div className="flex items-center gap-2 px-4 py-2.5 bg-stone-50 border-b border-stone-100">
-                                                        <button onClick={() => toggleFamily(fam)} className="flex-shrink-0 p-0.5 text-stone-400 hover:text-stone-600">
-                                                            {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                                                        </button>
-                                                        <FamilyNameInput
-                                                            value={fam}
-                                                            onCommit={(newName) => renameFamily(fam, newName)}
-                                                        />
-                                                        <span className="text-xs text-stone-400 whitespace-nowrap">{familyItems.length}バリエーション</span>
-                                                        {!collapsed && (
-                                                            <button
-                                                                onClick={() => addVariantToFamily(fam)}
-                                                                className="ml-auto flex items-center gap-1 text-xs text-stone-500 hover:text-primary border border-stone-200 hover:border-primary/50 px-2.5 py-1 rounded-full transition-colors whitespace-nowrap"
-                                                            >
-                                                                <Plus className="w-3 h-3" />
-                                                                バリエーションを追加
-                                                            </button>
-                                                        )}
-                                                    </div>
+                                                    {(() => {
+                                                        const allHidden = familyItems.every((i) => i.hidden);
+                                                        return (
+                                                            <div className={`flex items-center gap-2 px-4 py-2.5 border-b border-stone-100 ${allHidden ? "bg-stone-100 opacity-60" : "bg-stone-50"}`}>
+                                                                <button onClick={() => toggleFamily(fam)} className="flex-shrink-0 p-0.5 text-stone-400 hover:text-stone-600">
+                                                                    {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                                                                </button>
+                                                                <FamilyNameInput
+                                                                    value={fam}
+                                                                    onCommit={(newName) => renameFamily(fam, newName)}
+                                                                />
+                                                                <span className="text-xs text-stone-400 whitespace-nowrap">{familyItems.length}バリエーション</span>
+                                                                <button
+                                                                    onClick={() => toggleFamilyHidden(fam)}
+                                                                    title={allHidden ? "全て表示する" : "全て非表示にする"}
+                                                                    className={`p-1.5 rounded transition-colors flex-shrink-0 ${allHidden ? "text-primary" : "text-stone-300 hover:text-stone-600"}`}
+                                                                >
+                                                                    {allHidden ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                                                </button>
+                                                                {!collapsed && (
+                                                                    <button
+                                                                        onClick={() => addVariantToFamily(fam)}
+                                                                        className="ml-auto flex items-center gap-1 text-xs text-stone-500 hover:text-primary border border-stone-200 hover:border-primary/50 px-2.5 py-1 rounded-full transition-colors whitespace-nowrap"
+                                                                    >
+                                                                        <Plus className="w-3 h-3" />
+                                                                        バリエーションを追加
+                                                                    </button>
+                                                                )}
+                                                            </div>
+                                                        );
+                                                    })()}
                                                     {!collapsed && (
                                                         <div className="divide-y divide-stone-100">
                                                             {familyItems.map((fi) => (
@@ -700,21 +722,28 @@ function BadgeSelector({
     return (
         <div className="relative">
             {/* 選択済みバッジ表示 & 開閉ボタン */}
-            <div ref={triggerRef} className="flex flex-wrap gap-1 cursor-pointer" onClick={handleOpen}>
+            <div ref={triggerRef} className="flex flex-wrap gap-1 items-center">
                 {badges.length === 0 ? (
-                    <span className="text-xs text-stone-300 border border-dashed border-stone-200 px-2 py-0.5 rounded-full">＋ バッジ</span>
+                    <span className="text-xs text-stone-300 border border-dashed border-stone-200 px-2 py-0.5 rounded-full cursor-pointer" onClick={handleOpen}>＋ バッジ</span>
                 ) : (
-                    badges.map((b) => (
-                        <span key={b} className={`text-xs px-2 py-0.5 rounded-full border ${BADGE_COLORS[b] ?? DEFAULT_BADGE_COLOR}`}>
-                            {b}
-                        </span>
-                    ))
+                    <>
+                        {badges.map((b) => (
+                            <span key={b} className={`inline-flex items-center gap-0.5 text-xs px-2 py-0.5 rounded-full border ${BADGE_COLORS[b] ?? DEFAULT_BADGE_COLOR}`}>
+                                {b}
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); onChange(badges.filter(x => x !== b)); }}
+                                    className="ml-0.5 opacity-60 hover:opacity-100 leading-none"
+                                >×</button>
+                            </span>
+                        ))}
+                        <span className="text-xs text-stone-300 border border-dashed border-stone-200 px-2 py-0.5 rounded-full cursor-pointer" onClick={handleOpen}>＋</span>
+                    </>
                 )}
             </div>
 
             {/* ドロップダウン */}
             {open && (
-                <div className={`absolute z-50 left-0 bg-white border border-stone-200 rounded-xl shadow-xl p-3 w-72 ${openUp ? "bottom-8" : "top-8"}`}>
+                <div className={`absolute z-[200] left-0 bg-white border border-stone-200 rounded-xl shadow-xl p-3 w-72 ${openUp ? "bottom-8" : "top-8"}`}>
                     <p className="text-xs text-stone-400 mb-2 font-bold">バッジを選択（複数可）</p>
                     <div className="flex flex-wrap gap-1.5 mb-3">
                         {allBadges.map((badge) => (
