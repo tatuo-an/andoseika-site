@@ -241,7 +241,7 @@ export function AdminPanel({
             {/* 商品・在庫タブ */}
             {tab === "inventory" && (
                 <div>
-                    <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-4 divide-y divide-stone-100">
+                    <div className="bg-white rounded-2xl shadow-sm mb-4 divide-y divide-stone-100">
                         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                             <SortableContext items={visibleItems.map((i) => i.id)} strategy={verticalListSortingStrategy}>
                                 {visibleItems.map((item) => {
