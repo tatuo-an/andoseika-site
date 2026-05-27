@@ -163,6 +163,15 @@ export function AdminPanel({
         }
     };
 
+    const removeExtraBadge = (badge: string) => {
+        setExtraBadges((prev) => prev.filter((b) => b !== badge));
+        // そのバッジを使っている全商品からも除去
+        setItems((prev) => prev.map((item) =>
+            item.badges.includes(badge) ? { ...item, badges: item.badges.filter((b) => b !== badge) } : item
+        ));
+        setSavedInventory(false);
+    };
+
     const [savingInventory, setSavingInventory] = useState(false);
     const [savedInventory, setSavedInventory] = useState(false);
     const [inventoryError, setInventoryError] = useState("");
@@ -377,6 +386,7 @@ export function AdminPanel({
                                                                     shipTypes={SHIP_TYPES}
                                                                     allBadges={allBadges}
                                                                     onAddBadge={addExtraBadge}
+                                                                    onRemoveBadge={removeExtraBadge}
                                                                     onUpdate={updateItem}
                                                                     onCopy={copyItem}
                                                                     onDelete={deleteItem}
@@ -395,6 +405,7 @@ export function AdminPanel({
                                                     shipTypes={SHIP_TYPES}
                                                     allBadges={allBadges}
                                                     onAddBadge={addExtraBadge}
+                                                    onRemoveBadge={removeExtraBadge}
                                                     onUpdate={updateItem}
                                                     onCopy={copyItem}
                                                     onDelete={deleteItem}
@@ -516,6 +527,7 @@ function SortableRow({
     shipTypes,
     allBadges,
     onAddBadge,
+    onRemoveBadge,
     onUpdate,
     onCopy,
     onDelete,
@@ -524,6 +536,7 @@ function SortableRow({
     shipTypes: { value: string; label: string }[];
     allBadges: string[];
     onAddBadge: (badge: string) => void;
+    onRemoveBadge: (badge: string) => void;
     onUpdate: <K extends keyof InventoryItem>(id: string, field: K, value: InventoryItem[K]) => void;
     onCopy: (id: string) => void;
     onDelete: (id: string) => void;
@@ -619,6 +632,7 @@ function SortableRow({
                     allBadges={allBadges}
                     onChange={(b) => onUpdate(item.id, "badges", b)}
                     onAddBadge={onAddBadge}
+                    onRemoveBadge={onRemoveBadge}
                 />
             </div>
         </div>
@@ -687,11 +701,13 @@ function BadgeSelector({
     allBadges,
     onChange,
     onAddBadge,
+    onRemoveBadge,
 }: {
     badges: string[];
     allBadges: string[];
     onChange: (badges: string[]) => void;
     onAddBadge: (badge: string) => void;
+    onRemoveBadge: (badge: string) => void;
 }) {
     const [open, setOpen] = useState(false);
     const [custom, setCustom] = useState("");
@@ -746,19 +762,35 @@ function BadgeSelector({
                 <div className={`absolute z-[200] left-0 bg-white border border-stone-200 rounded-xl shadow-xl p-3 w-72 ${openUp ? "bottom-8" : "top-8"}`}>
                     <p className="text-xs text-stone-400 mb-2 font-bold">バッジを選択（複数可）</p>
                     <div className="flex flex-wrap gap-1.5 mb-3">
-                        {allBadges.map((badge) => (
-                            <button
-                                key={badge}
-                                onClick={() => toggle(badge)}
-                                className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
-                                    badges.includes(badge)
-                                        ? (BADGE_COLORS[badge] ?? DEFAULT_BADGE_COLOR) + " font-bold"
-                                        : "border-stone-200 text-stone-500 hover:bg-stone-50"
-                                }`}
-                            >
-                                {badges.includes(badge) ? "✓ " : ""}{badge}
-                            </button>
-                        ))}
+                        {allBadges.map((badge) => {
+                            const isPreset = PRESET_BADGES.includes(badge);
+                            const isSelected = badges.includes(badge);
+                            return (
+                                <span key={badge} className="inline-flex items-center">
+                                    <button
+                                        onClick={() => toggle(badge)}
+                                        className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${isPreset ? "" : "rounded-r-none border-r-0"} ${
+                                            isSelected
+                                                ? (BADGE_COLORS[badge] ?? DEFAULT_BADGE_COLOR) + " font-bold"
+                                                : "border-stone-200 text-stone-500 hover:bg-stone-50"
+                                        }`}
+                                    >
+                                        {isSelected ? "✓ " : ""}{badge}
+                                    </button>
+                                    {!isPreset && (
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); onRemoveBadge(badge); }}
+                                            title="バッジを削除"
+                                            className={`text-xs px-1.5 py-1 rounded-r-full border border-l-0 transition-colors ${
+                                                isSelected
+                                                    ? (BADGE_COLORS[badge] ?? DEFAULT_BADGE_COLOR) + " opacity-60 hover:opacity-100"
+                                                    : "border-stone-200 text-stone-400 hover:text-red-500 hover:bg-red-50"
+                                            }`}
+                                        >×</button>
+                                    )}
+                                </span>
+                            );
+                        })}
                     </div>
                     <div className="flex gap-1.5">
                         <input
