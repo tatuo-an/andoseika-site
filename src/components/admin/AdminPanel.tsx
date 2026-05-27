@@ -100,6 +100,20 @@ export function AdminPanel({
 
     const visibleItems = items;
 
+    // グローバルカスタムバッジ（プリセット以外で使われているバッジを全商品から収集）
+    const [extraBadges, setExtraBadges] = useState<string[]>(() =>
+        Array.from(new Set(
+            initialInventory.flatMap((i) => (i.badges ?? []).filter((b) => !PRESET_BADGES.includes(b)))
+        ))
+    );
+    const allBadges = Array.from(new Set([...PRESET_BADGES, ...extraBadges]));
+
+    const addExtraBadge = (badge: string) => {
+        if (!PRESET_BADGES.includes(badge) && !extraBadges.includes(badge)) {
+            setExtraBadges((prev) => [...prev, badge]);
+        }
+    };
+
     const [savingInventory, setSavingInventory] = useState(false);
     const [savedInventory, setSavedInventory] = useState(false);
     const [inventoryError, setInventoryError] = useState("");
@@ -244,23 +258,18 @@ export function AdminPanel({
                     <div className="bg-white rounded-2xl shadow-sm mb-4 divide-y divide-stone-100">
                         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                             <SortableContext items={visibleItems.map((i) => i.id)} strategy={verticalListSortingStrategy}>
-                                {visibleItems.map((item) => {
-                                    const allBadges = Array.from(new Set([
-                                        ...PRESET_BADGES,
-                                        ...items.flatMap((i) => i.badges),
-                                    ]));
-                                    return (
-                                        <SortableRow
-                                            key={item.id}
-                                            item={item}
-                                            shipTypes={SHIP_TYPES}
-                                            allBadges={allBadges}
-                                            onUpdate={updateItem}
-                                            onCopy={copyItem}
-                                            onDelete={deleteItem}
-                                        />
-                                    );
-                                })}
+                                {visibleItems.map((item) => (
+                                    <SortableRow
+                                        key={item.id}
+                                        item={item}
+                                        shipTypes={SHIP_TYPES}
+                                        allBadges={allBadges}
+                                        onAddBadge={addExtraBadge}
+                                        onUpdate={updateItem}
+                                        onCopy={copyItem}
+                                        onDelete={deleteItem}
+                                    />
+                                ))}
                             </SortableContext>
                         </DndContext>
                     </div>
@@ -367,6 +376,7 @@ function SortableRow({
     item,
     shipTypes,
     allBadges,
+    onAddBadge,
     onUpdate,
     onCopy,
     onDelete,
@@ -374,6 +384,7 @@ function SortableRow({
     item: InventoryItem;
     shipTypes: { value: string; label: string }[];
     allBadges: string[];
+    onAddBadge: (badge: string) => void;
     onUpdate: <K extends keyof InventoryItem>(id: string, field: K, value: InventoryItem[K]) => void;
     onCopy: (id: string) => void;
     onDelete: (id: string) => void;
@@ -472,6 +483,7 @@ function SortableRow({
                     badges={item.badges}
                     allBadges={allBadges}
                     onChange={(b) => onUpdate(item.id, "badges", b)}
+                    onAddBadge={onAddBadge}
                 />
             </div>
         </div>
@@ -483,10 +495,12 @@ function BadgeSelector({
     badges,
     allBadges,
     onChange,
+    onAddBadge,
 }: {
     badges: string[];
     allBadges: string[];
     onChange: (badges: string[]) => void;
+    onAddBadge: (badge: string) => void;
 }) {
     const [open, setOpen] = useState(false);
     const [custom, setCustom] = useState("");
@@ -499,8 +513,9 @@ function BadgeSelector({
 
     const addCustom = () => {
         const t = custom.trim();
-        if (!t || badges.includes(t)) { setCustom(""); return; }
-        onChange([...badges, t]);
+        if (!t) return;
+        onAddBadge(t); // グローバルリストに追加
+        if (!badges.includes(t)) onChange([...badges, t]);
         setCustom("");
     };
 
