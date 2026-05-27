@@ -527,7 +527,7 @@ function SortableRow({
             className={`px-3 py-3 ${item.hidden ? "opacity-50 bg-stone-50" : "hover:bg-stone-50/60"} ${isDragging ? "bg-primary/5 shadow-lg" : ""}`}>
 
             {/* 1行目: ドラッグ＋商品名＋ステータス＋操作ボタン */}
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center gap-2 mb-1.5">
                 <button
                     {...attributes}
                     {...listeners}
@@ -538,10 +538,39 @@ function SortableRow({
                 <input
                     value={item.name}
                     onChange={(e) => onUpdate(item.id, "name", e.target.value)}
-                    className="flex-1 min-w-0 border border-stone-200 rounded-lg px-3 py-1.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    className="w-48 min-w-0 border border-stone-200 rounded-lg px-2 py-1 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/30"
                 />
-                {statusLabel}
-                <div className="flex items-center gap-0.5 flex-shrink-0">
+                {/* 在庫数 */}
+                <div className="flex items-center gap-1">
+                    <span className="text-xs text-stone-400">在庫</span>
+                    <input type="number" min={-1} value={item.stock}
+                        onChange={(e) => { const v = parseInt(e.target.value, 10); onUpdate(item.id, "stock", isNaN(v) ? -1 : v); }}
+                        className="w-14 text-center border border-stone-200 rounded-lg px-1 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                </div>
+                {/* 価格 */}
+                <div className="flex items-center gap-1">
+                    <span className="text-xs text-stone-400">¥</span>
+                    <input type="number" min={0} value={item.price ?? ""} placeholder="−"
+                        onChange={(e) => onUpdate(item.id, "price", e.target.value ? parseInt(e.target.value, 10) : null)}
+                        className="w-24 text-center border border-stone-200 rounded-lg px-1 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                </div>
+                {/* 配送区分 */}
+                <select value={item.shipType}
+                    onChange={(e) => onUpdate(item.id, "shipType", e.target.value)}
+                    className="border border-stone-200 rounded-lg px-1.5 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30">
+                    {shipTypes.map((t) => (
+                        <option key={t.value} value={t.value}>{t.label}</option>
+                    ))}
+                </select>
+                {/* 次回出荷 */}
+                <input
+                    value={item.nextShipment}
+                    onChange={(e) => onUpdate(item.id, "nextShipment", e.target.value)}
+                    placeholder="次回入荷"
+                    className="w-20 border border-stone-200 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-primary/30"
+                />
+                <div className="ml-auto flex items-center gap-1 flex-shrink-0">
+                    {statusLabel}
                     <button onClick={() => onUpdate(item.id, "hidden", !item.hidden)}
                         title={item.hidden ? "表示する" : "非表示にする"}
                         className={`p-1.5 rounded transition-colors ${item.hidden ? "text-primary" : "text-stone-300 hover:text-stone-600"}`}>
@@ -558,46 +587,9 @@ function SortableRow({
                 </div>
             </div>
 
-            {/* 2行目: 各種設定 */}
+            {/* 2行目: ファミリー＋バッジ */}
             <div className="flex items-center gap-2 flex-wrap ml-7">
-                {/* 在庫数 */}
-                <div className="flex items-center gap-1">
-                    <span className="text-xs text-stone-400 whitespace-nowrap">在庫</span>
-                    <input type="number" min={-1} value={item.stock}
-                        onChange={(e) => {
-                            const v = parseInt(e.target.value, 10);
-                            onUpdate(item.id, "stock", isNaN(v) ? -1 : v);
-                        }}
-                        className="w-16 text-center border border-stone-200 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
-                </div>
-                {/* 価格 */}
-                <div className="flex items-center gap-1">
-                    <span className="text-xs text-stone-400">¥</span>
-                    <input type="number" min={0} value={item.price ?? ""} placeholder="デフォルト"
-                        onChange={(e) => onUpdate(item.id, "price", e.target.value ? parseInt(e.target.value, 10) : null)}
-                        className="w-28 text-center border border-stone-200 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
-                </div>
-                {/* 配送区分 */}
-                <select value={item.shipType}
-                    onChange={(e) => onUpdate(item.id, "shipType", e.target.value)}
-                    className="border border-stone-200 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30">
-                    {shipTypes.map((t) => (
-                        <option key={t.value} value={t.value}>{t.label}</option>
-                    ))}
-                </select>
-                {/* 次回出荷 */}
-                <div className="flex items-center gap-1">
-                    <span className="text-xs text-stone-400 whitespace-nowrap">次回</span>
-                    <input
-                        value={item.nextShipment}
-                        onChange={(e) => onUpdate(item.id, "nextShipment", e.target.value)}
-                        placeholder="例: 10月頃"
-                        className="w-24 border border-stone-200 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-primary/30"
-                    />
-                </div>
-                {/* ファミリー */}
                 <FamilyInput value={item.family ?? ""} onCommit={(v) => onUpdate(item.id, "family", v)} />
-                {/* バッジ */}
                 <BadgeSelector
                     badges={item.badges}
                     allBadges={allBadges}
