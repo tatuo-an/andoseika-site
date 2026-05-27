@@ -27,7 +27,7 @@ async function getInventory() {
         const sheets = getSheets();
         const res = await sheets.spreadsheets.values.get({
             spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-            range: "商品在庫!A:D",
+            range: "商品在庫!A:E",
         });
         const rows = res.data.values ?? [];
         return rows.slice(1).map((r) => ({
@@ -35,8 +35,14 @@ async function getInventory() {
             name: r[1] ?? "",
             stock: r[2] !== undefined && r[2] !== "" ? parseInt(r[2], 10) : -1,
             price: r[3] !== undefined && r[3] !== "" ? parseInt(r[3], 10) : null,
+            shipType: r[4] ?? "",
         }));
     } catch { return []; }
+}
+
+function toInt(v: string | undefined) {
+    if (v === undefined || v === "") return 0;
+    return parseInt(v, 10) || 0;
 }
 
 async function getShipping() {
@@ -44,15 +50,17 @@ async function getShipping() {
         const sheets = getSheets();
         const res = await sheets.spreadsheets.values.get({
             spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-            range: "送料マスタ!A:E",
+            range: "送料マスタ!A:L",
         });
         const rows = res.data.values ?? [];
         return rows.slice(1).map((r) => ({
             region: r[0] ?? "",
             prefectures: r[1] ?? "",
-            takkyubinFee: r[2] !== undefined && r[2] !== "" ? parseInt(r[2], 10) : 0,
-            compactFee: r[3] !== undefined && r[3] !== "" ? parseInt(r[3], 10) : 0,
-            clickpostFee: r[4] !== undefined && r[4] !== "" ? parseInt(r[4], 10) : 0,
+            s60: toInt(r[2]), s80: toInt(r[3]), s100: toInt(r[4]),
+            s120: toInt(r[5]), s140: toInt(r[6]), s160: toInt(r[7]),
+            s180: toInt(r[8]), s200: toInt(r[9]),
+            compact: toInt(r[10]),
+            clickpost: toInt(r[11]),
         }));
     } catch { return []; }
 }
