@@ -24,21 +24,11 @@ async function getInventoryRow(id: string): Promise<{ stock: number; hidden: boo
             scopes: ["https://www.googleapis.com/auth/spreadsheets"],
         });
         const sheets = google.sheets({ version: "v4", auth: authClient });
-        const [dataRes, deletedRes] = await Promise.all([
-            sheets.spreadsheets.values.get({
-                spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-                range: "商品在庫!A:I",
-            }),
-            sheets.spreadsheets.values.get({
-                spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-                range: "商品在庫!K1",
-            }),
-        ]);
-        const rows = dataRes.data.values ?? [];
-        const deletedIds: string[] = deletedRes.data.values?.[0]?.[0]
-            ? deletedRes.data.values[0][0].split(",").map((s: string) => s.trim()).filter(Boolean)
-            : [];
-        if (deletedIds.includes(id)) return { stock: -1, hidden: true, deleted: true, nextShipment: "", badges: [] };
+        const res = await sheets.spreadsheets.values.get({
+            spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
+            range: "商品在庫!A:I",
+        });
+        const rows = res.data.values ?? [];
         const row = rows.slice(1).find((r) => r[0] === id);
         if (!row) return { stock: -1, hidden: false, deleted: false, nextShipment: "", badges: [] };
         return {

@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 export const revalidate = 60;
 
 type InventoryData = { stock: number; nameOverride: string; hidden: boolean; deleted: boolean; nextShipment: string; badges: string[] };
-type InventoryResult = { map: Record<string, InventoryData>; order: string[]; deletedIds: Set<string> };
+type InventoryResult = { map: Record<string, InventoryData>; order: string[] };
 
 async function getInventoryMap(): Promise<InventoryResult> {
   try {
@@ -30,17 +30,11 @@ async function getInventoryMap(): Promise<InventoryResult> {
       scopes: ["https://www.googleapis.com/auth/spreadsheets"],
     });
     const sheets = google.sheets({ version: "v4", auth: authClient });
-    const [dataRes, deletedRes] = await Promise.all([
-      sheets.spreadsheets.values.get({
-        spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-        range: "商品在庫!A:I",
-      }),
-      sheets.spreadsheets.values.get({
-        spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-        range: "商品在庫!K1",
-      }),
-    ]);
-    const rows = dataRes.data.values ?? [];
+    const res = await sheets.spreadsheets.values.get({
+      spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
+      range: "商品在庫!A:I",
+    });
+    const rows = res.data.values ?? [];
     const map: Record<string, InventoryData> = {};
     const order: string[] = [];
     rows.slice(1).forEach((r) => {
@@ -50,20 +44,15 @@ async function getInventoryMap(): Promise<InventoryResult> {
           stock: r[2] !== undefined && r[2] !== "" ? parseInt(r[2], 10) : -1,
           nameOverride: r[1] ?? "",
           hidden: r[5] === "1",
-          deleted: r[6] === "1",
+          deleted: false,
           nextShipment: r[7] ?? "",
           badges: r[8] ? r[8].split(",").map((b: string) => b.trim()).filter(Boolean) : [],
         };
       }
     });
-    const deletedIds = new Set<string>(
-      deletedRes.data.values?.[0]?.[0]
-        ? deletedRes.data.values[0][0].split(",").map((s: string) => s.trim()).filter(Boolean)
-        : []
-    );
-    return { map, order, deletedIds };
+    return { map, order };
   } catch {
-    return { map: {}, order: [], deletedIds: new Set() };
+    return { map: {}, order: [] };
   }
 }
 
@@ -86,7 +75,7 @@ async function getProducts(): Promise<Product[]> {
 }
 
 export default async function ProductsPage() {
-  const [products, { map: inventoryMap, order: inventoryOrder, deletedIds }] = await Promise.all([getProducts(), getInventoryMap()]);
+  const [products, { map: inventoryMap, order: inventoryOrder }] = await Promise.all([getProducts(), getInventoryMap()]);
 
   if (products.length === 0) {
     return (
@@ -96,17 +85,13 @@ export default async function ProductsPage() {
     );
   }
 
-  // シートの順番で並べ替え、シートにない商品は末尾に追加。非表示・削除済みを除外
+  // シートの順番で並べ替え、シートにない商品は末尾に追加。非表示を除外
   const productMap = Object.fromEntries(products.map((p) => [p.id, p]));
   const orderedIds = new Set(inventoryOrder);
   const sortedProducts = [
     ...inventoryOrder.map((id) => productMap[id]).filter(Boolean),
     ...products.filter((p) => !orderedIds.has(p.id)),
-  ].filter((p) =>
-    !inventoryMap[p.id]?.hidden &&
-    !inventoryMap[p.id]?.deleted &&
-    !deletedIds.has(p.id)
-  ) as Product[];
+  ].filter((p) => !inventoryMap[p.id]?.hidden) as Product[];
 
   // Group products by category
   const rootProducts = sortedProducts.filter(p => p.category === "root");

@@ -100,7 +100,7 @@ export default async function AdminPage() {
     const session = await auth();
     if (!session?.user || !isAdmin(session.user.email)) redirect("/");
 
-    const [products, { items: inventory, deletedIds }, shipping] = await Promise.all([
+    const [products, { items: inventory }, shipping] = await Promise.all([
         getProducts(), getInventory(), getShipping()
     ]);
 
@@ -114,7 +114,6 @@ export default async function AdminPage() {
                     <AdminPanel
                         products={products}
                         initialInventory={inventory}
-                        initialDeletedIds={deletedIds}
                         initialShipping={shipping}
                     />
                 </div>

@@ -72,37 +72,32 @@ const SIZE_LABELS = ["60", "80", "100", "120", "140", "160", "180", "200", "コ�
 export function AdminPanel({
     products,
     initialInventory,
-    initialDeletedIds = [],
     initialShipping,
 }: {
     products: Product[];
     initialInventory: InventoryItem[];
-    initialDeletedIds?: string[];
     initialShipping: ShippingItem[];
 }) {
     const [tab, setTab] = useState<"inventory" | "shipping">("inventory");
 
     const productMap = Object.fromEntries(products.map((p) => [p.id, p]));
     const inventoryIds = new Set(initialInventory.map((i) => i.id));
-    const deletedIdSet = new Set(initialDeletedIds);
 
-    // items = シート全件（deleted=1 除く） + 削除済みでないシート未登録のMicroCMS商品
+    // items = シート全件 + シート未登録のMicroCMS商品
     const [items, setItems] = useState<InventoryItem[]>([
-        ...initialInventory
-            .filter((inv) => !inv.deleted)
-            .map((inv) => ({
-                id: inv.id,
-                name: inv.name || productMap[inv.id]?.name || inv.id,
-                stock: inv.stock,
-                price: inv.price,
-                shipType: inv.shipType,
-                hidden: inv.hidden,
-                deleted: false,
-                nextShipment: inv.nextShipment ?? "",
-                badges: inv.badges ?? [],
-            })),
+        ...initialInventory.map((inv) => ({
+            id: inv.id,
+            name: inv.name || productMap[inv.id]?.name || inv.id,
+            stock: inv.stock,
+            price: inv.price,
+            shipType: inv.shipType,
+            hidden: inv.hidden,
+            deleted: false,
+            nextShipment: inv.nextShipment ?? "",
+            badges: inv.badges ?? [],
+        })),
         ...products
-            .filter((p) => !inventoryIds.has(p.id) && !deletedIdSet.has(p.id))
+            .filter((p) => !inventoryIds.has(p.id))
             .map((p) => ({
                 id: p.id,
                 name: p.name,
@@ -115,8 +110,6 @@ export function AdminPanel({
                 badges: [] as string[],
             })),
     ]);
-
-    const [deletedIds, setDeletedIds] = useState<string[]>(initialDeletedIds);
 
     const visibleItems = items;
 
@@ -167,7 +160,6 @@ export function AdminPanel({
             // 失敗してもシート側の削除は続行
         }
         setItems((prev) => prev.filter((item) => item.id !== id));
-        setDeletedIds((prev) => prev.includes(id) ? prev : [...prev, id]);
         setSavedInventory(false);
     };
 
@@ -208,7 +200,7 @@ export function AdminPanel({
             const res = await fetch("/api/inventory", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ items, deletedIds }),
+                body: JSON.stringify({ items }),
             });
             if (!res.ok) {
                 const body = await res.json().catch(() => ({}));
