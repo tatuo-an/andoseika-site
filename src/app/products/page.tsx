@@ -8,6 +8,7 @@ import { Metadata } from "next";
 import localProducts from "@/data/products.json";
 import { QuickAddButton } from "@/components/products/QuickAddButton";
 import { google } from "googleapis";
+import { BADGE_COLORS, DEFAULT_BADGE_COLOR } from "@/components/admin/AdminPanel";
 
 export const metadata: Metadata = {
   title: "商品一覧",
@@ -16,7 +17,7 @@ export const metadata: Metadata = {
 
 export const revalidate = 60;
 
-type InventoryData = { stock: number; nameOverride: string; hidden: boolean; deleted: boolean; nextShipment: string };
+type InventoryData = { stock: number; nameOverride: string; hidden: boolean; deleted: boolean; nextShipment: string; badges: string[] };
 type InventoryResult = { map: Record<string, InventoryData>; order: string[] };
 
 async function getInventoryMap(): Promise<InventoryResult> {
@@ -45,6 +46,7 @@ async function getInventoryMap(): Promise<InventoryResult> {
           hidden: r[5] === "1",
           deleted: r[6] === "1",
           nextShipment: r[7] ?? "",
+          badges: r[8] ? r[8].split(",").map((b: string) => b.trim()).filter(Boolean) : [],
         };
       }
     });
@@ -156,6 +158,15 @@ export default async function ProductsPage() {
                       ¥{product.price.toLocaleString()}
                     </span>
                   </div>
+                  {inv?.badges && inv.badges.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mb-1">
+                      {inv.badges.map((badge) => (
+                        <span key={badge} className={`text-xs px-2 py-0.5 rounded-full border font-medium ${BADGE_COLORS[badge] ?? DEFAULT_BADGE_COLOR}`}>
+                          {badge}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                   <h2 className="font-bold text-stone-900 mb-2 line-clamp-2 group-hover:text-primary transition-colors">
                     {displayName}
                   </h2>

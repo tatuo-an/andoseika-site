@@ -27,7 +27,7 @@ async function getInventory() {
         const sheets = getSheets();
         const res = await sheets.spreadsheets.values.get({
             spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-            range: "商品在庫!A:H",
+            range: "商品在庫!A:I",
         });
         const rows = res.data.values ?? [];
         return rows.slice(1).map((r) => ({
@@ -39,6 +39,7 @@ async function getInventory() {
             hidden: r[5] === "1",
             deleted: r[6] === "1",
             nextShipment: r[7] ?? "",
+            badges: r[8] ? r[8].split(",").map((b: string) => b.trim()).filter(Boolean) : [],
         }));
     } catch { return []; }
 }

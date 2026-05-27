@@ -10,10 +10,11 @@ import { AddToCartButton } from "@/components/products/AddToCartButton";
 import localProducts from "@/data/products.json";
 import { Metadata } from "next";
 import { google } from "googleapis";
+import { BADGE_COLORS, DEFAULT_BADGE_COLOR } from "@/components/admin/AdminPanel";
 
 export const revalidate = 60;
 
-async function getInventoryRow(id: string): Promise<{ stock: number; hidden: boolean; deleted: boolean; nextShipment: string }> {
+async function getInventoryRow(id: string): Promise<{ stock: number; hidden: boolean; deleted: boolean; nextShipment: string; badges: string[] }> {
     try {
         const authClient = new google.auth.GoogleAuth({
             credentials: {
@@ -29,15 +30,16 @@ async function getInventoryRow(id: string): Promise<{ stock: number; hidden: boo
         });
         const rows = res.data.values ?? [];
         const row = rows.slice(1).find((r) => r[0] === id);
-        if (!row) return { stock: -1, hidden: false, deleted: false, nextShipment: "" };
+        if (!row) return { stock: -1, hidden: false, deleted: false, nextShipment: "", badges: [] };
         return {
             stock: row[2] !== undefined && row[2] !== "" ? parseInt(row[2], 10) : -1,
             hidden: row[5] === "1",
             deleted: row[6] === "1",
             nextShipment: row[7] ?? "",
+            badges: row[8] ? row[8].split(",").map((b: string) => b.trim()).filter(Boolean) : [],
         };
     } catch {
-        return { stock: -1, hidden: false, deleted: false, nextShipment: "" };
+        return { stock: -1, hidden: false, deleted: false, nextShipment: "", badges: [] };
     }
 }
 
@@ -110,7 +112,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 export default async function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
     const [product, inv] = await Promise.all([getProduct(id), getInventoryRow(id)]);
-    const { stock, hidden, deleted, nextShipment } = inv;
+    const { stock, hidden, deleted, nextShipment, badges } = inv;
     const isSoldOut = stock !== -1 && stock === 0;
 
     if (!product || hidden || deleted) {
@@ -157,6 +159,15 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                                 <span className="inline-block bg-primary/10 text-primary text-xs font-bold px-3 py-1 rounded-full mb-4">
                                     {product.category}
                                 </span>
+                                {badges.length > 0 && (
+                                    <div className="flex flex-wrap gap-1.5 mb-3">
+                                        {badges.map((badge) => (
+                                            <span key={badge} className={`text-xs px-2.5 py-1 rounded-full border font-medium ${BADGE_COLORS[badge] ?? DEFAULT_BADGE_COLOR}`}>
+                                                {badge}
+                                            </span>
+                                        ))}
+                                    </div>
+                                )}
                                 <h1 className="text-3xl md:text-4xl font-bold text-stone-900 mb-4 font-heading">
                                     {product.name}
                                 </h1>

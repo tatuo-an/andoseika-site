@@ -27,8 +27,21 @@ export type InventoryItem = {
     shipType: string;
     hidden: boolean;
     deleted: boolean;
-    nextShipment: string; // 売り切れ時の次回出荷表示テキスト（例: "10月頃"）
+    nextShipment: string;
+    badges: string[];
 };
+
+const PRESET_BADGES = ["新物", "訳あり", "秀品", "贈答用", "栽培期間中農薬不使用", "慣行栽培"];
+
+export const BADGE_COLORS: Record<string, string> = {
+    "新物":               "bg-green-100 text-green-700 border-green-200",
+    "訳あり":             "bg-orange-100 text-orange-700 border-orange-200",
+    "秀品":               "bg-blue-100 text-blue-700 border-blue-200",
+    "贈答用":             "bg-rose-100 text-rose-700 border-rose-200",
+    "栽培期間中農薬不使用": "bg-teal-100 text-teal-700 border-teal-200",
+    "慣行栽培":           "bg-stone-100 text-stone-600 border-stone-200",
+};
+export const DEFAULT_BADGE_COLOR = "bg-purple-100 text-purple-700 border-purple-200";
 
 type ShippingItem = {
     region: string;
@@ -88,6 +101,7 @@ export function AdminPanel({
             hidden: inv.hidden,
             deleted: inv.deleted,
             nextShipment: inv.nextShipment ?? "",
+            badges: inv.badges ?? [],
         })),
         ...products
             .filter((p) => !inventoryIds.has(p.id))
@@ -100,6 +114,7 @@ export function AdminPanel({
                 hidden: false,
                 deleted: false,
                 nextShipment: "",
+                badges: [] as string[],
             })),
     ]);
 
@@ -129,6 +144,7 @@ export function AdminPanel({
             id: `custom-${Date.now()}`,
             name: `${src.name} (コピー)`,
             deleted: false,
+            badges: [...src.badges],
         };
         setItems((prev) => {
             const idx = prev.findIndex((i) => i.id === id);
@@ -157,6 +173,7 @@ export function AdminPanel({
             hidden: false,
             deleted: false,
             nextShipment: "",
+            badges: [],
         }]);
         setSavedInventory(false);
     };
@@ -239,22 +256,31 @@ export function AdminPanel({
                                     <th className="text-center px-4 py-3 w-36">配送区分</th>
                                     <th className="text-center px-4 py-3 w-20">状態</th>
                                     <th className="text-center px-4 py-3 w-28">次回出荷<br /><span className="font-normal text-stone-400">売切時に表示</span></th>
-                                    <th className="w-20"></th>
+                                    <th className="text-left px-4 py-3 w-48">バッジ</th>
+                                    <th className="w-24"></th>
                                 </tr>
                             </thead>
                             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                                 <SortableContext items={visibleItems.map((i) => i.id)} strategy={verticalListSortingStrategy}>
                                     <tbody className="divide-y divide-stone-100">
-                                        {visibleItems.map((item) => (
+                                        {visibleItems.map((item) => {
+                                            // 全商品で使われているカスタムバッジを収集
+                                            const allBadges = Array.from(new Set([
+                                                ...PRESET_BADGES,
+                                                ...items.flatMap((i) => i.badges),
+                                            ]));
+                                            return (
                                             <SortableRow
                                                 key={item.id}
                                                 item={item}
                                                 shipTypes={SHIP_TYPES}
+                                                allBadges={allBadges}
                                                 onUpdate={updateItem}
                                                 onCopy={copyItem}
                                                 onDelete={deleteItem}
                                             />
-                                        ))}
+                                            );
+                                        })}
                                     </tbody>
                                 </SortableContext>
                             </DndContext>
@@ -362,12 +388,14 @@ export function AdminPanel({
 function SortableRow({
     item,
     shipTypes,
+    allBadges,
     onUpdate,
     onCopy,
     onDelete,
 }: {
     item: InventoryItem;
     shipTypes: { value: string; label: string }[];
+    allBadges: string[];
     onUpdate: <K extends keyof InventoryItem>(id: string, field: K, value: InventoryItem[K]) => void;
     onCopy: (id: string) => void;
     onDelete: (id: string) => void;
@@ -442,6 +470,13 @@ function SortableRow({
                     className="w-full border border-stone-200 rounded-lg px-2 py-1.5 text-xs text-center focus:outline-none focus:ring-2 focus:ring-primary/30"
                 />
             </td>
+            <td className="px-3 py-3">
+                <BadgeSelector
+                    badges={item.badges}
+                    allBadges={allBadges}
+                    onChange={(b) => onUpdate(item.id, "badges", b)}
+                />
+            </td>
             <td className="px-2 py-3 text-center">
                 <div className="flex items-center justify-center gap-1">
                     <button
@@ -465,5 +500,84 @@ function SortableRow({
                 </div>
             </td>
         </tr>
+    );
+}
+
+// ── バッジセレクター ────────────────────────────────────────────
+function BadgeSelector({
+    badges,
+    allBadges,
+    onChange,
+}: {
+    badges: string[];
+    allBadges: string[];
+    onChange: (badges: string[]) => void;
+}) {
+    const [open, setOpen] = useState(false);
+    const [custom, setCustom] = useState("");
+
+    const toggle = (badge: string) => {
+        onChange(badges.includes(badge) ? badges.filter((b) => b !== badge) : [...badges, badge]);
+    };
+
+    const addCustom = () => {
+        const t = custom.trim();
+        if (!t || badges.includes(t)) { setCustom(""); return; }
+        onChange([...badges, t]);
+        setCustom("");
+    };
+
+    return (
+        <div className="relative">
+            {/* 選択済みバッジ表示 & 開閉ボタン */}
+            <div className="flex flex-wrap gap-1 cursor-pointer" onClick={() => setOpen(!open)}>
+                {badges.length === 0 ? (
+                    <span className="text-xs text-stone-300 border border-dashed border-stone-200 px-2 py-0.5 rounded-full">＋ バッジ</span>
+                ) : (
+                    badges.map((b) => (
+                        <span key={b} className={`text-xs px-2 py-0.5 rounded-full border ${BADGE_COLORS[b] ?? DEFAULT_BADGE_COLOR}`}>
+                            {b}
+                        </span>
+                    ))
+                )}
+            </div>
+
+            {/* ドロップダウン */}
+            {open && (
+                <div className="absolute z-50 top-8 left-0 bg-white border border-stone-200 rounded-xl shadow-xl p-3 w-72">
+                    <p className="text-xs text-stone-400 mb-2 font-bold">バッジを選択（複数可）</p>
+                    <div className="flex flex-wrap gap-1.5 mb-3">
+                        {allBadges.map((badge) => (
+                            <button
+                                key={badge}
+                                onClick={() => toggle(badge)}
+                                className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                                    badges.includes(badge)
+                                        ? (BADGE_COLORS[badge] ?? DEFAULT_BADGE_COLOR) + " font-bold"
+                                        : "border-stone-200 text-stone-500 hover:bg-stone-50"
+                                }`}
+                            >
+                                {badges.includes(badge) ? "✓ " : ""}{badge}
+                            </button>
+                        ))}
+                    </div>
+                    <div className="flex gap-1.5">
+                        <input
+                            value={custom}
+                            onChange={(e) => setCustom(e.target.value)}
+                            onKeyDown={(e) => e.key === "Enter" && addCustom()}
+                            placeholder="カスタムバッジを追加"
+                            className="flex-1 text-xs border border-stone-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                        />
+                        <button onClick={addCustom} className="text-xs bg-stone-100 hover:bg-stone-200 px-3 py-1.5 rounded-lg transition-colors">
+                            追加
+                        </button>
+                    </div>
+                    <button onClick={() => setOpen(false)} className="mt-2 text-xs text-stone-400 hover:text-stone-600 w-full text-center">
+                        閉じる
+                    </button>
+                </div>
+            )}
+        </div>
     );
 }
