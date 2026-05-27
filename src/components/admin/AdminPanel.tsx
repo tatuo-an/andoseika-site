@@ -71,25 +71,31 @@ export function AdminPanel({
 }) {
     const [tab, setTab] = useState<"inventory" | "shipping">("inventory");
 
-    const inventoryMap = Object.fromEntries(initialInventory.map((i) => [i.id, i]));
+    const productMap = Object.fromEntries(products.map((p) => [p.id, p]));
+    const inventoryIds = new Set(initialInventory.map((i) => i.id));
 
-    // MicroCMS の商品 + シートにのみ存在する商品（MicroCMSから削除された分）をマージ
-    const productIds = new Set(products.map((p) => p.id));
-    const sheetOnlyItems = initialInventory.filter((i) => !productIds.has(i.id));
-
+    // シートの行順を優先。シートにない MicroCMS 商品は末尾に追加
     const [items, setItems] = useState<InventoryItem[]>([
-        ...products.map((p) => {
-            const inv = inventoryMap[p.id];
-            return {
+        // 1. シートにある商品（シート順）
+        ...initialInventory.map((inv) => ({
+            id: inv.id,
+            name: inv.name || productMap[inv.id]?.name || inv.id,
+            stock: inv.stock,
+            price: inv.price,
+            shipType: inv.shipType,
+            hidden: inv.hidden,
+        })),
+        // 2. シートにまだない MicroCMS 商品（新規追加分）
+        ...products
+            .filter((p) => !inventoryIds.has(p.id))
+            .map((p) => ({
                 id: p.id,
-                name: inv?.name || p.name,
-                stock: inv?.stock ?? -1,
-                price: inv?.price ?? null,
-                shipType: inv?.shipType ?? "",
-                hidden: inv?.hidden ?? false,
-            };
-        }),
-        ...sheetOnlyItems.map((i) => ({ ...i })),
+                name: p.name,
+                stock: -1,
+                price: null,
+                shipType: "",
+                hidden: false,
+            })),
     ]);
 
     const [savingInventory, setSavingInventory] = useState(false);

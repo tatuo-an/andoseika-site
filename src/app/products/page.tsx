@@ -17,8 +17,9 @@ export const metadata: Metadata = {
 export const revalidate = 60;
 
 type InventoryData = { stock: number; nameOverride: string; hidden: boolean };
+type InventoryResult = { map: Record<string, InventoryData>; order: string[] };
 
-async function getInventoryMap(): Promise<Record<string, InventoryData>> {
+async function getInventoryMap(): Promise<InventoryResult> {
   try {
     const authClient = new google.auth.GoogleAuth({
       credentials: {
@@ -30,20 +31,24 @@ async function getInventoryMap(): Promise<Record<string, InventoryData>> {
     const sheets = google.sheets({ version: "v4", auth: authClient });
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-      range: "商品在庫!A:C",
+      range: "商品在庫!A:F",
     });
     const rows = res.data.values ?? [];
     const map: Record<string, InventoryData> = {};
+    const order: string[] = [];
     rows.slice(1).forEach((r) => {
-      if (r[0]) map[r[0]] = {
-        stock: r[2] !== undefined && r[2] !== "" ? parseInt(r[2], 10) : -1,
-        nameOverride: r[1] ?? "",
-        hidden: r[5] === "1",
-      };
+      if (r[0]) {
+        order.push(r[0]);
+        map[r[0]] = {
+          stock: r[2] !== undefined && r[2] !== "" ? parseInt(r[2], 10) : -1,
+          nameOverride: r[1] ?? "",
+          hidden: r[5] === "1",
+        };
+      }
     });
-    return map;
+    return { map, order };
   } catch {
-    return {};
+    return { map: {}, order: [] };
   }
 }
 
@@ -66,7 +71,7 @@ async function getProducts(): Promise<Product[]> {
 }
 
 export default async function ProductsPage() {
-  const [products, inventoryMap] = await Promise.all([getProducts(), getInventoryMap()]);
+  const [products, { map: inventoryMap, order: inventoryOrder }] = await Promise.all([getProducts(), getInventoryMap()]);
 
   if (products.length === 0) {
     return (
@@ -76,14 +81,19 @@ export default async function ProductsPage() {
     );
   }
 
-  // 非表示の商品を除外
-  const visibleProducts = products.filter(p => !inventoryMap[p.id]?.hidden);
+  // シートの順番で並べ替え、シートにない商品は末尾に追加。非表示を除外
+  const productMap = Object.fromEntries(products.map((p) => [p.id, p]));
+  const orderedIds = new Set(inventoryOrder);
+  const sortedProducts = [
+    ...inventoryOrder.map((id) => productMap[id]).filter(Boolean),
+    ...products.filter((p) => !orderedIds.has(p.id)),
+  ].filter((p) => !inventoryMap[p.id]?.hidden) as Product[];
 
   // Group products by category
-  const rootProducts = visibleProducts.filter(p => p.category === "root");
-  const leafProducts = visibleProducts.filter(p => p.category === "leaf");
-  const honeyProducts = visibleProducts.filter(p => p.category === "honey");
-  const otherProducts = visibleProducts.filter(p => !["root", "leaf", "honey"].includes(p.category));
+  const rootProducts = sortedProducts.filter(p => p.category === "root");
+  const leafProducts = sortedProducts.filter(p => p.category === "leaf");
+  const honeyProducts = sortedProducts.filter(p => p.category === "honey");
+  const otherProducts = sortedProducts.filter(p => !["root", "leaf", "honey"].includes(p.category));
 
   const ProductSection = ({ title, items }: { title: string, items: Product[] }) => {
     if (items.length === 0) return null;
