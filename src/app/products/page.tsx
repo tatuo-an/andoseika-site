@@ -121,10 +121,11 @@ export default async function ProductsPage() {
     }
   }
 
-  const rootCards = cards.filter(c => c.category === "root" || (c.type === "single" && c.product.category === "root") || (c.type === "family" && c.category === "root"));
-  const leafCards = cards.filter(c => (c.type === "single" ? c.product.category : c.category) === "leaf");
-  const honeyCards = cards.filter(c => (c.type === "single" ? c.product.category : c.category) === "honey");
-  const otherCards = cards.filter(c => !["root", "leaf", "honey"].includes(c.type === "single" ? c.product.category : c.category));
+  const getCategory = (c: CardItem) => c.type === "single" ? c.product.category : c.category;
+  const rootCards = cards.filter(c => getCategory(c) === "root");
+  const leafCards = cards.filter(c => getCategory(c) === "leaf");
+  const honeyCards = cards.filter(c => getCategory(c) === "honey");
+  const otherCards = cards.filter(c => !["root", "leaf", "honey"].includes(getCategory(c)));
 
   const renderCard = (card: CardItem) => {
     if (card.type === "single") {
