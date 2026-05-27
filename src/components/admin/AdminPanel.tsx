@@ -1,8 +1,23 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Loader2, Plus, Trash2, ChevronUp, ChevronDown } from "lucide-react";
+import { Check, Loader2, Plus, Trash2, GripVertical } from "lucide-react";
 import { Product } from "@/types/microcms";
+import {
+    DndContext,
+    closestCenter,
+    PointerSensor,
+    useSensor,
+    useSensors,
+    DragEndEvent,
+} from "@dnd-kit/core";
+import {
+    SortableContext,
+    verticalListSortingStrategy,
+    useSortable,
+    arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 type InventoryItem = {
     id: string;
@@ -59,16 +74,20 @@ export function AdminPanel({
 
     const inventoryMap = Object.fromEntries(initialInventory.map((i) => [i.id, i]));
     const [items, setItems] = useState<InventoryItem[]>(
-        products.map((p) => ({
-            id: p.id,
-            name: p.name,
-            stock: inventoryMap[p.id]?.stock ?? -1,
-            price: inventoryMap[p.id]?.price ?? null,
-            shipType: inventoryMap[p.id]?.shipType ?? "",
-        }))
+        products.map((p) => {
+            const inv = inventoryMap[p.id];
+            return {
+                id: p.id,
+                name: inv?.name || p.name,   // シートに保存した名前を優先
+                stock: inv?.stock ?? -1,
+                price: inv?.price ?? null,
+                shipType: inv?.shipType ?? "",
+            };
+        })
     );
     const [savingInventory, setSavingInventory] = useState(false);
     const [savedInventory, setSavedInventory] = useState(false);
+    const [inventoryError, setInventoryError] = useState("");
 
     const [shipping, setShipping] = useState<ShippingItem[]>(
         initialShipping.length > 0 ? initialShipping : DEFAULT_SHIPPING
@@ -81,27 +100,38 @@ export function AdminPanel({
         setSavedInventory(false);
     };
 
-    const moveItem = (index: number, direction: "up" | "down") => {
-        setItems((prev) => {
-            const next = [...prev];
-            const target = direction === "up" ? index - 1 : index + 1;
-            if (target < 0 || target >= next.length) return prev;
-            [next[index], next[target]] = [next[target], next[index]];
-            return next;
-        });
-        setSavedInventory(false);
+    const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+
+    const handleDragEnd = (event: DragEndEvent) => {
+        const { active, over } = event;
+        if (over && active.id !== over.id) {
+            setItems((prev) => {
+                const oldIndex = prev.findIndex((i) => i.id === active.id);
+                const newIndex = prev.findIndex((i) => i.id === over.id);
+                return arrayMove(prev, oldIndex, newIndex);
+            });
+            setSavedInventory(false);
+        }
     };
 
     const saveInventory = async () => {
         setSavingInventory(true);
+        setInventoryError("");
         try {
-            await fetch("/api/inventory", {
+            const res = await fetch("/api/inventory", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ items }),
             });
+            if (!res.ok) {
+                const body = await res.json().catch(() => ({}));
+                setInventoryError(`保存失敗 (${res.status}): ${body?.error ?? "不明なエラー"}`);
+                return;
+            }
             setSavedInventory(true);
             setTimeout(() => setSavedInventory(false), 2000);
+        } catch (e) {
+            setInventoryError("通信エラーが発生しました");
         } finally { setSavingInventory(false); }
     };
 
@@ -141,7 +171,7 @@ export function AdminPanel({
                         <table className="w-full">
                             <thead className="bg-stone-100 text-stone-600 text-xs">
                                 <tr>
-                                    <th className="w-10"></th>
+                                    <th className="w-8"></th>
                                     <th className="text-left px-4 py-3">商品名</th>
                                     <th className="text-center px-4 py-3 w-28">在庫数<br /><span className="font-normal text-stone-400">-1=管理なし</span></th>
                                     <th className="text-center px-4 py-3 w-32">販売価格<br /><span className="font-normal text-stone-400">空欄=デフォルト</span></th>
@@ -149,70 +179,30 @@ export function AdminPanel({
                                     <th className="text-center px-4 py-3 w-20">状態</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-stone-100">
-                                {items.map((item, index) => {
-                                    const isSoldOut = item.stock !== -1 && item.stock === 0;
-                                    return (
-                                        <tr key={item.id} className="hover:bg-stone-50">
-                                            <td className="px-1 py-3 text-center">
-                                                <div className="flex flex-col items-center gap-0.5">
-                                                    <button onClick={() => moveItem(index, "up")} disabled={index === 0}
-                                                        className="p-0.5 text-stone-300 hover:text-stone-600 disabled:opacity-20 transition-colors">
-                                                        <ChevronUp className="w-4 h-4" />
-                                                    </button>
-                                                    <button onClick={() => moveItem(index, "down")} disabled={index === items.length - 1}
-                                                        className="p-0.5 text-stone-300 hover:text-stone-600 disabled:opacity-20 transition-colors">
-                                                        <ChevronDown className="w-4 h-4" />
-                                                    </button>
-                                                </div>
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                <input
-                                                    value={item.name}
-                                                    onChange={(e) => updateItem(item.id, "name", e.target.value)}
-                                                    className="w-full border border-stone-200 rounded-lg px-3 py-1.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/30"
-                                                />
-                                            </td>
-                                            <td className="px-4 py-3 text-center">
-                                                <input type="number" min={-1} value={item.stock}
-                                                    onChange={(e) => updateItem(item.id, "stock", parseInt(e.target.value, 10))}
-                                                    className="w-20 text-center border border-stone-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
-                                            </td>
-                                            <td className="px-4 py-3 text-center">
-                                                <div className="flex items-center justify-center gap-1">
-                                                    <span className="text-stone-400 text-sm">¥</span>
-                                                    <input type="number" min={0} value={item.price ?? ""} placeholder="未設定"
-                                                        onChange={(e) => updateItem(item.id, "price", e.target.value ? parseInt(e.target.value, 10) : null)}
-                                                        className="w-24 text-center border border-stone-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
-                                                </div>
-                                            </td>
-                                            <td className="px-4 py-3 text-center">
-                                                <select value={item.shipType}
-                                                    onChange={(e) => updateItem(item.id, "shipType", e.target.value)}
-                                                    className="border border-stone-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30">
-                                                    {SHIP_TYPES.map((t) => (
-                                                        <option key={t.value} value={t.value}>{t.label}</option>
-                                                    ))}
-                                                </select>
-                                            </td>
-                                            <td className="px-4 py-3 text-center">
-                                                {item.stock === -1
-                                                    ? <span className="text-xs text-stone-400">管理なし</span>
-                                                    : isSoldOut
-                                                        ? <span className="text-xs font-bold text-red-500">売り切れ</span>
-                                                        : <span className="text-xs font-bold text-green-600">販売中</span>}
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
+                            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                                <SortableContext items={items.map((i) => i.id)} strategy={verticalListSortingStrategy}>
+                                    <tbody className="divide-y divide-stone-100">
+                                        {items.map((item) => (
+                                            <SortableRow
+                                                key={item.id}
+                                                item={item}
+                                                shipTypes={SHIP_TYPES}
+                                                onUpdate={updateItem}
+                                            />
+                                        ))}
+                                    </tbody>
+                                </SortableContext>
+                            </DndContext>
                         </table>
                     </div>
-                    <button onClick={saveInventory} disabled={savingInventory}
-                        className="flex items-center gap-2 bg-stone-900 text-white px-8 py-3 rounded-full font-bold hover:bg-primary transition-colors disabled:opacity-50">
-                        {savingInventory ? <Loader2 className="w-4 h-4 animate-spin" /> : savedInventory ? <Check className="w-4 h-4" /> : null}
-                        {savedInventory ? "保存しました" : "一括保存"}
-                    </button>
+                    <div className="flex flex-col gap-2">
+                        <button onClick={saveInventory} disabled={savingInventory}
+                            className="flex items-center gap-2 bg-stone-900 text-white px-8 py-3 rounded-full font-bold hover:bg-primary transition-colors disabled:opacity-50">
+                            {savingInventory ? <Loader2 className="w-4 h-4 animate-spin" /> : savedInventory ? <Check className="w-4 h-4" /> : null}
+                            {savedInventory ? "保存しました" : "一括保存"}
+                        </button>
+                        {inventoryError && <p className="text-red-500 text-sm">{inventoryError}</p>}
+                    </div>
                 </div>
             )}
 
@@ -297,5 +287,78 @@ export function AdminPanel({
                 </div>
             )}
         </div>
+    );
+}
+
+// ── ドラッグ可能な行コンポーネント ──────────────────────────────
+function SortableRow({
+    item,
+    shipTypes,
+    onUpdate,
+}: {
+    item: InventoryItem;
+    shipTypes: { value: string; label: string }[];
+    onUpdate: <K extends keyof InventoryItem>(id: string, field: K, value: InventoryItem[K]) => void;
+}) {
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : 1,
+        zIndex: isDragging ? 10 : undefined,
+    };
+    const isSoldOut = item.stock !== -1 && item.stock === 0;
+
+    return (
+        <tr ref={setNodeRef} style={style} className={`hover:bg-stone-50 ${isDragging ? "bg-primary/5 shadow-lg" : ""}`}>
+            <td className="px-1 py-3 text-center">
+                <button
+                    {...attributes}
+                    {...listeners}
+                    className="cursor-grab active:cursor-grabbing p-1 text-stone-300 hover:text-stone-500 transition-colors touch-none"
+                >
+                    <GripVertical className="w-4 h-4" />
+                </button>
+            </td>
+            <td className="px-4 py-3">
+                <input
+                    value={item.name}
+                    onChange={(e) => onUpdate(item.id, "name", e.target.value)}
+                    className="w-full border border-stone-200 rounded-lg px-3 py-1.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/30"
+                />
+            </td>
+            <td className="px-4 py-3 text-center">
+                <input type="number" min={-1} value={item.stock}
+                    onChange={(e) => {
+                        const v = parseInt(e.target.value, 10);
+                        onUpdate(item.id, "stock", isNaN(v) ? -1 : v);
+                    }}
+                    className="w-20 text-center border border-stone-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+            </td>
+            <td className="px-4 py-3 text-center">
+                <div className="flex items-center justify-center gap-1">
+                    <span className="text-stone-400 text-sm">¥</span>
+                    <input type="number" min={0} value={item.price ?? ""} placeholder="未設定"
+                        onChange={(e) => onUpdate(item.id, "price", e.target.value ? parseInt(e.target.value, 10) : null)}
+                        className="w-24 text-center border border-stone-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                </div>
+            </td>
+            <td className="px-4 py-3 text-center">
+                <select value={item.shipType}
+                    onChange={(e) => onUpdate(item.id, "shipType", e.target.value)}
+                    className="border border-stone-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30">
+                    {shipTypes.map((t) => (
+                        <option key={t.value} value={t.value}>{t.label}</option>
+                    ))}
+                </select>
+            </td>
+            <td className="px-4 py-3 text-center">
+                {item.stock === -1
+                    ? <span className="text-xs text-stone-400">管理なし</span>
+                    : isSoldOut
+                        ? <span className="text-xs font-bold text-red-500">売り切れ</span>
+                        : <span className="text-xs font-bold text-green-600">販売中</span>}
+            </td>
+        </tr>
     );
 }
