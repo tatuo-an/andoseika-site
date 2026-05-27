@@ -14,6 +14,7 @@ import {
 import {
     SortableContext,
     verticalListSortingStrategy,
+    horizontalListSortingStrategy,
     useSortable,
     arrayMove,
 } from "@dnd-kit/sortable";
@@ -695,6 +696,31 @@ function FamilyInput({ value, onCommit }: { value: string; onCommit: (v: string)
     );
 }
 
+// ── ドラッグ可能なバッジチップ ──────────────────────────────────
+function SortableBadgeChip({ badge, onRemove }: { badge: string; onRemove: () => void }) {
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: badge });
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : 1,
+        zIndex: isDragging ? 10 : undefined,
+        cursor: isDragging ? "grabbing" : "grab",
+    };
+    return (
+        <span
+            ref={setNodeRef}
+            style={style}
+            className={`inline-flex items-center gap-0.5 text-xs px-2 py-0.5 rounded-full border select-none touch-none ${BADGE_COLORS[badge] ?? DEFAULT_BADGE_COLOR}`}
+        >
+            <span {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing">{badge}</span>
+            <button
+                onClick={(e) => { e.stopPropagation(); onRemove(); }}
+                className="ml-0.5 opacity-60 hover:opacity-100 leading-none"
+            >×</button>
+        </span>
+    );
+}
+
 // ── バッジセレクター ────────────────────────────────────────────
 function BadgeSelector({
     badges,
@@ -738,6 +764,17 @@ function BadgeSelector({
         setOpen(!open);
     };
 
+    const badgeSensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+
+    const handleBadgeDragEnd = (event: DragEndEvent) => {
+        const { active, over } = event;
+        if (over && active.id !== over.id) {
+            const oldIndex = badges.indexOf(active.id as string);
+            const newIndex = badges.indexOf(over.id as string);
+            onChange(arrayMove(badges, oldIndex, newIndex));
+        }
+    };
+
     return (
         <div className="relative">
             {/* 選択済みバッジ表示 & 開閉ボタン */}
@@ -746,15 +783,17 @@ function BadgeSelector({
                     <span className="text-xs text-stone-300 border border-dashed border-stone-200 px-2 py-0.5 rounded-full cursor-pointer" onClick={handleOpen}>＋ バッジ</span>
                 ) : (
                     <>
-                        {badges.map((b) => (
-                            <span key={b} className={`inline-flex items-center gap-0.5 text-xs px-2 py-0.5 rounded-full border ${BADGE_COLORS[b] ?? DEFAULT_BADGE_COLOR}`}>
-                                {b}
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); onChange(badges.filter(x => x !== b)); }}
-                                    className="ml-0.5 opacity-60 hover:opacity-100 leading-none"
-                                >×</button>
-                            </span>
-                        ))}
+                        <DndContext sensors={badgeSensors} collisionDetection={closestCenter} onDragEnd={handleBadgeDragEnd}>
+                            <SortableContext items={badges} strategy={horizontalListSortingStrategy}>
+                                {badges.map((b) => (
+                                    <SortableBadgeChip
+                                        key={b}
+                                        badge={b}
+                                        onRemove={() => onChange(badges.filter(x => x !== b))}
+                                    />
+                                ))}
+                            </SortableContext>
+                        </DndContext>
                         <span className="text-xs text-stone-300 border border-dashed border-stone-200 px-2 py-0.5 rounded-full cursor-pointer" onClick={handleOpen}>＋</span>
                     </>
                 )}
