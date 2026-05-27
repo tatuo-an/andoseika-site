@@ -201,6 +201,25 @@ export function AdminPanel({
         setSavedInventory(false);
     };
 
+    const addFamily = () => {
+        const familyName = prompt("ファミリー名を入力してください（例: 砂丘ながいも）");
+        if (!familyName?.trim()) return;
+        const newId = `custom-${Date.now()}`;
+        setItems((prev) => [...prev, {
+            id: newId,
+            name: "バリエーション名",
+            stock: -1,
+            price: null,
+            shipType: "",
+            hidden: false,
+            deleted: false,
+            nextShipment: "",
+            badges: [],
+            family: familyName.trim(),
+        }]);
+        setSavedInventory(false);
+    };
+
     const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
     const handleDragEnd = (event: DragEndEvent) => {
@@ -339,7 +358,12 @@ export function AdminPanel({
                         <button onClick={addItem}
                             className="flex items-center gap-2 border border-stone-300 text-stone-600 px-5 py-3 rounded-full text-sm font-bold hover:bg-stone-100 transition-colors">
                             <Plus className="w-4 h-4" />
-                            カスタム商品を追加
+                            商品を追加
+                        </button>
+                        <button onClick={addFamily}
+                            className="flex items-center gap-2 border border-stone-300 text-stone-600 px-5 py-3 rounded-full text-sm font-bold hover:bg-stone-100 transition-colors">
+                            <Plus className="w-4 h-4" />
+                            ファミリーを追加
                         </button>
                     </div>
                     {inventoryError && <p className="text-red-500 text-sm mt-1">{inventoryError}</p>}
