@@ -88,7 +88,7 @@ export default async function ProductsPage() {
             const stock = inventoryMap[product.id] ?? -1;
             const isSoldOut = stock !== -1 && stock === 0;
             return (
-            <Link href={`/products/${product.id}`} key={product.id} className="group">
+            <Link href={`/products/${product.id}`} key={product.id} className={`group ${isSoldOut ? "pointer-events-none" : ""}`}>
               <div className={`bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 ${isSoldOut ? "opacity-70" : ""}`}>
                 <div className="relative aspect-[3/2] bg-stone-100 overflow-hidden">
                   {product.image ? (

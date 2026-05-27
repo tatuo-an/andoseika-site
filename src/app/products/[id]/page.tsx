@@ -9,8 +9,32 @@ import { Product } from "@/types/microcms";
 import { AddToCartButton } from "@/components/products/AddToCartButton";
 import localProducts from "@/data/products.json";
 import { Metadata } from "next";
+import { google } from "googleapis";
 
 export const revalidate = 60;
+
+async function getStock(id: string): Promise<number> {
+    try {
+        const authClient = new google.auth.GoogleAuth({
+            credentials: {
+                client_email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
+                private_key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+            },
+            scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+        });
+        const sheets = google.sheets({ version: "v4", auth: authClient });
+        const res = await sheets.spreadsheets.values.get({
+            spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
+            range: "商品在庫!A:C",
+        });
+        const rows = res.data.values ?? [];
+        const row = rows.slice(1).find((r) => r[0] === id);
+        if (!row || row[2] === undefined || row[2] === "") return -1;
+        return parseInt(row[2], 10);
+    } catch {
+        return -1;
+    }
+}
 
 async function getProduct(id: string): Promise<Product | null> {
     let data: Product | null = null;
@@ -80,7 +104,8 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
 export default async function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
-    const product = await getProduct(id);
+    const [product, stock] = await Promise.all([getProduct(id), getStock(id)]);
+    const isSoldOut = stock !== -1 && stock === 0;
 
     if (!product) {
         return (
@@ -153,7 +178,13 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                                     </div>
                                 </div>
 
-                                <AddToCartButton product={product} />
+                                {isSoldOut ? (
+                                    <div className="w-full md:w-auto px-12 py-4 rounded-full font-bold text-lg bg-stone-200 text-stone-400 text-center cursor-not-allowed">
+                                        売り切れ
+                                    </div>
+                                ) : (
+                                    <AddToCartButton product={product} />
+                                )}
                             </div>
                         </div>
                     </div>
