@@ -245,46 +245,28 @@ export function AdminPanel({
             {/* 商品・在庫タブ */}
             {tab === "inventory" && (
                 <div>
-                    <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-4">
-                        <table className="w-full">
-                            <thead className="bg-stone-100 text-stone-600 text-xs">
-                                <tr>
-                                    <th className="w-8"></th>
-                                    <th className="text-left px-4 py-3">商品名</th>
-                                    <th className="text-center px-4 py-3 w-28">在庫数<br /><span className="font-normal text-stone-400">-1=管理なし</span></th>
-                                    <th className="text-center px-4 py-3 w-32">販売価格<br /><span className="font-normal text-stone-400">空欄=デフォルト</span></th>
-                                    <th className="text-center px-4 py-3 w-36">配送区分</th>
-                                    <th className="text-center px-4 py-3 w-20">状態</th>
-                                    <th className="text-center px-4 py-3 w-28">次回出荷<br /><span className="font-normal text-stone-400">売切時に表示</span></th>
-                                    <th className="text-left px-4 py-3 w-48">バッジ</th>
-                                    <th className="w-24"></th>
-                                </tr>
-                            </thead>
-                            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                                <SortableContext items={visibleItems.map((i) => i.id)} strategy={verticalListSortingStrategy}>
-                                    <tbody className="divide-y divide-stone-100">
-                                        {visibleItems.map((item) => {
-                                            // 全商品で使われているカスタムバッジを収集
-                                            const allBadges = Array.from(new Set([
-                                                ...PRESET_BADGES,
-                                                ...items.flatMap((i) => i.badges),
-                                            ]));
-                                            return (
-                                            <SortableRow
-                                                key={item.id}
-                                                item={item}
-                                                shipTypes={SHIP_TYPES}
-                                                allBadges={allBadges}
-                                                onUpdate={updateItem}
-                                                onCopy={copyItem}
-                                                onDelete={deleteItem}
-                                            />
-                                            );
-                                        })}
-                                    </tbody>
-                                </SortableContext>
-                            </DndContext>
-                        </table>
+                    <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-4 divide-y divide-stone-100">
+                        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                            <SortableContext items={visibleItems.map((i) => i.id)} strategy={verticalListSortingStrategy}>
+                                {visibleItems.map((item) => {
+                                    const allBadges = Array.from(new Set([
+                                        ...PRESET_BADGES,
+                                        ...items.flatMap((i) => i.badges),
+                                    ]));
+                                    return (
+                                        <SortableRow
+                                            key={item.id}
+                                            item={item}
+                                            shipTypes={SHIP_TYPES}
+                                            allBadges={allBadges}
+                                            onUpdate={updateItem}
+                                            onCopy={copyItem}
+                                            onDelete={deleteItem}
+                                        />
+                                    );
+                                })}
+                            </SortableContext>
+                        </DndContext>
                     </div>
 
                     <div className="flex items-center gap-3 mb-2">
@@ -408,98 +390,95 @@ function SortableRow({
         zIndex: isDragging ? 10 : undefined,
     };
     const isSoldOut = item.stock !== -1 && item.stock === 0;
+    const statusLabel = item.hidden
+        ? <span className="text-xs text-stone-400 bg-stone-100 px-2 py-0.5 rounded-full">非表示</span>
+        : item.stock === -1
+            ? <span className="text-xs text-stone-400 bg-stone-100 px-2 py-0.5 rounded-full">管理なし</span>
+            : isSoldOut
+                ? <span className="text-xs font-bold text-red-500 bg-red-50 px-2 py-0.5 rounded-full">売り切れ</span>
+                : <span className="text-xs font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">販売中</span>;
 
     return (
-        <tr ref={setNodeRef} style={style}
-            className={`${item.hidden ? "bg-stone-50 opacity-50" : "hover:bg-stone-50"} ${isDragging ? "bg-primary/5 shadow-lg" : ""}`}>
-            <td className="px-1 py-3 text-center">
+        <div ref={setNodeRef} style={style}
+            className={`px-3 py-3 ${item.hidden ? "opacity-50 bg-stone-50" : "hover:bg-stone-50/60"} ${isDragging ? "bg-primary/5 shadow-lg" : ""}`}>
+
+            {/* 1行目: ドラッグ＋商品名＋ステータス＋操作ボタン */}
+            <div className="flex items-center gap-2 mb-2">
                 <button
                     {...attributes}
                     {...listeners}
-                    className="cursor-grab active:cursor-grabbing p-1 text-stone-300 hover:text-stone-500 transition-colors touch-none"
+                    className="cursor-grab active:cursor-grabbing p-1 text-stone-300 hover:text-stone-500 transition-colors touch-none flex-shrink-0"
                 >
                     <GripVertical className="w-4 h-4" />
                 </button>
-            </td>
-            <td className="px-4 py-3">
                 <input
                     value={item.name}
                     onChange={(e) => onUpdate(item.id, "name", e.target.value)}
-                    className="w-full border border-stone-200 rounded-lg px-3 py-1.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    className="flex-1 min-w-0 border border-stone-200 rounded-lg px-3 py-1.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/30"
                 />
-            </td>
-            <td className="px-4 py-3 text-center">
-                <input type="number" min={-1} value={item.stock}
-                    onChange={(e) => {
-                        const v = parseInt(e.target.value, 10);
-                        onUpdate(item.id, "stock", isNaN(v) ? -1 : v);
-                    }}
-                    className="w-20 text-center border border-stone-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
-            </td>
-            <td className="px-4 py-3 text-center">
-                <div className="flex items-center justify-center gap-1">
-                    <span className="text-stone-400 text-sm">¥</span>
-                    <input type="number" min={0} value={item.price ?? ""} placeholder="未設定"
-                        onChange={(e) => onUpdate(item.id, "price", e.target.value ? parseInt(e.target.value, 10) : null)}
-                        className="w-24 text-center border border-stone-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                {statusLabel}
+                <div className="flex items-center gap-0.5 flex-shrink-0">
+                    <button onClick={() => onUpdate(item.id, "hidden", !item.hidden)}
+                        title={item.hidden ? "表示する" : "非表示にする"}
+                        className={`p-1.5 rounded transition-colors ${item.hidden ? "text-primary" : "text-stone-300 hover:text-stone-600"}`}>
+                        {item.hidden ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                    <button onClick={() => onCopy(item.id)} title="コピー"
+                        className="p-1.5 text-stone-300 hover:text-blue-500 rounded transition-colors">
+                        <Copy className="w-4 h-4" />
+                    </button>
+                    <button onClick={() => onDelete(item.id)} title="削除"
+                        className="p-1.5 text-stone-300 hover:text-red-500 rounded transition-colors">
+                        <Trash2 className="w-4 h-4" />
+                    </button>
                 </div>
-            </td>
-            <td className="px-4 py-3 text-center">
+            </div>
+
+            {/* 2行目: 各種設定 */}
+            <div className="flex items-center gap-2 flex-wrap ml-7">
+                {/* 在庫数 */}
+                <div className="flex items-center gap-1">
+                    <span className="text-xs text-stone-400 whitespace-nowrap">在庫</span>
+                    <input type="number" min={-1} value={item.stock}
+                        onChange={(e) => {
+                            const v = parseInt(e.target.value, 10);
+                            onUpdate(item.id, "stock", isNaN(v) ? -1 : v);
+                        }}
+                        className="w-16 text-center border border-stone-200 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                </div>
+                {/* 価格 */}
+                <div className="flex items-center gap-1">
+                    <span className="text-xs text-stone-400">¥</span>
+                    <input type="number" min={0} value={item.price ?? ""} placeholder="デフォルト"
+                        onChange={(e) => onUpdate(item.id, "price", e.target.value ? parseInt(e.target.value, 10) : null)}
+                        className="w-28 text-center border border-stone-200 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                </div>
+                {/* 配送区分 */}
                 <select value={item.shipType}
                     onChange={(e) => onUpdate(item.id, "shipType", e.target.value)}
-                    className="border border-stone-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30">
+                    className="border border-stone-200 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30">
                     {shipTypes.map((t) => (
                         <option key={t.value} value={t.value}>{t.label}</option>
                     ))}
                 </select>
-            </td>
-            <td className="px-4 py-3 text-center">
-                {item.hidden
-                    ? <span className="text-xs text-stone-400">非表示</span>
-                    : item.stock === -1
-                        ? <span className="text-xs text-stone-400">管理なし</span>
-                        : isSoldOut
-                            ? <span className="text-xs font-bold text-red-500">売り切れ</span>
-                            : <span className="text-xs font-bold text-green-600">販売中</span>}
-            </td>
-            <td className="px-3 py-3 text-center">
-                <input
-                    value={item.nextShipment}
-                    onChange={(e) => onUpdate(item.id, "nextShipment", e.target.value)}
-                    placeholder="例: 10月頃"
-                    className="w-full border border-stone-200 rounded-lg px-2 py-1.5 text-xs text-center focus:outline-none focus:ring-2 focus:ring-primary/30"
-                />
-            </td>
-            <td className="px-3 py-3">
+                {/* 次回出荷 */}
+                <div className="flex items-center gap-1">
+                    <span className="text-xs text-stone-400 whitespace-nowrap">次回</span>
+                    <input
+                        value={item.nextShipment}
+                        onChange={(e) => onUpdate(item.id, "nextShipment", e.target.value)}
+                        placeholder="例: 10月頃"
+                        className="w-24 border border-stone-200 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    />
+                </div>
+                {/* バッジ */}
                 <BadgeSelector
                     badges={item.badges}
                     allBadges={allBadges}
                     onChange={(b) => onUpdate(item.id, "badges", b)}
                 />
-            </td>
-            <td className="px-2 py-3 text-center">
-                <div className="flex items-center justify-center gap-1">
-                    <button
-                        onClick={() => onUpdate(item.id, "hidden", !item.hidden)}
-                        title={item.hidden ? "サイトに表示する" : "サイトから非表示にする"}
-                        className={`p-1.5 rounded transition-colors ${item.hidden ? "text-primary hover:text-primary/70" : "text-stone-300 hover:text-stone-600"}`}>
-                        {item.hidden ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                    <button
-                        onClick={() => onCopy(item.id)}
-                        title="コピーして追加"
-                        className="p-1.5 text-stone-300 hover:text-blue-500 rounded transition-colors">
-                        <Copy className="w-4 h-4" />
-                    </button>
-                    <button
-                        onClick={() => onDelete(item.id)}
-                        title="削除"
-                        className="p-1.5 text-stone-300 hover:text-red-500 rounded transition-colors">
-                        <Trash2 className="w-4 h-4" />
-                    </button>
-                </div>
-            </td>
-        </tr>
+            </div>
+        </div>
     );
 }
 
