@@ -16,7 +16,10 @@ export const metadata: Metadata = {
 
 export const revalidate = 60;
 
-type InventoryData = { stock: number; nameOverride: string; hidden: boolean; deleted: boolean; nextShipment: string; badges: string[] };
+type InventoryData = {
+  stock: number; variantName: string; hidden: boolean;
+  nextShipment: string; badges: string[]; family: string; price: number | null;
+};
 type InventoryResult = { map: Record<string, InventoryData>; order: string[] };
 
 async function getInventoryMap(): Promise<InventoryResult> {
@@ -31,7 +34,7 @@ async function getInventoryMap(): Promise<InventoryResult> {
     const sheets = google.sheets({ version: "v4", auth: authClient });
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-      range: "商品在庫!A:I",
+      range: "商品在庫!A:J",
     });
     const rows = res.data.values ?? [];
     const map: Record<string, InventoryData> = {};
@@ -41,11 +44,12 @@ async function getInventoryMap(): Promise<InventoryResult> {
         order.push(r[0]);
         map[r[0]] = {
           stock: r[2] !== undefined && r[2] !== "" ? parseInt(r[2], 10) : -1,
-          nameOverride: r[1] ?? "",
+          variantName: r[1] ?? "",   // B列 = バリエーション名
           hidden: r[5] === "1",
-          deleted: false,
           nextShipment: r[7] ?? "",
           badges: r[8] ? r[8].split(",").map((b: string) => b.trim()).filter(Boolean) : [],
+          family: r[9]?.trim() ?? "",
+          price: r[3] !== undefined && r[3] !== "" ? parseInt(r[3], 10) : null,
         };
       }
     });
@@ -57,118 +61,164 @@ async function getInventoryMap(): Promise<InventoryResult> {
 
 async function getProducts(): Promise<Product[]> {
   try {
-    const data = await client.getList<Product>({
-      endpoint: "products",
-      queries: { orders: "order" },
-    });
-
-    if (data.contents.length > 0) {
-      return data.contents;
-    }
+    const data = await client.getList<Product>({ endpoint: "products", queries: { orders: "order", limit: 100 } });
+    if (data.contents.length > 0) return data.contents;
   } catch (error) {
     console.error("Failed to fetch products from MicroCMS:", error);
   }
-
-  // Fallback to local data if MicroCMS fails or returns empty
   return localProducts as Product[];
 }
+
+// 表示用カード（単品 or ファミリー代表）
+type CardItem =
+  | { type: "single"; product: Product; inv: InventoryData }
+  | { type: "family"; familyName: string; repProduct: Product; repInv: InventoryData; repId: string; minPrice: number; allSoldOut: boolean; category: string };
 
 export default async function ProductsPage() {
   const [products, { map: inventoryMap, order: inventoryOrder }] = await Promise.all([getProducts(), getInventoryMap()]);
 
-  if (products.length === 0) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-stone-50">
-        <p className="text-stone-500">商品が見つかりませんでした。</p>
-      </div>
-    );
+  const productMap = Object.fromEntries(products.map((p) => [p.id, p]));
+
+  // ファミリーごとにグループ化
+  const seenFamilies = new Set<string>();
+  const cards: CardItem[] = [];
+
+  for (const id of inventoryOrder) {
+    const inv = inventoryMap[id];
+    if (!inv || inv.hidden) continue;
+    const product = productMap[id];
+    if (!product) continue;
+
+    if (inv.family) {
+      if (seenFamilies.has(inv.family)) continue; // 同じファミリーは2枚目以降スキップ
+      seenFamilies.add(inv.family);
+
+      // このファミリーの全バリエーション
+      const familyIds = inventoryOrder.filter(fid => inventoryMap[fid]?.family === inv.family && !inventoryMap[fid]?.hidden);
+      const familyInvs = familyIds.map(fid => ({ id: fid, inv: inventoryMap[fid], product: productMap[fid] })).filter(x => x.product);
+
+      // 最安値（販売中を優先）
+      const prices = familyInvs.map(x => x.inv.price ?? x.product!.price).filter(Boolean) as number[];
+      const minPrice = prices.length > 0 ? Math.min(...prices) : product.price;
+
+      // 代表リンク先（最初の販売中バリエーション、なければ先頭）
+      const firstAvail = familyInvs.find(x => !(x.inv.stock !== -1 && x.inv.stock === 0));
+      const rep = firstAvail ?? familyInvs[0];
+      const allSoldOut = familyInvs.every(x => x.inv.stock !== -1 && x.inv.stock === 0);
+
+      cards.push({
+        type: "family",
+        familyName: inv.family,
+        repProduct: rep?.product ?? product,
+        repInv: rep?.inv ?? inv,
+        repId: rep?.id ?? id,
+        minPrice,
+        allSoldOut,
+        category: product.category,
+      });
+    } else {
+      cards.push({ type: "single", product, inv });
+    }
   }
 
-  // シートの順番で並べ替え。シートにない商品は表示しない。非表示を除外
-  const productMap = Object.fromEntries(products.map((p) => [p.id, p]));
-  const sortedProducts = inventoryOrder
-    .map((id) => productMap[id])
-    .filter((p): p is Product => !!p && !inventoryMap[p.id]?.hidden);
+  const rootCards = cards.filter(c => c.category === "root" || (c.type === "single" && c.product.category === "root") || (c.type === "family" && c.category === "root"));
+  const leafCards = cards.filter(c => (c.type === "single" ? c.product.category : c.category) === "leaf");
+  const honeyCards = cards.filter(c => (c.type === "single" ? c.product.category : c.category) === "honey");
+  const otherCards = cards.filter(c => !["root", "leaf", "honey"].includes(c.type === "single" ? c.product.category : c.category));
 
-  // Group products by category
-  const rootProducts = sortedProducts.filter(p => p.category === "root");
-  const leafProducts = sortedProducts.filter(p => p.category === "leaf");
-  const honeyProducts = sortedProducts.filter(p => p.category === "honey");
-  const otherProducts = sortedProducts.filter(p => !["root", "leaf", "honey"].includes(p.category));
+  const renderCard = (card: CardItem) => {
+    if (card.type === "single") {
+      const { product, inv } = card;
+      const isSoldOut = inv.stock !== -1 && inv.stock === 0;
+      const displayName = inv.variantName || product.name;
+      return (
+        <Link href={`/products/${product.id}`} key={product.id} className={`group ${isSoldOut ? "pointer-events-none" : ""}`}>
+          <div className={`bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 ${isSoldOut ? "opacity-70" : ""}`}>
+            <div className="relative aspect-[3/2] bg-stone-100 overflow-hidden">
+              {product.image ? (
+                <Image src={product.image.url} alt={displayName} fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-stone-400">No Image</div>
+              )}
+              {isSoldOut && (
+                <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center gap-2">
+                  <span className="bg-white text-stone-900 text-sm font-bold px-4 py-2 rounded-full">売り切れ</span>
+                  {inv.nextShipment && (
+                    <span className="bg-black/60 text-white text-xs px-3 py-1 rounded-full">次回 {inv.nextShipment}入荷予定</span>
+                  )}
+                </div>
+              )}
+              {!isSoldOut && product.isRecommended && (
+                <span className="absolute top-4 right-4 bg-primary text-white text-xs font-bold px-3 py-1 rounded-full shadow-md">おすすめ</span>
+              )}
+            </div>
+            <div className="p-6">
+              <div className="flex justify-end mb-2">
+                <span className="font-bold text-lg text-stone-900">¥{product.price.toLocaleString()}</span>
+              </div>
+              {inv.badges.length > 0 && (
+                <div className="flex flex-wrap gap-1 mb-1">
+                  {inv.badges.map((badge) => (
+                    <span key={badge} className={`text-xs px-2 py-0.5 rounded-full border font-medium ${BADGE_COLORS[badge] ?? DEFAULT_BADGE_COLOR}`}>{badge}</span>
+                  ))}
+                </div>
+              )}
+              <h2 className="font-bold text-stone-900 mb-2 line-clamp-2 group-hover:text-primary transition-colors">{displayName}</h2>
+              <p className="text-sm text-stone-500 line-clamp-2">{product.description}</p>
+            </div>
+          </div>
+        </Link>
+      );
+    } else {
+      const { familyName, repProduct, repInv, repId, minPrice, allSoldOut } = card;
+      return (
+        <Link href={`/products/${repId}`} key={`family-${familyName}`} className={`group ${allSoldOut ? "pointer-events-none" : ""}`}>
+          <div className={`bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 ${allSoldOut ? "opacity-70" : ""}`}>
+            <div className="relative aspect-[3/2] bg-stone-100 overflow-hidden">
+              {repProduct.image ? (
+                <Image src={repProduct.image.url} alt={familyName} fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-stone-400">No Image</div>
+              )}
+              {allSoldOut && (
+                <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center gap-2">
+                  <span className="bg-white text-stone-900 text-sm font-bold px-4 py-2 rounded-full">売り切れ</span>
+                  {repInv.nextShipment && (
+                    <span className="bg-black/60 text-white text-xs px-3 py-1 rounded-full">次回 {repInv.nextShipment}入荷予定</span>
+                  )}
+                </div>
+              )}
+              {!allSoldOut && repProduct.isRecommended && (
+                <span className="absolute top-4 right-4 bg-primary text-white text-xs font-bold px-3 py-1 rounded-full shadow-md">おすすめ</span>
+              )}
+            </div>
+            <div className="p-6">
+              <div className="flex justify-end mb-2">
+                <span className="font-bold text-lg text-stone-900">¥{minPrice.toLocaleString()}〜</span>
+              </div>
+              {repInv.badges.length > 0 && (
+                <div className="flex flex-wrap gap-1 mb-1">
+                  {repInv.badges.map((badge) => (
+                    <span key={badge} className={`text-xs px-2 py-0.5 rounded-full border font-medium ${BADGE_COLORS[badge] ?? DEFAULT_BADGE_COLOR}`}>{badge}</span>
+                  ))}
+                </div>
+              )}
+              <h2 className="font-bold text-stone-900 mb-2 line-clamp-2 group-hover:text-primary transition-colors">{familyName}</h2>
+              <p className="text-sm text-stone-500 line-clamp-2">{repProduct.description}</p>
+            </div>
+          </div>
+        </Link>
+      );
+    }
+  };
 
-  const ProductSection = ({ title, items }: { title: string, items: Product[] }) => {
+  const ProductSection = ({ title, items }: { title: string; items: CardItem[] }) => {
     if (items.length === 0) return null;
     return (
       <div className="mb-16 last:mb-0">
-        <h2 className="text-2xl font-bold text-stone-900 mb-8 border-l-4 border-primary pl-4">
-          {title}
-        </h2>
+        <h2 className="text-2xl font-bold text-stone-900 mb-8 border-l-4 border-primary pl-4">{title}</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {items.map((product) => {
-            const inv = inventoryMap[product.id];
-            const stock = inv?.stock ?? -1;
-            const isSoldOut = stock !== -1 && stock === 0;
-            const displayName = inv?.nameOverride || product.name;
-            return (
-            <Link href={`/products/${product.id}`} key={product.id} className={`group ${isSoldOut ? "pointer-events-none" : ""}`}>
-              <div className={`bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 ${isSoldOut ? "opacity-70" : ""}`}>
-                <div className="relative aspect-[3/2] bg-stone-100 overflow-hidden">
-                  {product.image ? (
-                    <Image
-                      src={product.image.url}
-                      alt={product.name}
-                      fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-stone-400">
-                      No Image
-                    </div>
-                  )}
-                  {isSoldOut && (
-                    <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center gap-2">
-                      <span className="bg-white text-stone-900 text-sm font-bold px-4 py-2 rounded-full">
-                        売り切れ
-                      </span>
-                      {inv?.nextShipment && (
-                        <span className="bg-black/60 text-white text-xs px-3 py-1 rounded-full">
-                          次回 {inv.nextShipment}入荷予定
-                        </span>
-                      )}
-                    </div>
-                  )}
-                  {!isSoldOut && product.isRecommended && (
-                    <span className="absolute top-4 right-4 bg-primary text-white text-xs font-bold px-3 py-1 rounded-full shadow-md">
-                      おすすめ
-                    </span>
-                  )}
-                </div>
-                <div className="p-6 relative">
-                  <div className="flex justify-end items-start mb-2">
-                    <span className="font-bold text-lg text-stone-900">
-                      ¥{product.price.toLocaleString()}
-                    </span>
-                  </div>
-                  {inv?.badges && inv.badges.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mb-1">
-                      {inv.badges.map((badge) => (
-                        <span key={badge} className={`text-xs px-2 py-0.5 rounded-full border font-medium ${BADGE_COLORS[badge] ?? DEFAULT_BADGE_COLOR}`}>
-                          {badge}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                  <h2 className="font-bold text-stone-900 mb-2 line-clamp-2 group-hover:text-primary transition-colors">
-                    {displayName}
-                  </h2>
-                  <p className="text-sm text-stone-500 line-clamp-2">
-                    {product.description}
-                  </p>
-                </div>
-              </div>
-            </Link>
-            );
-          })}
+          {items.map(renderCard)}
         </div>
       </div>
     );
@@ -177,26 +227,21 @@ export default async function ProductsPage() {
   return (
     <div className="min-h-screen flex flex-col font-sans bg-stone-50">
       <Header />
-
       <main className="flex-1 py-16">
         <div className="container mx-auto px-4 md:px-6">
           <div className="text-center mb-16 space-y-4">
-            <h1 className="text-3xl md:text-4xl font-bold text-stone-900 font-heading">
-              商品一覧
-            </h1>
+            <h1 className="text-3xl md:text-4xl font-bold text-stone-900 font-heading">商品一覧</h1>
             <p className="text-stone-600 max-w-2xl mx-auto">
               安藤青果と、ご近所の農家さんが丹精込めて育てた自慢の逸品たち。<br />
               旬の時期に一番おいしい状態でお届けします。
             </p>
           </div>
-
-          <ProductSection title="根菜・芋類" items={rootProducts} />
-          <ProductSection title="葉物野菜" items={leafProducts} />
-          <ProductSection title="蜂蜜" items={honeyProducts} />
-          <ProductSection title="加工品・その他" items={otherProducts} />
+          <ProductSection title="根菜・芋類" items={rootCards} />
+          <ProductSection title="葉物野菜" items={leafCards} />
+          <ProductSection title="蜂蜜" items={honeyCards} />
+          <ProductSection title="加工品・その他" items={otherCards} />
         </div>
       </main>
-
       <Footer />
     </div>
   );

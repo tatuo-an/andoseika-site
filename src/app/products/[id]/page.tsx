@@ -211,7 +211,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                                     </div>
                                 )}
                                 <h1 className="text-3xl md:text-4xl font-bold text-stone-900 mb-4 font-heading">
-                                    {product.name}
+                                    {invData.family || product.name}
                                 </h1>
                                 <p className="text-2xl font-bold text-primary">
                                     ¥{product.price.toLocaleString()}
