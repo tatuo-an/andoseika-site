@@ -26,7 +26,8 @@ export type InventoryItem = {
     price: number | null;
     shipType: string;
     hidden: boolean;
-    deleted: boolean; // true = リストから削除済み（シートには残す）
+    deleted: boolean;
+    nextShipment: string; // 売り切れ時の次回出荷表示テキスト（例: "10月頃"）
 };
 
 type ShippingItem = {
@@ -86,6 +87,7 @@ export function AdminPanel({
             shipType: inv.shipType,
             hidden: inv.hidden,
             deleted: inv.deleted,
+            nextShipment: inv.nextShipment ?? "",
         })),
         ...products
             .filter((p) => !inventoryIds.has(p.id))
@@ -97,6 +99,7 @@ export function AdminPanel({
                 shipType: "",
                 hidden: false,
                 deleted: false,
+                nextShipment: "",
             })),
     ]);
 
@@ -135,6 +138,7 @@ export function AdminPanel({
             shipType: "",
             hidden: false,
             deleted: false,
+            nextShipment: "",
         }]);
         setSavedInventory(false);
     };
@@ -216,6 +220,7 @@ export function AdminPanel({
                                     <th className="text-center px-4 py-3 w-32">販売価格<br /><span className="font-normal text-stone-400">空欄=デフォルト</span></th>
                                     <th className="text-center px-4 py-3 w-36">配送区分</th>
                                     <th className="text-center px-4 py-3 w-20">状態</th>
+                                    <th className="text-center px-4 py-3 w-28">次回出荷<br /><span className="font-normal text-stone-400">売切時に表示</span></th>
                                     <th className="w-20"></th>
                                 </tr>
                             </thead>
@@ -407,6 +412,14 @@ function SortableRow({
                         : isSoldOut
                             ? <span className="text-xs font-bold text-red-500">売り切れ</span>
                             : <span className="text-xs font-bold text-green-600">販売中</span>}
+            </td>
+            <td className="px-3 py-3 text-center">
+                <input
+                    value={item.nextShipment}
+                    onChange={(e) => onUpdate(item.id, "nextShipment", e.target.value)}
+                    placeholder="例: 10月頃"
+                    className="w-full border border-stone-200 rounded-lg px-2 py-1.5 text-xs text-center focus:outline-none focus:ring-2 focus:ring-primary/30"
+                />
             </td>
             <td className="px-2 py-3 text-center">
                 <div className="flex items-center justify-center gap-1">

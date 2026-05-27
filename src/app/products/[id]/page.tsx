@@ -13,7 +13,7 @@ import { google } from "googleapis";
 
 export const revalidate = 60;
 
-async function getInventoryRow(id: string): Promise<{ stock: number; hidden: boolean; deleted: boolean }> {
+async function getInventoryRow(id: string): Promise<{ stock: number; hidden: boolean; deleted: boolean; nextShipment: string }> {
     try {
         const authClient = new google.auth.GoogleAuth({
             credentials: {
@@ -25,18 +25,19 @@ async function getInventoryRow(id: string): Promise<{ stock: number; hidden: boo
         const sheets = google.sheets({ version: "v4", auth: authClient });
         const res = await sheets.spreadsheets.values.get({
             spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-            range: "商品在庫!A:G",
+            range: "商品在庫!A:H",
         });
         const rows = res.data.values ?? [];
         const row = rows.slice(1).find((r) => r[0] === id);
-        if (!row) return { stock: -1, hidden: false, deleted: false };
+        if (!row) return { stock: -1, hidden: false, deleted: false, nextShipment: "" };
         return {
             stock: row[2] !== undefined && row[2] !== "" ? parseInt(row[2], 10) : -1,
             hidden: row[5] === "1",
             deleted: row[6] === "1",
+            nextShipment: row[7] ?? "",
         };
     } catch {
-        return { stock: -1, hidden: false, deleted: false };
+        return { stock: -1, hidden: false, deleted: false, nextShipment: "" };
     }
 }
 
@@ -109,7 +110,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 export default async function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
     const [product, inv] = await Promise.all([getProduct(id), getInventoryRow(id)]);
-    const { stock, hidden, deleted } = inv;
+    const { stock, hidden, deleted, nextShipment } = inv;
     const isSoldOut = stock !== -1 && stock === 0;
 
     if (!product || hidden || deleted) {
@@ -184,8 +185,15 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                                 </div>
 
                                 {isSoldOut ? (
-                                    <div className="w-full md:w-auto px-12 py-4 rounded-full font-bold text-lg bg-stone-200 text-stone-400 text-center cursor-not-allowed">
-                                        売り切れ
+                                    <div>
+                                        <div className="w-full md:w-auto px-12 py-4 rounded-full font-bold text-lg bg-stone-200 text-stone-400 text-center cursor-not-allowed">
+                                            売り切れ
+                                        </div>
+                                        {nextShipment && (
+                                            <p className="text-sm text-stone-500 mt-2 text-center">
+                                                次回入荷予定: {nextShipment}
+                                            </p>
+                                        )}
                                     </div>
                                 ) : (
                                     <AddToCartButton product={product} />

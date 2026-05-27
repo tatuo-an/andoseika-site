@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 
 export const revalidate = 60;
 
-type InventoryData = { stock: number; nameOverride: string; hidden: boolean; deleted: boolean };
+type InventoryData = { stock: number; nameOverride: string; hidden: boolean; deleted: boolean; nextShipment: string };
 type InventoryResult = { map: Record<string, InventoryData>; order: string[] };
 
 async function getInventoryMap(): Promise<InventoryResult> {
@@ -31,7 +31,7 @@ async function getInventoryMap(): Promise<InventoryResult> {
     const sheets = google.sheets({ version: "v4", auth: authClient });
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-      range: "商品在庫!A:G",
+      range: "商品在庫!A:H",
     });
     const rows = res.data.values ?? [];
     const map: Record<string, InventoryData> = {};
@@ -44,6 +44,7 @@ async function getInventoryMap(): Promise<InventoryResult> {
           nameOverride: r[1] ?? "",
           hidden: r[5] === "1",
           deleted: r[6] === "1",
+          nextShipment: r[7] ?? "",
         };
       }
     });
@@ -126,10 +127,15 @@ export default async function ProductsPage() {
                     </div>
                   )}
                   {isSoldOut && (
-                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                    <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center gap-2">
                       <span className="bg-white text-stone-900 text-sm font-bold px-4 py-2 rounded-full">
                         売り切れ
                       </span>
+                      {inv?.nextShipment && (
+                        <span className="bg-black/60 text-white text-xs px-3 py-1 rounded-full">
+                          次回 {inv.nextShipment}入荷予定
+                        </span>
+                      )}
                     </div>
                   )}
                   {!isSoldOut && product.isRecommended && (
