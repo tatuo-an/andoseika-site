@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Check, Loader2, Plus, Trash2, GripVertical, Eye, EyeOff, Copy } from "lucide-react";
 import { Product } from "@/types/microcms";
 import {
@@ -490,6 +490,8 @@ function BadgeSelector({
 }) {
     const [open, setOpen] = useState(false);
     const [custom, setCustom] = useState("");
+    const [openUp, setOpenUp] = useState(false);
+    const triggerRef = useRef<HTMLDivElement>(null);
 
     const toggle = (badge: string) => {
         onChange(badges.includes(badge) ? badges.filter((b) => b !== badge) : [...badges, badge]);
@@ -502,10 +504,19 @@ function BadgeSelector({
         setCustom("");
     };
 
+    const handleOpen = () => {
+        if (!open && triggerRef.current) {
+            const rect = triggerRef.current.getBoundingClientRect();
+            // ドロップダウンの高さ約220px。下に収まらない場合は上に開く
+            setOpenUp(rect.bottom + 220 > window.innerHeight);
+        }
+        setOpen(!open);
+    };
+
     return (
         <div className="relative">
             {/* 選択済みバッジ表示 & 開閉ボタン */}
-            <div className="flex flex-wrap gap-1 cursor-pointer" onClick={() => setOpen(!open)}>
+            <div ref={triggerRef} className="flex flex-wrap gap-1 cursor-pointer" onClick={handleOpen}>
                 {badges.length === 0 ? (
                     <span className="text-xs text-stone-300 border border-dashed border-stone-200 px-2 py-0.5 rounded-full">＋ バッジ</span>
                 ) : (
@@ -519,7 +530,7 @@ function BadgeSelector({
 
             {/* ドロップダウン */}
             {open && (
-                <div className="absolute z-50 top-8 left-0 bg-white border border-stone-200 rounded-xl shadow-xl p-3 w-72">
+                <div className={`absolute z-50 left-0 bg-white border border-stone-200 rounded-xl shadow-xl p-3 w-72 ${openUp ? "bottom-8" : "top-8"}`}>
                     <p className="text-xs text-stone-400 mb-2 font-bold">バッジを選択（複数可）</p>
                     <div className="flex flex-wrap gap-1.5 mb-3">
                         {allBadges.map((badge) => (
