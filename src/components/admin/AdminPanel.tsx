@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useRef } from "react";
-import { Check, Loader2, Plus, Trash2, GripVertical, Eye, EyeOff, Copy } from "lucide-react";
+import React, { useState, useRef } from "react";
+import { Check, Loader2, Plus, Trash2, GripVertical, Eye, EyeOff, Copy, ChevronDown, ChevronRight } from "lucide-react";
 import { Product } from "@/types/microcms";
 import {
     DndContext,
@@ -32,6 +32,7 @@ export type InventoryItem = {
     deleted: boolean;
     nextShipment: string;
     badges: string[];
+    family: string;
 };
 
 const PRESET_BADGES = ["新物", "訳あり", "秀品", "贈答用", "栽培期間中農薬不使用", "慣行栽培"];
@@ -95,8 +96,19 @@ export function AdminPanel({
             deleted: false,
             nextShipment: inv.nextShipment ?? "",
             badges: inv.badges ?? [],
+            family: inv.family ?? "",
         }))
     );
+
+    // 折りたたまれたファミリー
+    const [collapsedFamilies, setCollapsedFamilies] = useState<Set<string>>(new Set());
+    const toggleFamily = (family: string) => {
+        setCollapsedFamilies((prev) => {
+            const next = new Set(prev);
+            next.has(family) ? next.delete(family) : next.add(family);
+            return next;
+        });
+    };
 
     const visibleItems = items;
 
@@ -184,6 +196,7 @@ export function AdminPanel({
             deleted: false,
             nextShipment: "",
             badges: [],
+            family: "",
         }]);
         setSavedInventory(false);
     };
@@ -255,24 +268,67 @@ export function AdminPanel({
             {/* 商品・在庫タブ */}
             {tab === "inventory" && (
                 <div>
-                    <div className="bg-white rounded-2xl shadow-sm mb-4 divide-y divide-stone-100">
-                        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                            <SortableContext items={visibleItems.map((i) => i.id)} strategy={verticalListSortingStrategy}>
-                                {visibleItems.map((item) => (
-                                    <SortableRow
-                                        key={item.id}
-                                        item={item}
-                                        shipTypes={SHIP_TYPES}
-                                        allBadges={allBadges}
-                                        onAddBadge={addExtraBadge}
-                                        onUpdate={updateItem}
-                                        onCopy={copyItem}
-                                        onDelete={deleteItem}
-                                    />
-                                ))}
-                            </SortableContext>
-                        </DndContext>
-                    </div>
+                    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                        <SortableContext items={visibleItems.map((i) => i.id)} strategy={verticalListSortingStrategy}>
+                            {(() => {
+                                const rendered: React.ReactNode[] = [];
+                                const seenFamilies = new Set<string>();
+                                visibleItems.forEach((item) => {
+                                    const fam = item.family?.trim();
+                                    if (fam) {
+                                        if (!seenFamilies.has(fam)) {
+                                            seenFamilies.add(fam);
+                                            const familyItems = visibleItems.filter((i) => i.family?.trim() === fam);
+                                            const collapsed = collapsedFamilies.has(fam);
+                                            rendered.push(
+                                                <div key={`fam-${fam}`} className="bg-white rounded-2xl shadow-sm mb-2 overflow-hidden">
+                                                    <button
+                                                        onClick={() => toggleFamily(fam)}
+                                                        className="w-full flex items-center gap-2 px-4 py-3 bg-stone-50 hover:bg-stone-100 transition-colors text-left border-b border-stone-100"
+                                                    >
+                                                        {collapsed ? <ChevronRight className="w-4 h-4 text-stone-400" /> : <ChevronDown className="w-4 h-4 text-stone-400" />}
+                                                        <span className="font-bold text-stone-700 text-sm">{fam}</span>
+                                                        <span className="text-xs text-stone-400 ml-1">{familyItems.length}バリエーション</span>
+                                                    </button>
+                                                    {!collapsed && (
+                                                        <div className="divide-y divide-stone-100">
+                                                            {familyItems.map((fi) => (
+                                                                <SortableRow
+                                                                    key={fi.id}
+                                                                    item={fi}
+                                                                    shipTypes={SHIP_TYPES}
+                                                                    allBadges={allBadges}
+                                                                    onAddBadge={addExtraBadge}
+                                                                    onUpdate={updateItem}
+                                                                    onCopy={copyItem}
+                                                                    onDelete={deleteItem}
+                                                                />
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        }
+                                    } else {
+                                        rendered.push(
+                                            <div key={item.id} className="bg-white rounded-2xl shadow-sm mb-2">
+                                                <SortableRow
+                                                    item={item}
+                                                    shipTypes={SHIP_TYPES}
+                                                    allBadges={allBadges}
+                                                    onAddBadge={addExtraBadge}
+                                                    onUpdate={updateItem}
+                                                    onCopy={copyItem}
+                                                    onDelete={deleteItem}
+                                                />
+                                            </div>
+                                        );
+                                    }
+                                });
+                                return rendered;
+                            })()}
+                        </SortableContext>
+                    </DndContext>
 
                     <div className="flex items-center gap-3 mb-2">
                         <button onClick={saveInventory} disabled={savingInventory}
@@ -475,6 +531,16 @@ function SortableRow({
                         value={item.nextShipment}
                         onChange={(e) => onUpdate(item.id, "nextShipment", e.target.value)}
                         placeholder="例: 10月頃"
+                        className="w-24 border border-stone-200 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    />
+                </div>
+                {/* ファミリー */}
+                <div className="flex items-center gap-1">
+                    <span className="text-xs text-stone-400 whitespace-nowrap">ファミリー</span>
+                    <input
+                        value={item.family ?? ""}
+                        onChange={(e) => onUpdate(item.id, "family", e.target.value)}
+                        placeholder="例: ながいも"
                         className="w-24 border border-stone-200 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-primary/30"
                     />
                 </div>
