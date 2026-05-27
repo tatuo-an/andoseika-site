@@ -83,9 +83,9 @@ export function AdminPanel({
     const productMap = Object.fromEntries(products.map((p) => [p.id, p]));
     const inventoryIds = new Set(initialInventory.map((i) => i.id));
 
-    // items = シート全件 + シート未登録のMicroCMS商品
-    const [items, setItems] = useState<InventoryItem[]>([
-        ...initialInventory.map((inv) => ({
+    // items = シート全件のみ（MicroCMS未登録商品は自動追加しない）
+    const [items, setItems] = useState<InventoryItem[]>(
+        initialInventory.map((inv) => ({
             id: inv.id,
             name: inv.name || productMap[inv.id]?.name || inv.id,
             stock: inv.stock,
@@ -95,21 +95,8 @@ export function AdminPanel({
             deleted: false,
             nextShipment: inv.nextShipment ?? "",
             badges: inv.badges ?? [],
-        })),
-        ...products
-            .filter((p) => !inventoryIds.has(p.id))
-            .map((p) => ({
-                id: p.id,
-                name: p.name,
-                stock: -1 as number,
-                price: null as number | null,
-                shipType: "",
-                hidden: false,
-                deleted: false,
-                nextShipment: "",
-                badges: [] as string[],
-            })),
-    ]);
+        }))
+    );
 
     const visibleItems = items;
 
@@ -287,7 +274,7 @@ export function AdminPanel({
                         <button onClick={addItem}
                             className="flex items-center gap-2 border border-stone-300 text-stone-600 px-5 py-3 rounded-full text-sm font-bold hover:bg-stone-100 transition-colors">
                             <Plus className="w-4 h-4" />
-                            商品を追加
+                            カスタム商品を追加
                         </button>
                     </div>
                     {inventoryError && <p className="text-red-500 text-sm mt-1">{inventoryError}</p>}
