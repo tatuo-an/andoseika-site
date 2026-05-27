@@ -587,9 +587,11 @@ function SortableRow({
                 </div>
             </div>
 
-            {/* 2行目: ファミリー＋バッジ */}
+            {/* 2行目: ファミリー（未所属のみ）＋バッジ */}
             <div className="flex items-center gap-2 flex-wrap ml-7">
-                <FamilyInput value={item.family ?? ""} onCommit={(v) => onUpdate(item.id, "family", v)} />
+                {!item.family?.trim() && (
+                    <FamilyInput value="" onCommit={(v) => onUpdate(item.id, "family", v)} />
+                )}
                 <BadgeSelector
                     badges={item.badges}
                     allBadges={allBadges}
