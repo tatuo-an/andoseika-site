@@ -24,10 +24,12 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ success: true });
     } catch (err: any) {
         // 404 (already deleted) は成功扱い
-        if (err?.response?.status === 404 || err?.status === 404) {
+        const status = err?.response?.status ?? err?.status ?? err?.statusCode;
+        if (status === 404) {
             return NextResponse.json({ success: true, skipped: true });
         }
-        console.error("[microcms-delete]", err);
-        return NextResponse.json({ error: "Failed to delete from MicroCMS" }, { status: 500 });
+        const message = err?.response?.data?.message ?? err?.message ?? String(err);
+        console.error("[microcms-delete]", { status, message, err });
+        return NextResponse.json({ error: `MicroCMS error ${status}: ${message}` }, { status: 500 });
     }
 }
