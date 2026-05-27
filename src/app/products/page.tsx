@@ -147,13 +147,7 @@ export default async function ProductsPage() {
                   )}
                 </div>
                 <div className="p-6 relative">
-                  <div className="flex justify-between items-start mb-2">
-                    <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-1 rounded">
-                      {product.category === "root" ? "根菜・芋類" :
-                        product.category === "leaf" ? "葉物野菜" :
-                          product.category === "honey" ? "蜂蜜" :
-                            product.category === "processed" ? "加工品" : "その他"}
-                    </span>
+                  <div className="flex justify-end items-start mb-2">
                     <span className="font-bold text-lg text-stone-900">
                       ¥{product.price.toLocaleString()}
                     </span>
