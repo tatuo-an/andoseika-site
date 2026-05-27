@@ -110,6 +110,33 @@ export function AdminPanel({
         });
     };
 
+    // ファミリー名を一括変更（全メンバーの family フィールドを更新）
+    const renameFamily = (oldName: string, newName: string) => {
+        if (!newName.trim() || newName === oldName) return;
+        setItems((prev) => prev.map((item) =>
+            item.family?.trim() === oldName ? { ...item, family: newName.trim() } : item
+        ));
+        setCollapsedFamilies((prev) => {
+            const next = new Set(prev);
+            if (next.has(oldName)) { next.delete(oldName); next.add(newName.trim()); }
+            return next;
+        });
+        setSavedInventory(false);
+    };
+
+    // ファミリーにバリエーションを追加
+    const addVariantToFamily = (family: string) => {
+        const newId = `custom-${Date.now()}`;
+        // 同ファミリーの最後の商品の直後に挿入
+        setItems((prev) => {
+            const lastIdx = [...prev].map((i, idx) => ({ i, idx })).filter(({ i }) => i.family?.trim() === family).at(-1)?.idx ?? prev.length - 1;
+            const next = [...prev];
+            next.splice(lastIdx + 1, 0, { id: newId, name: "バリエーション名", stock: -1, price: null, shipType: "", hidden: false, deleted: false, nextShipment: "", badges: [], family });
+            return next;
+        });
+        setSavedInventory(false);
+    };
+
     const visibleItems = items;
 
     // グローバルカスタムバッジ（プリセット以外で使われているバッジを全商品から収集）
@@ -202,11 +229,9 @@ export function AdminPanel({
     };
 
     const addFamily = () => {
-        const familyName = prompt("ファミリー名を入力してください（例: 砂丘ながいも）");
-        if (!familyName?.trim()) return;
-        const newId = `custom-${Date.now()}`;
+        const ts = Date.now();
         setItems((prev) => [...prev, {
-            id: newId,
+            id: `custom-${ts}`,
             name: "バリエーション名",
             stock: -1,
             price: null,
@@ -215,7 +240,7 @@ export function AdminPanel({
             deleted: false,
             nextShipment: "",
             badges: [],
-            family: familyName.trim(),
+            family: "新しいファミリー",
         }]);
         setSavedInventory(false);
     };
@@ -301,14 +326,26 @@ export function AdminPanel({
                                             const collapsed = collapsedFamilies.has(fam);
                                             rendered.push(
                                                 <div key={`fam-${fam}`} className="bg-white rounded-2xl shadow-sm mb-2 overflow-hidden">
-                                                    <button
-                                                        onClick={() => toggleFamily(fam)}
-                                                        className="w-full flex items-center gap-2 px-4 py-3 bg-stone-50 hover:bg-stone-100 transition-colors text-left border-b border-stone-100"
-                                                    >
-                                                        {collapsed ? <ChevronRight className="w-4 h-4 text-stone-400" /> : <ChevronDown className="w-4 h-4 text-stone-400" />}
-                                                        <span className="font-bold text-stone-700 text-sm">{fam}</span>
-                                                        <span className="text-xs text-stone-400 ml-1">{familyItems.length}バリエーション</span>
-                                                    </button>
+                                                    {/* ── ヘッダー ── */}
+                                                    <div className="flex items-center gap-2 px-4 py-2.5 bg-stone-50 border-b border-stone-100">
+                                                        <button onClick={() => toggleFamily(fam)} className="flex-shrink-0 p-0.5 text-stone-400 hover:text-stone-600">
+                                                            {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                                                        </button>
+                                                        <FamilyNameInput
+                                                            value={fam}
+                                                            onCommit={(newName) => renameFamily(fam, newName)}
+                                                        />
+                                                        <span className="text-xs text-stone-400 whitespace-nowrap">{familyItems.length}バリエーション</span>
+                                                        {!collapsed && (
+                                                            <button
+                                                                onClick={() => addVariantToFamily(fam)}
+                                                                className="ml-auto flex items-center gap-1 text-xs text-stone-500 hover:text-primary border border-stone-200 hover:border-primary/50 px-2.5 py-1 rounded-full transition-colors whitespace-nowrap"
+                                                            >
+                                                                <Plus className="w-3 h-3" />
+                                                                バリエーションを追加
+                                                            </button>
+                                                        )}
+                                                    </div>
                                                     {!collapsed && (
                                                         <div className="divide-y divide-stone-100">
                                                             {familyItems.map((fi) => (
@@ -569,6 +606,41 @@ function SortableRow({
                 />
             </div>
         </div>
+    );
+}
+
+// ── ファミリー名ヘッダー編集（クリックで編集可能）────────────────────
+function FamilyNameInput({ value, onCommit }: { value: string; onCommit: (v: string) => void }) {
+    const [editing, setEditing] = useState(false);
+    const [local, setLocal] = useState(value);
+    const inputRef = useRef<HTMLInputElement>(null);
+
+    const commit = () => {
+        setEditing(false);
+        onCommit(local);
+    };
+
+    if (editing) {
+        return (
+            <input
+                ref={inputRef}
+                value={local}
+                onChange={(e) => setLocal(e.target.value)}
+                onBlur={commit}
+                onKeyDown={(e) => { if (e.key === "Enter") commit(); if (e.key === "Escape") { setLocal(value); setEditing(false); } }}
+                autoFocus
+                className="flex-1 min-w-0 font-bold text-stone-700 text-sm border border-primary/40 rounded-lg px-2 py-0.5 focus:outline-none focus:ring-2 focus:ring-primary/30 bg-white"
+            />
+        );
+    }
+    return (
+        <button
+            onClick={(e) => { e.stopPropagation(); setLocal(value); setEditing(true); setTimeout(() => inputRef.current?.focus(), 0); }}
+            className="flex-1 min-w-0 text-left font-bold text-stone-700 text-sm hover:text-primary transition-colors truncate"
+            title="クリックして編集"
+        >
+            {value}
+        </button>
     );
 }
 
