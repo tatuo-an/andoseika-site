@@ -8,7 +8,7 @@ import { Metadata } from "next";
 import localProducts from "@/data/products.json";
 import { QuickAddButton } from "@/components/products/QuickAddButton";
 import { google } from "googleapis";
-import { BADGE_COLORS, DEFAULT_BADGE_COLOR } from "@/components/admin/AdminPanel";
+import { BADGE_COLORS, DEFAULT_BADGE_COLOR } from "@/lib/badges";
 
 export const metadata: Metadata = {
   title: "商品一覧",

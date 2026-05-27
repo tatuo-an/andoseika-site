@@ -10,7 +10,7 @@ import { AddToCartButton } from "@/components/products/AddToCartButton";
 import localProducts from "@/data/products.json";
 import { Metadata } from "next";
 import { google } from "googleapis";
-import { BADGE_COLORS, DEFAULT_BADGE_COLOR } from "@/components/admin/AdminPanel";
+import { BADGE_COLORS, DEFAULT_BADGE_COLOR } from "@/lib/badges";
 
 export const revalidate = 60;
 

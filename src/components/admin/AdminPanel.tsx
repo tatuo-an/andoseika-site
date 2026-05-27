@@ -18,6 +18,9 @@ import {
     arrayMove,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { BADGE_COLORS, DEFAULT_BADGE_COLOR } from "@/lib/badges";
+
+export { BADGE_COLORS, DEFAULT_BADGE_COLOR };
 
 export type InventoryItem = {
     id: string;
@@ -33,15 +36,6 @@ export type InventoryItem = {
 
 const PRESET_BADGES = ["新物", "訳あり", "秀品", "贈答用", "栽培期間中農薬不使用", "慣行栽培"];
 
-export const BADGE_COLORS: Record<string, string> = {
-    "新物":               "bg-green-100 text-green-700 border-green-200",
-    "訳あり":             "bg-orange-100 text-orange-700 border-orange-200",
-    "秀品":               "bg-blue-100 text-blue-700 border-blue-200",
-    "贈答用":             "bg-rose-100 text-rose-700 border-rose-200",
-    "栽培期間中農薬不使用": "bg-teal-100 text-teal-700 border-teal-200",
-    "慣行栽培":           "bg-stone-100 text-stone-600 border-stone-200",
-};
-export const DEFAULT_BADGE_COLOR = "bg-purple-100 text-purple-700 border-purple-200";
 
 type ShippingItem = {
     region: string;
