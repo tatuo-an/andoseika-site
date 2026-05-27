@@ -345,12 +345,12 @@ export function AdminPanel({
                                             const familyItems = visibleItems.filter((i) => i.family?.trim() === fam);
                                             const collapsed = collapsedFamilies.has(fam);
                                             rendered.push(
-                                                <div key={`fam-${fam}`} className="bg-white rounded-2xl shadow-sm mb-2 overflow-hidden">
+                                                <div key={`fam-${fam}`} className="bg-white rounded-2xl shadow-sm mb-2">
                                                     {/* ── ヘッダー ── */}
                                                     {(() => {
                                                         const allHidden = familyItems.every((i) => i.hidden);
                                                         return (
-                                                            <div className={`flex items-center gap-2 px-4 py-2.5 border-b border-stone-100 ${allHidden ? "bg-stone-100 opacity-60" : "bg-stone-50"}`}>
+                                                            <div className={`flex items-center gap-2 px-4 py-2.5 border-b border-stone-100 rounded-t-2xl ${collapsed ? "rounded-b-2xl" : ""} ${allHidden ? "bg-stone-100 opacity-60" : "bg-stone-50"}`}>
                                                                 <button onClick={() => toggleFamily(fam)} className="flex-shrink-0 p-0.5 text-stone-400 hover:text-stone-600">
                                                                     {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                                                                 </button>
