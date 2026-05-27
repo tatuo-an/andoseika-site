@@ -2,8 +2,9 @@ import { auth, signOut } from "@/auth";
 import { redirect } from "next/navigation";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
-import { User, Package, MapPin, LogOut } from "lucide-react";
+import { User, Package, MapPin, LogOut, Settings } from "lucide-react";
 import Link from "next/link";
+import { isAdmin } from "@/lib/admin";
 
 export default async function MyPage() {
   const session = await auth();
@@ -59,6 +60,17 @@ export default async function MyPage() {
               <p className="text-xs text-stone-400 mt-3">※ 近日公開予定</p>
             </div>
           </div>
+
+          {/* 管理画面（管理者のみ） */}
+          {isAdmin(user.email) && (
+            <Link
+              href="/admin"
+              className="flex items-center gap-2 bg-stone-100 hover:bg-stone-200 text-stone-700 px-5 py-3 rounded-full text-sm font-bold transition-colors mb-4 w-fit"
+            >
+              <Settings className="w-4 h-4" />
+              管理画面
+            </Link>
+          )}
 
           {/* ログアウト */}
           <form
