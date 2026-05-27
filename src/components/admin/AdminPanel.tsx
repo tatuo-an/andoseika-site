@@ -114,8 +114,14 @@ export function AdminPanel({
     };
 
     const deleteItem = (id: string) => {
-        if (!confirm("この商品をリストから削除しますか？")) return;
-        setItems((prev) => prev.filter((item) => item.id !== id));
+        // MicroCMS 商品は削除しても再ロード時に復活するため、非表示に切り替える
+        // 手動追加(custom-)のみ完全削除
+        if (id.startsWith("custom-")) {
+            if (!confirm("この商品を削除しますか？")) return;
+            setItems((prev) => prev.filter((item) => item.id !== id));
+        } else {
+            setItems((prev) => prev.map((item) => item.id === id ? { ...item, hidden: true } : item));
+        }
         setSavedInventory(false);
     };
 
@@ -406,14 +412,14 @@ function SortableRow({
                     {/* 表示/非表示トグル */}
                     <button
                         onClick={() => onUpdate(item.id, "hidden", !item.hidden)}
-                        title={item.hidden ? "表示する" : "非表示にする"}
-                        className={`p-1.5 rounded transition-colors ${item.hidden ? "text-stone-400 hover:text-primary" : "text-stone-300 hover:text-stone-600"}`}>
+                        title={item.hidden ? "サイトに表示する" : "サイトから非表示にする"}
+                        className={`p-1.5 rounded transition-colors ${item.hidden ? "text-primary hover:text-primary/70" : "text-stone-300 hover:text-stone-600"}`}>
                         {item.hidden ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
-                    {/* 削除 */}
+                    {/* 削除（手動追加商品のみ完全削除、それ以外は非表示） */}
                     <button
                         onClick={() => onDelete(item.id)}
-                        title="リストから削除"
+                        title={item.id.startsWith("custom-") ? "削除" : "非表示にする"}
                         className="p-1.5 text-stone-300 hover:text-red-500 rounded transition-colors">
                         <Trash2 className="w-4 h-4" />
                     </button>
