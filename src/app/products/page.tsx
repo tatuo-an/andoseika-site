@@ -7,6 +7,7 @@ import { Product } from "@/types/microcms";
 import { Metadata } from "next";
 import localProducts from "@/data/products.json";
 import { QuickAddButton } from "@/components/products/QuickAddButton";
+import { google } from "googleapis";
 
 export const metadata: Metadata = {
   title: "商品一覧",
@@ -14,6 +15,31 @@ export const metadata: Metadata = {
 };
 
 export const revalidate = 60;
+
+async function getInventoryMap(): Promise<Record<string, number>> {
+  try {
+    const authClient = new google.auth.GoogleAuth({
+      credentials: {
+        client_email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
+        private_key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+      },
+      scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+    });
+    const sheets = google.sheets({ version: "v4", auth: authClient });
+    const res = await sheets.spreadsheets.values.get({
+      spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
+      range: "商品在庫!A:C",
+    });
+    const rows = res.data.values ?? [];
+    const map: Record<string, number> = {};
+    rows.slice(1).forEach((r) => {
+      if (r[0]) map[r[0]] = parseInt(r[2] ?? "0", 10);
+    });
+    return map;
+  } catch {
+    return {};
+  }
+}
 
 async function getProducts(): Promise<Product[]> {
   try {
@@ -34,7 +60,7 @@ async function getProducts(): Promise<Product[]> {
 }
 
 export default async function ProductsPage() {
-  const products = await getProducts();
+  const [products, inventoryMap] = await Promise.all([getProducts(), getInventoryMap()]);
 
   if (products.length === 0) {
     return (
@@ -58,9 +84,12 @@ export default async function ProductsPage() {
           {title}
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {items.map((product) => (
+          {items.map((product) => {
+            const stock = inventoryMap[product.id] ?? -1;
+            const isSoldOut = stock !== -1 && stock === 0;
+            return (
             <Link href={`/products/${product.id}`} key={product.id} className="group">
-              <div className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300">
+              <div className={`bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 ${isSoldOut ? "opacity-70" : ""}`}>
                 <div className="relative aspect-[3/2] bg-stone-100 overflow-hidden">
                   {product.image ? (
                     <Image
@@ -74,7 +103,14 @@ export default async function ProductsPage() {
                       No Image
                     </div>
                   )}
-                  {product.isRecommended && (
+                  {isSoldOut && (
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                      <span className="bg-white text-stone-900 text-sm font-bold px-4 py-2 rounded-full">
+                        売り切れ
+                      </span>
+                    </div>
+                  )}
+                  {!isSoldOut && product.isRecommended && (
                     <span className="absolute top-4 right-4 bg-primary text-white text-xs font-bold px-3 py-1 rounded-full shadow-md">
                       おすすめ
                     </span>
@@ -98,11 +134,12 @@ export default async function ProductsPage() {
                   <p className="text-sm text-stone-500 line-clamp-2 pr-12">
                     {product.description}
                   </p>
-                  <QuickAddButton product={product} />
+                  {!isSoldOut && <QuickAddButton product={product} />}
                 </div>
               </div>
             </Link>
-          ))}
+            );
+          })}
         </div>
       </div>
     );
