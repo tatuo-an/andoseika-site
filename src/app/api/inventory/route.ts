@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 const SPREADSHEET_ID = process.env.GOOGLE_SPREADSHEET_ID!;
 const SHEET_NAME = "商品在庫";
-// 列: A=商品ID, B=商品名, C=在庫数
+// 列: A=商品ID, B=商品名, C=在庫数, D=価格
 
 function getSheets() {
     const authClient = new google.auth.GoogleAuth({
@@ -20,20 +20,20 @@ function getSheets() {
     return google.sheets({ version: "v4", auth: authClient });
 }
 
-// 全商品の在庫取得（公開用・認証不要）
+// 全商品の在庫・価格取得
 export async function GET() {
     try {
         const sheets = getSheets();
         const res = await sheets.spreadsheets.values.get({
             spreadsheetId: SPREADSHEET_ID,
-            range: `${SHEET_NAME}!A:C`,
+            range: `${SHEET_NAME}!A:D`,
         });
         const rows = res.data.values ?? [];
-        // ヘッダー行をスキップ
         const data = rows.slice(1).map((r) => ({
             id: r[0] ?? "",
             name: r[1] ?? "",
-            stock: parseInt(r[2] ?? "0", 10),
+            stock: r[2] !== undefined && r[2] !== "" ? parseInt(r[2], 10) : -1,
+            price: r[3] !== undefined && r[3] !== "" ? parseInt(r[3], 10) : null,
         }));
         return NextResponse.json({ inventory: data });
     } catch (err) {
@@ -42,14 +42,16 @@ export async function GET() {
     }
 }
 
-// 在庫数更新（管理者のみ）
+// 一括保存（管理者のみ）
 export async function POST(req: NextRequest) {
     const session = await auth();
     if (!isAdmin(session?.user?.email)) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
-    const { id, name, stock } = await req.json();
+    const { items } = await req.json() as {
+        items: { id: string; name: string; stock: number; price: number | null }[]
+    };
 
     try {
         const sheets = getSheets();
@@ -57,26 +59,28 @@ export async function POST(req: NextRequest) {
             spreadsheetId: SPREADSHEET_ID,
             range: `${SHEET_NAME}!A:A`,
         });
-        const rows = res.data.values ?? [];
-        // ヘッダー行を含むのでindex+1がシート行番号
-        const rowIndex = rows.findIndex((r, i) => i > 0 && r[0] === id);
+        const existingRows = res.data.values ?? [];
+        const idToRow: Record<string, number> = {};
+        existingRows.forEach((r, i) => { if (i > 0 && r[0]) idToRow[r[0]] = i + 1; });
 
-        if (rowIndex === -1) {
-            // 新規追加
-            await sheets.spreadsheets.values.append({
-                spreadsheetId: SPREADSHEET_ID,
-                range: `${SHEET_NAME}!A:C`,
-                valueInputOption: "RAW",
-                requestBody: { values: [[id, name, stock]] },
-            });
-        } else {
-            // 既存行を更新
-            await sheets.spreadsheets.values.update({
-                spreadsheetId: SPREADSHEET_ID,
-                range: `${SHEET_NAME}!A${rowIndex + 1}:C${rowIndex + 1}`,
-                valueInputOption: "RAW",
-                requestBody: { values: [[id, name, stock]] },
-            });
+        for (const item of items) {
+            const values = [[item.id, item.name, item.stock, item.price ?? ""]];
+            if (idToRow[item.id]) {
+                const rowNum = idToRow[item.id];
+                await sheets.spreadsheets.values.update({
+                    spreadsheetId: SPREADSHEET_ID,
+                    range: `${SHEET_NAME}!A${rowNum}:D${rowNum}`,
+                    valueInputOption: "RAW",
+                    requestBody: { values },
+                });
+            } else {
+                await sheets.spreadsheets.values.append({
+                    spreadsheetId: SPREADSHEET_ID,
+                    range: `${SHEET_NAME}!A:D`,
+                    valueInputOption: "RAW",
+                    requestBody: { values },
+                });
+            }
         }
 
         return NextResponse.json({ success: true });
