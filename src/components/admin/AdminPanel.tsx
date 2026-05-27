@@ -154,8 +154,18 @@ export function AdminPanel({
         setSavedInventory(false);
     };
 
-    const deleteItem = (id: string) => {
-        if (!confirm("この商品を削除しますか？")) return;
+    const deleteItem = async (id: string) => {
+        if (!confirm("この商品を削除しますか？\n※MicroCMSからも完全に削除されます。")) return;
+        // MicroCMSから削除（custom-IDはスキップ）
+        try {
+            await fetch("/api/microcms-delete", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id }),
+            });
+        } catch {
+            // 失敗してもシート側の削除は続行
+        }
         setItems((prev) => prev.filter((item) => item.id !== id));
         setDeletedIds((prev) => prev.includes(id) ? prev : [...prev, id]);
         setSavedInventory(false);
