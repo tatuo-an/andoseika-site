@@ -189,52 +189,68 @@ export function AdminPanel({
             {/* 送料タブ */}
             {tab === "shipping" && (
                 <div>
-                    <p className="text-sm text-stone-500 mb-2">ヤマト運輸 中国エリア発送 税抜き参考値を初期値として設定済みです。都道府県はカンマ区切りで入力してください。</p>
+                    <p className="text-sm text-stone-500 mb-1">ヤマト運輸 中国エリア発送 税抜き参考値を初期値として設定済みです。</p>
                     <p className="text-xs text-stone-400 mb-4">※ 消費税10%を加算する場合は各金額を1.1倍にしてください</p>
-                    <div className="bg-white rounded-2xl shadow-sm overflow-x-auto mb-4">
-                        <table className="w-full" style={{ minWidth: "1000px" }}>
-                            <thead className="bg-stone-100 text-stone-600 text-xs">
-                                <tr>
-                                    <th className="text-left px-3 py-3 w-20 sticky left-0 bg-stone-100">地域名</th>
-                                    <th className="text-left px-3 py-3 w-52">都道府県</th>
-                                    {SIZE_LABELS.map((l) => (
-                                        <th key={l} className="text-center px-2 py-3 w-20">{l}</th>
-                                    ))}
-                                    <th className="w-8"></th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-stone-100">
-                                {shipping.map((row, index) => (
-                                    <tr key={index} className="hover:bg-stone-50">
-                                        <td className="px-3 py-2 sticky left-0 bg-white">
+
+                    <div className="space-y-4 mb-6">
+                        {shipping.map((row, index) => (
+                            <div key={index} className="bg-white rounded-2xl shadow-sm p-5">
+                                {/* ヘッダー行 */}
+                                <div className="flex items-start gap-3 mb-4">
+                                    <div className="flex-1 grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label className="text-xs text-stone-400 mb-1 block">地域名</label>
                                             <input value={row.region}
                                                 onChange={(e) => updateShipping(index, "region", e.target.value)}
-                                                className="w-full border border-stone-200 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
-                                        </td>
-                                        <td className="px-3 py-2">
+                                                className="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                                        </div>
+                                        <div>
+                                            <label className="text-xs text-stone-400 mb-1 block">都道府県（カンマ区切り）</label>
                                             <input value={row.prefectures}
                                                 onChange={(e) => updateShipping(index, "prefectures", e.target.value)}
-                                                className="w-full border border-stone-200 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
-                                        </td>
-                                        {SIZE_KEYS.map((key) => (
-                                            <td key={key} className="px-2 py-2 text-center">
-                                                <input type="number" min={0}
-                                                    value={row[key] as number}
+                                                className="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                                        </div>
+                                    </div>
+                                    <button onClick={() => setShipping((prev) => prev.filter((_, i) => i !== index))}
+                                        className="mt-6 p-1.5 text-stone-400 hover:text-red-500 transition-colors">
+                                        <Trash2 className="w-4 h-4" />
+                                    </button>
+                                </div>
+
+                                {/* 宅配便サイズ */}
+                                <div className="mb-3">
+                                    <p className="text-xs font-bold text-stone-500 mb-2">宅配便（サイズ別）</p>
+                                    <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
+                                        {(["s60","s80","s100","s120","s140","s160","s180","s200"] as const).map((key, i) => (
+                                            <div key={key} className="text-center">
+                                                <label className="text-xs text-stone-400 block mb-1">{SIZE_LABELS[i]}</label>
+                                                <input type="number" min={0} value={row[key]}
                                                     onChange={(e) => updateShipping(index, key, parseInt(e.target.value, 10) || 0)}
-                                                    className="w-16 text-center border border-stone-200 rounded-lg px-1 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
-                                            </td>
+                                                    className="w-full text-center border border-stone-200 rounded-lg px-1 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                                            </div>
                                         ))}
-                                        <td className="px-2 py-2 text-center">
-                                            <button onClick={() => setShipping((prev) => prev.filter((_, i) => i !== index))}
-                                                className="p-1 text-stone-400 hover:text-red-500 transition-colors">
-                                                <Trash2 className="w-3.5 h-3.5" />
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                    </div>
+                                </div>
+
+                                {/* コンパクト・クリックポスト */}
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                    <div className="text-center">
+                                        <label className="text-xs text-stone-400 block mb-1">コンパクト</label>
+                                        <input type="number" min={0} value={row.compact}
+                                            onChange={(e) => updateShipping(index, "compact", parseInt(e.target.value, 10) || 0)}
+                                            className="w-full text-center border border-stone-200 rounded-lg px-1 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                                    </div>
+                                    <div className="text-center">
+                                        <label className="text-xs text-stone-400 block mb-1">クリックポスト</label>
+                                        <input type="number" min={0} value={row.clickpost}
+                                            onChange={(e) => updateShipping(index, "clickpost", parseInt(e.target.value, 10) || 0)}
+                                            className="w-full text-center border border-stone-200 rounded-lg px-1 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
                     </div>
+
                     <div className="flex items-center gap-3">
                         <button onClick={saveShipping} disabled={savingShipping}
                             className="flex items-center gap-2 bg-stone-900 text-white px-8 py-3 rounded-full font-bold hover:bg-primary transition-colors disabled:opacity-50">
