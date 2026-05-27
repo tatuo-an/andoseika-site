@@ -6,7 +6,6 @@ import { client } from "@/lib/microcms";
 import { Product } from "@/types/microcms";
 import { Metadata } from "next";
 import localProducts from "@/data/products.json";
-import { QuickAddButton } from "@/components/products/QuickAddButton";
 import { google } from "googleapis";
 import { BADGE_COLORS, DEFAULT_BADGE_COLOR } from "@/lib/badges";
 
@@ -162,10 +161,9 @@ export default async function ProductsPage() {
                   <h2 className="font-bold text-stone-900 mb-2 line-clamp-2 group-hover:text-primary transition-colors">
                     {displayName}
                   </h2>
-                  <p className="text-sm text-stone-500 line-clamp-2 pr-12">
+                  <p className="text-sm text-stone-500 line-clamp-2">
                     {product.description}
                   </p>
-                  {!isSoldOut && <QuickAddButton product={product} />}
                 </div>
               </div>
             </Link>
