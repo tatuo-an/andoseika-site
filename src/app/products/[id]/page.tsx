@@ -218,7 +218,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                 <div className="bg-white rounded-3xl overflow-hidden shadow-sm">
                     <div className="grid md:grid-cols-2 gap-0">
                         {/* Image */}
-                        <div className="relative aspect-square md:aspect-auto md:h-full bg-stone-100">
+                        <div className="relative aspect-square bg-stone-100">
                             {(invImageUrl || product.image?.url) ? (
                                 <Image src={invImageUrl || product.image!.url} alt={product.name} fill className="object-cover" priority />
                             ) : (
