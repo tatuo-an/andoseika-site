@@ -23,11 +23,15 @@ function getRate(row: ShippingRow, shipType: string): number {
     return key ? (row[key] as number) : 0;
 }
 
+// 都道府県の末尾「都道府県」を除いて正規化（例:「沖縄」「沖縄県」→「沖縄」）
+function normPref(p: string) { return p.replace(/[都道府県]$/, ""); }
+
 function findRegionRow(prefecture: string, rows: ShippingRow[]): ShippingRow | null {
     if (!rows.length) return null;
+    const norm = normPref(prefecture);
     for (const row of rows) {
-        const prefs = row.prefectures.split(",").map(p => p.trim());
-        if (prefs.includes(prefecture)) return row;
+        const prefs = row.prefectures.split(",").map(p => normPref(p.trim()));
+        if (prefs.includes(norm)) return row;
     }
     return rows[rows.length - 1]; // それ以外
 }
@@ -35,6 +39,14 @@ function findRegionRow(prefecture: string, rows: ShippingRow[]): ShippingRow | n
 function findBaseRow(rows: ShippingRow[]): ShippingRow | null {
     return rows.length ? rows[rows.length - 1] : null;
 }
+
+// 送料マスタが未設定の場合のデフォルト値（ヤマト運輸 中国エリア発）
+const DEFAULT_SHIPPING: ShippingRow[] = [
+    { region: "北海道", prefectures: "北海道", s60: 1200, s80: 1400, s100: 1600, s120: 1750, s140: 2000, s160: 2200, s180: 2400, s200: 2600, compact: 990, clickpost: 185 },
+    { region: "東北", prefectures: "青森県,岩手県,宮城県,秋田県,山形県,福島県", s60: 800, s80: 1000, s100: 1200, s120: 1400, s140: 1600, s160: 1800, s180: 2000, s200: 2200, compact: 790, clickpost: 185 },
+    { region: "沖縄", prefectures: "沖縄県", s60: 1200, s80: 1700, s100: 2200, s120: 2700, s140: 3200, s160: 3700, s180: 4200, s200: 4900, compact: 790, clickpost: 185 },
+    { region: "それ以外", prefectures: "東京都,神奈川県,埼玉県,千葉県,茨城県,栃木県,群馬県,新潟県,富山県,石川県,福井県,山梨県,長野県,岐阜県,静岡県,愛知県,三重県,滋賀県,京都府,大阪府,兵庫県,奈良県,和歌山県,鳥取県,島根県,岡山県,広島県,山口県,徳島県,香川県,愛媛県,高知県,福岡県,佐賀県,長崎県,熊本県,大分県,宮崎県,鹿児島県", s60: 600, s80: 700, s100: 800, s120: 1000, s140: 1200, s160: 1400, s180: 1600, s200: 1800, compact: 690, clickpost: 185 },
+];
 
 export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
     const { cartDetails, removeItem, incrementItem, decrementItem, totalPrice, cartCount } = useShoppingCart();
@@ -50,7 +62,7 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
             fetch("/api/shipping").then(r => r.json()).catch(() => ({ shipping: [] })),
         ]).then(([addrData, shipData]) => {
             setPrefecture(addrData.address?.prefecture ?? null);
-            setShippingRows(shipData.shipping ?? []);
+            setShippingRows(shipData.shipping?.length ? shipData.shipping : DEFAULT_SHIPPING);
             setAddressLoaded(true);
         });
     }, [isOpen, addressLoaded]);
