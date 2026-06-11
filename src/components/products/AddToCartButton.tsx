@@ -5,11 +5,12 @@ import { useState } from "react";
 import { Check, ShoppingCart } from "lucide-react";
 import { Product } from "@/types/microcms";
 
-export function AddToCartButton({ product, variantId, variantName, price }: {
+export function AddToCartButton({ product, variantId, variantName, price, shipType }: {
     product: Product;
     variantId?: string;
     variantName?: string;
     price?: number;
+    shipType?: string;
 }) {
     const { addItem } = useShoppingCart();
     const [isAdded, setIsAdded] = useState(false);
@@ -23,7 +24,8 @@ export function AddToCartButton({ product, variantId, variantName, price }: {
             image: product.image.url,
             description: product.description,
             sku: variantId ?? product.id,
-        });
+            shipType: shipType ?? "",
+        } as Parameters<typeof addItem>[0]);
         setIsAdded(true);
         setTimeout(() => setIsAdded(false), 2000);
     };

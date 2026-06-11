@@ -29,7 +29,11 @@ export async function POST(req: NextRequest) {
         }
 
         const body = await req.json();
-        const { cartDetails } = body as { cartDetails?: Record<string, CartItem> };
+        const { cartDetails, surcharge, surchargeLabel } = body as {
+            cartDetails?: Record<string, CartItem>;
+            surcharge?: number;
+            surchargeLabel?: string;
+        };
 
         if (!cartDetails) {
             return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
@@ -38,23 +42,36 @@ export async function POST(req: NextRequest) {
         const baseUrl = getBaseUrl(req);
         const legalDisclosureUrl = new URL("/tokusho", baseUrl).toString();
 
-        const line_items = Object.values(cartDetails).map((item) => {
-            return {
+        const line_items = Object.values(cartDetails).map((item) => ({
+            price_data: {
+                currency: "jpy",
+                product_data: {
+                    name: item.name,
+                    images: [
+                        item.image.startsWith("http")
+                            ? item.image
+                            : new URL(item.image, baseUrl).toString(),
+                    ],
+                },
+                unit_amount: item.price,
+            },
+            quantity: item.quantity,
+        }));
+
+        // 追加送料（差額）があれば別 line item として追加
+        if (surcharge && surcharge > 0) {
+            line_items.push({
                 price_data: {
                     currency: "jpy",
                     product_data: {
-                        name: item.name,
-                        images: [
-                            item.image.startsWith("http")
-                                ? item.image
-                                : new URL(item.image, baseUrl).toString(),
-                        ],
+                        name: surchargeLabel ?? "追加送料",
+                        images: [],
                     },
-                    unit_amount: item.price,
+                    unit_amount: surcharge,
                 },
-                quantity: item.quantity,
-            };
-        });
+                quantity: 1,
+            });
+        }
 
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ["card"],
