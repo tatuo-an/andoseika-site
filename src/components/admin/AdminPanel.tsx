@@ -667,24 +667,55 @@ function SortableRow({
     );
 }
 
-// ── ファミリーギャラリー（最大5枚）──────────────────────────────
+// ── ギャラリースロット（ドラッグ可能） ──────────────────────────
+function SortableGallerySlot({ url, onRemove }: { url: string; onRemove: () => void }) {
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: url });
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : 1,
+        zIndex: isDragging ? 10 : undefined,
+    };
+    return (
+        <div ref={setNodeRef} style={style} className="relative flex-shrink-0 touch-none">
+            <div
+                {...attributes}
+                {...listeners}
+                className="w-10 h-10 rounded-lg border border-stone-200 overflow-hidden cursor-grab active:cursor-grabbing"
+            >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={url} alt="" className="w-full h-full object-cover pointer-events-none" />
+            </div>
+            <button
+                onClick={onRemove}
+                className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full flex items-center justify-center text-[10px] leading-none hover:bg-red-600 z-10"
+            >×</button>
+        </div>
+    );
+}
+
+// ── ファミリーギャラリー（最大5枚・ドラッグ並び替え）────────────────
 function FamilyGallery({ familyImages, onUpdate }: {
     familyImages: string[];
     onUpdate: (images: string[]) => void;
 }) {
-    const [uploading, setUploading] = useState<number | null>(null);
-    const [pendingSlot, setPendingSlot] = useState(-1);
+    const [uploading, setUploading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const gallerySensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
-    const openPicker = (slot: number) => {
-        setPendingSlot(slot);
-        fileInputRef.current?.click();
+    const handleDragEnd = (event: DragEndEvent) => {
+        const { active, over } = event;
+        if (over && active.id !== over.id) {
+            const oldIdx = familyImages.indexOf(active.id as string);
+            const newIdx = familyImages.indexOf(over.id as string);
+            if (oldIdx !== -1 && newIdx !== -1) onUpdate(arrayMove(familyImages, oldIdx, newIdx));
+        }
     };
 
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
-        if (!file || pendingSlot < 0) return;
-        setUploading(pendingSlot);
+        if (!file) return;
+        setUploading(true);
         try {
             const resized = await resizeImageFile(file);
             const form = new FormData();
@@ -696,54 +727,48 @@ function FamilyGallery({ familyImages, onUpdate }: {
                 return;
             }
             const { url } = await res.json();
-            const next = [...familyImages];
-            if (pendingSlot < next.length) next[pendingSlot] = url;
-            else next.push(url);
-            onUpdate(next.slice(0, 5));
+            onUpdate([...familyImages, url].slice(0, 5));
         } catch (err) {
             alert(`アップロードエラー: ${err}`);
         } finally {
-            setUploading(null);
-            setPendingSlot(-1);
+            setUploading(false);
             if (fileInputRef.current) fileInputRef.current.value = "";
         }
     };
 
-    const remove = (i: number) => onUpdate(familyImages.filter((_, idx) => idx !== i));
+    const emptyCount = Math.max(0, 5 - familyImages.length);
 
     return (
         <div className="flex items-center gap-2 px-4 py-2 border-b border-stone-100 bg-stone-50/40">
             <span className="text-xs text-stone-400 whitespace-nowrap">ギャラリー</span>
-            <div className="flex gap-1.5">
-                {Array.from({ length: 5 }, (_, i) => {
-                    const url = familyImages[i] ?? null;
-                    return (
-                        <div key={i} className="relative flex-shrink-0">
-                            <button
-                                type="button"
-                                onClick={() => openPicker(i)}
-                                disabled={uploading === i}
-                                title={url ? "クリックして差し替え" : "画像を追加"}
-                                className="w-10 h-10 rounded-lg border border-stone-200 bg-stone-100 hover:border-primary/60 overflow-hidden flex items-center justify-center transition-colors"
-                            >
-                                {uploading === i ? (
-                                    <Loader2 className="w-4 h-4 animate-spin text-stone-400" />
-                                ) : url ? (
-                                    // eslint-disable-next-line @next/next/no-img-element
-                                    <img src={url} alt="" className="w-full h-full object-cover" />
-                                ) : (
-                                    <Camera className="w-3.5 h-3.5 text-stone-300" />
-                                )}
-                            </button>
-                            {url && (
-                                <button
-                                    onClick={() => remove(i)}
-                                    className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full flex items-center justify-center text-[10px] leading-none hover:bg-red-600"
-                                >×</button>
-                            )}
-                        </div>
-                    );
-                })}
+            <div className="flex gap-1.5 items-center">
+                <DndContext sensors={gallerySensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                    <SortableContext items={familyImages} strategy={horizontalListSortingStrategy}>
+                        {familyImages.map((url, i) => (
+                            <SortableGallerySlot
+                                key={url}
+                                url={url}
+                                onRemove={() => onUpdate(familyImages.filter((_, idx) => idx !== i))}
+                            />
+                        ))}
+                    </SortableContext>
+                </DndContext>
+                {/* 空スロット */}
+                {Array.from({ length: emptyCount }, (_, i) => (
+                    <button
+                        key={`empty-${i}`}
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={uploading}
+                        className="w-10 h-10 rounded-lg border border-stone-200 bg-stone-100 hover:border-primary/60 flex items-center justify-center transition-colors"
+                    >
+                        {uploading && i === 0 ? (
+                            <Loader2 className="w-4 h-4 animate-spin text-stone-400" />
+                        ) : (
+                            <Camera className="w-3.5 h-3.5 text-stone-300" />
+                        )}
+                    </button>
+                ))}
             </div>
             <span className="text-xs text-stone-300">{familyImages.length}/5</span>
             <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
