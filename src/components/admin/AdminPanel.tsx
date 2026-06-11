@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef } from "react";
-import { Check, Loader2, Plus, Trash2, GripVertical, Eye, EyeOff, Copy, ChevronDown, ChevronRight } from "lucide-react";
+import { Check, Loader2, Plus, Trash2, GripVertical, Eye, EyeOff, Copy, ChevronDown, ChevronRight, Camera } from "lucide-react";
 import { Product } from "@/types/microcms";
 import {
     DndContext,
@@ -34,6 +34,7 @@ export type InventoryItem = {
     nextShipment: string;
     badges: string[];
     family: string;
+    imageUrl: string;
 };
 
 const PRESET_BADGES = ["新物", "訳あり", "秀品", "贈答用", "栽培期間中農薬不使用", "慣行栽培"];
@@ -98,6 +99,7 @@ export function AdminPanel({
             nextShipment: inv.nextShipment ?? "",
             badges: inv.badges ?? [],
             family: inv.family ?? "",
+            imageUrl: inv.imageUrl ?? productMap[inv.id]?.image?.url ?? "",
         }))
     );
 
@@ -142,7 +144,7 @@ export function AdminPanel({
         setItems((prev) => {
             const lastIdx = [...prev].map((i, idx) => ({ i, idx })).filter(({ i }) => i.family?.trim() === family).at(-1)?.idx ?? prev.length - 1;
             const next = [...prev];
-            next.splice(lastIdx + 1, 0, { id: newId, name: "バリエーション名", stock: -1, price: null, shipType: "", hidden: false, deleted: false, nextShipment: "", badges: [], family });
+            next.splice(lastIdx + 1, 0, { id: newId, name: "バリエーション名", stock: -1, price: null, shipType: "", hidden: false, deleted: false, nextShipment: "", badges: [], family, imageUrl: "" });
             return next;
         });
         setSavedInventory(false);
@@ -244,6 +246,7 @@ export function AdminPanel({
             nextShipment: "",
             badges: [],
             family: "",
+            imageUrl: "",
         }]);
         setSavedInventory(false);
     };
@@ -261,6 +264,7 @@ export function AdminPanel({
             nextShipment: "",
             badges: [],
             family: "新しいファミリー",
+            imageUrl: "",
         }]);
         setSavedInventory(false);
     };
@@ -562,7 +566,7 @@ function SortableRow({
         <div ref={setNodeRef} style={style}
             className={`px-3 py-3 ${item.hidden ? "opacity-50 bg-stone-50" : "hover:bg-stone-50/60"} ${isDragging ? "bg-primary/5 shadow-lg" : ""}`}>
 
-            {/* 1行目: ドラッグ＋商品名＋ステータス＋操作ボタン */}
+            {/* 1行目: ドラッグ＋画像＋商品名＋ステータス＋操作ボタン */}
             <div className="flex items-center gap-2 mb-1.5">
                 <button
                     {...attributes}
@@ -571,6 +575,10 @@ function SortableRow({
                 >
                     <GripVertical className="w-4 h-4" />
                 </button>
+                <ImageUploadButton
+                    currentImageUrl={item.imageUrl}
+                    onUploaded={(url) => onUpdate(item.id, "imageUrl", url)}
+                />
                 <input
                     value={item.name}
                     onChange={(e) => onUpdate(item.id, "name", e.target.value)}
@@ -636,6 +644,60 @@ function SortableRow({
                     onRemoveBadge={onRemoveBadge}
                 />
             </div>
+        </div>
+    );
+}
+
+// ── 画像アップロードボタン ──────────────────────────────────────
+function ImageUploadButton({ currentImageUrl, onUploaded }: {
+    currentImageUrl: string;
+    onUploaded: (url: string) => void;
+}) {
+    const [uploading, setUploading] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setUploading(true);
+        try {
+            const formData = new FormData();
+            formData.append("file", file);
+            const res = await fetch("/api/upload-image", { method: "POST", body: formData });
+            if (!res.ok) {
+                const body = await res.json().catch(() => ({}));
+                alert(`画像アップロード失敗: ${body.error ?? res.status}`);
+                return;
+            }
+            const { url } = await res.json();
+            onUploaded(url);
+        } catch {
+            alert("画像アップロード中にエラーが発生しました");
+        } finally {
+            setUploading(false);
+            if (fileInputRef.current) fileInputRef.current.value = "";
+        }
+    };
+
+    return (
+        <div className="flex-shrink-0">
+            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+            <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                title="画像を変更（クリックしてアップロード）"
+                className="w-9 h-9 rounded-lg border border-stone-200 overflow-hidden bg-stone-100 hover:border-primary/60 transition-colors flex-shrink-0 flex items-center justify-center"
+            >
+                {uploading ? (
+                    <Loader2 className="w-4 h-4 animate-spin text-stone-400" />
+                ) : currentImageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={currentImageUrl} alt="" className="w-full h-full object-cover" />
+                ) : (
+                    <Camera className="w-4 h-4 text-stone-300" />
+                )}
+            </button>
         </div>
     );
 }

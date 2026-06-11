@@ -18,7 +18,7 @@ export const revalidate = 60;
 
 type InventoryData = {
   stock: number; variantName: string; hidden: boolean;
-  nextShipment: string; badges: string[]; family: string; price: number | null;
+  nextShipment: string; badges: string[]; family: string; price: number | null; imageUrl: string;
 };
 type InventoryResult = { map: Record<string, InventoryData>; order: string[] };
 
@@ -34,7 +34,7 @@ async function getInventoryMap(): Promise<InventoryResult> {
     const sheets = google.sheets({ version: "v4", auth: authClient });
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-      range: "商品在庫!A:J",
+      range: "商品在庫!A:K",
     });
     const rows = res.data.values ?? [];
     const map: Record<string, InventoryData> = {};
@@ -50,6 +50,7 @@ async function getInventoryMap(): Promise<InventoryResult> {
           badges: r[8] ? r[8].split(",").map((b: string) => b.trim()).filter(Boolean) : [],
           family: r[9]?.trim() ?? "",
           price: r[3] !== undefined && r[3] !== "" ? parseInt(r[3], 10) : null,
+          imageUrl: r[10]?.trim() ?? "",
         };
       }
     });
@@ -132,12 +133,13 @@ export default async function ProductsPage() {
       const { product, inv } = card;
       const isSoldOut = inv.stock !== -1 && inv.stock === 0;
       const displayName = inv.variantName || product.name;
+      const imgSrc = inv.imageUrl || product.image?.url;
       return (
         <Link href={`/products/${product.id}`} key={product.id} className={`group ${isSoldOut ? "pointer-events-none" : ""}`}>
           <div className={`bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 ${isSoldOut ? "opacity-70" : ""}`}>
             <div className="relative aspect-[3/2] bg-stone-100 overflow-hidden">
-              {product.image ? (
-                <Image src={product.image.url} alt={displayName} fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
+              {imgSrc ? (
+                <Image src={imgSrc} alt={displayName} fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-stone-400">No Image</div>
               )}
@@ -172,12 +174,13 @@ export default async function ProductsPage() {
       );
     } else {
       const { familyName, repProduct, repInv, repId, minPrice, allSoldOut } = card;
+      const familyImgSrc = repInv.imageUrl || repProduct.image?.url;
       return (
         <Link href={`/products/${repId}`} key={`family-${familyName}`} className={`group ${allSoldOut ? "pointer-events-none" : ""}`}>
           <div className={`bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 ${allSoldOut ? "opacity-70" : ""}`}>
             <div className="relative aspect-[3/2] bg-stone-100 overflow-hidden">
-              {repProduct.image ? (
-                <Image src={repProduct.image.url} alt={familyName} fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
+              {familyImgSrc ? (
+                <Image src={familyImgSrc} alt={familyName} fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-stone-400">No Image</div>
               )}
