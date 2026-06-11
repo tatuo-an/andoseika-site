@@ -59,15 +59,6 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
     const baseRow = findBaseRow(shippingRows);
     const isExtraRegion = regionRow && baseRow && regionRow !== baseRow;
 
-    // デバッグ
-    if (typeof window !== "undefined" && isOpen) {
-        console.log("[CartModal] prefecture:", prefecture, "| addressLoaded:", addressLoaded);
-        console.log("[CartModal] shippingRows:", shippingRows.length, shippingRows.map(r => r.region));
-        console.log("[CartModal] regionRow:", regionRow?.region, "| baseRow:", baseRow?.region, "| isExtraRegion:", isExtraRegion);
-        console.log("[CartModal] cartItems shipType:", Object.values(cartDetails ?? {}).map(i => ({ name: i.name, shipType: (i as any).shipType })));
-        console.log("[CartModal] surcharge:", surcharge);
-    }
-
     const surcharge = (() => {
         if (!isExtraRegion || !regionRow || !baseRow) return 0;
         return Object.values(cartDetails ?? {}).reduce((sum, item) => {
@@ -77,6 +68,15 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
             return sum + Math.max(0, diff) * item.quantity;
         }, 0);
     })();
+
+    // デバッグ
+    if (typeof window !== "undefined" && isOpen) {
+        console.log("[CartModal] prefecture:", prefecture, "| addressLoaded:", addressLoaded);
+        console.log("[CartModal] shippingRows:", shippingRows.length, shippingRows.map(r => r.region));
+        console.log("[CartModal] regionRow:", regionRow?.region, "| baseRow:", baseRow?.region, "| isExtraRegion:", isExtraRegion);
+        console.log("[CartModal] cartItems shipType:", Object.values(cartDetails ?? {}).map(i => ({ name: i.name, shipType: (i as any).shipType })));
+        console.log("[CartModal] surcharge:", surcharge);
+    }
 
     if (!isOpen) return null;
 
