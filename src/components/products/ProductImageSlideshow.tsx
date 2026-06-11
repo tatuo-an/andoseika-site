@@ -1,11 +1,12 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 export function ProductImageSlideshow({ images, alt }: { images: string[]; alt: string }) {
     const [current, setCurrent] = useState(0);
+    const touchStartX = useRef<number | null>(null);
 
     if (images.length === 0) {
         return <div className="aspect-square w-full flex items-center justify-center text-stone-400 bg-stone-100">No Image</div>;
@@ -14,10 +15,24 @@ export function ProductImageSlideshow({ images, alt }: { images: string[]; alt: 
     const prev = () => setCurrent((i) => (i - 1 + images.length) % images.length);
     const next = () => setCurrent((i) => (i + 1) % images.length);
 
+    const handleTouchStart = (e: React.TouchEvent) => {
+        touchStartX.current = e.touches[0].clientX;
+    };
+    const handleTouchEnd = (e: React.TouchEvent) => {
+        if (touchStartX.current === null) return;
+        const delta = e.changedTouches[0].clientX - touchStartX.current;
+        if (Math.abs(delta) > 40) delta < 0 ? next() : prev();
+        touchStartX.current = null;
+    };
+
     return (
         <div className="flex flex-col gap-2">
             {/* メイン画像 */}
-            <div className="relative aspect-square bg-stone-100 overflow-hidden">
+            <div
+                className="relative aspect-square bg-stone-100 overflow-hidden"
+                onTouchStart={handleTouchStart}
+                onTouchEnd={handleTouchEnd}
+            >
                 <Image
                     src={images[current]}
                     alt={`${alt} ${current + 1}`}
