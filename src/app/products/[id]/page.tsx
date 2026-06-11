@@ -223,9 +223,6 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                         {/* Content */}
                         <div className="p-8 md:p-12 flex flex-col justify-center">
                             <div className="mb-6">
-                                <span className="inline-block bg-primary/10 text-primary text-xs font-bold px-3 py-1 rounded-full mb-4">
-                                    {product.category}
-                                </span>
                                 {badges.length > 0 && (
                                     <div className="flex flex-wrap gap-1.5 mb-3">
                                         {badges.map((badge) => (
@@ -239,7 +236,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                                     {invData.family || product.name}
                                 </h1>
                                 <p className="text-2xl font-bold text-primary">
-                                    ¥{product.price.toLocaleString()}
+                                    ¥{(invPrice ?? currentVariation?.price ?? product.price).toLocaleString()}
                                     <span className="text-sm text-stone-500 font-normal ml-2">（税込）</span>
                                 </p>
                             </div>
