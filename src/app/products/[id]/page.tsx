@@ -151,7 +151,14 @@ async function getProduct(id: string): Promise<Product | null> {
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
     const { id } = await params;
-    const product = await getProduct(id);
+    let product = await getProduct(id);
+    if (!product) {
+        // family fallback for metadata
+        const inv = await getInventoryData(id);
+        for (const row of inv.familyRows) {
+            if (row.id !== id) { product = await getProduct(row.id); if (product) break; }
+        }
+    }
     if (!product) return { title: "商品が見つかりません" };
     return {
         title: product.name,
@@ -162,9 +169,20 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
 export default async function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
-    const [product, invData] = await Promise.all([getProduct(id), getInventoryData(id)]);
+    const [productDirect, invData] = await Promise.all([getProduct(id), getInventoryData(id)]);
     const { stock, price: invPrice, hidden, deleted, nextShipment, badges, familyRows } = invData;
     const isSoldOut = stock !== -1 && stock === 0;
+
+    // custom-ID など MicroCMS にない場合、同じファミリーの代表商品データを流用
+    let product = productDirect;
+    if (!product && familyRows.length > 0) {
+        for (const row of familyRows) {
+            if (row.id !== id) {
+                const rep = await getProduct(row.id);
+                if (rep) { product = rep; break; }
+            }
+        }
+    }
 
     if (!product || hidden || deleted) {
         return (
