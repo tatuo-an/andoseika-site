@@ -35,6 +35,7 @@ export type InventoryItem = {
     badges: string[];
     family: string;
     imageUrl: string;
+    familyImages: string[];
 };
 
 const PRESET_BADGES = ["新物", "訳あり", "秀品", "贈答用", "栽培期間中農薬不使用", "慣行栽培"];
@@ -100,6 +101,7 @@ export function AdminPanel({
             badges: inv.badges ?? [],
             family: inv.family ?? "",
             imageUrl: inv.imageUrl ?? productMap[inv.id]?.image?.url ?? "",
+            familyImages: inv.familyImages ?? [],
         }))
     );
 
@@ -127,6 +129,14 @@ export function AdminPanel({
         setSavedInventory(false);
     };
 
+    // ファミリーのギャラリー画像を一括更新
+    const updateFamilyImages = (family: string, familyImages: string[]) => {
+        setItems((prev) => prev.map((item) =>
+            item.family?.trim() === family ? { ...item, familyImages } : item
+        ));
+        setSavedInventory(false);
+    };
+
     // ファミリー全体を一括非表示/表示切り替え
     const toggleFamilyHidden = (family: string) => {
         const familyItems = items.filter((i) => i.family?.trim() === family);
@@ -144,7 +154,8 @@ export function AdminPanel({
         setItems((prev) => {
             const lastIdx = [...prev].map((i, idx) => ({ i, idx })).filter(({ i }) => i.family?.trim() === family).at(-1)?.idx ?? prev.length - 1;
             const next = [...prev];
-            next.splice(lastIdx + 1, 0, { id: newId, name: "バリエーション名", stock: -1, price: null, shipType: "", hidden: false, deleted: false, nextShipment: "", badges: [], family, imageUrl: "" });
+            const familyImages = prev.find(i => i.family?.trim() === family)?.familyImages ?? [];
+            next.splice(lastIdx + 1, 0, { id: newId, name: "バリエーション名", stock: -1, price: null, shipType: "", hidden: false, deleted: false, nextShipment: "", badges: [], family, imageUrl: "", familyImages: [...familyImages] });
             return next;
         });
         setSavedInventory(false);
@@ -247,6 +258,7 @@ export function AdminPanel({
             badges: [],
             family: "",
             imageUrl: "",
+            familyImages: [],
         }]);
         setSavedInventory(false);
     };
@@ -265,6 +277,7 @@ export function AdminPanel({
             badges: [],
             family: "新しいファミリー",
             imageUrl: "",
+            familyImages: [],
         }]);
         setSavedInventory(false);
     };
@@ -383,6 +396,11 @@ export function AdminPanel({
                                                         );
                                                     })()}
                                                     {!collapsed && (
+                                                        <>
+                                                        <FamilyGallery
+                                                            familyImages={familyItems[0]?.familyImages ?? []}
+                                                            onUpdate={(imgs) => updateFamilyImages(fam, imgs)}
+                                                        />
                                                         <div className="divide-y divide-stone-100">
                                                             {familyItems.map((fi) => (
                                                                 <SortableRow
@@ -398,6 +416,7 @@ export function AdminPanel({
                                                                 />
                                                             ))}
                                                         </div>
+                                                        </>
                                                     )}
                                                 </div>
                                             );
@@ -644,6 +663,90 @@ function SortableRow({
                     onRemoveBadge={onRemoveBadge}
                 />
             </div>
+        </div>
+    );
+}
+
+// ── ファミリーギャラリー（最大5枚）──────────────────────────────
+function FamilyGallery({ familyImages, onUpdate }: {
+    familyImages: string[];
+    onUpdate: (images: string[]) => void;
+}) {
+    const [uploading, setUploading] = useState<number | null>(null);
+    const [pendingSlot, setPendingSlot] = useState(-1);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const openPicker = (slot: number) => {
+        setPendingSlot(slot);
+        fileInputRef.current?.click();
+    };
+
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file || pendingSlot < 0) return;
+        setUploading(pendingSlot);
+        try {
+            const resized = await resizeImageFile(file);
+            const form = new FormData();
+            form.append("file", resized, file.name.replace(/\.[^.]+$/, ".jpg"));
+            const res = await fetch("/api/upload-image", { method: "POST", body: form });
+            if (!res.ok) {
+                const body = await res.json().catch(() => ({}));
+                alert(`画像アップロード失敗: ${body.error ?? res.status}`);
+                return;
+            }
+            const { url } = await res.json();
+            const next = [...familyImages];
+            if (pendingSlot < next.length) next[pendingSlot] = url;
+            else next.push(url);
+            onUpdate(next.slice(0, 5));
+        } catch (err) {
+            alert(`アップロードエラー: ${err}`);
+        } finally {
+            setUploading(null);
+            setPendingSlot(-1);
+            if (fileInputRef.current) fileInputRef.current.value = "";
+        }
+    };
+
+    const remove = (i: number) => onUpdate(familyImages.filter((_, idx) => idx !== i));
+
+    return (
+        <div className="flex items-center gap-2 px-4 py-2 border-b border-stone-100 bg-stone-50/40">
+            <span className="text-xs text-stone-400 whitespace-nowrap">ギャラリー</span>
+            <div className="flex gap-1.5">
+                {Array.from({ length: 5 }, (_, i) => {
+                    const url = familyImages[i] ?? null;
+                    return (
+                        <div key={i} className="relative flex-shrink-0">
+                            <button
+                                type="button"
+                                onClick={() => openPicker(i)}
+                                disabled={uploading === i}
+                                title={url ? "クリックして差し替え" : "画像を追加"}
+                                className="w-10 h-10 rounded-lg border border-stone-200 bg-stone-100 hover:border-primary/60 overflow-hidden flex items-center justify-center transition-colors"
+                            >
+                                {uploading === i ? (
+                                    <Loader2 className="w-4 h-4 animate-spin text-stone-400" />
+                                ) : url ? (
+                                    // eslint-disable-next-line @next/next/no-img-element
+                                    <img src={url} alt="" className="w-full h-full object-cover" />
+                                ) : (
+                                    <Camera className="w-3.5 h-3.5 text-stone-300" />
+                                )}
+                            </button>
+                            {url && (
+                                <button
+                                    onClick={() => remove(i)}
+                                    className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full flex items-center justify-center text-[10px] leading-none hover:bg-red-600"
+                                >×</button>
+                            )}
+                        </div>
+                    );
+                })}
+            </div>
+            <span className="text-xs text-stone-300">{familyImages.length}/5</span>
+            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
         </div>
     );
 }

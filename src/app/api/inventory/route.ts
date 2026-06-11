@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 const SPREADSHEET_ID = process.env.GOOGLE_SPREADSHEET_ID!;
 const SHEET_NAME = "商品在庫";
-// 列: A=商品ID, B=商品名, C=在庫数, D=価格, E=配送区分, F=非表示(1/""), G=未使用, H=次回出荷, I=バッジ(カンマ区切り), J=ファミリー, K=画像URL
+// 列: A=商品ID, B=商品名, C=在庫数, D=価格, E=配送区分, F=非表示(1/""), G=未使用, H=次回出荷, I=バッジ(カンマ区切り), J=ファミリー, K=画像URL, L=ファミリーギャラリー画像(カンマ区切り)
 
 function getSheets() {
     const authClient = new google.auth.GoogleAuth({
@@ -25,7 +25,7 @@ export async function GET() {
         const sheets = getSheets();
         const res = await sheets.spreadsheets.values.get({
             spreadsheetId: SPREADSHEET_ID,
-            range: `${SHEET_NAME}!A:K`,
+            range: `${SHEET_NAME}!A:L`,
         });
         const rows = res.data.values ?? [];
         const data = rows.slice(1).map((r) => ({
@@ -40,6 +40,7 @@ export async function GET() {
             badges: r[8] ? r[8].split(",").map((b: string) => b.trim()).filter(Boolean) : [],
             family: r[9] ?? "",
             imageUrl: r[10] ?? "",
+            familyImages: r[11] ? r[11].split(",").map((s: string) => s.trim()).filter(Boolean) : [],
         }));
         return NextResponse.json({ inventory: data });
     } catch (err) {
@@ -55,7 +56,7 @@ export async function POST(req: NextRequest) {
     }
 
     const { items } = await req.json() as {
-        items: { id: string; name: string; stock: number; price: number | null; shipType: string; hidden: boolean; nextShipment: string; badges: string[]; family: string; imageUrl?: string }[];
+        items: { id: string; name: string; stock: number; price: number | null; shipType: string; hidden: boolean; nextShipment: string; badges: string[]; family: string; imageUrl?: string; familyImages?: string[] }[];
     };
 
     try {
@@ -63,7 +64,7 @@ export async function POST(req: NextRequest) {
 
         await sheets.spreadsheets.values.clear({
             spreadsheetId: SPREADSHEET_ID,
-            range: `${SHEET_NAME}!A2:K1000`,
+            range: `${SHEET_NAME}!A2:L1000`,
         });
 
         if (items.length > 0) {
@@ -84,6 +85,7 @@ export async function POST(req: NextRequest) {
                         (item.badges ?? []).join(","),
                         item.family ?? "",
                         item.imageUrl ?? "",
+                        (item.familyImages ?? []).join(","),
                     ]),
                 },
             });

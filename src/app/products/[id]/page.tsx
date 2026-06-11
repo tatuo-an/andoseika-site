@@ -7,6 +7,7 @@ import { ArrowLeft, Check, Truck } from "lucide-react";
 import { client } from "@/lib/microcms";
 import { Product } from "@/types/microcms";
 import { AddToCartButton } from "@/components/products/AddToCartButton";
+import { ProductImageSlideshow } from "@/components/products/ProductImageSlideshow";
 import localProducts from "@/data/products.json";
 import { Metadata } from "next";
 import { google } from "googleapis";
@@ -14,7 +15,7 @@ import { BADGE_COLORS, DEFAULT_BADGE_COLOR } from "@/lib/badges";
 
 export const revalidate = 60;
 
-type SheetRow = { id: string; name: string; stock: number; price: number | null; shipType: string; hidden: boolean; deleted: boolean; nextShipment: string; badges: string[]; family: string; imageUrl: string };
+type SheetRow = { id: string; name: string; stock: number; price: number | null; shipType: string; hidden: boolean; deleted: boolean; nextShipment: string; badges: string[]; family: string; imageUrl: string; familyImages: string[] };
 type VariationInfo = { id: string; label: string; price: number; isSoldOut: boolean };
 
 function getSheets() {
@@ -29,14 +30,14 @@ function getSheets() {
 }
 
 async function getInventoryData(id: string): Promise<{
-    stock: number; price: number | null; name: string; shipType: string; hidden: boolean; deleted: boolean; nextShipment: string; badges: string[]; family: string; imageUrl: string;
+    stock: number; price: number | null; name: string; shipType: string; hidden: boolean; deleted: boolean; nextShipment: string; badges: string[]; family: string; imageUrl: string; familyImages: string[];
     familyRows: SheetRow[];
 }> {
     try {
         const sheets = getSheets();
         const res = await sheets.spreadsheets.values.get({
             spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-            range: "商品在庫!A:K",
+            range: "商品在庫!A:L",
         });
         const rows = res.data.values ?? [];
         const allRows: SheetRow[] = rows.slice(1).filter(r => r[0]).map(r => ({
@@ -51,10 +52,11 @@ async function getInventoryData(id: string): Promise<{
             badges: r[8] ? r[8].split(",").map((b: string) => b.trim()).filter(Boolean) : [],
             family: r[9]?.trim() ?? "",
             imageUrl: r[10]?.trim() ?? "",
+            familyImages: r[11] ? r[11].split(",").map((s: string) => s.trim()).filter(Boolean) : [],
         }));
 
         const row = allRows.find(r => r.id === id);
-        if (!row) return { stock: -1, price: null, name: "", shipType: "", hidden: false, deleted: false, nextShipment: "", badges: [], family: "", imageUrl: "", familyRows: [] };
+        if (!row) return { stock: -1, price: null, name: "", shipType: "", hidden: false, deleted: false, nextShipment: "", badges: [], family: "", imageUrl: "", familyImages: [], familyRows: [] };
 
         const familyRows = row.family
             ? allRows.filter(r => r.family === row.family && !r.hidden)
@@ -71,10 +73,11 @@ async function getInventoryData(id: string): Promise<{
             badges: row.badges,
             family: row.family,
             imageUrl: row.imageUrl,
+            familyImages: row.familyImages,
             familyRows,
         };
     } catch {
-        return { stock: -1, price: null, name: "", shipType: "", hidden: false, deleted: false, nextShipment: "", badges: [], family: "", imageUrl: "", familyRows: [] };
+        return { stock: -1, price: null, name: "", shipType: "", hidden: false, deleted: false, nextShipment: "", badges: [], family: "", imageUrl: "", familyImages: [], familyRows: [] };
     }
 }
 
@@ -175,7 +178,8 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 export default async function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
     const [productDirect, invData] = await Promise.all([getProduct(id), getInventoryData(id)]);
-    const { stock, price: invPrice, name: invName, shipType, hidden, deleted, nextShipment, badges, familyRows, imageUrl: invImageUrl } = invData;
+    const { stock, price: invPrice, name: invName, shipType, hidden, deleted, nextShipment, badges, familyRows, imageUrl: invImageUrl, familyImages } = invData;
+
     const isSoldOut = stock !== -1 && stock === 0;
 
     // custom-ID など MicroCMS にない場合、同じファミリーの代表商品データを流用
@@ -200,6 +204,12 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
     const variations = await buildVariations(familyRows);
     const currentVariation = variations.find(v => v.id === id);
 
+    // スライドショー用画像配列: バリエーション個別画像(先頭) + ファミリーギャラリー + MicroCMS画像(フォールバック)
+    const slideImages = Array.from(new Set(
+        [invImageUrl, ...familyImages].filter(Boolean)
+    )) as string[];
+    const displayImages = slideImages.length > 0 ? slideImages : (product.image?.url ? [product.image.url] : []);
+
     // カート表示名: ファミリー名 + バリエーションラベル（なければシート名）
     const cartName = invData.family
         ? `${invData.family}${currentVariation?.label ? ` ${currentVariation.label}` : ""}`
@@ -217,13 +227,9 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
                 <div className="bg-white rounded-3xl overflow-hidden shadow-sm">
                     <div className="grid md:grid-cols-2 gap-0">
-                        {/* Image */}
-                        <div className="relative aspect-square bg-stone-100">
-                            {(invImageUrl || product.image?.url) ? (
-                                <Image src={invImageUrl || product.image!.url} alt={product.name} fill className="object-cover" priority />
-                            ) : (
-                                <div className="w-full h-full flex items-center justify-center text-stone-400">No Image</div>
-                            )}
+                        {/* Image slideshow */}
+                        <div className="p-0">
+                            <ProductImageSlideshow images={displayImages} alt={product.name} />
                         </div>
 
                         {/* Content */}
