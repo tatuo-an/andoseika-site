@@ -648,6 +648,34 @@ function SortableRow({
     );
 }
 
+// Canvas でリサイズ＋JPEG変換（最大1920px・品質85%）
+async function resizeImageFile(file: File, maxPx = 1920, quality = 0.85): Promise<Blob> {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+        img.onload = () => {
+            URL.revokeObjectURL(url);
+            let { width: w, height: h } = img;
+            if (w > maxPx || h > maxPx) {
+                if (w >= h) { h = Math.round(h * maxPx / w); w = maxPx; }
+                else { w = Math.round(w * maxPx / h); h = maxPx; }
+            }
+            const canvas = document.createElement("canvas");
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext("2d");
+            if (!ctx) { reject(new Error("Canvas unavailable")); return; }
+            ctx.drawImage(img, 0, 0, w, h);
+            canvas.toBlob(
+                (blob) => blob ? resolve(blob) : reject(new Error("toBlob failed")),
+                "image/jpeg", quality
+            );
+        };
+        img.onerror = reject;
+        img.src = url;
+    });
+}
+
 // ── 画像アップロードボタン ──────────────────────────────────────
 function ImageUploadButton({ currentImageUrl, onUploaded }: {
     currentImageUrl: string;
@@ -661,8 +689,9 @@ function ImageUploadButton({ currentImageUrl, onUploaded }: {
         if (!file) return;
         setUploading(true);
         try {
+            const resized = await resizeImageFile(file);
             const formData = new FormData();
-            formData.append("file", file);
+            formData.append("file", resized, file.name.replace(/\.[^.]+$/, ".jpg"));
             const res = await fetch("/api/upload-image", { method: "POST", body: formData });
             if (!res.ok) {
                 const body = await res.json().catch(() => ({}));
@@ -671,8 +700,8 @@ function ImageUploadButton({ currentImageUrl, onUploaded }: {
             }
             const { url } = await res.json();
             onUploaded(url);
-        } catch {
-            alert("画像アップロード中にエラーが発生しました");
+        } catch (err) {
+            alert(`画像アップロード中にエラーが発生しました: ${err}`);
         } finally {
             setUploading(false);
             if (fileInputRef.current) fileInputRef.current.value = "";
