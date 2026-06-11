@@ -202,7 +202,9 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
         : invName || product.name;
 
     return (
-        <div className="min-h-screen bg-stone-50 py-12">
+        <div className="min-h-screen flex flex-col bg-stone-50">
+            <Header />
+            <main className="flex-1 py-12">
             <div className="container mx-auto px-4 md:px-6">
                 <Link href="/products" className="inline-flex items-center text-stone-500 hover:text-primary mb-8 transition-colors">
                     <ArrowLeft className="h-4 w-4 mr-2" />
@@ -316,6 +318,8 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                     </div>
                 </div>
             </div>
+            </main>
+            <Footer />
         </div>
     );
 }
