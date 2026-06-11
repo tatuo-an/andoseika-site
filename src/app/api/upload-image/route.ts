@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
 
     let res: Response;
     try {
-        res = await fetch(`https://${serviceDomain}.microcms.io/api/v1/media`, {
+        res = await fetch(`https://${serviceDomain}.microcms-management.io/api/v1/media`, {
             method: "POST",
             headers: { "X-MICROCMS-API-KEY": apiKey },
             body: uploadForm,
