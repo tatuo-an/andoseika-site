@@ -40,6 +40,27 @@ function findBaseRow(rows: ShippingRow[]): ShippingRow | null {
     return rows.length ? rows[rows.length - 1] : null;
 }
 
+// 商品名から重量(g)を抽出
+function extractWeightG(name: string): number {
+    const kg = name.match(/(\d+(?:\.\d+)?)\s*kg/i);
+    if (kg) return parseFloat(kg[1]) * 1000;
+    const g = name.match(/(\d+(?:\.\d+)?)\s*g(?!l)/i); // "g"のみ (glは除外)
+    if (g) return parseFloat(g[1]);
+    return 0;
+}
+
+// 合計重量(g) → ヤマト宅配便サイズ
+function weightToShipSize(totalG: number): string {
+    if (totalG <=  2000) return "60";
+    if (totalG <=  5000) return "80";
+    if (totalG <= 10000) return "100";
+    if (totalG <= 15000) return "120";
+    if (totalG <= 20000) return "140";
+    if (totalG <= 25000) return "160";
+    if (totalG <= 30000) return "180";
+    return "200";
+}
+
 // 送料マスタが未設定の場合のデフォルト値（ヤマト運輸 中国エリア発）
 const DEFAULT_SHIPPING: ShippingRow[] = [
     { region: "北海道", prefectures: "北海道", s60: 1200, s80: 1400, s100: 1600, s120: 1750, s140: 2000, s160: 2200, s180: 2400, s200: 2600, compact: 990, clickpost: 185 },
@@ -71,8 +92,19 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
     const baseRow = findBaseRow(shippingRows);
     const isExtraRegion = regionRow && baseRow && regionRow !== baseRow;
 
+    // カート合計重量から宅配便サイズを決定
+    const totalWeightG = Object.values(cartDetails ?? {}).reduce((sum, item) => {
+        return sum + extractWeightG(item.name) * item.quantity;
+    }, 0);
+    const weightBasedShipType = totalWeightG > 0 ? weightToShipSize(totalWeightG) : null;
+
+    // 重量が取れた場合は合計重量ベース、取れない場合はアイテムごとの shipType で計算
     const surcharge = (() => {
         if (!isExtraRegion || !regionRow || !baseRow) return 0;
+        if (weightBasedShipType) {
+            const diff = getRate(regionRow, weightBasedShipType) - getRate(baseRow, weightBasedShipType);
+            return Math.max(0, diff);
+        }
         return Object.values(cartDetails ?? {}).reduce((sum, item) => {
             const shipType = (item as any).shipType as string;
             if (!shipType) return sum;
@@ -83,10 +115,8 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
 
     // デバッグ
     if (typeof window !== "undefined" && isOpen) {
-        console.log("[CartModal] prefecture:", prefecture, "| addressLoaded:", addressLoaded);
-        console.log("[CartModal] shippingRows:", shippingRows.length, shippingRows.map(r => r.region));
-        console.log("[CartModal] regionRow:", regionRow?.region, "| baseRow:", baseRow?.region, "| isExtraRegion:", isExtraRegion);
-        console.log("[CartModal] cartItems shipType:", Object.values(cartDetails ?? {}).map(i => ({ name: i.name, shipType: (i as any).shipType })));
+        console.log("[CartModal] prefecture:", prefecture, "| region:", regionRow?.region, "| isExtra:", isExtraRegion);
+        console.log("[CartModal] totalWeightG:", totalWeightG, "| shipSize:", weightBasedShipType);
         console.log("[CartModal] surcharge:", surcharge);
     }
 
