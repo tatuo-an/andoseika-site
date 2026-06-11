@@ -139,7 +139,7 @@ export default async function ProductsPage() {
           <div className={`bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 ${isSoldOut ? "opacity-70" : ""}`}>
             <div className="relative aspect-square bg-stone-100 overflow-hidden">
               {imgSrc ? (
-                <Image src={imgSrc} alt={displayName} fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
+                <Image src={imgSrc} alt={displayName} fill className="object-contain group-hover:scale-105 transition-transform duration-500" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-stone-400">No Image</div>
               )}
@@ -180,7 +180,7 @@ export default async function ProductsPage() {
           <div className={`bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 ${allSoldOut ? "opacity-70" : ""}`}>
             <div className="relative aspect-square bg-stone-100 overflow-hidden">
               {familyImgSrc ? (
-                <Image src={familyImgSrc} alt={familyName} fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
+                <Image src={familyImgSrc} alt={familyName} fill className="object-contain group-hover:scale-105 transition-transform duration-500" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-stone-400">No Image</div>
               )}
