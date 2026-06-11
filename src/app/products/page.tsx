@@ -137,7 +137,7 @@ export default async function ProductsPage() {
       return (
         <Link href={`/products/${product.id}`} key={product.id} className={`group ${isSoldOut ? "pointer-events-none" : ""}`}>
           <div className={`bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 ${isSoldOut ? "opacity-70" : ""}`}>
-            <div className="relative aspect-[3/2] bg-stone-100 overflow-hidden">
+            <div className="relative aspect-square bg-stone-100 overflow-hidden">
               {imgSrc ? (
                 <Image src={imgSrc} alt={displayName} fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
               ) : (
@@ -178,7 +178,7 @@ export default async function ProductsPage() {
       return (
         <Link href={`/products/${repId}`} key={`family-${familyName}`} className={`group ${allSoldOut ? "pointer-events-none" : ""}`}>
           <div className={`bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 ${allSoldOut ? "opacity-70" : ""}`}>
-            <div className="relative aspect-[3/2] bg-stone-100 overflow-hidden">
+            <div className="relative aspect-square bg-stone-100 overflow-hidden">
               {familyImgSrc ? (
                 <Image src={familyImgSrc} alt={familyName} fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
               ) : (
