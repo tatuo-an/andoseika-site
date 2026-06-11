@@ -196,6 +196,11 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
     const variations = await buildVariations(familyRows);
     const currentVariation = variations.find(v => v.id === id);
 
+    // カート表示名: ファミリー名 + バリエーションラベル（なければシート名）
+    const cartName = invData.family
+        ? `${invData.family}${currentVariation?.label ? ` ${currentVariation.label}` : ""}`
+        : invName || product.name;
+
     return (
         <div className="min-h-screen bg-stone-50 py-12">
             <div className="container mx-auto px-4 md:px-6">
@@ -304,7 +309,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                                     <AddToCartButton
                                         product={product}
                                         variantId={id}
-                                        variantName={invName || undefined}
+                                        variantName={cartName}
                                         price={invPrice ?? undefined}
                                     />
                                 )}
