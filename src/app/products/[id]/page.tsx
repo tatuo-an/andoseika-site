@@ -255,6 +255,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                                                 <Link
                                                     key={v.id}
                                                     href={`/products/${v.id}`}
+                                                    scroll={false}
                                                     className={`flex flex-col items-center px-3 py-2 rounded-xl border-2 text-sm min-w-[72px] transition-all
                                                         ${isSelected
                                                             ? "border-primary bg-primary/5 text-primary font-bold shadow-sm"
