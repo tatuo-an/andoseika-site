@@ -29,7 +29,7 @@ function getSheets() {
 }
 
 async function getInventoryData(id: string): Promise<{
-    stock: number; hidden: boolean; deleted: boolean; nextShipment: string; badges: string[]; family: string;
+    stock: number; price: number | null; hidden: boolean; deleted: boolean; nextShipment: string; badges: string[]; family: string;
     familyRows: SheetRow[];
 }> {
     try {
@@ -52,7 +52,7 @@ async function getInventoryData(id: string): Promise<{
         }));
 
         const row = allRows.find(r => r.id === id);
-        if (!row) return { stock: -1, hidden: false, deleted: false, nextShipment: "", badges: [], family: "", familyRows: [] };
+        if (!row) return { stock: -1, price: null, hidden: false, deleted: false, nextShipment: "", badges: [], family: "", familyRows: [] };
 
         const familyRows = row.family
             ? allRows.filter(r => r.family === row.family && !r.hidden)
@@ -60,6 +60,7 @@ async function getInventoryData(id: string): Promise<{
 
         return {
             stock: row.stock,
+            price: row.price,
             hidden: row.hidden,
             deleted: row.deleted,
             nextShipment: row.nextShipment,
@@ -68,7 +69,7 @@ async function getInventoryData(id: string): Promise<{
             familyRows,
         };
     } catch {
-        return { stock: -1, hidden: false, deleted: false, nextShipment: "", badges: [], family: "", familyRows: [] };
+        return { stock: -1, price: null, hidden: false, deleted: false, nextShipment: "", badges: [], family: "", familyRows: [] };
     }
 }
 
@@ -162,7 +163,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 export default async function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
     const [product, invData] = await Promise.all([getProduct(id), getInventoryData(id)]);
-    const { stock, hidden, deleted, nextShipment, badges, familyRows } = invData;
+    const { stock, price: invPrice, hidden, deleted, nextShipment, badges, familyRows } = invData;
     const isSoldOut = stock !== -1 && stock === 0;
 
     if (!product || hidden || deleted) {
@@ -281,7 +282,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                                         )}
                                     </div>
                                 ) : (
-                                    <AddToCartButton product={product} />
+                                    <AddToCartButton product={product} price={invPrice ?? undefined} />
                                 )}
                             </div>
                         </div>
