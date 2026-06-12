@@ -2,7 +2,7 @@ import { auth, signOut } from "@/auth";
 import { redirect } from "next/navigation";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
-import { User, Package, MapPin, LogOut, Settings } from "lucide-react";
+import { User, Package, MapPin, LogOut, Settings, Heart } from "lucide-react";
 import Link from "next/link";
 import { isAdmin } from "@/lib/admin";
 
@@ -41,6 +41,15 @@ export default async function MyPage() {
               <p className="text-sm text-stone-500">過去の注文履歴と発送状況を確認できます</p>
               <p className="text-xs text-stone-400 mt-3">※ 近日公開予定</p>
             </div>
+
+            <Link href="/mypage/favorites" className="bg-white rounded-2xl shadow-sm p-6 hover:shadow-md transition-shadow block">
+              <div className="flex items-center gap-3 mb-3">
+                <Heart className="w-5 h-5 text-primary" />
+                <h2 className="font-bold text-stone-900">お気に入り</h2>
+              </div>
+              <p className="text-sm text-stone-500">気になる商品を保存しておけます</p>
+              <p className="text-xs text-primary mt-3 font-medium">確認する →</p>
+            </Link>
 
             <Link href="/mypage/address" className="bg-white rounded-2xl shadow-sm p-6 hover:shadow-md transition-shadow block">
               <div className="flex items-center gap-3 mb-3">

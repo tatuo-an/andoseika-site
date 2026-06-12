@@ -8,6 +8,7 @@ import { client } from "@/lib/microcms";
 import { Product } from "@/types/microcms";
 import { AddToCartButton } from "@/components/products/AddToCartButton";
 import { ProductImageSlideshow } from "@/components/products/ProductImageSlideshow";
+import { FavoriteButton } from "@/components/products/FavoriteButton";
 import localProducts from "@/data/products.json";
 import { Metadata } from "next";
 import { google } from "googleapis";
@@ -244,9 +245,16 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                                         ))}
                                     </div>
                                 )}
-                                <h1 className="text-3xl md:text-4xl font-bold text-stone-900 mb-4 font-heading">
-                                    {invData.family || product.name}
-                                </h1>
+                                <div className="flex items-start justify-between gap-3 mb-4">
+                                    <h1 className="text-3xl md:text-4xl font-bold text-stone-900 font-heading">
+                                        {invData.family || product.name}
+                                    </h1>
+                                    <FavoriteButton
+                                        productId={invData.family ? `family:${invData.family}` : product.id}
+                                        size="lg"
+                                        className="flex-shrink-0 mt-1"
+                                    />
+                                </div>
                                 <p className="text-2xl font-bold text-primary">
                                     ¥{(invPrice ?? currentVariation?.price ?? product.price).toLocaleString()}
                                     <span className="text-sm text-stone-500 font-normal ml-2">（税込）</span>

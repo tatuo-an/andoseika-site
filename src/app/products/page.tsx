@@ -8,6 +8,7 @@ import { Metadata } from "next";
 import localProducts from "@/data/products.json";
 import { google } from "googleapis";
 import { BADGE_COLORS, DEFAULT_BADGE_COLOR } from "@/lib/badges";
+import { FavoriteButton } from "@/components/products/FavoriteButton";
 
 export const metadata: Metadata = {
   title: "商品一覧",
@@ -154,6 +155,9 @@ export default async function ProductsPage() {
               {!isSoldOut && product.isRecommended && (
                 <span className="absolute top-4 right-4 bg-primary text-white text-xs font-bold px-3 py-1 rounded-full shadow-md">おすすめ</span>
               )}
+              <div className="absolute top-3 left-3">
+                <FavoriteButton productId={product.id} size="sm" />
+              </div>
             </div>
             <div className="p-6">
               <div className="flex justify-end mb-2">
@@ -195,6 +199,9 @@ export default async function ProductsPage() {
               {!allSoldOut && repProduct.isRecommended && (
                 <span className="absolute top-4 right-4 bg-primary text-white text-xs font-bold px-3 py-1 rounded-full shadow-md">おすすめ</span>
               )}
+              <div className="absolute top-3 left-3">
+                <FavoriteButton productId={`family:${familyName}`} size="sm" />
+              </div>
             </div>
             <div className="p-6">
               <div className="flex justify-end mb-2">
