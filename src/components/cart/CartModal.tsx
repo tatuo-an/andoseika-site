@@ -332,15 +332,10 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                                     <div className="bg-stone-100/60 rounded-lg p-3 space-y-1 text-xs">
                                         <p className="text-stone-500 font-medium mb-1">内訳</p>
                                         {matchedVariant ? (
-                                            <>
-                                                <div className="flex justify-between text-stone-600">
-                                                    <span>{matchedVariant.name}</span>
-                                                    <span>¥{itemsTotal.toLocaleString()}</span>
-                                                </div>
-                                                <p className="text-[11px] text-green-600 pt-1">
-                                                    合計{(totalWeightG / 1000).toFixed(1)}kg → 既存バリエーション価格で適用
-                                                </p>
-                                            </>
+                                            <div className="flex justify-between text-stone-600">
+                                                <span>{matchedVariant.name}</span>
+                                                <span>¥{itemsTotal.toLocaleString()}</span>
+                                            </div>
                                         ) : (
                                             <>
                                                 <div className="flex justify-between text-stone-600">
