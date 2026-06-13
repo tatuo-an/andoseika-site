@@ -17,7 +17,7 @@ import { BADGE_COLORS, DEFAULT_BADGE_COLOR } from "@/lib/badges";
 export const revalidate = 60;
 
 type SheetRow = { id: string; name: string; stock: number; price: number | null; shipType: string; hidden: boolean; deleted: boolean; nextShipment: string; badges: string[]; family: string; imageUrl: string; familyImages: string[]; cost: number | null; profitRate: number | null; coolAvailable: boolean };
-type VariationInfo = { id: string; label: string; price: number; isSoldOut: boolean };
+type VariationInfo = { id: string; label: string; price: number; priceTaxed: number; isSoldOut: boolean };
 
 function getSheets() {
     const authClient = new google.auth.GoogleAuth({
@@ -99,6 +99,13 @@ function extractLabel(allNames: string[], name: string): string {
     return label || name;
 }
 
+/** 販売価格を税込みに変換: 本体(原価)8%, 送料+サービス料(残り)10% */
+function toTaxIncluded(price: number, cost: number | null): number {
+    if (cost === null || cost <= 0) return Math.round(price * 1.08);
+    const others = Math.max(0, price - cost);
+    return Math.round(cost * 1.08 + others * 1.10);
+}
+
 /** kg/g 単位から100g単価を計算 */
 function pricePerUnit(label: string, price: number): string | null {
     const kg = label.match(/(\d+(?:\.\d+)?)\s*kg/i);
@@ -128,12 +135,16 @@ async function buildVariations(familyRows: SheetRow[]): Promise<VariationInfo[]>
     }
 
     const allNames = familyRows.map(r => r.name);
-    return familyRows.map(r => ({
-        id: r.id,
-        label: extractLabel(allNames, r.name),
-        price: r.price ?? microPrices[r.id] ?? 0,
-        isSoldOut: r.stock !== -1 && r.stock === 0,
-    }));
+    return familyRows.map(r => {
+        const price = r.price ?? microPrices[r.id] ?? 0;
+        return {
+            id: r.id,
+            label: extractLabel(allNames, r.name),
+            price,
+            priceTaxed: toTaxIncluded(price, r.cost),
+            isSoldOut: r.stock !== -1 && r.stock === 0,
+        };
+    });
 }
 
 async function getProduct(id: string): Promise<Product | null> {
@@ -262,7 +273,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                                     />
                                 </div>
                                 <p className="text-2xl font-bold text-primary">
-                                    ¥{(invPrice ?? currentVariation?.price ?? product.price).toLocaleString()}
+                                    ¥{(currentVariation?.priceTaxed ?? toTaxIncluded(invPrice ?? product.price, invCost)).toLocaleString()}
                                     <span className="text-sm text-stone-500 font-normal ml-2">（税込）</span>
                                 </p>
                                 <div className="mt-3 bg-stone-50 border border-stone-100 rounded-lg p-3 text-xs text-stone-500 leading-relaxed space-y-2">
@@ -287,7 +298,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                                     <div className="flex flex-wrap gap-2">
                                         {variations.map((v) => {
                                             const isSelected = v.id === id;
-                                            const perUnit = pricePerUnit(v.label, v.price);
+                                            const perUnit = pricePerUnit(v.label, v.priceTaxed);
                                             return (
                                                 <Link
                                                     key={v.id}
@@ -302,7 +313,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                                                         }`}
                                                 >
                                                     <span className="font-bold">{v.label}</span>
-                                                    <span className="text-xs mt-0.5">{v.isSoldOut ? "売り切れ" : `¥${v.price.toLocaleString()}`}</span>
+                                                    <span className="text-xs mt-0.5">{v.isSoldOut ? "売り切れ" : `¥${v.priceTaxed.toLocaleString()}`}</span>
                                                     {perUnit && !v.isSoldOut && (
                                                         <span className="text-[10px] text-stone-400 mt-0.5">({perUnit})</span>
                                                     )}

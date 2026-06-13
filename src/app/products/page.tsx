@@ -19,8 +19,15 @@ export const revalidate = 60;
 
 type InventoryData = {
   stock: number; variantName: string; hidden: boolean;
-  nextShipment: string; badges: string[]; family: string; price: number | null; imageUrl: string;
+  nextShipment: string; badges: string[]; family: string; price: number | null; imageUrl: string; cost: number | null;
 };
+
+/** 販売価格を税込みに変換: 本体(原価)8%, 送料+サービス料(残り)10% */
+function toTaxIncluded(price: number, cost: number | null): number {
+    if (cost === null || cost <= 0) return Math.round(price * 1.08);
+    const others = Math.max(0, price - cost);
+    return Math.round(cost * 1.08 + others * 1.10);
+}
 type InventoryResult = { map: Record<string, InventoryData>; order: string[] };
 
 async function getInventoryMap(): Promise<InventoryResult> {
@@ -35,7 +42,7 @@ async function getInventoryMap(): Promise<InventoryResult> {
     const sheets = google.sheets({ version: "v4", auth: authClient });
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-      range: "商品在庫!A:K",
+      range: "商品在庫!A:N",
     });
     const rows = res.data.values ?? [];
     const map: Record<string, InventoryData> = {};
@@ -52,6 +59,7 @@ async function getInventoryMap(): Promise<InventoryResult> {
           family: r[9]?.trim() ?? "",
           price: r[3] !== undefined && r[3] !== "" ? parseInt(r[3], 10) : null,
           imageUrl: r[10]?.trim() ?? "",
+          cost: r[12] !== undefined && r[12] !== "" ? parseInt(r[12], 10) : null,
         };
       }
     });
@@ -99,9 +107,12 @@ export default async function ProductsPage() {
       const familyIds = inventoryOrder.filter(fid => inventoryMap[fid]?.family === inv.family && !inventoryMap[fid]?.hidden);
       const familyInvs = familyIds.map(fid => ({ id: fid, inv: inventoryMap[fid], product: productMap[fid] })).filter(x => x.product);
 
-      // 最安値（販売中を優先）
-      const prices = familyInvs.map(x => x.inv.price ?? x.product!.price).filter(Boolean) as number[];
-      const minPrice = prices.length > 0 ? Math.min(...prices) : product.price;
+      // 最安値（税込み、販売中を優先）
+      const prices = familyInvs.map(x => {
+        const p = x.inv.price ?? x.product!.price;
+        return toTaxIncluded(p, x.inv.cost);
+      }).filter(Boolean) as number[];
+      const minPrice = prices.length > 0 ? Math.min(...prices) : toTaxIncluded(product.price, inv.cost);
 
       // 代表リンク先（最初の販売中バリエーション、なければ先頭）
       const firstAvail = familyInvs.find(x => !(x.inv.stock !== -1 && x.inv.stock === 0));
@@ -161,7 +172,7 @@ export default async function ProductsPage() {
             </div>
             <div className="p-6">
               <div className="flex justify-end mb-2">
-                <span className="font-bold text-lg text-stone-900">¥{product.price.toLocaleString()}</span>
+                <span className="font-bold text-lg text-stone-900">¥{toTaxIncluded(inv.price ?? product.price, inv.cost).toLocaleString()}</span>
               </div>
               {inv.badges.length > 0 && (
                 <div className="flex flex-wrap gap-1 mb-1">
