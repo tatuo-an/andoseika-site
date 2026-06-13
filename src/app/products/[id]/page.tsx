@@ -263,6 +263,17 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                                     ¥{(invPrice ?? currentVariation?.price ?? product.price).toLocaleString()}
                                     <span className="text-sm text-stone-500 font-normal ml-2">（税込）</span>
                                 </p>
+                                <div className="mt-3 bg-stone-50 border border-stone-100 rounded-lg p-3 text-xs text-stone-500 leading-relaxed space-y-2">
+                                    <p>
+                                        表示価格は、1点のみ購入した場合の<span className="font-medium text-stone-700">商品代・送料・サービス料を含む税込総額</span>です。
+                                    </p>
+                                    <p>
+                                        複数商品を同梱する場合は、合計重量に応じて送料等を再計算し、カート内で<span className="font-medium text-emerald-600">同梱割引</span>を適用します。
+                                    </p>
+                                    <p className="text-stone-400">
+                                        ※お届け地域により追加送料が発生する場合があります。最終金額はカートでご確認ください。
+                                    </p>
+                                </div>
                             </div>
 
                             {/* バリエーション選択 */}
