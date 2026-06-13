@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
         }
 
         const body = await req.json();
-        const { cartDetails, quote } = body as {
+        const { cartDetails, quote, shippingAddress } = body as {
             cartDetails?: Record<string, CartItem & { cost?: number | null }>;
             quote?: {
                 matchedVariantId: string | null;
@@ -39,6 +39,10 @@ export async function POST(req: NextRequest) {
                 profit: number;
                 surcharge: number;
                 surchargeLabel: string | null;
+            };
+            shippingAddress?: {
+                label: string; name: string; postalCode: string; prefecture: string;
+                city: string; street: string; building: string; phone: string;
             };
         };
 
@@ -107,18 +111,13 @@ export async function POST(req: NextRequest) {
             }
         }
 
-        const session = await stripe.checkout.sessions.create({
+        // 配送先住所が事前指定されている場合は Stripe 側で再入力させない
+        const sessionParams: Stripe.Checkout.SessionCreateParams = {
             payment_method_types: ["card"],
             line_items,
             mode: "payment",
             success_url: `${baseUrl}/success`,
             cancel_url: `${baseUrl}/cancel`,
-            shipping_address_collection: {
-                allowed_countries: ["JP"],
-            },
-            phone_number_collection: {
-                enabled: true,
-            },
             custom_text: {
                 submit: {
                     message:
@@ -128,14 +127,44 @@ export async function POST(req: NextRequest) {
             metadata: {
                 legalDisclosureUrl,
                 source: "ando-seika-store",
+                shippingLabel: shippingAddress?.label ?? "",
             },
             payment_intent_data: {
                 metadata: {
                     legalDisclosureUrl,
                     source: "ando-seika-store",
+                    shippingLabel: shippingAddress?.label ?? "",
+                    shippingName: shippingAddress?.name ?? "",
+                    shippingPostal: shippingAddress?.postalCode ?? "",
+                    shippingAddress: shippingAddress
+                        ? `${shippingAddress.prefecture}${shippingAddress.city}${shippingAddress.street}${shippingAddress.building ? " " + shippingAddress.building : ""}`
+                        : "",
+                    shippingPhone: shippingAddress?.phone ?? "",
                 },
             },
-        });
+        };
+
+        if (shippingAddress) {
+            // Stripe Checkout に配送先を事前入力
+            sessionParams.payment_intent_data!.shipping = {
+                name: shippingAddress.name,
+                phone: shippingAddress.phone || undefined,
+                address: {
+                    country: "JP",
+                    postal_code: shippingAddress.postalCode,
+                    state: shippingAddress.prefecture,
+                    city: shippingAddress.city,
+                    line1: shippingAddress.street,
+                    line2: shippingAddress.building || undefined,
+                },
+            };
+        } else {
+            // フォールバック: Stripeで入力させる
+            sessionParams.shipping_address_collection = { allowed_countries: ["JP"] };
+            sessionParams.phone_number_collection = { enabled: true };
+        }
+
+        const session = await stripe.checkout.sessions.create(sessionParams);
 
         return NextResponse.json({ sessionId: session.id, url: session.url });
     } catch (err: unknown) {

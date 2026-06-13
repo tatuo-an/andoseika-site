@@ -70,11 +70,13 @@ const DEFAULT_SHIPPING: ShippingRow[] = [
 ];
 
 type InvItem = { id: string; name: string; price: number | null; family: string };
+type AddressItem = { label: string; name: string; postalCode: string; prefecture: string; city: string; street: string; building: string; phone: string };
 
 export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
     const { cartDetails, removeItem, incrementItem, decrementItem, cartCount } = useShoppingCart();
 
-    const [prefecture, setPrefecture] = useState<string | null>(null);
+    const [addresses, setAddresses] = useState<AddressItem[]>([]);
+    const [selectedAddressIdx, setSelectedAddressIdx] = useState(0);
     const [shippingRows, setShippingRows] = useState<ShippingRow[]>([]);
     const [inventory, setInventory] = useState<InvItem[]>([]);
     const [addressLoaded, setAddressLoaded] = useState(false);
@@ -82,17 +84,20 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
     useEffect(() => {
         if (!isOpen || addressLoaded) return;
         Promise.all([
-            fetch("/api/address").then(r => r.json()).catch(() => ({ address: null })),
+            fetch("/api/address").then(r => r.json()).catch(() => ({ addresses: [] })),
             fetch("/api/shipping").then(r => r.json()).catch(() => ({ shipping: [] })),
             fetch("/api/inventory-public").then(r => r.json()).catch(() => ({ inventory: [] })),
         ]).then(([addrData, shipData, invData]) => {
-            setPrefecture(addrData.address?.prefecture ?? null);
+            setAddresses(addrData.addresses ?? []);
+            setSelectedAddressIdx(0);
             setShippingRows(shipData.shipping?.length ? shipData.shipping : DEFAULT_SHIPPING);
             setInventory(invData.inventory ?? []);
             setAddressLoaded(true);
         });
     }, [isOpen, addressLoaded]);
 
+    const selectedAddress = addresses[selectedAddressIdx] ?? null;
+    const prefecture = selectedAddress?.prefecture ?? null;
     const regionRow = prefecture ? findRegionRow(prefecture, shippingRows) : null;
     const baseRow = findBaseRow(shippingRows);
     const isExtraRegion = regionRow && baseRow && regionRow !== baseRow;
@@ -138,12 +143,17 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
     if (!isOpen) return null;
 
     const handleCheckout = async () => {
+        if (!selectedAddress) {
+            alert("配送先を選択してください");
+            return;
+        }
         try {
             const response = await fetch("/api/checkout_sessions", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     cartDetails,
+                    shippingAddress: selectedAddress,
                     quote: {
                         matchedVariantId: matchedVariant?.id ?? null,
                         matchedVariantName: matchedVariant?.name ?? null,
@@ -219,6 +229,59 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
 
                 {cartCount! > 0 && (
                     <div className="p-6 border-t border-stone-100 bg-stone-50 space-y-3">
+                        {/* 配送先選択 */}
+                        {addressLoaded && addresses.length > 0 && (
+                            <div className="bg-white border border-stone-200 rounded-lg p-3 space-y-2">
+                                <div className="flex items-center justify-between">
+                                    <p className="text-xs font-bold text-stone-500">お届け先</p>
+                                    <Link href="/mypage/address" className="text-xs text-primary hover:underline">編集</Link>
+                                </div>
+                                {addresses.length === 1 ? (
+                                    <div className="text-sm">
+                                        <span className="bg-primary/10 text-primary text-xs font-bold px-2 py-0.5 rounded-full mr-2">
+                                            {selectedAddress?.label || "—"}
+                                        </span>
+                                        <span className="text-stone-700">{selectedAddress?.name}</span>
+                                        <p className="text-xs text-stone-500 mt-1">
+                                            〒{selectedAddress?.postalCode} {selectedAddress?.prefecture}{selectedAddress?.city}{selectedAddress?.street}
+                                            {selectedAddress?.building && ` ${selectedAddress.building}`}
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-1.5">
+                                        {addresses.map((addr, i) => (
+                                            <label key={addr.label} className={`flex items-start gap-2 p-2 rounded-lg cursor-pointer border transition-colors ${
+                                                i === selectedAddressIdx ? "border-primary bg-primary/5" : "border-stone-200 hover:bg-stone-50"
+                                            }`}>
+                                                <input
+                                                    type="radio"
+                                                    name="address"
+                                                    checked={i === selectedAddressIdx}
+                                                    onChange={() => setSelectedAddressIdx(i)}
+                                                    className="mt-1 accent-primary"
+                                                />
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center gap-1.5 mb-0.5">
+                                                        <span className="bg-primary/10 text-primary text-[10px] font-bold px-1.5 py-0.5 rounded-full">{addr.label}</span>
+                                                        <span className="text-sm font-medium text-stone-800 truncate">{addr.name}</span>
+                                                    </div>
+                                                    <p className="text-xs text-stone-500 truncate">
+                                                        {addr.prefecture}{addr.city}{addr.street}
+                                                    </p>
+                                                </div>
+                                            </label>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                        {addressLoaded && addresses.length === 0 && (
+                            <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 text-sm">
+                                <p className="text-orange-700 mb-1">配送先が登録されていません</p>
+                                <Link href="/mypage/address" className="text-xs text-orange-600 underline font-medium">配送先を登録する →</Link>
+                            </div>
+                        )}
+
                         {/* 内訳表示 */}
                         {addressLoaded && (() => {
                             // 単品購入時価格の合計（各商品の販売価格×数量）
@@ -298,9 +361,10 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
 
                         <button
                             onClick={handleCheckout}
-                            className="w-full py-4 bg-primary text-white font-bold rounded-full hover:bg-primary/90 transition-colors shadow-lg"
+                            disabled={!selectedAddress}
+                            className="w-full py-4 bg-primary text-white font-bold rounded-full hover:bg-primary/90 transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            お支払いへ進む
+                            {selectedAddress ? "お支払いへ進む" : "配送先を登録してください"}
                         </button>
                         <p className="text-xs text-center text-stone-500">
                             Stripeのセキュアな決済画面へ移動します。ご注文前に
