@@ -864,16 +864,63 @@ function stringifyOptions(opts: OptionEntry[]): string {
     return opts.map(o => `${o.label}:${o.amount}`).join("|");
 }
 
+function OptionRow({ option, onChange, onRemove }: {
+    option: OptionEntry;
+    onChange: (next: OptionEntry) => void;
+    onRemove: () => void;
+}) {
+    const [labelLocal, setLabelLocal] = useState(option.label);
+    const [amountLocal, setAmountLocal] = useState(option.amount === 0 ? "" : option.amount.toString());
+    const prevOpt = useRef(option);
+    // 外部から値が変わった場合に同期
+    if (prevOpt.current !== option) {
+        prevOpt.current = option;
+        setLabelLocal(option.label);
+        setAmountLocal(option.amount === 0 ? "" : option.amount.toString());
+    }
+    const commitLabel = () => onChange({ ...option, label: labelLocal });
+    const commitAmount = () => {
+        const num = parseInt(amountLocal, 10);
+        onChange({ ...option, amount: isNaN(num) ? 0 : num });
+    };
+    return (
+        <div className="flex items-center gap-2">
+            <input
+                value={labelLocal}
+                onChange={(e) => setLabelLocal(e.target.value)}
+                onBlur={commitLabel}
+                placeholder="例: ヒゲ焼き無し"
+                className="flex-1 border border-stone-200 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-primary/30"
+            />
+            <input
+                type="text"
+                inputMode="numeric"
+                value={amountLocal}
+                onChange={(e) => setAmountLocal(e.target.value)}
+                onBlur={commitAmount}
+                placeholder="-100"
+                className="w-20 text-center border border-stone-200 rounded-lg px-1 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-primary/30"
+            />
+            <span className="text-xs text-stone-400">円</span>
+            <button
+                onClick={onRemove}
+                className="p-1 text-stone-300 hover:text-red-500"
+            >
+                <Trash2 className="w-3.5 h-3.5" />
+            </button>
+        </div>
+    );
+}
+
 function FamilyOptions({ options, onUpdate }: { options: string; onUpdate: (s: string) => void }) {
     const parsed = parseOptions(options);
     const update = (next: OptionEntry[]) => onUpdate(stringifyOptions(next));
     const add = () => update([...parsed, { label: "", amount: 0 }]);
     const remove = (i: number) => update(parsed.filter((_, idx) => idx !== i));
-    const change = (i: number, key: "label" | "amount", v: string) => {
-        const next = [...parsed];
-        if (key === "label") next[i].label = v;
-        else next[i].amount = parseInt(v, 10) || 0;
-        update(next);
+    const change = (i: number, next: OptionEntry) => {
+        const arr = [...parsed];
+        arr[i] = next;
+        update(arr);
     };
 
     return (
@@ -892,28 +939,12 @@ function FamilyOptions({ options, onUpdate }: { options: string; onUpdate: (s: s
             {parsed.length > 0 && (
                 <div className="space-y-1">
                     {parsed.map((opt, i) => (
-                        <div key={i} className="flex items-center gap-2">
-                            <input
-                                value={opt.label}
-                                onChange={(e) => change(i, "label", e.target.value)}
-                                placeholder="例: ヒゲ焼き無し"
-                                className="flex-1 border border-stone-200 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-primary/30"
-                            />
-                            <input
-                                type="number"
-                                value={opt.amount}
-                                onChange={(e) => change(i, "amount", e.target.value)}
-                                placeholder="-100"
-                                className="w-20 text-center border border-stone-200 rounded-lg px-1 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-primary/30"
-                            />
-                            <span className="text-xs text-stone-400">円</span>
-                            <button
-                                onClick={() => remove(i)}
-                                className="p-1 text-stone-300 hover:text-red-500"
-                            >
-                                <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                        </div>
+                        <OptionRow
+                            key={i}
+                            option={opt}
+                            onChange={(next) => change(i, next)}
+                            onRemove={() => remove(i)}
+                        />
                     ))}
                 </div>
             )}
