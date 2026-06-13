@@ -37,6 +37,7 @@ export function FavoriteButton({ productId, className = "", size = "md" }: {
         try {
             const res = await fetch("/api/favorites", {
                 method: "POST",
+                keepalive: true, // ページ遷移中でもリクエストを継続
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ productId, action }),
             });
