@@ -147,6 +147,15 @@ export function AdminPanel({
         setSavedInventory(false);
     };
 
+    // ファミリー全体のクール便フラグを一括切替
+    const toggleFamilyCool = (family: string) => {
+        setItems((prev) => {
+            const current = prev.find(i => i.family?.trim() === family)?.coolAvailable ?? false;
+            return prev.map((item) => item.family?.trim() === family ? { ...item, coolAvailable: !current } : item);
+        });
+        setSavedInventory(false);
+    };
+
 
     // ファミリー全体を一括非表示/表示切り替え
     const toggleFamilyHidden = (family: string) => {
@@ -167,7 +176,8 @@ export function AdminPanel({
             const next = [...prev];
             const familyMember = prev.find(i => i.family?.trim() === family);
             const familyImages = familyMember?.familyImages ?? [];
-            next.splice(lastIdx + 1, 0, { id: newId, name: "バリエーション名", stock: -1, price: null, shipType: "", hidden: false, deleted: false, nextShipment: "", badges: [], family, imageUrl: "", familyImages: [...familyImages], cost: null, profitRate: null, coolAvailable: false });
+            const coolAvailable = familyMember?.coolAvailable ?? false;
+            next.splice(lastIdx + 1, 0, { id: newId, name: "バリエーション名", stock: -1, price: null, shipType: "", hidden: false, deleted: false, nextShipment: "", badges: [], family, imageUrl: "", familyImages: [...familyImages], cost: null, profitRate: null, coolAvailable });
             return next;
         });
         setSavedInventory(false);
@@ -232,10 +242,6 @@ export function AdminPanel({
         setItems((prev) => prev.map((item) => {
             if (item.id !== id) return item;
             const updated = { ...item, [field]: value };
-            // 配送区分が不可サイズに変わったらクール便を自動OFF
-            if (field === "shipType" && ["compact", "clickpost", "140", "160", "180", "200"].includes(value as string)) {
-                updated.coolAvailable = false;
-            }
             // 原価・利益率・配送区分が変わったら販売価格を再計算
             if (field === "cost" || field === "profitRate" || field === "shipType") {
                 const auto = calcSellPrice(updated);
@@ -427,6 +433,17 @@ export function AdminPanel({
                                                                     onCommit={(newName) => renameFamily(fam, newName)}
                                                                 />
                                                                 <span className="text-xs text-stone-400 whitespace-nowrap">{familyItems.length}バリエーション</span>
+                                                                <button
+                                                                    onClick={() => toggleFamilyCool(fam)}
+                                                                    title={familyItems[0]?.coolAvailable ? "クール便OFFにする" : "クール便ONにする"}
+                                                                    className={`px-2.5 py-1 rounded-full text-[11px] font-bold transition-colors border whitespace-nowrap flex-shrink-0 ${
+                                                                        familyItems[0]?.coolAvailable
+                                                                            ? "bg-blue-500 text-white border-blue-600"
+                                                                            : "bg-stone-50 text-stone-400 border-stone-200 hover:bg-stone-100"
+                                                                    }`}
+                                                                >
+                                                                    ❄ クール便
+                                                                </button>
                                                                 <button
                                                                     onClick={() => toggleFamilyHidden(fam)}
                                                                     title={allHidden ? "全て表示する" : "全て非表示にする"}
@@ -698,30 +715,6 @@ function SortableRow({
                         <option key={t.value} value={t.value}>{t.label}</option>
                     ))}
                 </select>
-                {/* クール便（コンパクト/クリックポスト/140以上は不可） */}
-                {(() => {
-                    const coolDisabled = ["compact", "clickpost", "140", "160", "180", "200"].includes(item.shipType);
-                    return (
-                        <button
-                            onClick={() => !coolDisabled && onUpdate(item.id, "coolAvailable", !item.coolAvailable)}
-                            disabled={coolDisabled}
-                            title={
-                                coolDisabled
-                                    ? "この配送区分ではクール便を選択できません"
-                                    : item.coolAvailable ? "クール便OFFにする" : "クール便ONにする"
-                            }
-                            className={`px-2 py-0.5 rounded-full text-[11px] font-bold transition-colors border whitespace-nowrap flex-shrink-0 ${
-                                coolDisabled
-                                    ? "bg-stone-100 text-stone-300 border-stone-200 cursor-not-allowed"
-                                    : item.coolAvailable
-                                        ? "bg-blue-500 text-white border-blue-600"
-                                        : "bg-stone-50 text-stone-400 border-stone-200 hover:bg-stone-100"
-                            }`}
-                        >
-                            ❄
-                        </button>
-                    );
-                })()}
                 {/* 次回出荷 */}
                 <input
                     value={item.nextShipment}

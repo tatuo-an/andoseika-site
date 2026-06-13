@@ -145,17 +145,12 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
         return Math.max(0, getRate(regionRow, weightBasedShipType) - getRate(baseRow, weightBasedShipType));
     })();
 
-    // クール便判定:
-    //   ファミリーマッチがある場合: そのマッチしたバリエーションの coolAvailable を使う（10kg等の単体扱い）
-    //   マッチがない場合: カート内のいずれかが coolAvailable=true
-    //   いずれも、合計重量から決まるサイズが140以上ならクール不可
-    const coolEligible = (() => {
-        if (!weightBasedShipType || coolSurchargeBySize(weightBasedShipType) === 0) return false;
-        if (matchedVariant) {
-            return inventory.find(v => v.id === matchedVariant.id)?.coolAvailable === true;
-        }
-        return cartItems.some(i => (i as { coolAvailable?: boolean }).coolAvailable);
-    })();
+    // クール便判定（ファミリー単位）:
+    //   1. カート内のいずれかが coolAvailable=true
+    //   2. かつ合計重量サイズが60~120（140以上は不可）
+    const coolEligible = weightBasedShipType !== null
+        && coolSurchargeBySize(weightBasedShipType) > 0
+        && cartItems.some(i => (i as { coolAvailable?: boolean }).coolAvailable);
     const coolFee = coolEligible && coolRequested ? coolSurchargeBySize(weightBasedShipType) : 0;
 
     // 最終請求: マッチした場合はそのバリエーション販売価格、それ以外は原価合計+送料+利益
