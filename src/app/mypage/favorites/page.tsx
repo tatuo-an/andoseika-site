@@ -15,8 +15,14 @@ export const dynamic = "force-dynamic";
 
 type InventoryRow = {
     id: string; name: string; price: number | null; hidden: boolean;
-    family: string; imageUrl: string; badges: string[]; stock: number; nextShipment: string;
+    family: string; imageUrl: string; badges: string[]; stock: number; nextShipment: string; cost: number | null;
 };
+
+function toTaxIncluded(price: number, cost: number | null): number {
+    if (cost === null || cost <= 0) return Math.round(price * 1.08);
+    const others = Math.max(0, price - cost);
+    return Math.round(cost * 1.08 + others * 1.10);
+}
 
 function getSheets() {
     const authClient = new google.auth.GoogleAuth({
@@ -48,7 +54,7 @@ async function getInventory(): Promise<InventoryRow[]> {
         const sheets = getSheets();
         const res = await sheets.spreadsheets.values.get({
             spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-            range: "商品在庫!A:L",
+            range: "商品在庫!A:N",
         });
         const rows = res.data.values ?? [];
         return rows.slice(1).filter(r => r[0]).map(r => ({
@@ -61,6 +67,7 @@ async function getInventory(): Promise<InventoryRow[]> {
             badges: r[8] ? r[8].split(",").map((b: string) => b.trim()).filter(Boolean) : [],
             family: r[9]?.trim() ?? "",
             imageUrl: r[10]?.trim() ?? "",
+            cost: r[12] !== undefined && r[12] !== "" ? parseInt(r[12], 10) : null,
         }));
     } catch { return []; }
 }
@@ -94,7 +101,10 @@ export default async function FavoritesPage() {
             const familyRows = inventory.filter(r => r.family === familyName && !r.hidden);
             if (familyRows.length === 0) continue;
             const rep = familyRows.find(r => !(r.stock !== -1 && r.stock === 0)) ?? familyRows[0];
-            const prices = familyRows.map(r => r.price ?? productMap[r.id]?.price).filter(Boolean) as number[];
+            const prices = familyRows.map(r => {
+                const p = r.price ?? productMap[r.id]?.price;
+                return p ? toTaxIncluded(p, r.cost) : 0;
+            }).filter(Boolean);
             const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
             const allSoldOut = familyRows.every(r => r.stock !== -1 && r.stock === 0);
             const repProduct = productMap[rep.id];
@@ -112,12 +122,13 @@ export default async function FavoritesPage() {
             const product = productMap[fav];
             if (!inv || inv.hidden) continue;
             const price = inv.price ?? product?.price ?? 0;
+            const priceTaxed = toTaxIncluded(price, inv.cost);
             cards.push({
                 key: fav,
                 href: `/products/${fav}`,
                 image: inv.imageUrl || product?.image?.url || "",
                 name: inv.name || product?.name || fav,
-                price: `¥${price.toLocaleString()}`,
+                price: `¥${priceTaxed.toLocaleString()}`,
                 badges: inv.badges,
                 isSoldOut: inv.stock !== -1 && inv.stock === 0,
             });
