@@ -780,7 +780,7 @@ function SortableRow({
                 {/* 利益率 */}
                 <div className="flex items-center gap-1">
                     <span className="text-xs text-stone-400">利益率</span>
-                    <input type="number" min={0} step="0.1" value={item.profitRate ?? ""} placeholder="−"
+                    <input type="number" min={0} step="1" value={item.profitRate ?? ""} placeholder="−"
                         onChange={(e) => onUpdate(item.id, "profitRate", e.target.value ? parseFloat(e.target.value) : null)}
                         className="w-14 text-center border border-stone-200 rounded-lg px-1 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
                     <span className="text-xs text-stone-400">%</span>
