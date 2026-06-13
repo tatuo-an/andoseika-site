@@ -87,6 +87,14 @@ const DEFAULT_SHIPPING: ShippingRow[] = [
 ];
 
 type InvItem = { id: string; name: string; price: number | null; family: string; coolAvailable?: boolean; shipType?: string; clickpostMax?: number };
+type OptionEntry = { label: string; amount: number };
+function parseFamilyOptions(s: string): OptionEntry[] {
+    if (!s?.trim()) return [];
+    return s.split("|").map(p => {
+        const [label, amountStr] = p.split(":");
+        return { label: label?.trim() ?? "", amount: parseInt(amountStr ?? "0", 10) || 0 };
+    }).filter(e => e.label);
+}
 type AddressItem = { label: string; name: string; postalCode: string; prefecture: string; city: string; street: string; building: string; phone: string };
 
 export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
@@ -99,6 +107,8 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
     const [inventory, setInventory] = useState<InvItem[]>([]);
     const [addressLoaded, setAddressLoaded] = useState(false);
     const [coolRequested, setCoolRequested] = useState(false);
+    // 選択中のファミリーオプション: { "family名:ラベル": true }
+    const [selectedOptions, setSelectedOptions] = useState<Set<string>>(new Set());
 
     useEffect(() => {
         if (!isOpen || addressLoaded) return;
@@ -181,6 +191,28 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
         && cartItems.some(i => (i as { coolAvailable?: boolean }).coolAvailable);
     const coolFee = coolEligible && coolRequested ? coolSurchargeBySize(effectiveShipType) : 0;
 
+    // ファミリーオプションを集約: { familyName: OptionEntry[] }
+    const familyOptionsMap = new Map<string, OptionEntry[]>();
+    cartItems.forEach(i => {
+        const fam = (i as { family?: string }).family;
+        const opts = (i as { familyOptions?: string }).familyOptions;
+        if (fam && opts && !familyOptionsMap.has(fam)) {
+            const parsed = parseFamilyOptions(opts);
+            if (parsed.length > 0) familyOptionsMap.set(fam, parsed);
+        }
+    });
+
+    // 選択されたオプションの合計（税抜）
+    const optionsAdjustment = (() => {
+        let sum = 0;
+        familyOptionsMap.forEach((opts, fam) => {
+            opts.forEach(o => {
+                if (selectedOptions.has(`${fam}:${o.label}`)) sum += o.amount;
+            });
+        });
+        return sum;
+    })();
+
     // 税抜きの内訳（本体・送料・サービス料）
     const itemsBodyNet = itemsTotalCost;
     const shipFeeNet = baseShipFee;
@@ -194,8 +226,10 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
     const profitShown = Math.round(profitNet * 1.10);
     const surchargeTaxed = Math.round(surcharge * 1.10);
     const coolFeeTaxed = Math.round(coolFee * 1.10);
+    // オプション調整（本体価格扱い: 8%）
+    const optionsAdjustmentTaxed = Math.round(optionsAdjustment * 1.08);
 
-    const grandTotal = itemsBodyShown + shipFeeShown + profitShown + surchargeTaxed + coolFeeTaxed;
+    const grandTotal = itemsBodyShown + shipFeeShown + profitShown + surchargeTaxed + coolFeeTaxed + optionsAdjustmentTaxed;
 
     if (!isOpen) return null;
 
@@ -221,6 +255,8 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                         surchargeLabel: isExtraRegion ? `追加送料（${regionRow!.region}）` : null,
                         coolFee: coolFeeTaxed,
                         shipSizeLabel: shipTypeLabel(effectiveShipType),
+                        optionsAdjustment: optionsAdjustmentTaxed,
+                        optionLabels: Array.from(selectedOptions),
                     },
                 }),
             });
@@ -413,6 +449,12 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                                         )}
                                     </div>
 
+                                    {optionsAdjustmentTaxed !== 0 && (
+                                        <div className={`flex justify-between ${optionsAdjustmentTaxed < 0 ? "text-emerald-600" : "text-orange-600"} font-medium`}>
+                                            <span>オプション調整</span>
+                                            <span>{optionsAdjustmentTaxed > 0 ? "+" : "−"}¥{Math.abs(optionsAdjustmentTaxed).toLocaleString()}</span>
+                                        </div>
+                                    )}
                                     {isExtraRegion && surchargeTaxed > 0 && (
                                         <div className="flex justify-between text-orange-600">
                                             <span>追加送料（{regionRow!.region}）</span>
@@ -428,6 +470,43 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                                 </div>
                             );
                         })()}
+                        {/* ファミリーオプション */}
+                        {familyOptionsMap.size > 0 && (
+                            <div className="bg-white border border-stone-200 rounded-lg p-3 space-y-2">
+                                <p className="text-xs font-bold text-stone-500">オプション</p>
+                                {Array.from(familyOptionsMap.entries()).map(([fam, opts]) => (
+                                    <div key={fam} className="space-y-1">
+                                        {familyOptionsMap.size > 1 && (
+                                            <p className="text-[10px] text-stone-400">{fam}</p>
+                                        )}
+                                        {opts.map(o => {
+                                            const key = `${fam}:${o.label}`;
+                                            const checked = selectedOptions.has(key);
+                                            return (
+                                                <label key={key} className="flex items-center gap-2 text-sm cursor-pointer">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={checked}
+                                                        onChange={(e) => {
+                                                            const next = new Set(selectedOptions);
+                                                            if (e.target.checked) next.add(key);
+                                                            else next.delete(key);
+                                                            setSelectedOptions(next);
+                                                        }}
+                                                        className="accent-primary"
+                                                    />
+                                                    <span className="flex-1 text-stone-700">{o.label}</span>
+                                                    <span className={`text-xs font-medium ${o.amount < 0 ? "text-emerald-600" : "text-orange-600"}`}>
+                                                        {o.amount > 0 ? "+" : ""}¥{Math.round(o.amount * 1.08).toLocaleString()}
+                                                    </span>
+                                                </label>
+                                            );
+                                        })}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
                         {/* クール便オプション */}
                         {coolEligible && effectiveShipType && coolSurchargeBySize(effectiveShipType) > 0 && (
                             <label className="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-lg p-3 cursor-pointer">

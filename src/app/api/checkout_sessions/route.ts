@@ -41,6 +41,8 @@ export async function POST(req: NextRequest) {
                 surchargeLabel: string | null;
                 coolFee?: number;         // クール便（税込, 10%）
                 shipSizeLabel?: string;
+                optionsAdjustment?: number; // オプション調整（税込, 8%、負値=割引）
+                optionLabels?: string[];    // 選択されたオプションのキー "family:label" 配列
             };
             shippingAddress?: {
                 label: string; name: string; postalCode: string; prefecture: string;
@@ -104,6 +106,27 @@ export async function POST(req: NextRequest) {
                     },
                     quantity: 1,
                 });
+            }
+            // オプション調整（割引は商品本体価格から差し引く / 追加料金は別行）
+            if (quote.optionsAdjustment && quote.optionsAdjustment !== 0) {
+                if (quote.optionsAdjustment > 0) {
+                    // 追加料金は別行
+                    line_items.push({
+                        price_data: {
+                            currency: "jpy",
+                            product_data: { name: `オプション（${quote.optionLabels?.map(k => k.split(":")[1]).join(", ") ?? ""}）`, images: [] },
+                            unit_amount: quote.optionsAdjustment,
+                        },
+                        quantity: 1,
+                    });
+                } else {
+                    // 割引は商品本体行の単価から差し引く（Stripeは負の単価不可）
+                    const discount = Math.abs(quote.optionsAdjustment);
+                    if (line_items[0] && line_items[0].price_data.unit_amount >= discount) {
+                        line_items[0].price_data.unit_amount -= discount;
+                        line_items[0].price_data.product_data.name += `（${quote.optionLabels?.map(k => k.split(":")[1]).join(", ") ?? ""}）`;
+                    }
+                }
             }
         } else {
             for (const item of cartArr) {

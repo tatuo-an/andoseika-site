@@ -41,6 +41,7 @@ export type InventoryItem = {
     coolAvailable: boolean;     // クール便対応(ファミリー単位)
     description: string;        // 商品説明（ファミリー単位）
     clickpostMax: number;       // クリックポスト最大同梱数(0=不可)
+    options: string;            // ファミリー単位の割引/追加オプション (ラベル:金額|...)
 };
 
 const PRESET_BADGES = ["新物", "訳あり", "秀品", "贈答用", "栽培期間中農薬不使用", "慣行栽培"];
@@ -112,6 +113,7 @@ export function AdminPanel({
             coolAvailable: inv.coolAvailable ?? false,
             description: inv.description ?? "",
             clickpostMax: inv.clickpostMax ?? 0,
+            options: inv.options ?? "",
         }))
     );
 
@@ -147,6 +149,14 @@ export function AdminPanel({
     const updateFamilyImages = (family: string, familyImages: string[]) => {
         setItems((prev) => prev.map((item) =>
             item.family?.trim() === family ? { ...item, familyImages } : item
+        ));
+        setSavedInventory(false);
+    };
+
+    // ファミリーのオプションを一括更新
+    const updateFamilyOptions = (family: string, options: string) => {
+        setItems((prev) => prev.map((item) =>
+            item.family?.trim() === family ? { ...item, options } : item
         ));
         setSavedInventory(false);
     };
@@ -190,7 +200,7 @@ export function AdminPanel({
             const familyImages = familyMember?.familyImages ?? [];
             const coolAvailable = familyMember?.coolAvailable ?? false;
             const description = familyMember?.description ?? "";
-            next.splice(lastIdx + 1, 0, { id: newId, name: "バリエーション名", stock: -1, price: null, shipType: "", hidden: false, deleted: false, nextShipment: "", badges: [], family, imageUrl: "", familyImages: [...familyImages], cost: null, profitRate: null, coolAvailable, description, clickpostMax: 0 });
+            next.splice(lastIdx + 1, 0, { id: newId, name: "バリエーション名", stock: -1, price: null, shipType: "", hidden: false, deleted: false, nextShipment: "", badges: [], family, imageUrl: "", familyImages: [...familyImages], cost: null, profitRate: null, coolAvailable, description, clickpostMax: 0, options: familyMember?.options ?? "" });
             return next;
         });
         setSavedInventory(false);
@@ -328,6 +338,7 @@ export function AdminPanel({
             coolAvailable: false,
             description: "",
             clickpostMax: 0,
+            options: "",
         }]);
         setSavedInventory(false);
     };
@@ -352,6 +363,7 @@ export function AdminPanel({
             coolAvailable: false,
             description: "",
             clickpostMax: 0,
+            options: "",
         }]);
         setSavedInventory(false);
     };
@@ -489,6 +501,10 @@ export function AdminPanel({
                                                         <FamilyDescription
                                                             description={familyItems[0]?.description ?? ""}
                                                             onCommit={(desc) => updateFamilyDescription(fam, desc)}
+                                                        />
+                                                        <FamilyOptions
+                                                            options={familyItems[0]?.options ?? ""}
+                                                            onUpdate={(opts) => updateFamilyOptions(fam, opts)}
                                                         />
                                                         <div className="divide-y divide-stone-100">
                                                             {familyItems.map((fi) => (
@@ -783,6 +799,78 @@ function SortableRow({
                     onRemoveBadge={onRemoveBadge}
                 />
             </div>
+        </div>
+    );
+}
+
+// ── ファミリーのオプション（割引/追加料金） ───────────────────
+type OptionEntry = { label: string; amount: number };
+
+function parseOptions(s: string): OptionEntry[] {
+    if (!s.trim()) return [];
+    return s.split("|").map(p => {
+        const [label, amountStr] = p.split(":");
+        return { label: label?.trim() ?? "", amount: parseInt(amountStr ?? "0", 10) || 0 };
+    }).filter(e => e.label);
+}
+
+function stringifyOptions(opts: OptionEntry[]): string {
+    return opts.map(o => `${o.label}:${o.amount}`).join("|");
+}
+
+function FamilyOptions({ options, onUpdate }: { options: string; onUpdate: (s: string) => void }) {
+    const parsed = parseOptions(options);
+    const update = (next: OptionEntry[]) => onUpdate(stringifyOptions(next));
+    const add = () => update([...parsed, { label: "", amount: 0 }]);
+    const remove = (i: number) => update(parsed.filter((_, idx) => idx !== i));
+    const change = (i: number, key: "label" | "amount", v: string) => {
+        const next = [...parsed];
+        if (key === "label") next[i].label = v;
+        else next[i].amount = parseInt(v, 10) || 0;
+        update(next);
+    };
+
+    return (
+        <div className="px-4 py-2 border-b border-stone-100 bg-stone-50/40">
+            <div className="flex items-center gap-2 mb-1.5">
+                <span className="text-xs text-stone-400 whitespace-nowrap">オプション</span>
+                <span className="text-[10px] text-stone-400">（割引はマイナス、追加料金はプラス）</span>
+                <button
+                    onClick={add}
+                    className="ml-auto flex items-center gap-1 text-xs text-stone-500 hover:text-primary border border-stone-200 hover:border-primary/40 px-2 py-0.5 rounded-full transition-colors"
+                >
+                    <Plus className="w-3 h-3" />
+                    追加
+                </button>
+            </div>
+            {parsed.length > 0 && (
+                <div className="space-y-1">
+                    {parsed.map((opt, i) => (
+                        <div key={i} className="flex items-center gap-2">
+                            <input
+                                value={opt.label}
+                                onChange={(e) => change(i, "label", e.target.value)}
+                                placeholder="例: ヒゲ焼き無し"
+                                className="flex-1 border border-stone-200 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-primary/30"
+                            />
+                            <input
+                                type="number"
+                                value={opt.amount}
+                                onChange={(e) => change(i, "amount", e.target.value)}
+                                placeholder="-100"
+                                className="w-20 text-center border border-stone-200 rounded-lg px-1 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-primary/30"
+                            />
+                            <span className="text-xs text-stone-400">円</span>
+                            <button
+                                onClick={() => remove(i)}
+                                className="p-1 text-stone-300 hover:text-red-500"
+                            >
+                                <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                        </div>
+                    ))}
+                </div>
+            )}
         </div>
     );
 }
