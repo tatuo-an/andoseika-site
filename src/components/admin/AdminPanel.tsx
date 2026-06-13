@@ -232,6 +232,10 @@ export function AdminPanel({
         setItems((prev) => prev.map((item) => {
             if (item.id !== id) return item;
             const updated = { ...item, [field]: value };
+            // 配送区分が不可サイズに変わったらクール便を自動OFF
+            if (field === "shipType" && ["compact", "clickpost", "140", "160", "180", "200"].includes(value as string)) {
+                updated.coolAvailable = false;
+            }
             // 原価・利益率・配送区分が変わったら販売価格を再計算
             if (field === "cost" || field === "profitRate" || field === "shipType") {
                 const auto = calcSellPrice(updated);
@@ -694,18 +698,30 @@ function SortableRow({
                         <option key={t.value} value={t.value}>{t.label}</option>
                     ))}
                 </select>
-                {/* クール便 */}
-                <button
-                    onClick={() => onUpdate(item.id, "coolAvailable", !item.coolAvailable)}
-                    title={item.coolAvailable ? "クール便OFFにする" : "クール便ONにする"}
-                    className={`px-2 py-0.5 rounded-full text-[11px] font-bold transition-colors border whitespace-nowrap flex-shrink-0 ${
-                        item.coolAvailable
-                            ? "bg-blue-50 text-blue-600 border-blue-200"
-                            : "bg-stone-50 text-stone-400 border-stone-200 hover:bg-stone-100"
-                    }`}
-                >
-                    ❄
-                </button>
+                {/* クール便（コンパクト/クリックポスト/140以上は不可） */}
+                {(() => {
+                    const coolDisabled = ["compact", "clickpost", "140", "160", "180", "200"].includes(item.shipType);
+                    return (
+                        <button
+                            onClick={() => !coolDisabled && onUpdate(item.id, "coolAvailable", !item.coolAvailable)}
+                            disabled={coolDisabled}
+                            title={
+                                coolDisabled
+                                    ? "この配送区分ではクール便を選択できません"
+                                    : item.coolAvailable ? "クール便OFFにする" : "クール便ONにする"
+                            }
+                            className={`px-2 py-0.5 rounded-full text-[11px] font-bold transition-colors border whitespace-nowrap flex-shrink-0 ${
+                                coolDisabled
+                                    ? "bg-stone-100 text-stone-300 border-stone-200 cursor-not-allowed"
+                                    : item.coolAvailable
+                                        ? "bg-blue-500 text-white border-blue-600"
+                                        : "bg-stone-50 text-stone-400 border-stone-200 hover:bg-stone-100"
+                            }`}
+                        >
+                            ❄
+                        </button>
+                    );
+                })()}
                 {/* 次回出荷 */}
                 <input
                     value={item.nextShipment}
