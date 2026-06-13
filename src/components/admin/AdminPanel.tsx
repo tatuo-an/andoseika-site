@@ -147,14 +147,6 @@ export function AdminPanel({
         setSavedInventory(false);
     };
 
-    // ファミリーのクール便対応フラグを一括更新
-    const toggleFamilyCool = (family: string) => {
-        setItems((prev) => {
-            const current = prev.find(i => i.family?.trim() === family)?.coolAvailable ?? false;
-            return prev.map((item) => item.family?.trim() === family ? { ...item, coolAvailable: !current } : item);
-        });
-        setSavedInventory(false);
-    };
 
     // ファミリー全体を一括非表示/表示切り替え
     const toggleFamilyHidden = (family: string) => {
@@ -175,8 +167,7 @@ export function AdminPanel({
             const next = [...prev];
             const familyMember = prev.find(i => i.family?.trim() === family);
             const familyImages = familyMember?.familyImages ?? [];
-            const coolAvailable = familyMember?.coolAvailable ?? false;
-            next.splice(lastIdx + 1, 0, { id: newId, name: "バリエーション名", stock: -1, price: null, shipType: "", hidden: false, deleted: false, nextShipment: "", badges: [], family, imageUrl: "", familyImages: [...familyImages], cost: null, profitRate: null, coolAvailable });
+            next.splice(lastIdx + 1, 0, { id: newId, name: "バリエーション名", stock: -1, price: null, shipType: "", hidden: false, deleted: false, nextShipment: "", badges: [], family, imageUrl: "", familyImages: [...familyImages], cost: null, profitRate: null, coolAvailable: false });
             return next;
         });
         setSavedInventory(false);
@@ -432,17 +423,6 @@ export function AdminPanel({
                                                                     onCommit={(newName) => renameFamily(fam, newName)}
                                                                 />
                                                                 <span className="text-xs text-stone-400 whitespace-nowrap">{familyItems.length}バリエーション</span>
-                                                                <button
-                                                                    onClick={() => toggleFamilyCool(fam)}
-                                                                    title={familyItems[0]?.coolAvailable ? "クール便OFFにする" : "クール便ONにする"}
-                                                                    className={`px-2 py-0.5 rounded-full text-[11px] font-bold transition-colors flex-shrink-0 border ${
-                                                                        familyItems[0]?.coolAvailable
-                                                                            ? "bg-blue-50 text-blue-600 border-blue-200"
-                                                                            : "bg-stone-50 text-stone-400 border-stone-200 hover:bg-stone-100"
-                                                                    }`}
-                                                                >
-                                                                    ❄ クール便
-                                                                </button>
                                                                 <button
                                                                     onClick={() => toggleFamilyHidden(fam)}
                                                                     title={allHidden ? "全て表示する" : "全て非表示にする"}
@@ -714,6 +694,18 @@ function SortableRow({
                         <option key={t.value} value={t.value}>{t.label}</option>
                     ))}
                 </select>
+                {/* クール便 */}
+                <button
+                    onClick={() => onUpdate(item.id, "coolAvailable", !item.coolAvailable)}
+                    title={item.coolAvailable ? "クール便OFFにする" : "クール便ONにする"}
+                    className={`px-2 py-0.5 rounded-full text-[11px] font-bold transition-colors border whitespace-nowrap flex-shrink-0 ${
+                        item.coolAvailable
+                            ? "bg-blue-50 text-blue-600 border-blue-200"
+                            : "bg-stone-50 text-stone-400 border-stone-200 hover:bg-stone-100"
+                    }`}
+                >
+                    ❄
+                </button>
                 {/* 次回出荷 */}
                 <input
                     value={item.nextShipment}
