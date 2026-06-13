@@ -5,7 +5,6 @@ import { Footer } from "@/components/layout/Footer";
 import Link from "next/link";
 import Image from "next/image";
 import { ChevronLeft, Heart } from "lucide-react";
-import { FavoritesRefreshButton } from "@/components/mypage/FavoritesRefreshButton";
 import { google } from "googleapis";
 import { client } from "@/lib/microcms";
 import { Product } from "@/types/microcms";
@@ -145,13 +144,10 @@ export default async function FavoritesPage() {
                         <ChevronLeft className="w-4 h-4" />
                         マイページに戻る
                     </Link>
-                    <div className="flex items-center justify-between mb-8 flex-wrap gap-3">
-                        <h1 className="text-2xl font-bold text-stone-900 flex items-center gap-2">
-                            <Heart className="w-6 h-6 fill-red-500 text-red-500" />
-                            お気に入り
-                        </h1>
-                        <FavoritesRefreshButton />
-                    </div>
+                    <h1 className="text-2xl font-bold text-stone-900 mb-8 flex items-center gap-2">
+                        <Heart className="w-6 h-6 fill-red-500 text-red-500" />
+                        お気に入り
+                    </h1>
 
                     {cards.length === 0 ? (
                         <div className="bg-white rounded-2xl shadow-sm p-12 text-center">
