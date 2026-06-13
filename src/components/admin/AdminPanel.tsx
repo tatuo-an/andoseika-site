@@ -109,8 +109,12 @@ export function AdminPanel({
         }))
     );
 
-    // 折りたたまれたファミリー
-    const [collapsedFamilies, setCollapsedFamilies] = useState<Set<string>>(new Set());
+    // 折りたたまれたファミリー（初期はすべて折りたたみ）
+    const [collapsedFamilies, setCollapsedFamilies] = useState<Set<string>>(() => {
+        const families = new Set<string>();
+        initialInventory.forEach(inv => { if (inv.family?.trim()) families.add(inv.family.trim()); });
+        return families;
+    });
     const toggleFamily = (family: string) => {
         setCollapsedFamilies((prev) => {
             const next = new Set(prev);
@@ -480,24 +484,30 @@ export function AdminPanel({
                         </SortableContext>
                     </DndContext>
 
-                    <div className="flex items-center gap-3 mb-2">
-                        <button onClick={saveInventory} disabled={savingInventory}
-                            className="flex items-center gap-2 bg-stone-900 text-white px-8 py-3 rounded-full font-bold hover:bg-primary transition-colors disabled:opacity-50">
-                            {savingInventory ? <Loader2 className="w-4 h-4 animate-spin" /> : savedInventory ? <Check className="w-4 h-4" /> : null}
-                            {savedInventory ? "保存しました" : "一括保存"}
-                        </button>
-                        <button onClick={addItem}
-                            className="flex items-center gap-2 border border-stone-300 text-stone-600 px-5 py-3 rounded-full text-sm font-bold hover:bg-stone-100 transition-colors">
-                            <Plus className="w-4 h-4" />
-                            商品を追加
-                        </button>
-                        <button onClick={addFamily}
-                            className="flex items-center gap-2 border border-stone-300 text-stone-600 px-5 py-3 rounded-full text-sm font-bold hover:bg-stone-100 transition-colors">
-                            <Plus className="w-4 h-4" />
-                            ファミリーを追加
-                        </button>
+                    {/* 下部に余白を確保（固定ボタンと被らないように） */}
+                    <div className="h-24" />
+
+                    {/* 固定アクションバー */}
+                    <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur border-t border-stone-200 shadow-lg">
+                        <div className="container mx-auto px-4 md:px-6 max-w-5xl py-3 flex items-center gap-3 flex-wrap">
+                            <button onClick={saveInventory} disabled={savingInventory}
+                                className="flex items-center gap-2 bg-stone-900 text-white px-8 py-3 rounded-full font-bold hover:bg-primary transition-colors disabled:opacity-50">
+                                {savingInventory ? <Loader2 className="w-4 h-4 animate-spin" /> : savedInventory ? <Check className="w-4 h-4" /> : null}
+                                {savedInventory ? "保存しました" : "一括保存"}
+                            </button>
+                            <button onClick={addItem}
+                                className="flex items-center gap-2 border border-stone-300 text-stone-600 px-5 py-3 rounded-full text-sm font-bold hover:bg-stone-100 transition-colors">
+                                <Plus className="w-4 h-4" />
+                                商品を追加
+                            </button>
+                            <button onClick={addFamily}
+                                className="flex items-center gap-2 border border-stone-300 text-stone-600 px-5 py-3 rounded-full text-sm font-bold hover:bg-stone-100 transition-colors">
+                                <Plus className="w-4 h-4" />
+                                ファミリーを追加
+                            </button>
+                            {inventoryError && <p className="text-red-500 text-sm">{inventoryError}</p>}
+                        </div>
                     </div>
-                    {inventoryError && <p className="text-red-500 text-sm mt-1">{inventoryError}</p>}
                 </div>
             )}
 
