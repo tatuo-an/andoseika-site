@@ -79,7 +79,7 @@ const DEFAULT_SHIPPING: ShippingRow[] = [
     { region: "それ以外", prefectures: "東京都,神奈川県,埼玉県,千葉県,茨城県,栃木県,群馬県,新潟県,富山県,石川県,福井県,山梨県,長野県,岐阜県,静岡県,愛知県,三重県,滋賀県,京都府,大阪府,兵庫県,奈良県,和歌山県,鳥取県,島根県,岡山県,広島県,山口県,徳島県,香川県,愛媛県,高知県,福岡県,佐賀県,長崎県,熊本県,大分県,宮崎県,鹿児島県", s60: 600, s80: 700, s100: 800, s120: 1000, s140: 1200, s160: 1400, s180: 1600, s200: 1800, compact: 690, clickpost: 185 },
 ];
 
-type InvItem = { id: string; name: string; price: number | null; family: string; coolAvailable?: boolean };
+type InvItem = { id: string; name: string; price: number | null; family: string; coolAvailable?: boolean; shipType?: string };
 type AddressItem = { label: string; name: string; postalCode: string; prefecture: string; city: string; street: string; building: string; phone: string };
 
 export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
@@ -148,7 +148,11 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
     // クール便判定（ファミリー単位）:
     //   1. カート内のいずれかが coolAvailable=true
     //   2. かつ合計重量サイズが60~120（140以上は不可）
-    const coolEligible = weightBasedShipType !== null
+    //   3. ファミリーマッチした商品の配送区分が「コンパクト」でない
+    const matchedInv = matchedVariant ? inventory.find(v => v.id === matchedVariant.id) : null;
+    const matchedIsCompact = matchedInv?.shipType === "compact";
+    const coolEligible = !matchedIsCompact
+        && weightBasedShipType !== null
         && coolSurchargeBySize(weightBasedShipType) > 0
         && cartItems.some(i => (i as { coolAvailable?: boolean }).coolAvailable);
     const coolFee = coolEligible && coolRequested ? coolSurchargeBySize(weightBasedShipType) : 0;

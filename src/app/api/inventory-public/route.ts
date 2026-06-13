@@ -32,6 +32,7 @@ export async function GET() {
                 id: r[0] ?? "",
                 name: r[1] ?? "",
                 price: r[3] !== undefined && r[3] !== "" ? parseInt(r[3], 10) : null,
+                shipType: r[4] ?? "",
                 family: r[9] ?? "",
                 hidden: r[5] === "1",
                 coolAvailable: r[14] === "1",
