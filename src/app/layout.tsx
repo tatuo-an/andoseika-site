@@ -41,6 +41,7 @@ export const metadata: Metadata = {
 };
 
 import { CartProvider } from "@/components/providers/CartProvider";
+import { FavoritesProvider } from "@/components/providers/FavoritesProvider";
 
 export default function RootLayout({
   children,
@@ -52,7 +53,9 @@ export default function RootLayout({
       <body
         className={`${zenKaku.variable} ${outfit.variable} antialiased`}
       >
-        <CartProvider>{children}</CartProvider>
+        <CartProvider>
+          <FavoritesProvider>{children}</FavoritesProvider>
+        </CartProvider>
       </body>
     </html>
   );
