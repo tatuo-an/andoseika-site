@@ -34,12 +34,13 @@ export async function POST(req: NextRequest) {
             quote?: {
                 matchedVariantId: string | null;
                 matchedVariantName: string | null;
-                itemsTotal: number;
-                baseShipFee: number;
-                profit: number;
-                surcharge: number;
+                itemsTotal: number;       // 商品本体価格（税込, 8%）
+                baseShipFee: number;      // 送料（税込, 10%）
+                profit: number;           // サービス料（税込, 10%）
+                surcharge: number;        // 追加送料（税込, 10%）
                 surchargeLabel: string | null;
-                coolFee?: number;
+                coolFee?: number;         // クール便（税込, 10%）
+                shipSizeLabel?: string;
             };
             shippingAddress?: {
                 label: string; name: string; postalCode: string; prefecture: string;
@@ -60,34 +61,29 @@ export async function POST(req: NextRequest) {
         const line_items: LI[] = [];
 
         if (quote) {
-            if (quote.matchedVariantId) {
-                const firstImg = cartArr[0]?.image;
+            // 商品本体価格（税込）
+            const firstImg = cartArr[0]?.image;
+            const itemsName = quote.matchedVariantName
+                ?? (cartArr.length === 1 ? cartArr[0].name : `商品本体（${cartArr.length}点）`);
+            line_items.push({
+                price_data: {
+                    currency: "jpy",
+                    product_data: { name: itemsName, images: firstImg ? [toAbsoluteUrl(firstImg)] : [] },
+                    unit_amount: quote.itemsTotal,
+                },
+                quantity: 1,
+            });
+            if (quote.baseShipFee > 0) {
                 line_items.push({
-                    price_data: {
-                        currency: "jpy",
-                        product_data: { name: quote.matchedVariantName ?? "商品", images: firstImg ? [toAbsoluteUrl(firstImg)] : [] },
-                        unit_amount: quote.itemsTotal,
-                    },
+                    price_data: { currency: "jpy", product_data: { name: `送料${quote.shipSizeLabel ? `（${quote.shipSizeLabel}）` : ""}`, images: [] }, unit_amount: quote.baseShipFee },
                     quantity: 1,
                 });
-            } else {
-                for (const item of cartArr) {
-                    const unitAmount = item.cost ?? item.price;
-                    line_items.push({
-                        price_data: {
-                            currency: "jpy",
-                            product_data: { name: item.name, images: [toAbsoluteUrl(item.image)] },
-                            unit_amount: unitAmount,
-                        },
-                        quantity: item.quantity,
-                    });
-                }
-                if (quote.baseShipFee > 0) {
-                    line_items.push({ price_data: { currency: "jpy", product_data: { name: "送料", images: [] }, unit_amount: quote.baseShipFee }, quantity: 1 });
-                }
-                if (quote.profit > 0) {
-                    line_items.push({ price_data: { currency: "jpy", product_data: { name: "サービス料", images: [] }, unit_amount: quote.profit }, quantity: 1 });
-                }
+            }
+            if (quote.profit > 0) {
+                line_items.push({
+                    price_data: { currency: "jpy", product_data: { name: "サービス料", images: [] }, unit_amount: quote.profit },
+                    quantity: 1,
+                });
             }
             if (quote.surcharge > 0) {
                 line_items.push({

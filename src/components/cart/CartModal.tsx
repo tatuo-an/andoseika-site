@@ -168,16 +168,21 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
         && cartItems.some(i => (i as { coolAvailable?: boolean }).coolAvailable);
     const coolFee = coolEligible && coolRequested ? coolSurchargeBySize(effectiveShipType) : 0;
 
-    // 最終請求: マッチした場合はそのバリエーション販売価格、それ以外は原価合計+送料+利益
-    // 表示用の内訳は両ケース共通の3行（商品本体価格／送料／サービス料）。
-    // マッチ時は サービス料 = 販売価格 - 原価合計 - 送料 として逆算表示。
-    const itemsTotal = matchedVariant ? matchedVariant.price! : itemsTotalCost;
-    const itemsBodyShown = itemsTotalCost;
-    const shipFeeShown = baseShipFee;
-    const profitShown = matchedVariant
+    // 税抜きの内訳（本体・送料・サービス料）
+    const itemsBodyNet = itemsTotalCost;
+    const shipFeeNet = baseShipFee;
+    const profitNet = matchedVariant
         ? Math.max(0, matchedVariant.price! - itemsTotalCost - baseShipFee)
         : profit;
-    const grandTotal = itemsTotal + (matchedVariant ? 0 : (shipFeeShown + profitShown)) + surcharge + coolFee;
+
+    // 税込み変換: 本体=8%, 送料/サービス料/追加送料/クール便=10%
+    const itemsBodyShown = Math.round(itemsBodyNet * 1.08);
+    const shipFeeShown = Math.round(shipFeeNet * 1.10);
+    const profitShown = Math.round(profitNet * 1.10);
+    const surchargeTaxed = Math.round(surcharge * 1.10);
+    const coolFeeTaxed = Math.round(coolFee * 1.10);
+
+    const grandTotal = itemsBodyShown + shipFeeShown + profitShown + surchargeTaxed + coolFeeTaxed;
 
     if (!isOpen) return null;
 
@@ -196,12 +201,13 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                     quote: {
                         matchedVariantId: matchedVariant?.id ?? null,
                         matchedVariantName: matchedVariant?.name ?? null,
-                        itemsTotal,
+                        itemsTotal: itemsBodyShown,
                         baseShipFee: shipFeeShown,
                         profit: profitShown,
-                        surcharge,
+                        surcharge: surchargeTaxed,
                         surchargeLabel: isExtraRegion ? `追加送料（${regionRow!.region}）` : null,
-                        coolFee,
+                        coolFee: coolFeeTaxed,
+                        shipSizeLabel: shipTypeLabel(effectiveShipType),
                     },
                 }),
             });
@@ -324,9 +330,14 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
 
                         {/* 内訳表示 */}
                         {addressLoaded && (() => {
-                            // 単品購入時価格の合計（各商品の販売価格×数量）
-                            const singlePurchaseTotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-                            const bundledTotal = itemsTotal + shipFeeShown + profitShown; // 追加送料抜きの本体合計
+                            // 単品購入時価格の合計（税込: 原価×1.08 + (販売価格-原価)×1.10）
+                            const singlePurchaseTotal = cartItems.reduce((sum, item) => {
+                                const cost = (item as { cost?: number | null }).cost ?? item.price;
+                                const others = Math.max(0, item.price - cost);
+                                const taxed = Math.round(cost * 1.08 + others * 1.10);
+                                return sum + taxed * item.quantity;
+                            }, 0);
+                            const bundledTotal = itemsBodyShown + shipFeeShown + profitShown; // 追加送料・クール抜きの本体合計（税込）
                             const bundleDiscount = singlePurchaseTotal - bundledTotal;
                             // カートが「1種類のみ」かつ「バリエーションマッチがある」場合は同梱割引を表示しない
                             const isSingleVariantPurchase = cartItems.length === 1 && !!matchedVariant;
@@ -368,16 +379,16 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                                         )}
                                     </div>
 
-                                    {isExtraRegion && surcharge > 0 && (
+                                    {isExtraRegion && surchargeTaxed > 0 && (
                                         <div className="flex justify-between text-orange-600">
                                             <span>追加送料（{regionRow!.region}）</span>
-                                            <span>+¥{surcharge.toLocaleString()}</span>
+                                            <span>+¥{surchargeTaxed.toLocaleString()}</span>
                                         </div>
                                     )}
-                                    {coolFee > 0 && (
+                                    {coolFeeTaxed > 0 && (
                                         <div className="flex justify-between text-blue-600">
                                             <span>❄ クール便</span>
-                                            <span>+¥{coolFee.toLocaleString()}</span>
+                                            <span>+¥{coolFeeTaxed.toLocaleString()}</span>
                                         </div>
                                     )}
                                 </div>
@@ -393,7 +404,7 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                                     className="accent-blue-600"
                                 />
                                 <span className="text-sm text-blue-800 flex-1">
-                                    ❄ クール便で配送（+¥{coolSurchargeBySize(effectiveShipType).toLocaleString()}）
+                                    ❄ クール便で配送（+¥{Math.round(coolSurchargeBySize(effectiveShipType) * 1.10).toLocaleString()}）
                                 </span>
                             </label>
                         )}
