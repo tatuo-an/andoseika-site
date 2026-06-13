@@ -158,10 +158,15 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
     const coolFee = coolEligible && coolRequested ? coolSurchargeBySize(weightBasedShipType) : 0;
 
     // 最終請求: マッチした場合はそのバリエーション販売価格、それ以外は原価合計+送料+利益
+    // 表示用の内訳は両ケース共通の3行（商品本体価格／送料／サービス料）。
+    // マッチ時は サービス料 = 販売価格 - 原価合計 - 送料 として逆算表示。
     const itemsTotal = matchedVariant ? matchedVariant.price! : itemsTotalCost;
-    const shipFeeShown = matchedVariant ? 0 : baseShipFee;
-    const profitShown = matchedVariant ? 0 : profit;
-    const grandTotal = itemsTotal + shipFeeShown + profitShown + surcharge + coolFee;
+    const itemsBodyShown = itemsTotalCost;
+    const shipFeeShown = baseShipFee;
+    const profitShown = matchedVariant
+        ? Math.max(0, matchedVariant.price! - itemsTotalCost - baseShipFee)
+        : profit;
+    const grandTotal = itemsTotal + (matchedVariant ? 0 : (shipFeeShown + profitShown)) + surcharge + coolFee;
 
     if (!isOpen) return null;
 
@@ -331,30 +336,21 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                                     {/* 内訳 */}
                                     <div className="bg-stone-100/60 rounded-lg p-3 space-y-1 text-xs">
                                         <p className="text-stone-500 font-medium mb-1">内訳</p>
-                                        {matchedVariant ? (
+                                        <div className="flex justify-between text-stone-600">
+                                            <span>商品本体価格</span>
+                                            <span>¥{itemsBodyShown.toLocaleString()}</span>
+                                        </div>
+                                        {shipFeeShown > 0 && (
                                             <div className="flex justify-between text-stone-600">
-                                                <span>{matchedVariant.name}</span>
-                                                <span>¥{itemsTotal.toLocaleString()}</span>
+                                                <span>送料（{weightBasedShipType}サイズ）</span>
+                                                <span>¥{shipFeeShown.toLocaleString()}</span>
                                             </div>
-                                        ) : (
-                                            <>
-                                                <div className="flex justify-between text-stone-600">
-                                                    <span>商品本体価格</span>
-                                                    <span>¥{itemsTotalCost.toLocaleString()}</span>
-                                                </div>
-                                                {shipFeeShown > 0 && (
-                                                    <div className="flex justify-between text-stone-600">
-                                                        <span>送料（{weightBasedShipType}サイズ）</span>
-                                                        <span>¥{shipFeeShown.toLocaleString()}</span>
-                                                    </div>
-                                                )}
-                                                {profitShown > 0 && (
-                                                    <div className="flex justify-between text-stone-600">
-                                                        <span>サービス料</span>
-                                                        <span>¥{profitShown.toLocaleString()}</span>
-                                                    </div>
-                                                )}
-                                            </>
+                                        )}
+                                        {profitShown > 0 && (
+                                            <div className="flex justify-between text-stone-600">
+                                                <span>サービス料</span>
+                                                <span>¥{profitShown.toLocaleString()}</span>
+                                            </div>
                                         )}
                                     </div>
 
