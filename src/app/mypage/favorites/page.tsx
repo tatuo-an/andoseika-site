@@ -10,12 +10,14 @@ import { client } from "@/lib/microcms";
 import { Product } from "@/types/microcms";
 import localProducts from "@/data/products.json";
 import { BADGE_COLORS, DEFAULT_BADGE_COLOR } from "@/lib/badges";
+import { isSaleActive, calcSalePrice } from "@/lib/sale";
 
 export const dynamic = "force-dynamic";
 
 type InventoryRow = {
     id: string; name: string; price: number | null; hidden: boolean;
     family: string; imageUrl: string; badges: string[]; stock: number; nextShipment: string; cost: number | null;
+    salePercent: number; saleStart: string; saleEnd: string;
 };
 
 function toTaxIncluded(price: number, cost: number | null): number {
@@ -54,7 +56,7 @@ async function getInventory(): Promise<InventoryRow[]> {
         const sheets = getSheets();
         const res = await sheets.spreadsheets.values.get({
             spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-            range: "商品在庫!A:N",
+            range: "商品在庫!A:U",
         });
         const rows = res.data.values ?? [];
         return rows.slice(1).filter(r => r[0]).map(r => ({
@@ -68,6 +70,9 @@ async function getInventory(): Promise<InventoryRow[]> {
             family: r[9]?.trim() ?? "",
             imageUrl: r[10]?.trim() ?? "",
             cost: r[12] !== undefined && r[12] !== "" ? parseInt(r[12], 10) : null,
+            salePercent: r[18] !== undefined && r[18] !== "" ? parseInt(r[18], 10) : 0,
+            saleStart: r[19] ?? "",
+            saleEnd: r[20] ?? "",
         }));
     } catch { return []; }
 }
@@ -92,7 +97,7 @@ export default async function FavoritesPage() {
     const productMap = Object.fromEntries(products.map(p => [p.id, p]));
 
     // お気に入りごとに表示用カードを構築
-    type Card = { key: string; href: string; image: string; name: string; price: string; badges: string[]; isSoldOut: boolean };
+    type Card = { key: string; href: string; image: string; name: string; price: string; badges: string[]; isSoldOut: boolean; salePercent: number };
     const cards: Card[] = [];
 
     for (const fav of favorites) {
@@ -103,11 +108,15 @@ export default async function FavoritesPage() {
             const rep = familyRows.find(r => !(r.stock !== -1 && r.stock === 0)) ?? familyRows[0];
             const prices = familyRows.map(r => {
                 const p = r.price ?? productMap[r.id]?.price;
-                return p ? toTaxIncluded(p, r.cost) : 0;
+                if (!p) return 0;
+                const taxed = toTaxIncluded(p, r.cost);
+                const active = isSaleActive(r.salePercent, r.saleStart, r.saleEnd);
+                return active ? calcSalePrice(taxed, r.salePercent) : taxed;
             }).filter(Boolean);
             const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
             const allSoldOut = familyRows.every(r => r.stock !== -1 && r.stock === 0);
             const repProduct = productMap[rep.id];
+            const repOnSale = isSaleActive(rep.salePercent, rep.saleStart, rep.saleEnd);
             cards.push({
                 key: fav,
                 href: `/products/${rep.id}`,
@@ -116,6 +125,7 @@ export default async function FavoritesPage() {
                 price: `¥${minPrice.toLocaleString()}〜`,
                 badges: rep.badges,
                 isSoldOut: allSoldOut,
+                salePercent: repOnSale ? rep.salePercent : 0,
             });
         } else {
             const inv = inventory.find(r => r.id === fav);
@@ -123,14 +133,17 @@ export default async function FavoritesPage() {
             if (!inv || inv.hidden) continue;
             const price = inv.price ?? product?.price ?? 0;
             const priceTaxed = toTaxIncluded(price, inv.cost);
+            const onSale = isSaleActive(inv.salePercent, inv.saleStart, inv.saleEnd);
+            const displayPrice = onSale ? calcSalePrice(priceTaxed, inv.salePercent) : priceTaxed;
             cards.push({
                 key: fav,
                 href: `/products/${fav}`,
                 image: inv.imageUrl || product?.image?.url || "",
                 name: inv.name || product?.name || fav,
-                price: `¥${priceTaxed.toLocaleString()}`,
+                price: `¥${displayPrice.toLocaleString()}`,
                 badges: inv.badges,
                 isSoldOut: inv.stock !== -1 && inv.stock === 0,
+                salePercent: onSale ? inv.salePercent : 0,
             });
         }
     }
@@ -167,6 +180,11 @@ export default async function FavoritesPage() {
                                                 <Image src={card.image} alt={card.name} fill className="object-contain group-hover:scale-105 transition-transform duration-500" />
                                             ) : (
                                                 <div className="w-full h-full flex items-center justify-center text-stone-400">No Image</div>
+                                            )}
+                                            {card.salePercent > 0 && (
+                                                <span className="absolute top-3 right-3 bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-md z-10">
+                                                    {card.salePercent}% OFF
+                                                </span>
                                             )}
                                             {card.isSoldOut && (
                                                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center">

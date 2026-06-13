@@ -279,7 +279,12 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                 <div className="bg-white rounded-3xl overflow-hidden shadow-sm">
                     <div className="grid md:grid-cols-2 gap-0">
                         {/* Image slideshow */}
-                        <div className="p-4 md:p-0 max-w-sm mx-auto md:max-w-none w-full">
+                        <div className="p-4 md:p-0 max-w-sm mx-auto md:max-w-none w-full relative">
+                            {isSaleActive(invData.salePercent, invData.saleStart, invData.saleEnd) && (
+                                <span className="absolute top-6 right-6 md:top-3 md:right-3 bg-red-500 text-white text-sm font-bold px-3 py-1.5 rounded-full shadow-lg z-20">
+                                    {invData.salePercent}% OFF
+                                </span>
+                            )}
                             <ProductImageSlideshow images={displayImages} alt={product.name} />
                         </div>
 
