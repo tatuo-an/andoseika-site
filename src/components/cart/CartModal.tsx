@@ -79,7 +79,7 @@ const DEFAULT_SHIPPING: ShippingRow[] = [
     { region: "それ以外", prefectures: "東京都,神奈川県,埼玉県,千葉県,茨城県,栃木県,群馬県,新潟県,富山県,石川県,福井県,山梨県,長野県,岐阜県,静岡県,愛知県,三重県,滋賀県,京都府,大阪府,兵庫県,奈良県,和歌山県,鳥取県,島根県,岡山県,広島県,山口県,徳島県,香川県,愛媛県,高知県,福岡県,佐賀県,長崎県,熊本県,大分県,宮崎県,鹿児島県", s60: 600, s80: 700, s100: 800, s120: 1000, s140: 1200, s160: 1400, s180: 1600, s200: 1800, compact: 690, clickpost: 185 },
 ];
 
-type InvItem = { id: string; name: string; price: number | null; family: string };
+type InvItem = { id: string; name: string; price: number | null; family: string; coolAvailable?: boolean };
 type AddressItem = { label: string; name: string; postalCode: string; prefecture: string; city: string; street: string; building: string; phone: string };
 
 export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
@@ -145,12 +145,17 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
         return Math.max(0, getRate(regionRow, weightBasedShipType) - getRate(baseRow, weightBasedShipType));
     })();
 
-    // クール便: 各アイテムが coolAvailable かつ shipType がクール対応可能サイズの場合のみ
-    const COOL_DISABLED_TYPES = ["compact", "clickpost", "140", "160", "180", "200"];
-    const coolEligible = cartItems.some(i => {
-        const it = i as { coolAvailable?: boolean; shipType?: string };
-        return it.coolAvailable && !COOL_DISABLED_TYPES.includes(it.shipType ?? "");
-    });
+    // クール便判定:
+    //   ファミリーマッチがある場合: そのマッチしたバリエーションの coolAvailable を使う（10kg等の単体扱い）
+    //   マッチがない場合: カート内のいずれかが coolAvailable=true
+    //   いずれも、合計重量から決まるサイズが140以上ならクール不可
+    const coolEligible = (() => {
+        if (!weightBasedShipType || coolSurchargeBySize(weightBasedShipType) === 0) return false;
+        if (matchedVariant) {
+            return inventory.find(v => v.id === matchedVariant.id)?.coolAvailable === true;
+        }
+        return cartItems.some(i => (i as { coolAvailable?: boolean }).coolAvailable);
+    })();
     const coolFee = coolEligible && coolRequested ? coolSurchargeBySize(weightBasedShipType) : 0;
 
     // 最終請求: マッチした場合はそのバリエーション販売価格、それ以外は原価合計+送料+利益
