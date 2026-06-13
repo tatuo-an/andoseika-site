@@ -217,10 +217,19 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
         return sum;
     })();
 
-    // セール割引合計（税抜）
-    const saleDiscountTotal = cartItems.reduce((sum, item) => {
-        const d = (item as { saleDiscount?: number }).saleDiscount ?? 0;
-        return sum + d * item.quantity;
+    // 税込み単価計算（item.price は割引前の税抜き販売価格）
+    const itemTaxedUnit = (item: { price: number; cost?: number | null }) => {
+        const cost = item.cost ?? item.price;
+        const others = Math.max(0, item.price - cost);
+        return Math.round(cost * 1.08 + others * 1.10);
+    };
+    // セール割引合計（税込）= Σ((元税込単価 - セール後税込単価) × qty)
+    const saleDiscountTaxedTotal = cartItems.reduce((sum, item) => {
+        const pct = (item as { salePercent?: number }).salePercent ?? 0;
+        if (pct <= 0) return sum;
+        const original = itemTaxedUnit(item as { price: number; cost?: number | null });
+        const after = Math.ceil(original * (1 - pct / 100));
+        return sum + (original - after) * item.quantity;
     }, 0);
 
     // 税抜きの内訳（本体・送料・サービス料）
@@ -238,8 +247,8 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
     const coolFeeTaxed = Math.round(coolFee * 1.10);
     // オプション調整（本体価格扱い: 8%）
     const optionsAdjustmentTaxed = Math.round(optionsAdjustment * 1.08);
-    // セール割引（本体価格扱い: 8%）
-    const saleDiscountTaxed = Math.round(saleDiscountTotal * 1.08);
+    // セール割引（税込）
+    const saleDiscountTaxed = saleDiscountTaxedTotal;
 
     const grandTotal = itemsBodyShown + shipFeeShown + profitShown + surchargeTaxed + coolFeeTaxed + optionsAdjustmentTaxed - saleDiscountTaxed;
 
@@ -314,9 +323,10 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                                 <div className="flex-1 space-y-1">
                                     <h3 className="font-bold text-stone-900">{item.name}</h3>
                                     <p className="text-sm text-stone-500">¥{(() => {
-                                        const cost = (item as { cost?: number | null }).cost ?? item.price;
-                                        const others = Math.max(0, item.price - cost);
-                                        return Math.round(cost * 1.08 + others * 1.10).toLocaleString();
+                                        const original = itemTaxedUnit(item as { price: number; cost?: number | null });
+                                        const pct = (item as { salePercent?: number }).salePercent ?? 0;
+                                        const display = pct > 0 ? Math.ceil(original * (1 - pct / 100)) : original;
+                                        return display.toLocaleString();
                                     })()}</p>
                                     <div className="flex items-center gap-3 pt-2">
                                         <div className="flex items-center border border-stone-200 rounded-full">
@@ -413,12 +423,12 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
 
                         {/* 内訳表示 */}
                         {addressLoaded && (() => {
-                            // 単品購入時価格の合計（税込: 原価×1.08 + (販売価格-原価)×1.10）
+                            // 単品購入時価格の合計（税込・セール反映）
                             const singlePurchaseTotal = cartItems.reduce((sum, item) => {
-                                const cost = (item as { cost?: number | null }).cost ?? item.price;
-                                const others = Math.max(0, item.price - cost);
-                                const taxed = Math.round(cost * 1.08 + others * 1.10);
-                                return sum + taxed * item.quantity;
+                                const original = itemTaxedUnit(item as { price: number; cost?: number | null });
+                                const pct = (item as { salePercent?: number }).salePercent ?? 0;
+                                const display = pct > 0 ? Math.ceil(original * (1 - pct / 100)) : original;
+                                return sum + display * item.quantity;
                             }, 0);
                             const bundledTotal = itemsBodyShown + shipFeeShown + profitShown; // 追加送料・クール抜きの本体合計（税込）
                             const bundleDiscount = singlePurchaseTotal - bundledTotal;

@@ -5,12 +5,11 @@ import { useState } from "react";
 import { Check, ShoppingCart } from "lucide-react";
 import { Product } from "@/types/microcms";
 
-export function AddToCartButton({ product, variantId, variantName, price, originalPrice, shipType, imageUrl, family, cost, profitRate, coolAvailable, clickpostMax, familyOptions }: {
+export function AddToCartButton({ product, variantId, variantName, price, shipType, imageUrl, family, cost, profitRate, coolAvailable, clickpostMax, familyOptions, salePercent }: {
     product: Product;
     variantId?: string;
     variantName?: string;
     price?: number;
-    originalPrice?: number;  // セール元価格（あればセール対象）
     shipType?: string;
     imageUrl?: string;
     family?: string;
@@ -19,6 +18,7 @@ export function AddToCartButton({ product, variantId, variantName, price, origin
     coolAvailable?: boolean;
     clickpostMax?: number;
     familyOptions?: string;
+    salePercent?: number;
 }) {
     const { addItem } = useShoppingCart();
     const [isAdded, setIsAdded] = useState(false);
@@ -39,8 +39,7 @@ export function AddToCartButton({ product, variantId, variantName, price, origin
             coolAvailable: coolAvailable ?? false,
             clickpostMax: clickpostMax ?? 0,
             familyOptions: familyOptions ?? "",
-            originalPrice: originalPrice ?? (price ?? product.price),
-            saleDiscount: originalPrice ? originalPrice - (price ?? product.price) : 0,
+            salePercent: salePercent ?? 0,
         } as Parameters<typeof addItem>[0]);
         setIsAdded(true);
         setTimeout(() => setIsAdded(false), 2000);

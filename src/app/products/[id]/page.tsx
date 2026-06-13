@@ -401,16 +401,13 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                                     </div>
                                 ) : (
                                     (() => {
-                                        const baseSellPrice = invPrice ?? product.price;
                                         const onSale = isSaleActive(invData.salePercent, invData.saleStart, invData.saleEnd);
-                                        const salePrice = onSale ? calcSalePrice(baseSellPrice, invData.salePercent) : baseSellPrice;
                                         return (
                                             <AddToCartButton
                                                 product={product}
                                                 variantId={id}
                                                 variantName={cartName}
-                                                price={salePrice}
-                                                originalPrice={onSale ? baseSellPrice : undefined}
+                                                price={invPrice ?? undefined}
                                                 shipType={shipType}
                                                 imageUrl={invImageUrl || undefined}
                                                 family={invData.family || undefined}
@@ -419,6 +416,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                                                 coolAvailable={invCoolAvailable}
                                                 clickpostMax={invData.clickpostMax}
                                                 familyOptions={invData.options}
+                                                salePercent={onSale ? invData.salePercent : 0}
                                             />
                                         );
                                     })()
