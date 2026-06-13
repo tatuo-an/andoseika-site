@@ -145,8 +145,12 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
         return Math.max(0, getRate(regionRow, weightBasedShipType) - getRate(baseRow, weightBasedShipType));
     })();
 
-    // クール便: カート内に少なくとも1つクール便対応商品があれば選択可能
-    const coolEligible = cartItems.some(i => (i as { coolAvailable?: boolean }).coolAvailable);
+    // クール便: 各アイテムが coolAvailable かつ shipType がクール対応可能サイズの場合のみ
+    const COOL_DISABLED_TYPES = ["compact", "clickpost", "140", "160", "180", "200"];
+    const coolEligible = cartItems.some(i => {
+        const it = i as { coolAvailable?: boolean; shipType?: string };
+        return it.coolAvailable && !COOL_DISABLED_TYPES.includes(it.shipType ?? "");
+    });
     const coolFee = coolEligible && coolRequested ? coolSurchargeBySize(weightBasedShipType) : 0;
 
     // 最終請求: マッチした場合はそのバリエーション販売価格、それ以外は原価合計+送料+利益
