@@ -252,7 +252,11 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                                 </div>
                                 <div className="flex-1 space-y-1">
                                     <h3 className="font-bold text-stone-900">{item.name}</h3>
-                                    <p className="text-sm text-stone-500">¥{item.price.toLocaleString()}</p>
+                                    <p className="text-sm text-stone-500">¥{(() => {
+                                        const cost = (item as { cost?: number | null }).cost ?? item.price;
+                                        const others = Math.max(0, item.price - cost);
+                                        return Math.round(cost * 1.08 + others * 1.10).toLocaleString();
+                                    })()}</p>
                                     <div className="flex items-center gap-3 pt-2">
                                         <div className="flex items-center border border-stone-200 rounded-full">
                                             <button onClick={() => decrementItem(item.id)} className="p-1 hover:bg-stone-100 rounded-l-full">
