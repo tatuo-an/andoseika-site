@@ -40,6 +40,7 @@ export type InventoryItem = {
     profitRate: number | null;  // 利益率(%)
     coolAvailable: boolean;     // クール便対応(ファミリー単位)
     description: string;        // 商品説明（ファミリー単位）
+    clickpostMax: number;       // クリックポスト最大同梱数(0=不可)
 };
 
 const PRESET_BADGES = ["新物", "訳あり", "秀品", "贈答用", "栽培期間中農薬不使用", "慣行栽培"];
@@ -110,6 +111,7 @@ export function AdminPanel({
             profitRate: inv.profitRate ?? null,
             coolAvailable: inv.coolAvailable ?? false,
             description: inv.description ?? "",
+            clickpostMax: inv.clickpostMax ?? 0,
         }))
     );
 
@@ -188,7 +190,7 @@ export function AdminPanel({
             const familyImages = familyMember?.familyImages ?? [];
             const coolAvailable = familyMember?.coolAvailable ?? false;
             const description = familyMember?.description ?? "";
-            next.splice(lastIdx + 1, 0, { id: newId, name: "バリエーション名", stock: -1, price: null, shipType: "", hidden: false, deleted: false, nextShipment: "", badges: [], family, imageUrl: "", familyImages: [...familyImages], cost: null, profitRate: null, coolAvailable, description });
+            next.splice(lastIdx + 1, 0, { id: newId, name: "バリエーション名", stock: -1, price: null, shipType: "", hidden: false, deleted: false, nextShipment: "", badges: [], family, imageUrl: "", familyImages: [...familyImages], cost: null, profitRate: null, coolAvailable, description, clickpostMax: 0 });
             return next;
         });
         setSavedInventory(false);
@@ -325,6 +327,7 @@ export function AdminPanel({
             profitRate: null,
             coolAvailable: false,
             description: "",
+            clickpostMax: 0,
         }]);
         setSavedInventory(false);
     };
@@ -348,6 +351,7 @@ export function AdminPanel({
             profitRate: null,
             coolAvailable: false,
             description: "",
+            clickpostMax: 0,
         }]);
         setSavedInventory(false);
     };
@@ -739,6 +743,15 @@ function SortableRow({
                     placeholder="次回入荷"
                     className="w-20 border border-stone-200 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-primary/30"
                 />
+                {/* クリックポスト最大同梱数 */}
+                <div className="flex items-center gap-0.5" title="クリックポストに何個まで同梱可能か（0=不可）">
+                    <span className="text-xs text-stone-400 whitespace-nowrap">CP</span>
+                    <input
+                        type="number" min={0} value={item.clickpostMax}
+                        onChange={(e) => onUpdate(item.id, "clickpostMax", parseInt(e.target.value, 10) || 0)}
+                        className="w-12 text-center border border-stone-200 rounded-lg px-1 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    />
+                </div>
                 <div className="ml-auto flex items-center gap-1 flex-shrink-0">
                     {statusLabel}
                     <button onClick={() => onUpdate(item.id, "hidden", !item.hidden)}
