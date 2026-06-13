@@ -601,7 +601,7 @@ function SortableRow({
                 <input
                     value={item.name}
                     onChange={(e) => onUpdate(item.id, "name", e.target.value)}
-                    className="w-48 min-w-0 border border-stone-200 rounded-lg px-2 py-1 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    className="w-24 min-w-0 border border-stone-200 rounded-lg px-2 py-1 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/30"
                 />
                 {/* 在庫数 */}
                 <div className="flex items-center gap-1">
@@ -612,7 +612,7 @@ function SortableRow({
                 </div>
                 {/* 価格 */}
                 <div className="flex items-center gap-1">
-                    <span className="text-xs text-stone-400">¥</span>
+                    <span className="text-xs text-stone-400">原価</span>
                     <input type="number" min={0} value={item.price ?? ""} placeholder="−"
                         onChange={(e) => onUpdate(item.id, "price", e.target.value ? parseInt(e.target.value, 10) : null)}
                         className="w-24 text-center border border-stone-200 rounded-lg px-1 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
