@@ -19,7 +19,7 @@ export const revalidate = 60;
 
 type InventoryData = {
   stock: number; variantName: string; hidden: boolean;
-  nextShipment: string; badges: string[]; family: string; price: number | null; imageUrl: string; cost: number | null;
+  nextShipment: string; badges: string[]; family: string; price: number | null; imageUrl: string; cost: number | null; description: string; familyImages: string[];
 };
 
 /** 販売価格を税込みに変換: 本体(原価)8%, 送料+サービス料(残り)10% */
@@ -42,7 +42,7 @@ async function getInventoryMap(): Promise<InventoryResult> {
     const sheets = google.sheets({ version: "v4", auth: authClient });
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-      range: "商品在庫!A:N",
+      range: "商品在庫!A:P",
     });
     const rows = res.data.values ?? [];
     const map: Record<string, InventoryData> = {};
@@ -60,6 +60,8 @@ async function getInventoryMap(): Promise<InventoryResult> {
           price: r[3] !== undefined && r[3] !== "" ? parseInt(r[3], 10) : null,
           imageUrl: r[10]?.trim() ?? "",
           cost: r[12] !== undefined && r[12] !== "" ? parseInt(r[12], 10) : null,
+          familyImages: r[11] ? r[11].split(",").map((s: string) => s.trim()).filter(Boolean) : [],
+          description: r[15] ?? "",
         };
       }
     });
@@ -82,7 +84,7 @@ async function getProducts(): Promise<Product[]> {
 // 表示用カード（単品 or ファミリー代表）
 type CardItem =
   | { type: "single"; product: Product; inv: InventoryData }
-  | { type: "family"; familyName: string; repProduct: Product; repInv: InventoryData; repId: string; minPrice: number; allSoldOut: boolean; category: string };
+  | { type: "family"; familyName: string; repProduct: Product | null; repInv: InventoryData; repId: string; minPrice: number; allSoldOut: boolean; category: string };
 
 export default async function ProductsPage() {
   const [products, { map: inventoryMap, order: inventoryOrder }] = await Promise.all([getProducts(), getInventoryMap()]);
@@ -96,40 +98,42 @@ export default async function ProductsPage() {
   for (const id of inventoryOrder) {
     const inv = inventoryMap[id];
     if (!inv || inv.hidden) continue;
-    const product = productMap[id];
-    if (!product) continue;
+    const product = productMap[id]; // MicroCMS未登録ならundefined
 
     if (inv.family) {
-      if (seenFamilies.has(inv.family)) continue; // 同じファミリーは2枚目以降スキップ
+      if (seenFamilies.has(inv.family)) continue;
       seenFamilies.add(inv.family);
 
-      // このファミリーの全バリエーション
       const familyIds = inventoryOrder.filter(fid => inventoryMap[fid]?.family === inv.family && !inventoryMap[fid]?.hidden);
-      const familyInvs = familyIds.map(fid => ({ id: fid, inv: inventoryMap[fid], product: productMap[fid] })).filter(x => x.product);
+      const familyInvs = familyIds.map(fid => ({ id: fid, inv: inventoryMap[fid], product: productMap[fid] as Product | undefined }));
 
-      // 最安値（税込み、販売中を優先）
+      // 最安値（税込み）
       const prices = familyInvs.map(x => {
-        const p = x.inv.price ?? x.product!.price;
-        return toTaxIncluded(p, x.inv.cost);
+        const p = x.inv.price ?? x.product?.price;
+        return p ? toTaxIncluded(p, x.inv.cost) : 0;
       }).filter(Boolean) as number[];
-      const minPrice = prices.length > 0 ? Math.min(...prices) : toTaxIncluded(product.price, inv.cost);
+      const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
 
-      // 代表リンク先（最初の販売中バリエーション、なければ先頭）
       const firstAvail = familyInvs.find(x => !(x.inv.stock !== -1 && x.inv.stock === 0));
       const rep = firstAvail ?? familyInvs[0];
       const allSoldOut = familyInvs.every(x => x.inv.stock !== -1 && x.inv.stock === 0);
 
+      // 代表productを探す（先頭で持っているもの、いなければファミリー内で最初に見つかるもの）
+      const repProduct: Product | null = rep?.product ?? familyInvs.find(x => x.product)?.product ?? null;
+
       cards.push({
         type: "family",
         familyName: inv.family,
-        repProduct: rep?.product ?? product,
-        repInv: rep?.inv ?? inv,
-        repId: rep?.id ?? id,
+        repProduct,
+        repInv: rep.inv,
+        repId: rep.id,
         minPrice,
         allSoldOut,
-        category: product.category,
+        category: repProduct?.category ?? "other",
       });
     } else {
+      // 単品はMicroCMS必須（フォールバックなし）
+      if (!product) continue;
       cards.push({ type: "single", product, inv });
     }
   }
@@ -189,7 +193,8 @@ export default async function ProductsPage() {
       );
     } else {
       const { familyName, repProduct, repInv, repId, minPrice, allSoldOut } = card;
-      const familyImgSrc = repInv.imageUrl || repProduct.image?.url;
+      const familyImgSrc = repInv.imageUrl || repInv.familyImages[0] || repProduct?.image?.url;
+      const familyDescription = repInv.description || repProduct?.description || "";
       return (
         <Link href={`/products/${repId}`} key={`family-${familyName}`} className={`group ${allSoldOut ? "pointer-events-none" : ""}`}>
           <div className={`bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 ${allSoldOut ? "opacity-70" : ""}`}>
@@ -207,7 +212,7 @@ export default async function ProductsPage() {
                   )}
                 </div>
               )}
-              {!allSoldOut && repProduct.isRecommended && (
+              {!allSoldOut && repProduct?.isRecommended && (
                 <span className="absolute top-4 right-4 bg-primary text-white text-xs font-bold px-3 py-1 rounded-full shadow-md">おすすめ</span>
               )}
               <div className="absolute top-3 left-3">
@@ -226,7 +231,7 @@ export default async function ProductsPage() {
                 </div>
               )}
               <h2 className="font-bold text-stone-900 mb-2 line-clamp-2 group-hover:text-primary transition-colors">{familyName}</h2>
-              <p className="text-sm text-stone-500 line-clamp-2">{repProduct.description}</p>
+              <p className="text-sm text-stone-500 line-clamp-2">{familyDescription}</p>
             </div>
           </div>
         </Link>
