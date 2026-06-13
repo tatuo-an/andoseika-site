@@ -193,7 +193,7 @@ export default async function ProductsPage() {
       );
     } else {
       const { familyName, repProduct, repInv, repId, minPrice, allSoldOut } = card;
-      const familyImgSrc = repInv.imageUrl || repInv.familyImages[0] || repProduct?.image?.url;
+      const familyImgSrc = repInv.familyImages[0] || repInv.imageUrl || repProduct?.image?.url;
       const familyDescription = repInv.description || repProduct?.description || "";
       return (
         <Link href={`/products/${repId}`} key={`family-${familyName}`} className={`group ${allSoldOut ? "pointer-events-none" : ""}`}>
