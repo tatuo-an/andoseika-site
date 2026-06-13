@@ -39,6 +39,7 @@ export type InventoryItem = {
     cost: number | null;        // 原価
     profitRate: number | null;  // 利益率(%)
     coolAvailable: boolean;     // クール便対応(ファミリー単位)
+    description: string;        // 商品説明（ファミリー単位）
 };
 
 const PRESET_BADGES = ["新物", "訳あり", "秀品", "贈答用", "栽培期間中農薬不使用", "慣行栽培"];
@@ -108,6 +109,7 @@ export function AdminPanel({
             cost: inv.cost ?? null,
             profitRate: inv.profitRate ?? null,
             coolAvailable: inv.coolAvailable ?? false,
+            description: inv.description ?? "",
         }))
     );
 
@@ -147,6 +149,14 @@ export function AdminPanel({
         setSavedInventory(false);
     };
 
+    // ファミリーの商品説明を一括更新
+    const updateFamilyDescription = (family: string, description: string) => {
+        setItems((prev) => prev.map((item) =>
+            item.family?.trim() === family ? { ...item, description } : item
+        ));
+        setSavedInventory(false);
+    };
+
     // ファミリー全体のクール便フラグを一括切替
     const toggleFamilyCool = (family: string) => {
         setItems((prev) => {
@@ -177,7 +187,8 @@ export function AdminPanel({
             const familyMember = prev.find(i => i.family?.trim() === family);
             const familyImages = familyMember?.familyImages ?? [];
             const coolAvailable = familyMember?.coolAvailable ?? false;
-            next.splice(lastIdx + 1, 0, { id: newId, name: "バリエーション名", stock: -1, price: null, shipType: "", hidden: false, deleted: false, nextShipment: "", badges: [], family, imageUrl: "", familyImages: [...familyImages], cost: null, profitRate: null, coolAvailable });
+            const description = familyMember?.description ?? "";
+            next.splice(lastIdx + 1, 0, { id: newId, name: "バリエーション名", stock: -1, price: null, shipType: "", hidden: false, deleted: false, nextShipment: "", badges: [], family, imageUrl: "", familyImages: [...familyImages], cost: null, profitRate: null, coolAvailable, description });
             return next;
         });
         setSavedInventory(false);
@@ -313,6 +324,7 @@ export function AdminPanel({
             cost: null,
             profitRate: null,
             coolAvailable: false,
+            description: "",
         }]);
         setSavedInventory(false);
     };
@@ -335,6 +347,7 @@ export function AdminPanel({
             cost: null,
             profitRate: null,
             coolAvailable: false,
+            description: "",
         }]);
         setSavedInventory(false);
     };
@@ -468,6 +481,10 @@ export function AdminPanel({
                                                         <FamilyGallery
                                                             familyImages={familyItems[0]?.familyImages ?? []}
                                                             onUpdate={(imgs) => updateFamilyImages(fam, imgs)}
+                                                        />
+                                                        <FamilyDescription
+                                                            description={familyItems[0]?.description ?? ""}
+                                                            onCommit={(desc) => updateFamilyDescription(fam, desc)}
                                                         />
                                                         <div className="divide-y divide-stone-100">
                                                             {familyItems.map((fi) => (
@@ -751,6 +768,31 @@ function SortableRow({
                     onChange={(b) => onUpdate(item.id, "badges", b)}
                     onAddBadge={onAddBadge}
                     onRemoveBadge={onRemoveBadge}
+                />
+            </div>
+        </div>
+    );
+}
+
+// ── ファミリーの商品説明テキストエリア ─────────────────────────
+function FamilyDescription({ description, onCommit }: {
+    description: string;
+    onCommit: (description: string) => void;
+}) {
+    const [local, setLocal] = useState(description);
+    const prev = useRef(description);
+    if (prev.current !== description) { prev.current = description; setLocal(description); }
+    return (
+        <div className="px-4 py-2 border-b border-stone-100 bg-stone-50/40">
+            <div className="flex items-start gap-2">
+                <span className="text-xs text-stone-400 whitespace-nowrap pt-1">商品説明</span>
+                <textarea
+                    value={local}
+                    onChange={(e) => setLocal(e.target.value)}
+                    onBlur={() => onCommit(local)}
+                    placeholder="商品の特徴・産地・食べ方などを入力（詳細ページに表示されます）"
+                    rows={2}
+                    className="flex-1 border border-stone-200 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-primary/30 resize-y"
                 />
             </div>
         </div>

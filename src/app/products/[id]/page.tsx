@@ -16,7 +16,7 @@ import { BADGE_COLORS, DEFAULT_BADGE_COLOR } from "@/lib/badges";
 
 export const revalidate = 60;
 
-type SheetRow = { id: string; name: string; stock: number; price: number | null; shipType: string; hidden: boolean; deleted: boolean; nextShipment: string; badges: string[]; family: string; imageUrl: string; familyImages: string[]; cost: number | null; profitRate: number | null; coolAvailable: boolean };
+type SheetRow = { id: string; name: string; stock: number; price: number | null; shipType: string; hidden: boolean; deleted: boolean; nextShipment: string; badges: string[]; family: string; imageUrl: string; familyImages: string[]; cost: number | null; profitRate: number | null; coolAvailable: boolean; description: string };
 type VariationInfo = { id: string; label: string; price: number; priceTaxed: number; isSoldOut: boolean };
 
 function getSheets() {
@@ -31,14 +31,14 @@ function getSheets() {
 }
 
 async function getInventoryData(id: string): Promise<{
-    stock: number; price: number | null; name: string; shipType: string; hidden: boolean; deleted: boolean; nextShipment: string; badges: string[]; family: string; imageUrl: string; familyImages: string[]; cost: number | null; profitRate: number | null; coolAvailable: boolean;
+    stock: number; price: number | null; name: string; shipType: string; hidden: boolean; deleted: boolean; nextShipment: string; badges: string[]; family: string; imageUrl: string; familyImages: string[]; cost: number | null; profitRate: number | null; coolAvailable: boolean; description: string;
     familyRows: SheetRow[];
 }> {
     try {
         const sheets = getSheets();
         const res = await sheets.spreadsheets.values.get({
             spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-            range: "商品在庫!A:O",
+            range: "商品在庫!A:P",
         });
         const rows = res.data.values ?? [];
         const allRows: SheetRow[] = rows.slice(1).filter(r => r[0]).map(r => ({
@@ -57,10 +57,11 @@ async function getInventoryData(id: string): Promise<{
             cost: r[12] !== undefined && r[12] !== "" ? parseInt(r[12], 10) : null,
             profitRate: r[13] !== undefined && r[13] !== "" ? parseFloat(r[13]) : null,
             coolAvailable: r[14] === "1",
+            description: r[15] ?? "",
         }));
 
         const row = allRows.find(r => r.id === id);
-        if (!row) return { stock: -1, price: null, name: "", shipType: "", hidden: false, deleted: false, nextShipment: "", badges: [], family: "", imageUrl: "", familyImages: [], cost: null, profitRate: null, coolAvailable: false, familyRows: [] };
+        if (!row) return { stock: -1, price: null, name: "", shipType: "", hidden: false, deleted: false, nextShipment: "", badges: [], family: "", imageUrl: "", familyImages: [], cost: null, profitRate: null, coolAvailable: false, description: "", familyRows: [] };
 
         const familyRows = row.family
             ? allRows.filter(r => r.family === row.family && !r.hidden)
@@ -81,10 +82,11 @@ async function getInventoryData(id: string): Promise<{
             cost: row.cost,
             profitRate: row.profitRate,
             coolAvailable: row.coolAvailable,
+            description: row.description,
             familyRows,
         };
     } catch {
-        return { stock: -1, price: null, name: "", shipType: "", hidden: false, deleted: false, nextShipment: "", badges: [], family: "", imageUrl: "", familyImages: [], cost: null, profitRate: null, coolAvailable: false, familyRows: [] };
+        return { stock: -1, price: null, name: "", shipType: "", hidden: false, deleted: false, nextShipment: "", badges: [], family: "", imageUrl: "", familyImages: [], cost: null, profitRate: null, coolAvailable: false, description: "", familyRows: [] };
     }
 }
 
@@ -325,7 +327,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                             )}
 
                             <div className="prose prose-stone mb-8">
-                                <p className="text-stone-600 leading-relaxed">{product.description}</p>
+                                <p className="text-stone-600 leading-relaxed whitespace-pre-wrap">{invData.description || product.description}</p>
                             </div>
 
                             <div className="space-y-6 border-t border-stone-100 pt-8">
