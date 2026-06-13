@@ -9,6 +9,7 @@ import localProducts from "@/data/products.json";
 import { google } from "googleapis";
 import { BADGE_COLORS, DEFAULT_BADGE_COLOR } from "@/lib/badges";
 import { FavoriteButton } from "@/components/products/FavoriteButton";
+import { isSaleActive, calcSalePrice } from "@/lib/sale";
 
 export const metadata: Metadata = {
   title: "商品一覧",
@@ -20,6 +21,7 @@ export const revalidate = 60;
 type InventoryData = {
   stock: number; variantName: string; hidden: boolean;
   nextShipment: string; badges: string[]; family: string; price: number | null; imageUrl: string; cost: number | null; description: string; familyImages: string[];
+  salePercent: number; saleStart: string; saleEnd: string;
 };
 
 /** 販売価格を税込みに変換: 本体(原価)8%, 送料+サービス料(残り)10% */
@@ -42,7 +44,7 @@ async function getInventoryMap(): Promise<InventoryResult> {
     const sheets = google.sheets({ version: "v4", auth: authClient });
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-      range: "商品在庫!A:P",
+      range: "商品在庫!A:U",
     });
     const rows = res.data.values ?? [];
     const map: Record<string, InventoryData> = {};
@@ -62,6 +64,9 @@ async function getInventoryMap(): Promise<InventoryResult> {
           cost: r[12] !== undefined && r[12] !== "" ? parseInt(r[12], 10) : null,
           familyImages: r[11] ? r[11].split(",").map((s: string) => s.trim()).filter(Boolean) : [],
           description: r[15] ?? "",
+          salePercent: r[18] !== undefined && r[18] !== "" ? parseInt(r[18], 10) : 0,
+          saleStart: r[19] ?? "",
+          saleEnd: r[20] ?? "",
         };
       }
     });
@@ -107,10 +112,13 @@ export default async function ProductsPage() {
       const familyIds = inventoryOrder.filter(fid => inventoryMap[fid]?.family === inv.family && !inventoryMap[fid]?.hidden);
       const familyInvs = familyIds.map(fid => ({ id: fid, inv: inventoryMap[fid], product: productMap[fid] as Product | undefined }));
 
-      // 最安値（税込み）
+      // 最安値（税込み・セール反映）
       const prices = familyInvs.map(x => {
         const p = x.inv.price ?? x.product?.price;
-        return p ? toTaxIncluded(p, x.inv.cost) : 0;
+        if (!p) return 0;
+        const taxed = toTaxIncluded(p, x.inv.cost);
+        const active = isSaleActive(x.inv.salePercent, x.inv.saleStart, x.inv.saleEnd);
+        return active ? calcSalePrice(taxed, x.inv.salePercent) : taxed;
       }).filter(Boolean) as number[];
       const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
 
@@ -150,6 +158,9 @@ export default async function ProductsPage() {
       const isSoldOut = inv.stock !== -1 && inv.stock === 0;
       const displayName = inv.variantName || product.name;
       const imgSrc = inv.imageUrl || product.image?.url;
+      const onSale = isSaleActive(inv.salePercent, inv.saleStart, inv.saleEnd);
+      const originalTaxed = toTaxIncluded(inv.price ?? product.price, inv.cost);
+      const displayTaxed = onSale ? calcSalePrice(originalTaxed, inv.salePercent) : originalTaxed;
       return (
         <Link href={`/products/${product.id}`} key={product.id} className={`group ${isSoldOut ? "pointer-events-none" : ""}`}>
           <div className={`bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 ${isSoldOut ? "opacity-70" : ""}`}>
@@ -170,13 +181,21 @@ export default async function ProductsPage() {
               {!isSoldOut && product.isRecommended && (
                 <span className="absolute top-4 right-4 bg-primary text-white text-xs font-bold px-3 py-1 rounded-full shadow-md">おすすめ</span>
               )}
+              {onSale && (
+                <span className="absolute top-3 right-3 bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-md z-10">
+                  {inv.salePercent}% OFF
+                </span>
+              )}
               <div className="absolute top-3 left-3 pointer-events-auto z-20">
                 <FavoriteButton productId={product.id} size="sm" />
               </div>
             </div>
             <div className="p-6">
-              <div className="flex justify-end mb-2">
-                <span className="font-bold text-lg text-stone-900">¥{toTaxIncluded(inv.price ?? product.price, inv.cost).toLocaleString()}</span>
+              <div className="flex justify-end items-baseline gap-2 mb-2">
+                {onSale && (
+                  <span className="text-xs text-stone-400 line-through">¥{originalTaxed.toLocaleString()}</span>
+                )}
+                <span className={`font-bold text-lg ${onSale ? "text-red-500" : "text-stone-900"}`}>¥{displayTaxed.toLocaleString()}</span>
               </div>
               {inv.badges.length > 0 && (
                 <div className="flex flex-wrap gap-1 mb-1">
@@ -195,6 +214,7 @@ export default async function ProductsPage() {
       const { familyName, repProduct, repInv, repId, minPrice, allSoldOut } = card;
       const familyImgSrc = repInv.familyImages[0] || repInv.imageUrl || repProduct?.image?.url;
       const familyDescription = repInv.description || repProduct?.description || "";
+      const familyOnSale = isSaleActive(repInv.salePercent, repInv.saleStart, repInv.saleEnd);
       return (
         <Link href={`/products/${repId}`} key={`family-${familyName}`} className={`group ${allSoldOut ? "pointer-events-none" : ""}`}>
           <div className={`bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 ${allSoldOut ? "opacity-70" : ""}`}>
@@ -214,6 +234,11 @@ export default async function ProductsPage() {
               )}
               {!allSoldOut && repProduct?.isRecommended && (
                 <span className="absolute top-4 right-4 bg-primary text-white text-xs font-bold px-3 py-1 rounded-full shadow-md">おすすめ</span>
+              )}
+              {familyOnSale && (
+                <span className="absolute top-3 right-3 bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-md z-10">
+                  {repInv.salePercent}% OFF
+                </span>
               )}
               <div className="absolute top-3 left-3 pointer-events-auto z-20">
                 <FavoriteButton productId={`family:${familyName}`} size="sm" />

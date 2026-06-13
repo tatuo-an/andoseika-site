@@ -42,6 +42,9 @@ export type InventoryItem = {
     description: string;        // 商品説明（ファミリー単位）
     clickpostMax: number;       // クリックポスト最大同梱数(0=不可)
     options: string;            // ファミリー単位の割引/追加オプション (ラベル:金額|...)
+    salePercent: number;        // セール割引率(%) ファミリー単位
+    saleStart: string;          // セール開始日 YYYY-MM-DD
+    saleEnd: string;            // セール終了日 YYYY-MM-DD
 };
 
 const PRESET_BADGES = ["新物", "訳あり", "秀品", "贈答用", "栽培期間中農薬不使用", "慣行栽培"];
@@ -114,6 +117,9 @@ export function AdminPanel({
             description: inv.description ?? "",
             clickpostMax: inv.clickpostMax ?? 0,
             options: inv.options ?? "",
+            salePercent: inv.salePercent ?? 0,
+            saleStart: inv.saleStart ?? "",
+            saleEnd: inv.saleEnd ?? "",
         }))
     );
 
@@ -183,6 +189,14 @@ export function AdminPanel({
         setSavedInventory(false);
     };
 
+    // ファミリーのセール設定を一括更新
+    const updateFamilySale = (family: string, salePercent: number, saleStart: string, saleEnd: string) => {
+        setItems((prev) => prev.map((item) =>
+            item.family?.trim() === family ? { ...item, salePercent, saleStart, saleEnd } : item
+        ));
+        setSavedInventory(false);
+    };
+
     // ファミリーのオプションを一括更新
     const updateFamilyOptions = (family: string, options: string) => {
         setItems((prev) => prev.map((item) =>
@@ -230,7 +244,7 @@ export function AdminPanel({
             const familyImages = familyMember?.familyImages ?? [];
             const coolAvailable = familyMember?.coolAvailable ?? false;
             const description = familyMember?.description ?? "";
-            next.splice(lastIdx + 1, 0, { id: newId, name: "バリエーション名", stock: -1, price: null, shipType: "", hidden: false, deleted: false, nextShipment: "", badges: [], family, imageUrl: "", familyImages: [...familyImages], cost: null, profitRate: null, coolAvailable, description, clickpostMax: 0, options: familyMember?.options ?? "" });
+            next.splice(lastIdx + 1, 0, { id: newId, name: "バリエーション名", stock: -1, price: null, shipType: "", hidden: false, deleted: false, nextShipment: "", badges: [], family, imageUrl: "", familyImages: [...familyImages], cost: null, profitRate: null, coolAvailable, description, clickpostMax: 0, options: familyMember?.options ?? "", salePercent: familyMember?.salePercent ?? 0, saleStart: familyMember?.saleStart ?? "", saleEnd: familyMember?.saleEnd ?? "" });
             return next;
         });
         setSavedInventory(false);
@@ -372,6 +386,9 @@ export function AdminPanel({
             description: "",
             clickpostMax: 0,
             options: "",
+            salePercent: 0,
+            saleStart: "",
+            saleEnd: "",
         }]);
         setSavedInventory(false);
     };
@@ -397,6 +414,9 @@ export function AdminPanel({
             description: "",
             clickpostMax: 0,
             options: "",
+            salePercent: 0,
+            saleStart: "",
+            saleEnd: "",
         }]);
         setSavedInventory(false);
     };
@@ -554,6 +574,12 @@ export function AdminPanel({
                                                         <FamilyOptions
                                                             options={familyItems[0]?.options ?? ""}
                                                             onUpdate={(opts) => updateFamilyOptions(fam, opts)}
+                                                        />
+                                                        <FamilySale
+                                                            salePercent={familyItems[0]?.salePercent ?? 0}
+                                                            saleStart={familyItems[0]?.saleStart ?? ""}
+                                                            saleEnd={familyItems[0]?.saleEnd ?? ""}
+                                                            onUpdate={(p, s, e) => updateFamilySale(fam, p, s, e)}
                                                         />
                                                         <div className="divide-y divide-stone-100">
                                                             {familyItems.map((fi) => (
@@ -951,6 +977,71 @@ function FamilyOptions({ options, onUpdate }: { options: string; onUpdate: (s: s
                     ))}
                 </div>
             )}
+        </div>
+    );
+}
+
+// ── ファミリーのセール設定 ─────────────────────────────────────
+function FamilySale({ salePercent, saleStart, saleEnd, onUpdate }: {
+    salePercent: number;
+    saleStart: string;
+    saleEnd: string;
+    onUpdate: (percent: number, start: string, end: string) => void;
+}) {
+    const [percentLocal, setPercentLocal] = useState(salePercent === 0 ? "" : salePercent.toString());
+    const [startLocal, setStartLocal] = useState(saleStart);
+    const [endLocal, setEndLocal] = useState(saleEnd);
+    const prevP = useRef(salePercent);
+    const prevS = useRef(saleStart);
+    const prevE = useRef(saleEnd);
+    if (prevP.current !== salePercent) { prevP.current = salePercent; setPercentLocal(salePercent === 0 ? "" : salePercent.toString()); }
+    if (prevS.current !== saleStart) { prevS.current = saleStart; setStartLocal(saleStart); }
+    if (prevE.current !== saleEnd) { prevE.current = saleEnd; setEndLocal(saleEnd); }
+
+    const commit = (p: string, s: string, e: string) => {
+        const num = parseInt(p, 10);
+        onUpdate(isNaN(num) ? 0 : num, s, e);
+    };
+
+    const today = new Date().toISOString().slice(0, 10);
+    const isActive = salePercent > 0 && (!saleStart || today >= saleStart) && (!saleEnd || today <= saleEnd);
+
+    return (
+        <div className="px-4 py-2 border-b border-stone-100 bg-stone-50/40">
+            <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs text-stone-400 whitespace-nowrap">セール</span>
+                {salePercent > 0 && (
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isActive ? "bg-red-500 text-white" : "bg-stone-200 text-stone-500"}`}>
+                        {isActive ? "適用中" : "期間外"}
+                    </span>
+                )}
+                <div className="flex items-center gap-1">
+                    <input
+                        type="text"
+                        inputMode="numeric"
+                        value={percentLocal}
+                        onChange={(e) => setPercentLocal(e.target.value)}
+                        onBlur={() => commit(percentLocal, startLocal, endLocal)}
+                        placeholder="0"
+                        className="w-14 text-center border border-stone-200 rounded-lg px-1 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    />
+                    <span className="text-xs text-stone-400">% OFF</span>
+                </div>
+                <span className="text-[10px] text-stone-400">期間</span>
+                <input
+                    type="date"
+                    value={startLocal}
+                    onChange={(e) => { setStartLocal(e.target.value); commit(percentLocal, e.target.value, endLocal); }}
+                    className="border border-stone-200 rounded-lg px-1 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-primary/30"
+                />
+                <span className="text-xs text-stone-400">〜</span>
+                <input
+                    type="date"
+                    value={endLocal}
+                    onChange={(e) => { setEndLocal(e.target.value); commit(percentLocal, startLocal, e.target.value); }}
+                    className="border border-stone-200 rounded-lg px-1 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-primary/30"
+                />
+            </div>
         </div>
     );
 }

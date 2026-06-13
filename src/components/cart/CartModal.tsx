@@ -217,6 +217,12 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
         return sum;
     })();
 
+    // セール割引合計（税抜）
+    const saleDiscountTotal = cartItems.reduce((sum, item) => {
+        const d = (item as { saleDiscount?: number }).saleDiscount ?? 0;
+        return sum + d * item.quantity;
+    }, 0);
+
     // 税抜きの内訳（本体・送料・サービス料）
     const itemsBodyNet = itemsTotalCost;
     const shipFeeNet = baseShipFee;
@@ -232,8 +238,10 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
     const coolFeeTaxed = Math.round(coolFee * 1.10);
     // オプション調整（本体価格扱い: 8%）
     const optionsAdjustmentTaxed = Math.round(optionsAdjustment * 1.08);
+    // セール割引（本体価格扱い: 8%）
+    const saleDiscountTaxed = Math.round(saleDiscountTotal * 1.08);
 
-    const grandTotal = itemsBodyShown + shipFeeShown + profitShown + surchargeTaxed + coolFeeTaxed + optionsAdjustmentTaxed;
+    const grandTotal = itemsBodyShown + shipFeeShown + profitShown + surchargeTaxed + coolFeeTaxed + optionsAdjustmentTaxed - saleDiscountTaxed;
 
     if (!isOpen) return null;
 
@@ -261,6 +269,7 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                         shipSizeLabel: shipTypeLabel(effectiveShipType),
                         optionsAdjustment: optionsAdjustmentTaxed,
                         optionLabels: Array.from(selectedOptions),
+                        saleDiscount: saleDiscountTaxed,
                     },
                 }),
             });
@@ -453,6 +462,12 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                                         )}
                                     </div>
 
+                                    {saleDiscountTaxed > 0 && (
+                                        <div className="flex justify-between text-red-500 font-medium">
+                                            <span>セール割引</span>
+                                            <span>−¥{saleDiscountTaxed.toLocaleString()}</span>
+                                        </div>
+                                    )}
                                     {optionsAdjustmentTaxed !== 0 && (
                                         <div className={`flex justify-between ${optionsAdjustmentTaxed < 0 ? "text-emerald-600" : "text-orange-600"} font-medium`}>
                                             <span>オプション調整</span>

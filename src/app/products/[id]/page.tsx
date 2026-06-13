@@ -13,11 +13,12 @@ import localProducts from "@/data/products.json";
 import { Metadata } from "next";
 import { google } from "googleapis";
 import { BADGE_COLORS, DEFAULT_BADGE_COLOR } from "@/lib/badges";
+import { isSaleActive, calcSalePrice } from "@/lib/sale";
 
 export const revalidate = 60;
 
-type SheetRow = { id: string; name: string; stock: number; price: number | null; shipType: string; hidden: boolean; deleted: boolean; nextShipment: string; badges: string[]; family: string; imageUrl: string; familyImages: string[]; cost: number | null; profitRate: number | null; coolAvailable: boolean; description: string; clickpostMax: number; options: string };
-type VariationInfo = { id: string; label: string; price: number; priceTaxed: number; isSoldOut: boolean };
+type SheetRow = { id: string; name: string; stock: number; price: number | null; shipType: string; hidden: boolean; deleted: boolean; nextShipment: string; badges: string[]; family: string; imageUrl: string; familyImages: string[]; cost: number | null; profitRate: number | null; coolAvailable: boolean; description: string; clickpostMax: number; options: string; salePercent: number; saleStart: string; saleEnd: string };
+type VariationInfo = { id: string; label: string; price: number; priceTaxed: number; salePercent: number; saleStart: string; saleEnd: string; isSoldOut: boolean };
 
 function getSheets() {
     const authClient = new google.auth.GoogleAuth({
@@ -31,14 +32,14 @@ function getSheets() {
 }
 
 async function getInventoryData(id: string): Promise<{
-    stock: number; price: number | null; name: string; shipType: string; hidden: boolean; deleted: boolean; nextShipment: string; badges: string[]; family: string; imageUrl: string; familyImages: string[]; cost: number | null; profitRate: number | null; coolAvailable: boolean; description: string; clickpostMax: number; options: string;
+    stock: number; price: number | null; name: string; shipType: string; hidden: boolean; deleted: boolean; nextShipment: string; badges: string[]; family: string; imageUrl: string; familyImages: string[]; cost: number | null; profitRate: number | null; coolAvailable: boolean; description: string; clickpostMax: number; options: string; salePercent: number; saleStart: string; saleEnd: string;
     familyRows: SheetRow[];
 }> {
     try {
         const sheets = getSheets();
         const res = await sheets.spreadsheets.values.get({
             spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-            range: "商品在庫!A:R",
+            range: "商品在庫!A:U",
         });
         const rows = res.data.values ?? [];
         const allRows: SheetRow[] = rows.slice(1).filter(r => r[0]).map(r => ({
@@ -60,10 +61,13 @@ async function getInventoryData(id: string): Promise<{
             description: r[15] ?? "",
             clickpostMax: r[16] !== undefined && r[16] !== "" ? parseInt(r[16], 10) : 0,
             options: r[17] ?? "",
+            salePercent: r[18] !== undefined && r[18] !== "" ? parseInt(r[18], 10) : 0,
+            saleStart: r[19] ?? "",
+            saleEnd: r[20] ?? "",
         }));
 
         const row = allRows.find(r => r.id === id);
-        if (!row) return { stock: -1, price: null, name: "", shipType: "", hidden: false, deleted: false, nextShipment: "", badges: [], family: "", imageUrl: "", familyImages: [], cost: null, profitRate: null, coolAvailable: false, description: "", clickpostMax: 0, options: "", familyRows: [] };
+        if (!row) return { stock: -1, price: null, name: "", shipType: "", hidden: false, deleted: false, nextShipment: "", badges: [], family: "", imageUrl: "", familyImages: [], cost: null, profitRate: null, coolAvailable: false, description: "", clickpostMax: 0, options: "", salePercent: 0, saleStart: "", saleEnd: "", familyRows: [] };
 
         const familyRows = row.family
             ? allRows.filter(r => r.family === row.family && !r.hidden)
@@ -87,10 +91,13 @@ async function getInventoryData(id: string): Promise<{
             description: row.description,
             clickpostMax: row.clickpostMax,
             options: row.options,
+            salePercent: row.salePercent,
+            saleStart: row.saleStart,
+            saleEnd: row.saleEnd,
             familyRows,
         };
     } catch {
-        return { stock: -1, price: null, name: "", shipType: "", hidden: false, deleted: false, nextShipment: "", badges: [], family: "", imageUrl: "", familyImages: [], cost: null, profitRate: null, coolAvailable: false, description: "", clickpostMax: 0, options: "", familyRows: [] };
+        return { stock: -1, price: null, name: "", shipType: "", hidden: false, deleted: false, nextShipment: "", badges: [], family: "", imageUrl: "", familyImages: [], cost: null, profitRate: null, coolAvailable: false, description: "", clickpostMax: 0, options: "", salePercent: 0, saleStart: "", saleEnd: "", familyRows: [] };
     }
 }
 
@@ -148,6 +155,9 @@ async function buildVariations(familyRows: SheetRow[]): Promise<VariationInfo[]>
             label: extractLabel(allNames, r.name),
             price,
             priceTaxed: toTaxIncluded(price, r.cost),
+            salePercent: r.salePercent,
+            saleStart: r.saleStart,
+            saleEnd: r.saleEnd,
             isSoldOut: r.stock !== -1 && r.stock === 0,
         };
     });
@@ -295,10 +305,23 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                                         className="flex-shrink-0 mt-1"
                                     />
                                 </div>
-                                <p className="text-2xl font-bold text-primary">
-                                    ¥{(currentVariation?.priceTaxed ?? toTaxIncluded(invPrice ?? product.price, invCost)).toLocaleString()}
-                                    <span className="text-sm text-stone-500 font-normal ml-2">（税込）</span>
-                                </p>
+                                {(() => {
+                                    const normalTaxed = currentVariation?.priceTaxed ?? toTaxIncluded(invPrice ?? product.price, invCost);
+                                    const onSale = isSaleActive(invData.salePercent, invData.saleStart, invData.saleEnd);
+                                    const displayTaxed = onSale ? calcSalePrice(normalTaxed, invData.salePercent) : normalTaxed;
+                                    return (
+                                        <p className="text-2xl font-bold text-primary flex items-baseline gap-3 flex-wrap">
+                                            {onSale && (
+                                                <>
+                                                    <span className="bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-full">{invData.salePercent}% OFF</span>
+                                                    <span className="text-base text-stone-400 line-through font-normal">¥{normalTaxed.toLocaleString()}</span>
+                                                </>
+                                            )}
+                                            <span className={onSale ? "text-red-500" : ""}>¥{displayTaxed.toLocaleString()}</span>
+                                            <span className="text-sm text-stone-500 font-normal">（税込）</span>
+                                        </p>
+                                    );
+                                })()}
                                 <div className="mt-3 bg-stone-50 border border-stone-100 rounded-lg p-3 text-xs text-stone-500 leading-relaxed space-y-2">
                                     <p>
                                         表示価格は、1点のみ購入した場合の<span className="font-medium text-stone-700">商品代・送料・サービス料を含む税込総額</span>です。
@@ -321,7 +344,9 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                                     <div className="flex flex-wrap gap-2">
                                         {variations.map((v) => {
                                             const isSelected = v.id === id;
-                                            const perUnit = pricePerUnit(v.label, v.priceTaxed);
+                                            const vOnSale = isSaleActive(v.salePercent, v.saleStart, v.saleEnd);
+                                            const vDisplayPrice = vOnSale ? calcSalePrice(v.priceTaxed, v.salePercent) : v.priceTaxed;
+                                            const perUnit = pricePerUnit(v.label, vDisplayPrice);
                                             return (
                                                 <Link
                                                     key={v.id}
@@ -336,7 +361,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                                                         }`}
                                                 >
                                                     <span className="font-bold">{v.label}</span>
-                                                    <span className="text-xs mt-0.5">{v.isSoldOut ? "売り切れ" : `¥${v.priceTaxed.toLocaleString()}`}</span>
+                                                    <span className={`text-xs mt-0.5 ${vOnSale && !v.isSoldOut ? "text-red-500 font-bold" : ""}`}>{v.isSoldOut ? "売り切れ" : `¥${vDisplayPrice.toLocaleString()}`}</span>
                                                     {perUnit && !v.isSoldOut && (
                                                         <span className="text-[10px] text-stone-400 mt-0.5">({perUnit})</span>
                                                     )}
@@ -375,20 +400,28 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                                         )}
                                     </div>
                                 ) : (
-                                    <AddToCartButton
-                                        product={product}
-                                        variantId={id}
-                                        variantName={cartName}
-                                        price={invPrice ?? undefined}
-                                        shipType={shipType}
-                                        imageUrl={invImageUrl || undefined}
-                                        family={invData.family || undefined}
-                                        cost={invCost}
-                                        profitRate={invProfitRate}
-                                        coolAvailable={invCoolAvailable}
-                                        clickpostMax={invData.clickpostMax}
-                                        familyOptions={invData.options}
-                                    />
+                                    (() => {
+                                        const baseSellPrice = invPrice ?? product.price;
+                                        const onSale = isSaleActive(invData.salePercent, invData.saleStart, invData.saleEnd);
+                                        const salePrice = onSale ? calcSalePrice(baseSellPrice, invData.salePercent) : baseSellPrice;
+                                        return (
+                                            <AddToCartButton
+                                                product={product}
+                                                variantId={id}
+                                                variantName={cartName}
+                                                price={salePrice}
+                                                originalPrice={onSale ? baseSellPrice : undefined}
+                                                shipType={shipType}
+                                                imageUrl={invImageUrl || undefined}
+                                                family={invData.family || undefined}
+                                                cost={invCost}
+                                                profitRate={invProfitRate}
+                                                coolAvailable={invCoolAvailable}
+                                                clickpostMax={invData.clickpostMax}
+                                                familyOptions={invData.options}
+                                            />
+                                        );
+                                    })()
                                 )}
                             </div>
                         </div>

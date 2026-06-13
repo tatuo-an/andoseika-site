@@ -23,7 +23,7 @@ export async function GET() {
         const sheets = getSheets();
         const res = await sheets.spreadsheets.values.get({
             spreadsheetId: SPREADSHEET_ID,
-            range: `${SHEET_NAME}!A:R`,
+            range: `${SHEET_NAME}!A:U`,
         });
         const rows = res.data.values ?? [];
         const data = rows.slice(1)
@@ -38,6 +38,9 @@ export async function GET() {
                 coolAvailable: r[14] === "1",
                 clickpostMax: r[16] !== undefined && r[16] !== "" ? parseInt(r[16], 10) : 0,
                 options: r[17] ?? "",
+                salePercent: r[18] !== undefined && r[18] !== "" ? parseInt(r[18], 10) : 0,
+                saleStart: r[19] ?? "",
+                saleEnd: r[20] ?? "",
             }))
             .filter(r => !r.hidden);
         return NextResponse.json({ inventory: data });
