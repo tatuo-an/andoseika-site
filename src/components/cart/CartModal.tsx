@@ -69,11 +69,14 @@ const DEFAULT_SHIPPING: ShippingRow[] = [
     { region: "それ以外", prefectures: "東京都,神奈川県,埼玉県,千葉県,茨城県,栃木県,群馬県,新潟県,富山県,石川県,福井県,山梨県,長野県,岐阜県,静岡県,愛知県,三重県,滋賀県,京都府,大阪府,兵庫県,奈良県,和歌山県,鳥取県,島根県,岡山県,広島県,山口県,徳島県,香川県,愛媛県,高知県,福岡県,佐賀県,長崎県,熊本県,大分県,宮崎県,鹿児島県", s60: 600, s80: 700, s100: 800, s120: 1000, s140: 1200, s160: 1400, s180: 1600, s200: 1800, compact: 690, clickpost: 185 },
 ];
 
+type InvItem = { id: string; name: string; price: number | null; family: string };
+
 export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
-    const { cartDetails, removeItem, incrementItem, decrementItem, totalPrice, cartCount } = useShoppingCart();
+    const { cartDetails, removeItem, incrementItem, decrementItem, cartCount } = useShoppingCart();
 
     const [prefecture, setPrefecture] = useState<string | null>(null);
     const [shippingRows, setShippingRows] = useState<ShippingRow[]>([]);
+    const [inventory, setInventory] = useState<InvItem[]>([]);
     const [addressLoaded, setAddressLoaded] = useState(false);
 
     useEffect(() => {
@@ -81,9 +84,11 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
         Promise.all([
             fetch("/api/address").then(r => r.json()).catch(() => ({ address: null })),
             fetch("/api/shipping").then(r => r.json()).catch(() => ({ shipping: [] })),
-        ]).then(([addrData, shipData]) => {
+            fetch("/api/inventory-public").then(r => r.json()).catch(() => ({ inventory: [] })),
+        ]).then(([addrData, shipData, invData]) => {
             setPrefecture(addrData.address?.prefecture ?? null);
             setShippingRows(shipData.shipping?.length ? shipData.shipping : DEFAULT_SHIPPING);
+            setInventory(invData.inventory ?? []);
             setAddressLoaded(true);
         });
     }, [isOpen, addressLoaded]);
@@ -92,33 +97,43 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
     const baseRow = findBaseRow(shippingRows);
     const isExtraRegion = regionRow && baseRow && regionRow !== baseRow;
 
-    // カート合計重量から宅配便サイズを決定
-    const totalWeightG = Object.values(cartDetails ?? {}).reduce((sum, item) => {
-        return sum + extractWeightG(item.name) * item.quantity;
-    }, 0);
+    const cartItems = Object.values(cartDetails ?? {});
+    const totalWeightG = cartItems.reduce((sum, item) => sum + extractWeightG(item.name) * item.quantity, 0);
     const weightBasedShipType = totalWeightG > 0 ? weightToShipSize(totalWeightG) : null;
 
-    // 重量が取れた場合は合計重量ベース、取れない場合はアイテムごとの shipType で計算
-    const surcharge = (() => {
-        if (!isExtraRegion || !regionRow || !baseRow) return 0;
-        if (weightBasedShipType) {
-            const diff = getRate(regionRow, weightBasedShipType) - getRate(baseRow, weightBasedShipType);
-            return Math.max(0, diff);
-        }
-        return Object.values(cartDetails ?? {}).reduce((sum, item) => {
-            const shipType = (item as any).shipType as string;
-            if (!shipType) return sum;
-            const diff = getRate(regionRow, shipType) - getRate(baseRow, shipType);
-            return sum + Math.max(0, diff) * item.quantity;
-        }, 0);
+    // ファミリーマッチ判定: 全アイテムが同ファミリーで、合計重量が単一バリエーションと一致
+    const cartFamilies = new Set(cartItems.map(i => (i as { family?: string }).family).filter(Boolean) as string[]);
+    const matchedVariant: InvItem | null = (() => {
+        if (cartFamilies.size !== 1 || inventory.length === 0) return null;
+        const family = [...cartFamilies][0];
+        const variants = inventory.filter(v => v.family === family);
+        return variants.find(v => extractWeightG(v.name) === totalWeightG && v.price !== null) ?? null;
     })();
 
-    // デバッグ
-    if (typeof window !== "undefined" && isOpen) {
-        console.log("[CartModal] prefecture:", prefecture, "| region:", regionRow?.region, "| isExtra:", isExtraRegion);
-        console.log("[CartModal] totalWeightG:", totalWeightG, "| shipSize:", weightBasedShipType);
-        console.log("[CartModal] surcharge:", surcharge);
-    }
+    // 原価合計・最低利益率
+    const itemsTotalCost = cartItems.reduce((sum, item) => {
+        const cost = (item as { cost?: number | null }).cost;
+        return sum + (cost ?? item.price) * item.quantity;
+    }, 0);
+    const minProfitRate = cartItems.reduce<number | null>((min, item) => {
+        const pr = (item as { profitRate?: number | null }).profitRate;
+        if (pr === null || pr === undefined) return min;
+        return min === null ? pr : Math.min(min, pr);
+    }, null);
+
+    const baseShipFee = weightBasedShipType && baseRow ? getRate(baseRow, weightBasedShipType) : 0;
+    const profit = minProfitRate !== null ? Math.round(itemsTotalCost * minProfitRate / 100) : 0;
+
+    const surcharge = (() => {
+        if (!isExtraRegion || !regionRow || !baseRow || !weightBasedShipType) return 0;
+        return Math.max(0, getRate(regionRow, weightBasedShipType) - getRate(baseRow, weightBasedShipType));
+    })();
+
+    // 最終請求: マッチした場合はそのバリエーション販売価格、それ以外は原価合計+送料+利益
+    const itemsTotal = matchedVariant ? matchedVariant.price! : itemsTotalCost;
+    const shipFeeShown = matchedVariant ? 0 : baseShipFee;
+    const profitShown = matchedVariant ? 0 : profit;
+    const grandTotal = itemsTotal + shipFeeShown + profitShown + surcharge;
 
     if (!isOpen) return null;
 
@@ -129,8 +144,15 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     cartDetails,
-                    surcharge: surcharge > 0 ? surcharge : undefined,
-                    surchargeLabel: isExtraRegion ? `追加送料（${regionRow!.region}）` : undefined,
+                    quote: {
+                        matchedVariantId: matchedVariant?.id ?? null,
+                        matchedVariantName: matchedVariant?.name ?? null,
+                        itemsTotal,
+                        baseShipFee: shipFeeShown,
+                        profit: profitShown,
+                        surcharge,
+                        surchargeLabel: isExtraRegion ? `追加送料（${regionRow!.region}）` : null,
+                    },
                 }),
             });
             if (!response.ok) { console.error(await response.json()); return; }
@@ -197,22 +219,43 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
 
                 {cartCount! > 0 && (
                     <div className="p-6 border-t border-stone-100 bg-stone-50 space-y-3">
-                        {/* 送料表示 */}
-                        {prefecture && addressLoaded && (
+                        {/* 内訳表示 */}
+                        {addressLoaded && (
                             <div className="text-sm space-y-1">
-                                <div className="flex justify-between text-stone-600">
-                                    <span>商品合計</span>
-                                    <span>¥{totalPrice?.toLocaleString()}</span>
-                                </div>
-                                {isExtraRegion && surcharge > 0 ? (
+                                {matchedVariant ? (
+                                    <>
+                                        <div className="flex justify-between text-stone-600">
+                                            <span>{matchedVariant.name}</span>
+                                            <span>¥{itemsTotal.toLocaleString()}</span>
+                                        </div>
+                                        <p className="text-xs text-green-600">
+                                            合計重量 {(totalWeightG / 1000).toFixed(1)}kg → 既存バリエーション価格で適用
+                                        </p>
+                                    </>
+                                ) : (
+                                    <>
+                                        <div className="flex justify-between text-stone-600">
+                                            <span>商品代金</span>
+                                            <span>¥{itemsTotalCost.toLocaleString()}</span>
+                                        </div>
+                                        {shipFeeShown > 0 && (
+                                            <div className="flex justify-between text-stone-600">
+                                                <span>送料（{weightBasedShipType}）</span>
+                                                <span>¥{shipFeeShown.toLocaleString()}</span>
+                                            </div>
+                                        )}
+                                        {profitShown > 0 && (
+                                            <div className="flex justify-between text-stone-600">
+                                                <span>サービス料</span>
+                                                <span>¥{profitShown.toLocaleString()}</span>
+                                            </div>
+                                        )}
+                                    </>
+                                )}
+                                {isExtraRegion && surcharge > 0 && (
                                     <div className="flex justify-between text-orange-600">
                                         <span>追加送料（{regionRow!.region}）</span>
                                         <span>+¥{surcharge.toLocaleString()}</span>
-                                    </div>
-                                ) : (
-                                    <div className="flex justify-between text-stone-400 text-xs">
-                                        <span>送料</span>
-                                        <span>商品代金に含まれています</span>
                                     </div>
                                 )}
                             </div>
@@ -225,7 +268,7 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
 
                         <div className="flex items-center justify-between text-lg font-bold text-stone-900 border-t border-stone-200 pt-3">
                             <span>合計</span>
-                            <span>¥{((totalPrice ?? 0) + surcharge).toLocaleString()}</span>
+                            <span>¥{grandTotal.toLocaleString()}</span>
                         </div>
 
                         <button

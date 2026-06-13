@@ -29,10 +29,17 @@ export async function POST(req: NextRequest) {
         }
 
         const body = await req.json();
-        const { cartDetails, surcharge, surchargeLabel } = body as {
-            cartDetails?: Record<string, CartItem>;
-            surcharge?: number;
-            surchargeLabel?: string;
+        const { cartDetails, quote } = body as {
+            cartDetails?: Record<string, CartItem & { cost?: number | null }>;
+            quote?: {
+                matchedVariantId: string | null;
+                matchedVariantName: string | null;
+                itemsTotal: number;
+                baseShipFee: number;
+                profit: number;
+                surcharge: number;
+                surchargeLabel: string | null;
+            };
         };
 
         if (!cartDetails) {
@@ -41,36 +48,63 @@ export async function POST(req: NextRequest) {
 
         const baseUrl = getBaseUrl(req);
         const legalDisclosureUrl = new URL("/tokusho", baseUrl).toString();
+        const cartArr = Object.values(cartDetails);
+        const toAbsoluteUrl = (img: string) => img.startsWith("http") ? img : new URL(img, baseUrl).toString();
 
-        const line_items = Object.values(cartDetails).map((item) => ({
-            price_data: {
-                currency: "jpy",
-                product_data: {
-                    name: item.name,
-                    images: [
-                        item.image.startsWith("http")
-                            ? item.image
-                            : new URL(item.image, baseUrl).toString(),
-                    ],
-                },
-                unit_amount: item.price,
-            },
-            quantity: item.quantity,
-        }));
+        type LI = { price_data: { currency: string; product_data: { name: string; images: string[] }; unit_amount: number }; quantity: number };
+        const line_items: LI[] = [];
 
-        // 追加送料（差額）があれば別 line item として追加
-        if (surcharge && surcharge > 0) {
-            line_items.push({
-                price_data: {
-                    currency: "jpy",
-                    product_data: {
-                        name: surchargeLabel ?? "追加送料",
-                        images: [],
+        if (quote) {
+            if (quote.matchedVariantId) {
+                const firstImg = cartArr[0]?.image;
+                line_items.push({
+                    price_data: {
+                        currency: "jpy",
+                        product_data: { name: quote.matchedVariantName ?? "商品", images: firstImg ? [toAbsoluteUrl(firstImg)] : [] },
+                        unit_amount: quote.itemsTotal,
                     },
-                    unit_amount: surcharge,
-                },
-                quantity: 1,
-            });
+                    quantity: 1,
+                });
+            } else {
+                for (const item of cartArr) {
+                    const unitAmount = item.cost ?? item.price;
+                    line_items.push({
+                        price_data: {
+                            currency: "jpy",
+                            product_data: { name: item.name, images: [toAbsoluteUrl(item.image)] },
+                            unit_amount: unitAmount,
+                        },
+                        quantity: item.quantity,
+                    });
+                }
+                if (quote.baseShipFee > 0) {
+                    line_items.push({ price_data: { currency: "jpy", product_data: { name: "送料", images: [] }, unit_amount: quote.baseShipFee }, quantity: 1 });
+                }
+                if (quote.profit > 0) {
+                    line_items.push({ price_data: { currency: "jpy", product_data: { name: "サービス料", images: [] }, unit_amount: quote.profit }, quantity: 1 });
+                }
+            }
+            if (quote.surcharge > 0) {
+                line_items.push({
+                    price_data: {
+                        currency: "jpy",
+                        product_data: { name: quote.surchargeLabel ?? "追加送料", images: [] },
+                        unit_amount: quote.surcharge,
+                    },
+                    quantity: 1,
+                });
+            }
+        } else {
+            for (const item of cartArr) {
+                line_items.push({
+                    price_data: {
+                        currency: "jpy",
+                        product_data: { name: item.name, images: [toAbsoluteUrl(item.image)] },
+                        unit_amount: item.price,
+                    },
+                    quantity: item.quantity,
+                });
+            }
         }
 
         const session = await stripe.checkout.sessions.create({
