@@ -853,11 +853,11 @@ function SortableRow({
 type OptionEntry = { label: string; amount: number };
 
 function parseOptions(s: string): OptionEntry[] {
-    if (!s.trim()) return [];
-    return s.split("|").map(p => {
+    if (!s) return [];
+    return s.split("|").filter(Boolean).map(p => {
         const [label, amountStr] = p.split(":");
-        return { label: label?.trim() ?? "", amount: parseInt(amountStr ?? "0", 10) || 0 };
-    }).filter(e => e.label);
+        return { label: label ?? "", amount: parseInt(amountStr ?? "0", 10) || 0 };
+    });
 }
 
 function stringifyOptions(opts: OptionEntry[]): string {
