@@ -61,6 +61,13 @@ function weightToShipSize(totalG: number): string {
     return "200";
 }
 
+function shipTypeLabel(s: string | null): string {
+    if (!s) return "";
+    if (s === "compact") return "コンパクト";
+    if (s === "clickpost") return "クリックポスト";
+    return `${s}サイズ`;
+}
+
 // クール便加算（税抜）。140以上はクール便対応外（0を返す）
 function coolSurchargeBySize(shipType: string | null): number {
     if (!shipType) return 0;
@@ -137,25 +144,29 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
         return min === null ? pr : Math.min(min, pr);
     }, null);
 
-    const baseShipFee = weightBasedShipType && baseRow ? getRate(baseRow, weightBasedShipType) : 0;
+    // 単体×nでマッチした場合はそのバリエーションの配送区分を優先する
+    const matchedInv = matchedVariant ? inventory.find(v => v.id === matchedVariant.id) : null;
+    const matchedIsCompact = matchedInv?.shipType === "compact";
+    const effectiveShipType = (cartItems.length === 1 && matchedInv?.shipType)
+        ? matchedInv.shipType
+        : weightBasedShipType;
+
+    const baseShipFee = effectiveShipType && baseRow ? getRate(baseRow, effectiveShipType) : 0;
     const profit = minProfitRate !== null ? Math.round(itemsTotalCost * minProfitRate / 100) : 0;
 
     const surcharge = (() => {
-        if (!isExtraRegion || !regionRow || !baseRow || !weightBasedShipType) return 0;
-        return Math.max(0, getRate(regionRow, weightBasedShipType) - getRate(baseRow, weightBasedShipType));
+        if (!isExtraRegion || !regionRow || !baseRow || !effectiveShipType) return 0;
+        return Math.max(0, getRate(regionRow, effectiveShipType) - getRate(baseRow, effectiveShipType));
     })();
 
-    // クール便判定（ファミリー単位）:
+    // クール便判定:
     //   1. カート内のいずれかが coolAvailable=true
-    //   2. かつ合計重量サイズが60~120（140以上は不可）
-    //   3. ファミリーマッチした商品の配送区分が「コンパクト」でない
-    const matchedInv = matchedVariant ? inventory.find(v => v.id === matchedVariant.id) : null;
-    const matchedIsCompact = matchedInv?.shipType === "compact";
+    //   2. かつ「実効発送サイズ」が60~120（コンパクト/クリックポスト/140以上は不可）
     const coolEligible = !matchedIsCompact
-        && weightBasedShipType !== null
-        && coolSurchargeBySize(weightBasedShipType) > 0
+        && effectiveShipType !== null
+        && coolSurchargeBySize(effectiveShipType) > 0
         && cartItems.some(i => (i as { coolAvailable?: boolean }).coolAvailable);
-    const coolFee = coolEligible && coolRequested ? coolSurchargeBySize(weightBasedShipType) : 0;
+    const coolFee = coolEligible && coolRequested ? coolSurchargeBySize(effectiveShipType) : 0;
 
     // 最終請求: マッチした場合はそのバリエーション販売価格、それ以外は原価合計+送料+利益
     // 表示用の内訳は両ケース共通の3行（商品本体価格／送料／サービス料）。
@@ -345,7 +356,7 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                                         </div>
                                         {shipFeeShown > 0 && (
                                             <div className="flex justify-between text-stone-600">
-                                                <span>送料（{weightBasedShipType}サイズ）</span>
+                                                <span>送料（{shipTypeLabel(effectiveShipType)}）</span>
                                                 <span>¥{shipFeeShown.toLocaleString()}</span>
                                             </div>
                                         )}
@@ -373,7 +384,7 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                             );
                         })()}
                         {/* クール便オプション */}
-                        {coolEligible && weightBasedShipType && coolSurchargeBySize(weightBasedShipType) > 0 && (
+                        {coolEligible && effectiveShipType && coolSurchargeBySize(effectiveShipType) > 0 && (
                             <label className="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-lg p-3 cursor-pointer">
                                 <input
                                     type="checkbox"
@@ -382,14 +393,9 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                                     className="accent-blue-600"
                                 />
                                 <span className="text-sm text-blue-800 flex-1">
-                                    ❄ クール便で配送（+¥{coolSurchargeBySize(weightBasedShipType).toLocaleString()}）
+                                    ❄ クール便で配送（+¥{coolSurchargeBySize(effectiveShipType).toLocaleString()}）
                                 </span>
                             </label>
-                        )}
-                        {coolEligible && weightBasedShipType && coolSurchargeBySize(weightBasedShipType) === 0 && (
-                            <p className="text-xs text-stone-400 bg-stone-100 rounded-lg p-2">
-                                ※ 140サイズ以上のためクール便は対応していません
-                            </p>
                         )}
 
                         {addressLoaded && !prefecture && (
