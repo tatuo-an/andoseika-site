@@ -94,6 +94,7 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
 
     const [addresses, setAddresses] = useState<AddressItem[]>([]);
     const [selectedAddressIdx, setSelectedAddressIdx] = useState(0);
+    const [addressPickerOpen, setAddressPickerOpen] = useState(false);
     const [shippingRows, setShippingRows] = useState<ShippingRow[]>([]);
     const [inventory, setInventory] = useState<InvItem[]>([]);
     const [addressLoaded, setAddressLoaded] = useState(false);
@@ -280,9 +281,16 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                             <div className="bg-white border border-stone-200 rounded-lg p-3 space-y-2">
                                 <div className="flex items-center justify-between">
                                     <p className="text-xs font-bold text-stone-500">お届け先</p>
-                                    <Link href="/mypage/address" className="text-xs text-primary hover:underline">編集</Link>
+                                    {addresses.length > 1 && !addressPickerOpen && (
+                                        <button
+                                            onClick={() => setAddressPickerOpen(true)}
+                                            className="text-xs text-primary hover:underline font-medium"
+                                        >
+                                            変更
+                                        </button>
+                                    )}
                                 </div>
-                                {addresses.length === 1 ? (
+                                {!addressPickerOpen ? (
                                     <div className="text-sm">
                                         <span className="bg-primary/10 text-primary text-xs font-bold px-2 py-0.5 rounded-full mr-2">
                                             {selectedAddress?.label || "—"}
@@ -303,7 +311,7 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                                                     type="radio"
                                                     name="address"
                                                     checked={i === selectedAddressIdx}
-                                                    onChange={() => setSelectedAddressIdx(i)}
+                                                    onChange={() => { setSelectedAddressIdx(i); setAddressPickerOpen(false); }}
                                                     className="mt-1 accent-primary"
                                                 />
                                                 <div className="flex-1 min-w-0">
@@ -317,6 +325,12 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                                                 </div>
                                             </label>
                                         ))}
+                                        <Link
+                                            href="/mypage/address"
+                                            className="flex items-center justify-center gap-1 border border-dashed border-stone-300 rounded-lg py-2 text-xs text-stone-500 hover:border-primary/50 hover:text-primary transition-colors"
+                                        >
+                                            + 配送先を追加
+                                        </Link>
                                     </div>
                                 )}
                             </div>
