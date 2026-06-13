@@ -220,46 +220,71 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                 {cartCount! > 0 && (
                     <div className="p-6 border-t border-stone-100 bg-stone-50 space-y-3">
                         {/* 内訳表示 */}
-                        {addressLoaded && (
-                            <div className="text-sm space-y-1">
-                                {matchedVariant ? (
-                                    <>
+                        {addressLoaded && (() => {
+                            // 単品購入時価格の合計（各商品の販売価格×数量）
+                            const singlePurchaseTotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+                            const bundledTotal = itemsTotal + shipFeeShown + profitShown; // 追加送料抜きの本体合計
+                            const bundleDiscount = singlePurchaseTotal - bundledTotal;
+
+                            return (
+                                <div className="text-sm space-y-2">
+                                    <div className="space-y-1">
                                         <div className="flex justify-between text-stone-600">
-                                            <span>{matchedVariant.name}</span>
-                                            <span>¥{itemsTotal.toLocaleString()}</span>
+                                            <span>単品購入時価格の合計</span>
+                                            <span>¥{singlePurchaseTotal.toLocaleString()}</span>
                                         </div>
-                                        <p className="text-xs text-green-600">
-                                            合計重量 {(totalWeightG / 1000).toFixed(1)}kg → 既存バリエーション価格で適用
-                                        </p>
-                                    </>
-                                ) : (
-                                    <>
-                                        <div className="flex justify-between text-stone-600">
-                                            <span>商品代金</span>
-                                            <span>¥{itemsTotalCost.toLocaleString()}</span>
-                                        </div>
-                                        {shipFeeShown > 0 && (
-                                            <div className="flex justify-between text-stone-600">
-                                                <span>送料（{weightBasedShipType}）</span>
-                                                <span>¥{shipFeeShown.toLocaleString()}</span>
+                                        {bundleDiscount !== 0 && (
+                                            <div className="flex justify-between text-emerald-600 font-medium">
+                                                <span>同梱割引</span>
+                                                <span>{bundleDiscount > 0 ? "−" : "+"}¥{Math.abs(bundleDiscount).toLocaleString()}</span>
                                             </div>
                                         )}
-                                        {profitShown > 0 && (
-                                            <div className="flex justify-between text-stone-600">
-                                                <span>サービス料</span>
-                                                <span>¥{profitShown.toLocaleString()}</span>
-                                            </div>
-                                        )}
-                                    </>
-                                )}
-                                {isExtraRegion && surcharge > 0 && (
-                                    <div className="flex justify-between text-orange-600">
-                                        <span>追加送料（{regionRow!.region}）</span>
-                                        <span>+¥{surcharge.toLocaleString()}</span>
                                     </div>
-                                )}
-                            </div>
-                        )}
+
+                                    {/* 内訳 */}
+                                    <div className="bg-stone-100/60 rounded-lg p-3 space-y-1 text-xs">
+                                        <p className="text-stone-500 font-medium mb-1">内訳</p>
+                                        {matchedVariant ? (
+                                            <>
+                                                <div className="flex justify-between text-stone-600">
+                                                    <span>{matchedVariant.name}</span>
+                                                    <span>¥{itemsTotal.toLocaleString()}</span>
+                                                </div>
+                                                <p className="text-[11px] text-green-600 pt-1">
+                                                    合計{(totalWeightG / 1000).toFixed(1)}kg → 既存バリエーション価格で適用
+                                                </p>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <div className="flex justify-between text-stone-600">
+                                                    <span>商品本体価格</span>
+                                                    <span>¥{itemsTotalCost.toLocaleString()}</span>
+                                                </div>
+                                                {shipFeeShown > 0 && (
+                                                    <div className="flex justify-between text-stone-600">
+                                                        <span>送料（{weightBasedShipType}サイズ）</span>
+                                                        <span>¥{shipFeeShown.toLocaleString()}</span>
+                                                    </div>
+                                                )}
+                                                {profitShown > 0 && (
+                                                    <div className="flex justify-between text-stone-600">
+                                                        <span>サービス料</span>
+                                                        <span>¥{profitShown.toLocaleString()}</span>
+                                                    </div>
+                                                )}
+                                            </>
+                                        )}
+                                    </div>
+
+                                    {isExtraRegion && surcharge > 0 && (
+                                        <div className="flex justify-between text-orange-600">
+                                            <span>追加送料（{regionRow!.region}）</span>
+                                            <span>+¥{surcharge.toLocaleString()}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })()}
                         {addressLoaded && !prefecture && (
                             <p className="text-xs text-orange-500">
                                 <Link href="/mypage/address" className="underline font-medium">住所を登録</Link>すると正確な送料が計算されます
@@ -267,8 +292,8 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                         )}
 
                         <div className="flex items-center justify-between text-lg font-bold text-stone-900 border-t border-stone-200 pt-3">
-                            <span>合計</span>
-                            <span>¥{grandTotal.toLocaleString()}</span>
+                            <span>お支払い合計</span>
+                            <span>¥{grandTotal.toLocaleString()}<span className="text-xs font-normal text-stone-500 ml-1">（税込）</span></span>
                         </div>
 
                         <button
