@@ -213,6 +213,23 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
         }
     }
 
+    // ファミリー全員がMicroCMS未登録 → シートデータだけで擬似Productを構築
+    if (!product && invData.family) {
+        const now = new Date().toISOString();
+        product = {
+            id,
+            name: invData.family,
+            category: "processed",
+            price: invPrice ?? 0,
+            description: invData.description || "",
+            image: { url: invImageUrl || invData.familyImages[0] || "", width: 800, height: 800 },
+            createdAt: now,
+            updatedAt: now,
+            publishedAt: now,
+            revisedAt: now,
+        } as Product;
+    }
+
     if (!product || hidden || deleted) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-stone-50">
