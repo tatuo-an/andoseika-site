@@ -317,6 +317,9 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                             const singlePurchaseTotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
                             const bundledTotal = itemsTotal + shipFeeShown + profitShown; // 追加送料抜きの本体合計
                             const bundleDiscount = singlePurchaseTotal - bundledTotal;
+                            // カートが「1種類のみ」かつ「バリエーションマッチがある」場合は同梱割引を表示しない
+                            const isSingleVariantPurchase = cartItems.length === 1 && !!matchedVariant;
+                            const showBundleDiscount = bundleDiscount !== 0 && !isSingleVariantPurchase;
 
                             return (
                                 <div className="text-sm space-y-2">
@@ -325,7 +328,7 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                                             <span>単品購入時価格の合計</span>
                                             <span>¥{singlePurchaseTotal.toLocaleString()}</span>
                                         </div>
-                                        {bundleDiscount !== 0 && (
+                                        {showBundleDiscount && (
                                             <div className="flex justify-between text-emerald-600 font-medium">
                                                 <span>同梱割引</span>
                                                 <span>{bundleDiscount > 0 ? "−" : "+"}¥{Math.abs(bundleDiscount).toLocaleString()}</span>
