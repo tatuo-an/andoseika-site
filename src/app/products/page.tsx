@@ -170,7 +170,7 @@ export default async function ProductsPage() {
               {!isSoldOut && product.isRecommended && (
                 <span className="absolute top-4 right-4 bg-primary text-white text-xs font-bold px-3 py-1 rounded-full shadow-md">おすすめ</span>
               )}
-              <div className="absolute top-3 left-3">
+              <div className="absolute top-3 left-3 pointer-events-auto">
                 <FavoriteButton productId={product.id} size="sm" />
               </div>
             </div>
