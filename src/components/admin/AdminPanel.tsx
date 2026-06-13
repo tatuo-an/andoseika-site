@@ -27,7 +27,7 @@ export type InventoryItem = {
     id: string;
     name: string;
     stock: number;
-    price: number | null;
+    price: number | null;       // 販売価格（Stripeへ送る額）
     shipType: string;
     hidden: boolean;
     deleted: boolean;
@@ -36,6 +36,8 @@ export type InventoryItem = {
     family: string;
     imageUrl: string;
     familyImages: string[];
+    cost: number | null;        // 原価
+    profitRate: number | null;  // 利益率(%)
 };
 
 const PRESET_BADGES = ["新物", "訳あり", "秀品", "贈答用", "栽培期間中農薬不使用", "慣行栽培"];
@@ -102,6 +104,8 @@ export function AdminPanel({
             family: inv.family ?? "",
             imageUrl: inv.imageUrl ?? productMap[inv.id]?.image?.url ?? "",
             familyImages: inv.familyImages ?? [],
+            cost: inv.cost ?? null,
+            profitRate: inv.profitRate ?? null,
         }))
     );
 
@@ -155,7 +159,7 @@ export function AdminPanel({
             const lastIdx = [...prev].map((i, idx) => ({ i, idx })).filter(({ i }) => i.family?.trim() === family).at(-1)?.idx ?? prev.length - 1;
             const next = [...prev];
             const familyImages = prev.find(i => i.family?.trim() === family)?.familyImages ?? [];
-            next.splice(lastIdx + 1, 0, { id: newId, name: "バリエーション名", stock: -1, price: null, shipType: "", hidden: false, deleted: false, nextShipment: "", badges: [], family, imageUrl: "", familyImages: [...familyImages] });
+            next.splice(lastIdx + 1, 0, { id: newId, name: "バリエーション名", stock: -1, price: null, shipType: "", hidden: false, deleted: false, nextShipment: "", badges: [], family, imageUrl: "", familyImages: [...familyImages], cost: null, profitRate: null });
             return next;
         });
         setSavedInventory(false);
@@ -196,8 +200,37 @@ export function AdminPanel({
     const [savingShipping, setSavingShipping] = useState(false);
     const [savedShipping, setSavedShipping] = useState(false);
 
+    // 基準地域行（最後の行 = "それ以外"）の送料を取得
+    const baseShipRow = shipping.length > 0 ? shipping[shipping.length - 1] : null;
+    const getBaseShipFee = (shipType: string): number => {
+        if (!baseShipRow || !shipType) return 0;
+        const map: Record<string, keyof ShippingItem> = {
+            "60": "s60", "80": "s80", "100": "s100", "120": "s120",
+            "140": "s140", "160": "s160", "180": "s180", "200": "s200",
+            "compact": "compact", "clickpost": "clickpost",
+        };
+        const key = map[shipType];
+        return key ? (baseShipRow[key] as number) : 0;
+    };
+
+    // 販売価格を 原価 + 送料 + 原価×利益率/100 で算出（null返却→未設定）
+    const calcSellPrice = (item: InventoryItem): number | null => {
+        if (item.cost === null || item.profitRate === null) return null;
+        const shipFee = getBaseShipFee(item.shipType);
+        return Math.round(item.cost + shipFee + item.cost * item.profitRate / 100);
+    };
+
     const updateItem = <K extends keyof InventoryItem>(id: string, field: K, value: InventoryItem[K]) => {
-        setItems((prev) => prev.map((item) => item.id === id ? { ...item, [field]: value } : item));
+        setItems((prev) => prev.map((item) => {
+            if (item.id !== id) return item;
+            const updated = { ...item, [field]: value };
+            // 原価・利益率・配送区分が変わったら販売価格を再計算
+            if (field === "cost" || field === "profitRate" || field === "shipType") {
+                const auto = calcSellPrice(updated);
+                if (auto !== null) updated.price = auto;
+            }
+            return updated;
+        }));
         setSavedInventory(false);
     };
 
@@ -259,6 +292,8 @@ export function AdminPanel({
             family: "",
             imageUrl: "",
             familyImages: [],
+            cost: null,
+            profitRate: null,
         }]);
         setSavedInventory(false);
     };
@@ -278,6 +313,8 @@ export function AdminPanel({
             family: "新しいファミリー",
             imageUrl: "",
             familyImages: [],
+            cost: null,
+            profitRate: null,
         }]);
         setSavedInventory(false);
     };
@@ -610,12 +647,28 @@ function SortableRow({
                         onChange={(e) => { const v = parseInt(e.target.value, 10); onUpdate(item.id, "stock", isNaN(v) ? -1 : v); }}
                         className="w-14 text-center border border-stone-200 rounded-lg px-1 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
                 </div>
-                {/* 価格 */}
+                {/* 原価 */}
                 <div className="flex items-center gap-1">
                     <span className="text-xs text-stone-400">原価</span>
+                    <input type="number" min={0} value={item.cost ?? ""} placeholder="−"
+                        onChange={(e) => onUpdate(item.id, "cost", e.target.value ? parseInt(e.target.value, 10) : null)}
+                        className="w-20 text-center border border-stone-200 rounded-lg px-1 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                </div>
+                {/* 利益率 */}
+                <div className="flex items-center gap-1">
+                    <span className="text-xs text-stone-400">利益率</span>
+                    <input type="number" min={0} step="0.1" value={item.profitRate ?? ""} placeholder="−"
+                        onChange={(e) => onUpdate(item.id, "profitRate", e.target.value ? parseFloat(e.target.value) : null)}
+                        className="w-14 text-center border border-stone-200 rounded-lg px-1 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                    <span className="text-xs text-stone-400">%</span>
+                </div>
+                {/* 販売価格 */}
+                <div className="flex items-center gap-1">
+                    <span className="text-xs text-stone-400">販売</span>
                     <input type="number" min={0} value={item.price ?? ""} placeholder="−"
                         onChange={(e) => onUpdate(item.id, "price", e.target.value ? parseInt(e.target.value, 10) : null)}
-                        className="w-24 text-center border border-stone-200 rounded-lg px-1 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                        title="原価・利益率・配送区分から自動算出されます（手動上書きも可）"
+                        className="w-24 text-center border border-stone-200 rounded-lg px-1 py-1 text-sm font-medium bg-primary/5 focus:outline-none focus:ring-2 focus:ring-primary/30" />
                 </div>
                 {/* 配送区分 */}
                 <select value={item.shipType}
