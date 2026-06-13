@@ -267,7 +267,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                 <div className="bg-white rounded-3xl overflow-hidden shadow-sm">
                     <div className="grid md:grid-cols-2 gap-0">
                         {/* Image slideshow */}
-                        <div className="p-0">
+                        <div className="p-4 md:p-0 max-w-sm mx-auto md:max-w-none w-full">
                             <ProductImageSlideshow images={displayImages} alt={product.name} />
                         </div>
 
