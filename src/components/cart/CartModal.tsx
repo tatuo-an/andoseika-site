@@ -304,15 +304,19 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                                 ) : (
                                     <div className="space-y-1.5">
                                         {addresses.map((addr, i) => (
-                                            <label key={addr.label} className={`flex items-start gap-2 p-2 rounded-lg cursor-pointer border transition-colors ${
-                                                i === selectedAddressIdx ? "border-primary bg-primary/5" : "border-stone-200 hover:bg-stone-50"
-                                            }`}>
+                                            <div
+                                                key={addr.label}
+                                                onClick={() => { setSelectedAddressIdx(i); setAddressPickerOpen(false); }}
+                                                className={`flex items-start gap-2 p-2 rounded-lg cursor-pointer border transition-colors ${
+                                                    i === selectedAddressIdx ? "border-primary bg-primary/5" : "border-stone-200 hover:bg-stone-50"
+                                                }`}
+                                            >
                                                 <input
                                                     type="radio"
                                                     name="address"
                                                     checked={i === selectedAddressIdx}
-                                                    onChange={() => { setSelectedAddressIdx(i); setAddressPickerOpen(false); }}
-                                                    className="mt-1 accent-primary"
+                                                    readOnly
+                                                    className="mt-1 accent-primary pointer-events-none"
                                                 />
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex items-center gap-1.5 mb-0.5">
@@ -323,7 +327,7 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                                                         {addr.prefecture}{addr.city}{addr.street}
                                                     </p>
                                                 </div>
-                                            </label>
+                                            </div>
                                         ))}
                                         <Link
                                             href="/mypage/address"
