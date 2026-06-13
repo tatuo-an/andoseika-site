@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef } from "react";
-import { Check, Loader2, Plus, Trash2, GripVertical, Eye, EyeOff, Copy, ChevronDown, ChevronRight, Camera } from "lucide-react";
+import { Check, Loader2, Plus, Trash2, GripVertical, Eye, EyeOff, Copy, ChevronDown, ChevronRight, Camera, ChevronUp } from "lucide-react";
 import { Product } from "@/types/microcms";
 import {
     DndContext,
@@ -150,6 +150,36 @@ export function AdminPanel({
         setItems((prev) => prev.map((item) =>
             item.family?.trim() === family ? { ...item, familyImages } : item
         ));
+        setSavedInventory(false);
+    };
+
+    // ファミリーグループを上下移動（中身のバリエーションごと並び替え）
+    const moveFamilyGroup = (family: string, direction: "up" | "down") => {
+        setItems(prev => {
+            // 現在のグループ順序を取得（ファミリー名 or 単品ID）
+            const groupOrder: string[] = [];
+            prev.forEach(item => {
+                const key = item.family?.trim() || `__single_${item.id}`;
+                if (!groupOrder.includes(key)) groupOrder.push(key);
+            });
+            const currentIdx = groupOrder.indexOf(family);
+            if (currentIdx === -1) return prev;
+            const targetIdx = direction === "up" ? currentIdx - 1 : currentIdx + 1;
+            if (targetIdx < 0 || targetIdx >= groupOrder.length) return prev;
+            // 入れ替え
+            const newOrder = [...groupOrder];
+            [newOrder[currentIdx], newOrder[targetIdx]] = [newOrder[targetIdx], newOrder[currentIdx]];
+            // グループごとにアイテム再配置
+            const groupMap = new Map<string, InventoryItem[]>();
+            prev.forEach(item => {
+                const key = item.family?.trim() || `__single_${item.id}`;
+                if (!groupMap.has(key)) groupMap.set(key, []);
+                groupMap.get(key)!.push(item);
+            });
+            const result: InventoryItem[] = [];
+            newOrder.forEach(key => { result.push(...(groupMap.get(key) ?? [])); });
+            return result;
+        });
         setSavedInventory(false);
     };
 
@@ -457,6 +487,22 @@ export function AdminPanel({
                                                                 <button onClick={() => toggleFamily(fam)} className="flex-shrink-0 p-0.5 text-stone-400 hover:text-stone-600">
                                                                     {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                                                                 </button>
+                                                                <div className="flex flex-col flex-shrink-0">
+                                                                    <button
+                                                                        onClick={() => moveFamilyGroup(fam, "up")}
+                                                                        title="上に移動"
+                                                                        className="text-stone-300 hover:text-stone-600 leading-none"
+                                                                    >
+                                                                        <ChevronUp className="w-3 h-3" />
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => moveFamilyGroup(fam, "down")}
+                                                                        title="下に移動"
+                                                                        className="text-stone-300 hover:text-stone-600 leading-none"
+                                                                    >
+                                                                        <ChevronDown className="w-3 h-3" />
+                                                                    </button>
+                                                                </div>
                                                                 <FamilyNameInput
                                                                     value={fam}
                                                                     onCommit={(newName) => renameFamily(fam, newName)}
