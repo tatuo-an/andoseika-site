@@ -175,7 +175,8 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
             : weightBasedShipType;
 
     const baseShipFee = effectiveShipType && baseRow ? getRate(baseRow, effectiveShipType) : 0;
-    const profit = minProfitRate !== null ? Math.round(itemsTotalCost * minProfitRate / 100) : 0;
+    // サービス料は (原価合計 + 送料) × 利益率 で計算
+    const profit = minProfitRate !== null ? Math.round((itemsTotalCost + baseShipFee) * minProfitRate / 100) : 0;
 
     const surcharge = (() => {
         if (!isExtraRegion || !regionRow || !baseRow || !effectiveShipType) return 0;

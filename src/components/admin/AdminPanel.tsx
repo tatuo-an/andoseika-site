@@ -284,11 +284,12 @@ export function AdminPanel({
         return key ? (baseShipRow[key] as number) : 0;
     };
 
-    // 販売価格を 原価 + 送料 + 原価×利益率/100 で算出（null返却→未設定）
+    // 販売価格を (原価+送料) × (1+利益率/100) で算出（null返却→未設定）
     const calcSellPrice = (item: InventoryItem): number | null => {
         if (item.cost === null || item.profitRate === null) return null;
         const shipFee = getBaseShipFee(item.shipType);
-        return Math.round(item.cost + shipFee + item.cost * item.profitRate / 100);
+        const base = item.cost + shipFee;
+        return Math.round(base + base * item.profitRate / 100);
     };
 
     const updateItem = <K extends keyof InventoryItem>(id: string, field: K, value: InventoryItem[K]) => {
