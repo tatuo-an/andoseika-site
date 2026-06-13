@@ -61,6 +61,16 @@ function weightToShipSize(totalG: number): string {
     return "200";
 }
 
+// クール便加算（税抜）。140以上はクール便対応外（0を返す）
+function coolSurchargeBySize(shipType: string | null): number {
+    if (!shipType) return 0;
+    if (shipType === "60") return 250;
+    if (shipType === "80") return 300;
+    if (shipType === "100") return 400;
+    if (shipType === "120") return 650;
+    return 0; // 140以上はクール便なし
+}
+
 // 送料マスタが未設定の場合のデフォルト値（ヤマト運輸 中国エリア発）
 const DEFAULT_SHIPPING: ShippingRow[] = [
     { region: "北海道", prefectures: "北海道", s60: 1200, s80: 1400, s100: 1600, s120: 1750, s140: 2000, s160: 2200, s180: 2400, s200: 2600, compact: 990, clickpost: 185 },
@@ -80,6 +90,7 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
     const [shippingRows, setShippingRows] = useState<ShippingRow[]>([]);
     const [inventory, setInventory] = useState<InvItem[]>([]);
     const [addressLoaded, setAddressLoaded] = useState(false);
+    const [coolRequested, setCoolRequested] = useState(false);
 
     useEffect(() => {
         if (!isOpen || addressLoaded) return;
@@ -134,11 +145,15 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
         return Math.max(0, getRate(regionRow, weightBasedShipType) - getRate(baseRow, weightBasedShipType));
     })();
 
+    // クール便: カート内に少なくとも1つクール便対応商品があれば選択可能
+    const coolEligible = cartItems.some(i => (i as { coolAvailable?: boolean }).coolAvailable);
+    const coolFee = coolEligible && coolRequested ? coolSurchargeBySize(weightBasedShipType) : 0;
+
     // 最終請求: マッチした場合はそのバリエーション販売価格、それ以外は原価合計+送料+利益
     const itemsTotal = matchedVariant ? matchedVariant.price! : itemsTotalCost;
     const shipFeeShown = matchedVariant ? 0 : baseShipFee;
     const profitShown = matchedVariant ? 0 : profit;
-    const grandTotal = itemsTotal + shipFeeShown + profitShown + surcharge;
+    const grandTotal = itemsTotal + shipFeeShown + profitShown + surcharge + coolFee;
 
     if (!isOpen) return null;
 
@@ -162,6 +177,7 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                         profit: profitShown,
                         surcharge,
                         surchargeLabel: isExtraRegion ? `追加送料（${regionRow!.region}）` : null,
+                        coolFee,
                     },
                 }),
             });
@@ -345,9 +361,35 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                                             <span>+¥{surcharge.toLocaleString()}</span>
                                         </div>
                                     )}
+                                    {coolFee > 0 && (
+                                        <div className="flex justify-between text-blue-600">
+                                            <span>❄ クール便</span>
+                                            <span>+¥{coolFee.toLocaleString()}</span>
+                                        </div>
+                                    )}
                                 </div>
                             );
                         })()}
+                        {/* クール便オプション */}
+                        {coolEligible && weightBasedShipType && coolSurchargeBySize(weightBasedShipType) > 0 && (
+                            <label className="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-lg p-3 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={coolRequested}
+                                    onChange={(e) => setCoolRequested(e.target.checked)}
+                                    className="accent-blue-600"
+                                />
+                                <span className="text-sm text-blue-800 flex-1">
+                                    ❄ クール便で配送（+¥{coolSurchargeBySize(weightBasedShipType).toLocaleString()}）
+                                </span>
+                            </label>
+                        )}
+                        {coolEligible && weightBasedShipType && coolSurchargeBySize(weightBasedShipType) === 0 && (
+                            <p className="text-xs text-stone-400 bg-stone-100 rounded-lg p-2">
+                                ※ 140サイズ以上のためクール便は対応していません
+                            </p>
+                        )}
+
                         {addressLoaded && !prefecture && (
                             <p className="text-xs text-orange-500">
                                 <Link href="/mypage/address" className="underline font-medium">住所を登録</Link>すると正確な送料が計算されます

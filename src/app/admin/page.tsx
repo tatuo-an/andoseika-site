@@ -28,7 +28,7 @@ async function getInventory(): Promise<{ items: ReturnType<typeof mapRow>[]; del
         const [dataRes, deletedRes] = await Promise.all([
             sheets.spreadsheets.values.get({
                 spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-                range: "商品在庫!A:N",
+                range: "商品在庫!A:O",
             }),
             sheets.spreadsheets.values.get({
                 spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
@@ -62,6 +62,7 @@ function mapRow(r: string[]) {
         familyImages: r[11] ? r[11].split(",").map((s: string) => s.trim()).filter(Boolean) : [],
         cost: r[12] !== undefined && r[12] !== "" ? parseInt(r[12], 10) : null,
         profitRate: r[13] !== undefined && r[13] !== "" ? parseFloat(r[13]) : null,
+        coolAvailable: r[14] === "1",
     };
 }
 

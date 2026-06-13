@@ -39,6 +39,7 @@ export async function POST(req: NextRequest) {
                 profit: number;
                 surcharge: number;
                 surchargeLabel: string | null;
+                coolFee?: number;
             };
             shippingAddress?: {
                 label: string; name: string; postalCode: string; prefecture: string;
@@ -94,6 +95,16 @@ export async function POST(req: NextRequest) {
                         currency: "jpy",
                         product_data: { name: quote.surchargeLabel ?? "追加送料", images: [] },
                         unit_amount: quote.surcharge,
+                    },
+                    quantity: 1,
+                });
+            }
+            if (quote.coolFee && quote.coolFee > 0) {
+                line_items.push({
+                    price_data: {
+                        currency: "jpy",
+                        product_data: { name: "クール便", images: [] },
+                        unit_amount: quote.coolFee,
                     },
                     quantity: 1,
                 });

@@ -16,7 +16,7 @@ import { BADGE_COLORS, DEFAULT_BADGE_COLOR } from "@/lib/badges";
 
 export const revalidate = 60;
 
-type SheetRow = { id: string; name: string; stock: number; price: number | null; shipType: string; hidden: boolean; deleted: boolean; nextShipment: string; badges: string[]; family: string; imageUrl: string; familyImages: string[]; cost: number | null; profitRate: number | null };
+type SheetRow = { id: string; name: string; stock: number; price: number | null; shipType: string; hidden: boolean; deleted: boolean; nextShipment: string; badges: string[]; family: string; imageUrl: string; familyImages: string[]; cost: number | null; profitRate: number | null; coolAvailable: boolean };
 type VariationInfo = { id: string; label: string; price: number; isSoldOut: boolean };
 
 function getSheets() {
@@ -31,14 +31,14 @@ function getSheets() {
 }
 
 async function getInventoryData(id: string): Promise<{
-    stock: number; price: number | null; name: string; shipType: string; hidden: boolean; deleted: boolean; nextShipment: string; badges: string[]; family: string; imageUrl: string; familyImages: string[]; cost: number | null; profitRate: number | null;
+    stock: number; price: number | null; name: string; shipType: string; hidden: boolean; deleted: boolean; nextShipment: string; badges: string[]; family: string; imageUrl: string; familyImages: string[]; cost: number | null; profitRate: number | null; coolAvailable: boolean;
     familyRows: SheetRow[];
 }> {
     try {
         const sheets = getSheets();
         const res = await sheets.spreadsheets.values.get({
             spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-            range: "商品在庫!A:N",
+            range: "商品在庫!A:O",
         });
         const rows = res.data.values ?? [];
         const allRows: SheetRow[] = rows.slice(1).filter(r => r[0]).map(r => ({
@@ -56,10 +56,11 @@ async function getInventoryData(id: string): Promise<{
             familyImages: r[11] ? r[11].split(",").map((s: string) => s.trim()).filter(Boolean) : [],
             cost: r[12] !== undefined && r[12] !== "" ? parseInt(r[12], 10) : null,
             profitRate: r[13] !== undefined && r[13] !== "" ? parseFloat(r[13]) : null,
+            coolAvailable: r[14] === "1",
         }));
 
         const row = allRows.find(r => r.id === id);
-        if (!row) return { stock: -1, price: null, name: "", shipType: "", hidden: false, deleted: false, nextShipment: "", badges: [], family: "", imageUrl: "", familyImages: [], cost: null, profitRate: null, familyRows: [] };
+        if (!row) return { stock: -1, price: null, name: "", shipType: "", hidden: false, deleted: false, nextShipment: "", badges: [], family: "", imageUrl: "", familyImages: [], cost: null, profitRate: null, coolAvailable: false, familyRows: [] };
 
         const familyRows = row.family
             ? allRows.filter(r => r.family === row.family && !r.hidden)
@@ -79,10 +80,11 @@ async function getInventoryData(id: string): Promise<{
             familyImages: row.familyImages,
             cost: row.cost,
             profitRate: row.profitRate,
+            coolAvailable: row.coolAvailable,
             familyRows,
         };
     } catch {
-        return { stock: -1, price: null, name: "", shipType: "", hidden: false, deleted: false, nextShipment: "", badges: [], family: "", imageUrl: "", familyImages: [], cost: null, profitRate: null, familyRows: [] };
+        return { stock: -1, price: null, name: "", shipType: "", hidden: false, deleted: false, nextShipment: "", badges: [], family: "", imageUrl: "", familyImages: [], cost: null, profitRate: null, coolAvailable: false, familyRows: [] };
     }
 }
 
@@ -183,7 +185,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 export default async function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
     const [productDirect, invData] = await Promise.all([getProduct(id), getInventoryData(id)]);
-    const { stock, price: invPrice, name: invName, shipType, hidden, deleted, nextShipment, badges, familyRows, imageUrl: invImageUrl, familyImages, cost: invCost, profitRate: invProfitRate } = invData;
+    const { stock, price: invPrice, name: invName, shipType, hidden, deleted, nextShipment, badges, familyRows, imageUrl: invImageUrl, familyImages, cost: invCost, profitRate: invProfitRate, coolAvailable: invCoolAvailable } = invData;
 
     const isSoldOut = stock !== -1 && stock === 0;
 
@@ -349,6 +351,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                                         family={invData.family || undefined}
                                         cost={invCost}
                                         profitRate={invProfitRate}
+                                        coolAvailable={invCoolAvailable}
                                     />
                                 )}
                             </div>

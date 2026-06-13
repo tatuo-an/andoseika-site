@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 const SPREADSHEET_ID = process.env.GOOGLE_SPREADSHEET_ID!;
 const SHEET_NAME = "商品在庫";
-// 列: A=商品ID, B=商品名, C=在庫数, D=販売価格, E=配送区分, F=非表示(1/""), G=未使用, H=次回出荷, I=バッジ(カンマ区切り), J=ファミリー, K=画像URL, L=ファミリーギャラリー画像(カンマ区切り), M=原価, N=利益率(%)
+// 列: A=商品ID, B=商品名, C=在庫数, D=販売価格, E=配送区分, F=非表示(1/""), G=未使用, H=次回出荷, I=バッジ(カンマ区切り), J=ファミリー, K=画像URL, L=ファミリーギャラリー画像(カンマ区切り), M=原価, N=利益率(%), O=クール便対応(1/"")
 
 function getSheets() {
     const authClient = new google.auth.GoogleAuth({
@@ -25,7 +25,7 @@ export async function GET() {
         const sheets = getSheets();
         const res = await sheets.spreadsheets.values.get({
             spreadsheetId: SPREADSHEET_ID,
-            range: `${SHEET_NAME}!A:N`,
+            range: `${SHEET_NAME}!A:O`,
         });
         const rows = res.data.values ?? [];
         const data = rows.slice(1).map((r) => ({
@@ -43,6 +43,7 @@ export async function GET() {
             familyImages: r[11] ? r[11].split(",").map((s: string) => s.trim()).filter(Boolean) : [],
             cost: r[12] !== undefined && r[12] !== "" ? parseInt(r[12], 10) : null,
             profitRate: r[13] !== undefined && r[13] !== "" ? parseFloat(r[13]) : null,
+            coolAvailable: r[14] === "1",
         }));
         return NextResponse.json({ inventory: data });
     } catch (err) {
@@ -58,7 +59,7 @@ export async function POST(req: NextRequest) {
     }
 
     const { items } = await req.json() as {
-        items: { id: string; name: string; stock: number; price: number | null; shipType: string; hidden: boolean; nextShipment: string; badges: string[]; family: string; imageUrl?: string; familyImages?: string[]; cost?: number | null; profitRate?: number | null }[];
+        items: { id: string; name: string; stock: number; price: number | null; shipType: string; hidden: boolean; nextShipment: string; badges: string[]; family: string; imageUrl?: string; familyImages?: string[]; cost?: number | null; profitRate?: number | null; coolAvailable?: boolean }[];
     };
 
     try {
@@ -66,7 +67,7 @@ export async function POST(req: NextRequest) {
 
         await sheets.spreadsheets.values.clear({
             spreadsheetId: SPREADSHEET_ID,
-            range: `${SHEET_NAME}!A2:N1000`,
+            range: `${SHEET_NAME}!A2:O1000`,
         });
 
         if (items.length > 0) {
@@ -90,6 +91,7 @@ export async function POST(req: NextRequest) {
                         (item.familyImages ?? []).join(","),
                         item.cost ?? "",
                         item.profitRate ?? "",
+                        item.coolAvailable ? "1" : "",
                     ]),
                 },
             });
