@@ -35,12 +35,16 @@ export async function GET() {
                 shipType: r[4] ?? "",
                 family: r[9] ?? "",
                 hidden: r[5] === "1",
+                cost: r[12] !== undefined && r[12] !== "" ? parseInt(r[12], 10) : null,
+                profitRate: r[13] !== undefined && r[13] !== "" ? parseFloat(r[13]) : null,
                 coolAvailable: r[14] === "1",
                 clickpostMax: r[16] !== undefined && r[16] !== "" ? parseInt(r[16], 10) : 0,
                 options: r[17] ?? "",
                 salePercent: r[18] !== undefined && r[18] !== "" ? parseInt(r[18], 10) : 0,
                 saleStart: r[19] ?? "",
                 saleEnd: r[20] ?? "",
+                shipMode: r[21] ?? "",
+                shipValue: r[22] ?? "",
             }))
             .filter(r => !r.hidden);
         return NextResponse.json({ inventory: data });

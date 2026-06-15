@@ -86,7 +86,23 @@ const DEFAULT_SHIPPING: ShippingRow[] = [
     { region: "それ以外", prefectures: "東京都,神奈川県,埼玉県,千葉県,茨城県,栃木県,群馬県,新潟県,富山県,石川県,福井県,山梨県,長野県,岐阜県,静岡県,愛知県,三重県,滋賀県,京都府,大阪府,兵庫県,奈良県,和歌山県,鳥取県,島根県,岡山県,広島県,山口県,徳島県,香川県,愛媛県,高知県,福岡県,佐賀県,長崎県,熊本県,大分県,宮崎県,鹿児島県", s60: 600, s80: 700, s100: 800, s120: 1000, s140: 1200, s160: 1400, s180: 1600, s200: 1800, compact: 690, clickpost: 185 },
 ];
 
-type InvItem = { id: string; name: string; price: number | null; family: string; coolAvailable?: boolean; shipType?: string; clickpostMax?: number };
+type InvItem = { id: string; name: string; price: number | null; family: string; coolAvailable?: boolean; shipType?: string; clickpostMax?: number; cost?: number | null; profitRate?: number | null };
+
+// カートのitemに保存されたフィールドが欠落していても、inventoryから復元する
+function enrichItem<T extends { id: string }>(item: T, inventory: InvItem[]): T {
+    const inv = inventory.find(v => v.id === item.id);
+    if (!inv) return item;
+    const it = item as T & { cost?: number | null; profitRate?: number | null; shipType?: string; coolAvailable?: boolean; clickpostMax?: number; family?: string };
+    return {
+        ...item,
+        cost: it.cost ?? inv.cost ?? null,
+        profitRate: it.profitRate ?? inv.profitRate ?? null,
+        shipType: it.shipType || inv.shipType || "",
+        coolAvailable: it.coolAvailable ?? inv.coolAvailable ?? false,
+        clickpostMax: it.clickpostMax ?? inv.clickpostMax ?? 0,
+        family: it.family || inv.family || "",
+    } as T;
+}
 type OptionEntry = { label: string; amount: number };
 function parseFamilyOptions(s: string): OptionEntry[] {
     if (!s?.trim()) return [];
@@ -131,7 +147,9 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
     const baseRow = findBaseRow(shippingRows);
     const isExtraRegion = regionRow && baseRow && regionRow !== baseRow;
 
-    const cartItems = Object.values(cartDetails ?? {});
+    const rawCartItems = Object.values(cartDetails ?? {});
+    // inventory から原価・利益率などを復元
+    const cartItems = rawCartItems.map(item => enrichItem(item, inventory));
     const totalWeightG = cartItems.reduce((sum, item) => sum + extractWeightG(item.name) * item.quantity, 0);
     const weightBasedShipType = totalWeightG > 0 ? weightToShipSize(totalWeightG) : null;
 

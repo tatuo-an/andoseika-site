@@ -16,7 +16,22 @@ type ShippingRow = {
     s140: number; s160: number; s180: number; s200: number;
     compact: number; clickpost: number;
 };
-type InvItem = { id: string; name: string; price: number | null; family: string; coolAvailable?: boolean; shipType?: string; clickpostMax?: number };
+type InvItem = { id: string; name: string; price: number | null; family: string; coolAvailable?: boolean; shipType?: string; clickpostMax?: number; cost?: number | null; profitRate?: number | null };
+
+function enrichItem<T extends { id: string }>(item: T, inventory: InvItem[]): T {
+    const inv = inventory.find(v => v.id === item.id);
+    if (!inv) return item;
+    const it = item as T & { cost?: number | null; profitRate?: number | null; shipType?: string; coolAvailable?: boolean; clickpostMax?: number; family?: string };
+    return {
+        ...item,
+        cost: it.cost ?? inv.cost ?? null,
+        profitRate: it.profitRate ?? inv.profitRate ?? null,
+        shipType: it.shipType || inv.shipType || "",
+        coolAvailable: it.coolAvailable ?? inv.coolAvailable ?? false,
+        clickpostMax: it.clickpostMax ?? inv.clickpostMax ?? 0,
+        family: it.family || inv.family || "",
+    } as T;
+}
 type SuggestCard = { id: string; href: string; name: string; image: string; displayPrice: number; salePercent: number; isSoldOut: boolean; family: string };
 
 // === 計算ユーティリティ ===
@@ -130,7 +145,8 @@ export default function CartPage() {
     const baseRow = findBaseRow(shippingRows);
     const isExtraRegion = regionRow && baseRow && regionRow !== baseRow;
 
-    const cartItems = Object.values(cartDetails ?? {});
+    const rawCartItems = Object.values(cartDetails ?? {});
+    const cartItems = rawCartItems.map(item => enrichItem(item, inventory));
     const totalWeightG = cartItems.reduce((sum, item) => sum + extractWeightG(item.name) * item.quantity, 0);
     const weightBasedShipType = totalWeightG > 0 ? weightToShipSize(totalWeightG) : null;
 
