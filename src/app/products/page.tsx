@@ -192,22 +192,21 @@ export default async function ProductsPage() {
                 <FavoriteButton productId={product.id} size="sm" />
               </div>
             </div>
-            <div className="p-6">
-              <div className="flex justify-end items-baseline gap-2 mb-2">
-                {onSale && (
-                  <span className="text-xs text-stone-400 line-through">¥{originalTaxed.toLocaleString()}</span>
-                )}
-                <span className={`font-bold text-lg ${onSale ? "text-red-500" : "text-stone-900"}`}>¥{displayTaxed.toLocaleString()}</span>
-              </div>
+            <div className="p-3 space-y-1.5">
               {inv.badges.length > 0 && (
-                <div className="flex flex-wrap gap-1 mb-1">
+                <div className="flex flex-wrap gap-1">
                   {inv.badges.map((badge) => (
-                    <span key={badge} className={`text-xs px-2 py-0.5 rounded-full border font-medium ${BADGE_COLORS[badge] ?? DEFAULT_BADGE_COLOR}`}>{badge}</span>
+                    <span key={badge} className={`text-[10px] px-1.5 py-0.5 rounded-full border font-medium ${BADGE_COLORS[badge] ?? DEFAULT_BADGE_COLOR}`}>{badge}</span>
                   ))}
                 </div>
               )}
-              <h2 className="font-bold text-stone-900 mb-2 line-clamp-2 group-hover:text-primary transition-colors">{displayName}</h2>
-              <p className="text-sm text-stone-500 line-clamp-2">{product.description}</p>
+              <h2 className="font-bold text-stone-900 text-sm line-clamp-2 group-hover:text-primary transition-colors">{displayName}</h2>
+              <div className="flex justify-end items-baseline gap-2">
+                {onSale && (
+                  <span className="text-xs text-stone-400 line-through">¥{originalTaxed.toLocaleString()}</span>
+                )}
+                <span className={`font-bold ${onSale ? "text-red-500" : "text-stone-900"}`}>¥{displayTaxed.toLocaleString()}</span>
+              </div>
             </div>
           </div>
         </Link>
@@ -215,7 +214,6 @@ export default async function ProductsPage() {
     } else {
       const { familyName, repProduct, repInv, repId, minPrice, allSoldOut } = card;
       const familyImgSrc = repInv.familyImages[0] || repInv.imageUrl || repProduct?.image?.url;
-      const familyDescription = repInv.description || repProduct?.description || "";
       const familyOnSale = isSaleActive(repInv.salePercent, repInv.saleStart, repInv.saleEnd);
       return (
         <Link href={`/products/${repId}`} key={`family-${familyName}`} className={`group ${allSoldOut ? "pointer-events-none" : ""}`}>
@@ -246,19 +244,18 @@ export default async function ProductsPage() {
                 <FavoriteButton productId={`family:${familyName}`} size="sm" />
               </div>
             </div>
-            <div className="p-6">
-              <div className="flex justify-end mb-2">
-                <span className="font-bold text-lg text-stone-900">¥{minPrice.toLocaleString()}〜</span>
-              </div>
+            <div className="p-3 space-y-1.5">
               {repInv.badges.length > 0 && (
-                <div className="flex flex-wrap gap-1 mb-1">
+                <div className="flex flex-wrap gap-1">
                   {repInv.badges.map((badge) => (
-                    <span key={badge} className={`text-xs px-2 py-0.5 rounded-full border font-medium ${BADGE_COLORS[badge] ?? DEFAULT_BADGE_COLOR}`}>{badge}</span>
+                    <span key={badge} className={`text-[10px] px-1.5 py-0.5 rounded-full border font-medium ${BADGE_COLORS[badge] ?? DEFAULT_BADGE_COLOR}`}>{badge}</span>
                   ))}
                 </div>
               )}
-              <h2 className="font-bold text-stone-900 mb-2 line-clamp-2 group-hover:text-primary transition-colors">{familyName}</h2>
-              <p className="text-sm text-stone-500 line-clamp-2">{familyDescription}</p>
+              <h2 className="font-bold text-stone-900 text-sm line-clamp-2 group-hover:text-primary transition-colors">{familyName}</h2>
+              <div className="flex justify-end">
+                <span className="font-bold text-stone-900">¥{minPrice.toLocaleString()}〜</span>
+              </div>
             </div>
           </div>
         </Link>
