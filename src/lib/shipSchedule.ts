@@ -68,3 +68,32 @@ export function computeShipSchedule(shipMode: string, shipValue: string, now: Da
 
     return null;
 }
+
+/**
+ * 最早のお届け開始日（Dateオブジェクト）を返す。発送日 + バッファ日数。
+ */
+export function earliestDeliveryDate(shipMode: string, shipValue: string, now: Date = new Date()): Date | null {
+    if (!shipMode || !shipValue) return null;
+    if (shipMode === "days") {
+        const [minStr] = shipValue.split("-");
+        const minN = parseInt(minStr, 10);
+        if (isNaN(minN)) return null;
+        const d = new Date(now);
+        d.setDate(now.getDate() + minN + DELIVERY_BUFFER_DAYS);
+        return d;
+    }
+    if (shipMode === "weekdays") {
+        const selected = shipValue.split(",").map(s => s.trim()).filter(Boolean);
+        const indices = selected.map(l => WEEKDAY_LABELS.indexOf(l)).filter(i => i >= 0);
+        if (indices.length === 0) return null;
+        for (let i = 1; i <= 14; i++) {
+            const d = new Date(now);
+            d.setDate(now.getDate() + i);
+            if (indices.includes(d.getDay())) {
+                d.setDate(d.getDate() + DELIVERY_BUFFER_DAYS);
+                return d;
+            }
+        }
+    }
+    return null;
+}

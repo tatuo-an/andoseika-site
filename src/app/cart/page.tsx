@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ChevronLeft, Plus, Minus, Trash2, Calendar, MapPin } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { earliestDeliveryDate } from "@/lib/shipSchedule";
 
 type AddressItem = { label: string; name: string; postalCode: string; prefecture: string; city: string; street: string; building: string; phone: string };
 
@@ -226,14 +227,27 @@ export default function CartPage() {
 
     const grandTotal = itemsBodyShown + shipFeeShown + profitShown + surchargeTaxed + coolFeeTaxed + optionsAdjustmentTaxed - saleDiscountTaxed;
 
-    // お届け希望日候補（3日後〜21日後）
+    // カート内全商品の中で最も遅い「お届け開始日」を計算
+    const cartEarliestDelivery = (() => {
+        let latest: Date | null = null;
+        for (const item of cartItems) {
+            const mode = (item as { shipMode?: string }).shipMode ?? "";
+            const val = (item as { shipValue?: string }).shipValue ?? "";
+            const d = earliestDeliveryDate(mode, val);
+            if (!d) continue;
+            if (!latest || d > latest) latest = d;
+        }
+        return latest;
+    })();
+
+    // お届け希望日候補（最早お届け日から21日間、または通常は3日後〜21日後）
     const dateOptions = (() => {
         const arr: { value: string; label: string }[] = [];
         const WD = ["日", "月", "火", "水", "木", "金", "土"];
-        const now = new Date();
-        for (let i = 3; i <= 21; i++) {
-            const d = new Date(now);
-            d.setDate(now.getDate() + i);
+        const start = cartEarliestDelivery ?? (() => { const d = new Date(); d.setDate(d.getDate() + 3); return d; })();
+        for (let i = 0; i < 21; i++) {
+            const d = new Date(start);
+            d.setDate(start.getDate() + i);
             const v = d.toISOString().slice(0, 10);
             const label = `${d.getMonth() + 1}/${d.getDate()}（${WD[d.getDay()]}）`;
             arr.push({ value: v, label });

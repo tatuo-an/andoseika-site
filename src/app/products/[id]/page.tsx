@@ -443,6 +443,8 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                                                 clickpostMax={invData.clickpostMax}
                                                 familyOptions={invData.options}
                                                 salePercent={onSale ? invData.salePercent : 0}
+                                                shipMode={invData.shipMode}
+                                                shipValue={invData.shipValue}
                                             />
                                         );
                                     })()
