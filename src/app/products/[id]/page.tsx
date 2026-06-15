@@ -3,7 +3,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, Check, Truck } from "lucide-react";
+import { ArrowLeft, Check, Truck, CalendarCheck } from "lucide-react";
 import { client } from "@/lib/microcms";
 import { Product } from "@/types/microcms";
 import { AddToCartButton } from "@/components/products/AddToCartButton";
@@ -14,10 +14,11 @@ import { Metadata } from "next";
 import { google } from "googleapis";
 import { BADGE_COLORS, DEFAULT_BADGE_COLOR } from "@/lib/badges";
 import { isSaleActive, calcSalePrice } from "@/lib/sale";
+import { computeShipSchedule } from "@/lib/shipSchedule";
 
 export const revalidate = 60;
 
-type SheetRow = { id: string; name: string; stock: number; price: number | null; shipType: string; hidden: boolean; deleted: boolean; nextShipment: string; badges: string[]; family: string; imageUrl: string; familyImages: string[]; cost: number | null; profitRate: number | null; coolAvailable: boolean; description: string; clickpostMax: number; options: string; salePercent: number; saleStart: string; saleEnd: string };
+type SheetRow = { id: string; name: string; stock: number; price: number | null; shipType: string; hidden: boolean; deleted: boolean; nextShipment: string; badges: string[]; family: string; imageUrl: string; familyImages: string[]; cost: number | null; profitRate: number | null; coolAvailable: boolean; description: string; clickpostMax: number; options: string; salePercent: number; saleStart: string; saleEnd: string; shipMode: string; shipValue: string };
 type VariationInfo = { id: string; label: string; price: number; priceTaxed: number; salePercent: number; saleStart: string; saleEnd: string; isSoldOut: boolean };
 
 function getSheets() {
@@ -32,14 +33,14 @@ function getSheets() {
 }
 
 async function getInventoryData(id: string): Promise<{
-    stock: number; price: number | null; name: string; shipType: string; hidden: boolean; deleted: boolean; nextShipment: string; badges: string[]; family: string; imageUrl: string; familyImages: string[]; cost: number | null; profitRate: number | null; coolAvailable: boolean; description: string; clickpostMax: number; options: string; salePercent: number; saleStart: string; saleEnd: string;
+    stock: number; price: number | null; name: string; shipType: string; hidden: boolean; deleted: boolean; nextShipment: string; badges: string[]; family: string; imageUrl: string; familyImages: string[]; cost: number | null; profitRate: number | null; coolAvailable: boolean; description: string; clickpostMax: number; options: string; salePercent: number; saleStart: string; saleEnd: string; shipMode: string; shipValue: string;
     familyRows: SheetRow[];
 }> {
     try {
         const sheets = getSheets();
         const res = await sheets.spreadsheets.values.get({
             spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-            range: "商品在庫!A:U",
+            range: "商品在庫!A:W",
         });
         const rows = res.data.values ?? [];
         const allRows: SheetRow[] = rows.slice(1).filter(r => r[0]).map(r => ({
@@ -64,10 +65,12 @@ async function getInventoryData(id: string): Promise<{
             salePercent: r[18] !== undefined && r[18] !== "" ? parseInt(r[18], 10) : 0,
             saleStart: r[19] ?? "",
             saleEnd: r[20] ?? "",
+            shipMode: r[21] ?? "",
+            shipValue: r[22] ?? "",
         }));
 
         const row = allRows.find(r => r.id === id);
-        if (!row) return { stock: -1, price: null, name: "", shipType: "", hidden: false, deleted: false, nextShipment: "", badges: [], family: "", imageUrl: "", familyImages: [], cost: null, profitRate: null, coolAvailable: false, description: "", clickpostMax: 0, options: "", salePercent: 0, saleStart: "", saleEnd: "", familyRows: [] };
+        if (!row) return { stock: -1, price: null, name: "", shipType: "", hidden: false, deleted: false, nextShipment: "", badges: [], family: "", imageUrl: "", familyImages: [], cost: null, profitRate: null, coolAvailable: false, description: "", clickpostMax: 0, options: "", salePercent: 0, saleStart: "", saleEnd: "", shipMode: "", shipValue: "", familyRows: [] };
 
         const familyRows = row.family
             ? allRows.filter(r => r.family === row.family && !r.hidden)
@@ -94,10 +97,12 @@ async function getInventoryData(id: string): Promise<{
             salePercent: row.salePercent,
             saleStart: row.saleStart,
             saleEnd: row.saleEnd,
+            shipMode: row.shipMode,
+            shipValue: row.shipValue,
             familyRows,
         };
     } catch {
-        return { stock: -1, price: null, name: "", shipType: "", hidden: false, deleted: false, nextShipment: "", badges: [], family: "", imageUrl: "", familyImages: [], cost: null, profitRate: null, coolAvailable: false, description: "", clickpostMax: 0, options: "", salePercent: 0, saleStart: "", saleEnd: "", familyRows: [] };
+        return { stock: -1, price: null, name: "", shipType: "", hidden: false, deleted: false, nextShipment: "", badges: [], family: "", imageUrl: "", familyImages: [], cost: null, profitRate: null, coolAvailable: false, description: "", clickpostMax: 0, options: "", salePercent: 0, saleStart: "", saleEnd: "", shipMode: "", shipValue: "", familyRows: [] };
     }
 }
 
@@ -382,6 +387,22 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                             </div>
 
                             <div className="space-y-6 border-t border-stone-100 pt-8">
+                                {(() => {
+                                    const sched = computeShipSchedule(invData.shipMode, invData.shipValue);
+                                    if (!sched) return null;
+                                    return (
+                                        <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 space-y-1">
+                                            <div className="flex items-center gap-2 text-sm text-stone-700">
+                                                <Truck className="h-4 w-4 text-primary" />
+                                                <span>{sched.shippingLabel}</span>
+                                            </div>
+                                            <div className="flex items-center gap-2 text-sm font-medium text-primary">
+                                                <CalendarCheck className="h-4 w-4" />
+                                                <span>{sched.deliveryLabel}</span>
+                                            </div>
+                                        </div>
+                                    );
+                                })()}
                                 <div className="flex items-center gap-4 text-sm text-stone-600">
                                     <div className="flex items-center gap-2">
                                         <Check className="h-4 w-4 text-primary" />
