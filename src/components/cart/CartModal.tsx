@@ -351,76 +351,6 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
 
                 {cartCount! > 0 && (
                     <div className="p-6 border-t border-stone-100 bg-stone-50 space-y-3">
-                        {/* 配送先選択 */}
-                        {addressLoaded && addresses.length > 0 && (
-                            <div className="bg-white border border-stone-200 rounded-lg p-3 space-y-2">
-                                <div className="flex items-center justify-between">
-                                    <p className="text-xs font-bold text-stone-500">お届け先</p>
-                                    {addresses.length > 1 && !addressPickerOpen && (
-                                        <button
-                                            onClick={() => setAddressPickerOpen(true)}
-                                            className="text-xs text-primary hover:underline font-medium"
-                                        >
-                                            変更
-                                        </button>
-                                    )}
-                                </div>
-                                {!addressPickerOpen ? (
-                                    <div className="text-sm">
-                                        <span className="bg-primary/10 text-primary text-xs font-bold px-2 py-0.5 rounded-full mr-2">
-                                            {selectedAddress?.label || "—"}
-                                        </span>
-                                        <span className="text-stone-700">{selectedAddress?.name}</span>
-                                        <p className="text-xs text-stone-500 mt-1">
-                                            〒{selectedAddress?.postalCode} {selectedAddress?.prefecture}{selectedAddress?.city}{selectedAddress?.street}
-                                            {selectedAddress?.building && ` ${selectedAddress.building}`}
-                                        </p>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-1.5">
-                                        {addresses.map((addr, i) => (
-                                            <div
-                                                key={addr.label}
-                                                onClick={() => { setSelectedAddressIdx(i); setAddressPickerOpen(false); }}
-                                                className={`flex items-start gap-2 p-2 rounded-lg cursor-pointer border transition-colors ${
-                                                    i === selectedAddressIdx ? "border-primary bg-primary/5" : "border-stone-200 hover:bg-stone-50"
-                                                }`}
-                                            >
-                                                <input
-                                                    type="radio"
-                                                    name="address"
-                                                    checked={i === selectedAddressIdx}
-                                                    readOnly
-                                                    className="mt-1 accent-primary pointer-events-none"
-                                                />
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="flex items-center gap-1.5 mb-0.5">
-                                                        <span className="bg-primary/10 text-primary text-[10px] font-bold px-1.5 py-0.5 rounded-full">{addr.label}</span>
-                                                        <span className="text-sm font-medium text-stone-800 truncate">{addr.name}</span>
-                                                    </div>
-                                                    <p className="text-xs text-stone-500 truncate">
-                                                        {addr.prefecture}{addr.city}{addr.street}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        ))}
-                                        <Link
-                                            href="/mypage/address"
-                                            className="flex items-center justify-center gap-1 border border-dashed border-stone-300 rounded-lg py-2 text-xs text-stone-500 hover:border-primary/50 hover:text-primary transition-colors"
-                                        >
-                                            + 配送先を追加
-                                        </Link>
-                                    </div>
-                                )}
-                            </div>
-                        )}
-                        {addressLoaded && addresses.length === 0 && (
-                            <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 text-sm">
-                                <p className="text-orange-700 mb-1">配送先が登録されていません</p>
-                                <Link href="/mypage/address" className="text-xs text-orange-600 underline font-medium">配送先を登録する →</Link>
-                            </div>
-                        )}
-
                         {/* 内訳表示 */}
                         {addressLoaded && (() => {
                             // 単品購入時価格の合計（税込・セール反映）
@@ -562,20 +492,13 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                             <span>¥{grandTotal.toLocaleString()}<span className="text-xs font-normal text-stone-500 ml-1">（税込）</span></span>
                         </div>
 
-                        <button
-                            onClick={handleCheckout}
-                            disabled={!selectedAddress}
-                            className="w-full py-4 bg-primary text-white font-bold rounded-full hover:bg-primary/90 transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                        <Link
+                            href="/cart"
+                            onClick={onClose}
+                            className="block w-full py-4 bg-primary text-white font-bold rounded-full hover:bg-primary/90 transition-colors shadow-lg text-center"
                         >
-                            {selectedAddress ? "お支払いへ進む" : "配送先を登録してください"}
-                        </button>
-                        <p className="text-xs text-center text-stone-500">
-                            Stripeのセキュアな決済画面へ移動します。ご注文前に
-                            <Link href="/tokusho" className="font-medium text-primary hover:underline">
-                                特定商取引法に基づく表示
-                            </Link>
-                            をご確認ください。
-                        </p>
+                            カートを見る
+                        </Link>
                     </div>
                 )}
             </div>

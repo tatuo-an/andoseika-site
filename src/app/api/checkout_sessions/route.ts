@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
         }
 
         const body = await req.json();
-        const { cartDetails, quote, shippingAddress } = body as {
+        const { cartDetails, quote, shippingAddress, desiredDeliveryDate, desiredDeliveryTime } = body as {
             cartDetails?: Record<string, CartItem & { cost?: number | null }>;
             quote?: {
                 matchedVariantId: string | null;
@@ -49,6 +49,8 @@ export async function POST(req: NextRequest) {
                 label: string; name: string; postalCode: string; prefecture: string;
                 city: string; street: string; building: string; phone: string;
             };
+            desiredDeliveryDate?: string;
+            desiredDeliveryTime?: string;
         };
 
         if (!cartDetails) {
@@ -177,6 +179,8 @@ export async function POST(req: NextRequest) {
                         ? `${shippingAddress.prefecture}${shippingAddress.city}${shippingAddress.street}${shippingAddress.building ? " " + shippingAddress.building : ""}`
                         : "",
                     shippingPhone: shippingAddress?.phone ?? "",
+                    desiredDeliveryDate: desiredDeliveryDate ?? "",
+                    desiredDeliveryTime: desiredDeliveryTime ?? "",
                 },
             },
         };
