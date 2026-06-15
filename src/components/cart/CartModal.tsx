@@ -370,6 +370,15 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
 
                 {cartCount! > 0 && (
                     <div className="p-6 border-t border-stone-100 bg-stone-50 space-y-3">
+                        {/* DEBUG: 送料計算のデバッグ情報 */}
+                        <div className="bg-yellow-100 border border-yellow-300 rounded p-2 text-[10px] leading-tight">
+                            <p>shipRows: {shippingRows.length}件 / inventory: {inventory.length}件</p>
+                            <p>baseRow: {baseRow ? `${baseRow.region} (compact=${baseRow.compact})` : "null"}</p>
+                            <p>effectiveShipType: {String(effectiveShipType)} / baseShipFee: {baseShipFee}</p>
+                            <p>matchedVariant: {matchedVariant ? `${matchedVariant.name} (price=${matchedVariant.price})` : "null"}</p>
+                            <p>matchedInv.shipType: {matchedInv?.shipType ?? "null"}</p>
+                            <p>totalWeightG: {totalWeightG} / weightBasedShipType: {String(weightBasedShipType)}</p>
+                        </div>
                         {/* 内訳表示 */}
                         {addressLoaded && (() => {
                             // 単品購入時価格の合計（税込・セール反映）
