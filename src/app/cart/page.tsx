@@ -16,12 +16,12 @@ type ShippingRow = {
     s140: number; s160: number; s180: number; s200: number;
     compact: number; clickpost: number;
 };
-type InvItem = { id: string; name: string; price: number | null; family: string; coolAvailable?: boolean; shipType?: string; clickpostMax?: number; cost?: number | null; profitRate?: number | null };
+type InvItem = { id: string; name: string; price: number | null; family: string; coolAvailable?: boolean; shipType?: string; clickpostMax?: number; cost?: number | null; profitRate?: number | null; compactMax?: number };
 
 function enrichItem<T extends { id: string }>(item: T, inventory: InvItem[]): T {
     const inv = inventory.find(v => v.id === item.id);
     if (!inv) return item;
-    const it = item as T & { cost?: number | null; profitRate?: number | null; shipType?: string; coolAvailable?: boolean; clickpostMax?: number; family?: string };
+    const it = item as T & { cost?: number | null; profitRate?: number | null; shipType?: string; coolAvailable?: boolean; clickpostMax?: number; compactMax?: number; family?: string };
     return {
         ...item,
         cost: it.cost ?? inv.cost ?? null,
@@ -29,6 +29,7 @@ function enrichItem<T extends { id: string }>(item: T, inventory: InvItem[]): T 
         shipType: it.shipType || inv.shipType || "",
         coolAvailable: it.coolAvailable ?? inv.coolAvailable ?? false,
         clickpostMax: it.clickpostMax ?? inv.clickpostMax ?? 0,
+        compactMax: it.compactMax ?? inv.compactMax ?? 0,
         family: it.family || inv.family || "",
     } as T;
 }
@@ -178,11 +179,21 @@ export default function CartPage() {
     const singleItemShipType = cartItems.length === 1
         ? ((cartItems[0] as { shipType?: string }).shipType || matchedInv?.shipType || "")
         : "";
+    const isCompactOverflow = (() => {
+        if (cartItems.length === 0) return false;
+        if (!cartItems.every(i => (i as { shipType?: string }).shipType === "compact")) return false;
+        const compactMaxes = cartItems.map(i => (i as { compactMax?: number }).compactMax ?? 0);
+        if (compactMaxes.some(m => m <= 0)) return false;
+        const minMax = Math.min(...compactMaxes);
+        return totalQuantity > minMax;
+    })();
     const effectiveShipType = isClickpost
         ? "clickpost"
-        : singleItemShipType
-            ? singleItemShipType
-            : weightBasedShipType;
+        : isCompactOverflow
+            ? weightBasedShipType
+            : singleItemShipType
+                ? singleItemShipType
+                : weightBasedShipType;
 
     const itemsTotalCost = cartItems.reduce((sum, item) => {
         const cost = (item as { cost?: number | null }).cost;

@@ -86,13 +86,13 @@ const DEFAULT_SHIPPING: ShippingRow[] = [
     { region: "それ以外", prefectures: "東京都,神奈川県,埼玉県,千葉県,茨城県,栃木県,群馬県,新潟県,富山県,石川県,福井県,山梨県,長野県,岐阜県,静岡県,愛知県,三重県,滋賀県,京都府,大阪府,兵庫県,奈良県,和歌山県,鳥取県,島根県,岡山県,広島県,山口県,徳島県,香川県,愛媛県,高知県,福岡県,佐賀県,長崎県,熊本県,大分県,宮崎県,鹿児島県", s60: 600, s80: 700, s100: 800, s120: 1000, s140: 1200, s160: 1400, s180: 1600, s200: 1800, compact: 690, clickpost: 185 },
 ];
 
-type InvItem = { id: string; name: string; price: number | null; family: string; coolAvailable?: boolean; shipType?: string; clickpostMax?: number; cost?: number | null; profitRate?: number | null };
+type InvItem = { id: string; name: string; price: number | null; family: string; coolAvailable?: boolean; shipType?: string; clickpostMax?: number; cost?: number | null; profitRate?: number | null; compactMax?: number };
 
 // カートのitemに保存されたフィールドが欠落していても、inventoryから復元する
 function enrichItem<T extends { id: string }>(item: T, inventory: InvItem[]): T {
     const inv = inventory.find(v => v.id === item.id);
     if (!inv) return item;
-    const it = item as T & { cost?: number | null; profitRate?: number | null; shipType?: string; coolAvailable?: boolean; clickpostMax?: number; family?: string };
+    const it = item as T & { cost?: number | null; profitRate?: number | null; shipType?: string; coolAvailable?: boolean; clickpostMax?: number; compactMax?: number; family?: string };
     return {
         ...item,
         cost: it.cost ?? inv.cost ?? null,
@@ -100,6 +100,7 @@ function enrichItem<T extends { id: string }>(item: T, inventory: InvItem[]): T 
         shipType: it.shipType || inv.shipType || "",
         coolAvailable: it.coolAvailable ?? inv.coolAvailable ?? false,
         clickpostMax: it.clickpostMax ?? inv.clickpostMax ?? 0,
+        compactMax: it.compactMax ?? inv.compactMax ?? 0,
         family: it.family || inv.family || "",
     } as T;
 }
@@ -200,11 +201,22 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
     const singleItemShipType = cartItems.length === 1
         ? ((cartItems[0] as { shipType?: string }).shipType || matchedInv?.shipType || "")
         : "";
+    // コンパクト超過判定: 全アイテムが compact かつ compactMax を超えたら宅配便サイズに切り替え
+    const isCompactOverflow = (() => {
+        if (cartItems.length === 0) return false;
+        if (!cartItems.every(i => (i as { shipType?: string }).shipType === "compact")) return false;
+        const compactMaxes = cartItems.map(i => (i as { compactMax?: number }).compactMax ?? 0);
+        if (compactMaxes.some(m => m <= 0)) return false;
+        const minMax = Math.min(...compactMaxes);
+        return totalQuantity > minMax;
+    })();
     const effectiveShipType = isClickpost
         ? "clickpost"
-        : singleItemShipType
-            ? singleItemShipType
-            : weightBasedShipType;
+        : isCompactOverflow
+            ? weightBasedShipType
+            : singleItemShipType
+                ? singleItemShipType
+                : weightBasedShipType;
 
     const baseShipFee = effectiveShipType && baseRow ? getRate(baseRow, effectiveShipType) : 0;
     // サービス料は 販売価格 = (原価+送料) / (1 - 利益率/100) から逆算した利益分

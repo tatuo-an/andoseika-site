@@ -47,6 +47,7 @@ export type InventoryItem = {
     saleEnd: string;            // セール終了日 YYYY-MM-DD
     shipMode: string;           // 発送モード: "" | "days" | "weekdays"
     shipValue: string;          // days: "3-5", weekdays: "月,木"
+    compactMax: number;         // コンパクト最大同梱数(0=未設定/制限なし、N=同梱可能数)
 };
 
 const PRESET_BADGES = ["新物", "訳あり", "秀品", "贈答用", "栽培期間中農薬不使用", "慣行栽培"];
@@ -124,6 +125,7 @@ export function AdminPanel({
             saleEnd: inv.saleEnd ?? "",
             shipMode: inv.shipMode ?? "",
             shipValue: inv.shipValue ?? "",
+            compactMax: inv.compactMax ?? 0,
         }))
     );
 
@@ -256,7 +258,7 @@ export function AdminPanel({
             const familyImages = familyMember?.familyImages ?? [];
             const coolAvailable = familyMember?.coolAvailable ?? false;
             const description = familyMember?.description ?? "";
-            next.splice(lastIdx + 1, 0, { id: newId, name: "バリエーション名", stock: -1, price: null, shipType: "", hidden: false, deleted: false, nextShipment: "", badges: [], family, imageUrl: "", familyImages: [...familyImages], cost: null, profitRate: null, coolAvailable, description, clickpostMax: 0, options: familyMember?.options ?? "", salePercent: familyMember?.salePercent ?? 0, saleStart: familyMember?.saleStart ?? "", saleEnd: familyMember?.saleEnd ?? "", shipMode: familyMember?.shipMode ?? "", shipValue: familyMember?.shipValue ?? "" });
+            next.splice(lastIdx + 1, 0, { id: newId, name: "バリエーション名", stock: -1, price: null, shipType: "", hidden: false, deleted: false, nextShipment: "", badges: [], family, imageUrl: "", familyImages: [...familyImages], cost: null, profitRate: null, coolAvailable, description, clickpostMax: 0, options: familyMember?.options ?? "", salePercent: familyMember?.salePercent ?? 0, saleStart: familyMember?.saleStart ?? "", saleEnd: familyMember?.saleEnd ?? "", shipMode: familyMember?.shipMode ?? "", shipValue: familyMember?.shipValue ?? "", compactMax: 0 });
             return next;
         });
         setSavedInventory(false);
@@ -403,6 +405,7 @@ export function AdminPanel({
             saleEnd: "",
             shipMode: "",
             shipValue: "",
+            compactMax: 0,
         }]);
         setSavedInventory(false);
     };
@@ -433,6 +436,7 @@ export function AdminPanel({
             saleEnd: "",
             shipMode: "",
             shipValue: "",
+            compactMax: 0,
         }]);
         setSavedInventory(false);
     };
@@ -861,6 +865,15 @@ function SortableRow({
                     <input
                         type="number" min={0} value={item.clickpostMax}
                         onChange={(e) => onUpdate(item.id, "clickpostMax", parseInt(e.target.value, 10) || 0)}
+                        className="w-12 text-center border border-stone-200 rounded-lg px-1 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    />
+                </div>
+                {/* コンパクト最大同梱数 */}
+                <div className="flex items-center gap-0.5" title="コンパクトに何個まで同梱可能か（0=未設定/制限なし）">
+                    <span className="text-xs text-stone-400 whitespace-nowrap">CO</span>
+                    <input
+                        type="number" min={0} value={item.compactMax}
+                        onChange={(e) => onUpdate(item.id, "compactMax", parseInt(e.target.value, 10) || 0)}
                         className="w-12 text-center border border-stone-200 rounded-lg px-1 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
                     />
                 </div>
