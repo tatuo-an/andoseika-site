@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Check, Loader2, Plus, Trash2, GripVertical, Eye, EyeOff, Copy, ChevronDown, ChevronRight, Camera, ChevronUp } from "lucide-react";
 import { Product } from "@/types/microcms";
 import {
@@ -45,6 +45,8 @@ export type InventoryItem = {
     salePercent: number;        // セール割引率(%) ファミリー単位
     saleStart: string;          // セール開始日 YYYY-MM-DD
     saleEnd: string;            // セール終了日 YYYY-MM-DD
+    shipMode: string;           // 発送モード: "" | "days" | "weekdays"
+    shipValue: string;          // days: "3-5", weekdays: "月,木"
 };
 
 const PRESET_BADGES = ["新物", "訳あり", "秀品", "贈答用", "栽培期間中農薬不使用", "慣行栽培"];
@@ -120,6 +122,8 @@ export function AdminPanel({
             salePercent: inv.salePercent ?? 0,
             saleStart: inv.saleStart ?? "",
             saleEnd: inv.saleEnd ?? "",
+            shipMode: inv.shipMode ?? "",
+            shipValue: inv.shipValue ?? "",
         }))
     );
 
@@ -189,6 +193,14 @@ export function AdminPanel({
         setSavedInventory(false);
     };
 
+    // ファミリーの発送日設定を一括更新
+    const updateFamilyShip = (family: string, shipMode: string, shipValue: string) => {
+        setItems((prev) => prev.map((item) =>
+            item.family?.trim() === family ? { ...item, shipMode, shipValue } : item
+        ));
+        setSavedInventory(false);
+    };
+
     // ファミリーのセール設定を一括更新
     const updateFamilySale = (family: string, salePercent: number, saleStart: string, saleEnd: string) => {
         setItems((prev) => prev.map((item) =>
@@ -244,7 +256,7 @@ export function AdminPanel({
             const familyImages = familyMember?.familyImages ?? [];
             const coolAvailable = familyMember?.coolAvailable ?? false;
             const description = familyMember?.description ?? "";
-            next.splice(lastIdx + 1, 0, { id: newId, name: "バリエーション名", stock: -1, price: null, shipType: "", hidden: false, deleted: false, nextShipment: "", badges: [], family, imageUrl: "", familyImages: [...familyImages], cost: null, profitRate: null, coolAvailable, description, clickpostMax: 0, options: familyMember?.options ?? "", salePercent: familyMember?.salePercent ?? 0, saleStart: familyMember?.saleStart ?? "", saleEnd: familyMember?.saleEnd ?? "" });
+            next.splice(lastIdx + 1, 0, { id: newId, name: "バリエーション名", stock: -1, price: null, shipType: "", hidden: false, deleted: false, nextShipment: "", badges: [], family, imageUrl: "", familyImages: [...familyImages], cost: null, profitRate: null, coolAvailable, description, clickpostMax: 0, options: familyMember?.options ?? "", salePercent: familyMember?.salePercent ?? 0, saleStart: familyMember?.saleStart ?? "", saleEnd: familyMember?.saleEnd ?? "", shipMode: familyMember?.shipMode ?? "", shipValue: familyMember?.shipValue ?? "" });
             return next;
         });
         setSavedInventory(false);
@@ -389,6 +401,8 @@ export function AdminPanel({
             salePercent: 0,
             saleStart: "",
             saleEnd: "",
+            shipMode: "",
+            shipValue: "",
         }]);
         setSavedInventory(false);
     };
@@ -417,6 +431,8 @@ export function AdminPanel({
             salePercent: 0,
             saleStart: "",
             saleEnd: "",
+            shipMode: "",
+            shipValue: "",
         }]);
         setSavedInventory(false);
     };
@@ -580,6 +596,11 @@ export function AdminPanel({
                                                             saleStart={familyItems[0]?.saleStart ?? ""}
                                                             saleEnd={familyItems[0]?.saleEnd ?? ""}
                                                             onUpdate={(p, s, e) => updateFamilySale(fam, p, s, e)}
+                                                        />
+                                                        <FamilyShipSchedule
+                                                            shipMode={familyItems[0]?.shipMode ?? ""}
+                                                            shipValue={familyItems[0]?.shipValue ?? ""}
+                                                            onUpdate={(mode, val) => updateFamilyShip(fam, mode, val)}
                                                         />
                                                         <div className="divide-y divide-stone-100">
                                                             {familyItems.map((fi) => (
@@ -977,6 +998,103 @@ function FamilyOptions({ options, onUpdate }: { options: string; onUpdate: (s: s
                     ))}
                 </div>
             )}
+        </div>
+    );
+}
+
+// ── ファミリーの発送日設定 ────────────────────────────────────
+const WEEKDAY_LABELS = ["日", "月", "火", "水", "木", "金", "土"];
+
+function FamilyShipSchedule({ shipMode, shipValue, onUpdate }: {
+    shipMode: string;
+    shipValue: string;
+    onUpdate: (mode: string, value: string) => void;
+}) {
+    // daysモード時の min/max
+    const [minLocal, setMinLocal] = useState("");
+    const [maxLocal, setMaxLocal] = useState("");
+    useEffect(() => {
+        if (shipMode === "days") {
+            const [mn, mx] = shipValue.split("-");
+            setMinLocal(mn ?? "");
+            setMaxLocal(mx ?? "");
+        }
+    }, [shipMode, shipValue]);
+
+    const commitDays = (mn: string, mx: string) => {
+        const minN = parseInt(mn, 10);
+        const maxN = parseInt(mx, 10);
+        const validMin = isNaN(minN) ? "" : String(minN);
+        const validMax = isNaN(maxN) ? "" : String(maxN);
+        onUpdate("days", `${validMin}-${validMax}`);
+    };
+
+    const selectedWeekdays = shipMode === "weekdays"
+        ? shipValue.split(",").map(s => s.trim()).filter(Boolean)
+        : [];
+    const toggleWeekday = (wd: string) => {
+        const next = selectedWeekdays.includes(wd)
+            ? selectedWeekdays.filter(x => x !== wd)
+            : [...selectedWeekdays, wd];
+        // 曜日順にソート
+        next.sort((a, b) => WEEKDAY_LABELS.indexOf(a) - WEEKDAY_LABELS.indexOf(b));
+        onUpdate("weekdays", next.join(","));
+    };
+
+    return (
+        <div className="px-4 py-2 border-b border-stone-100 bg-stone-50/40">
+            <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                <span className="text-xs text-stone-400 whitespace-nowrap">発送日</span>
+                <select
+                    value={shipMode}
+                    onChange={(e) => onUpdate(e.target.value, "")}
+                    className="border border-stone-200 rounded-lg px-1.5 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-primary/30"
+                >
+                    <option value="">未設定</option>
+                    <option value="days">日数指定</option>
+                    <option value="weekdays">曜日指定</option>
+                </select>
+                {shipMode === "days" && (
+                    <div className="flex items-center gap-1">
+                        <span className="text-xs text-stone-400">ご注文後</span>
+                        <input
+                            type="text" inputMode="numeric" value={minLocal}
+                            onChange={(e) => setMinLocal(e.target.value)}
+                            onBlur={() => commitDays(minLocal, maxLocal)}
+                            placeholder="3"
+                            className="w-10 text-center border border-stone-200 rounded-lg px-1 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-primary/30"
+                        />
+                        <span className="text-xs text-stone-400">〜</span>
+                        <input
+                            type="text" inputMode="numeric" value={maxLocal}
+                            onChange={(e) => setMaxLocal(e.target.value)}
+                            onBlur={() => commitDays(minLocal, maxLocal)}
+                            placeholder="5"
+                            className="w-10 text-center border border-stone-200 rounded-lg px-1 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-primary/30"
+                        />
+                        <span className="text-xs text-stone-400">日以内に発送</span>
+                    </div>
+                )}
+                {shipMode === "weekdays" && (
+                    <div className="flex items-center gap-1 flex-wrap">
+                        <span className="text-xs text-stone-400">毎週</span>
+                        {WEEKDAY_LABELS.map(wd => (
+                            <button
+                                key={wd}
+                                onClick={() => toggleWeekday(wd)}
+                                className={`w-7 h-7 rounded-full text-xs font-bold transition-colors border ${
+                                    selectedWeekdays.includes(wd)
+                                        ? "bg-primary text-white border-primary"
+                                        : "bg-white text-stone-500 border-stone-200 hover:bg-stone-50"
+                                }`}
+                            >
+                                {wd}
+                            </button>
+                        ))}
+                        <span className="text-xs text-stone-400">曜日に発送</span>
+                    </div>
+                )}
+            </div>
         </div>
     );
 }
