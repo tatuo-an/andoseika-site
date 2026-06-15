@@ -571,6 +571,8 @@ export function AdminPanel({
                                                                     <option value="">カテゴリ未設定</option>
                                                                     <option value="root">根菜・芋類</option>
                                                                     <option value="leaf">葉物野菜</option>
+                                                                    <option value="allium">ネギ類</option>
+                                                                    <option value="fruit">果物</option>
                                                                     <option value="honey">蜂蜜</option>
                                                                     <option value="processed">加工品・その他</option>
                                                                 </select>

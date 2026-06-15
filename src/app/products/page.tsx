@@ -149,8 +149,10 @@ export default async function ProductsPage() {
   const getCategory = (c: CardItem) => c.type === "single" ? (c.inv.category || c.product.category) : c.category;
   const rootCards = cards.filter(c => getCategory(c) === "root");
   const leafCards = cards.filter(c => getCategory(c) === "leaf");
+  const alliumCards = cards.filter(c => getCategory(c) === "allium");
+  const fruitCards = cards.filter(c => getCategory(c) === "fruit");
   const honeyCards = cards.filter(c => getCategory(c) === "honey");
-  const otherCards = cards.filter(c => !["root", "leaf", "honey"].includes(getCategory(c)));
+  const otherCards = cards.filter(c => !["root", "leaf", "allium", "fruit", "honey"].includes(getCategory(c)));
 
   const renderCard = (card: CardItem) => {
     if (card.type === "single") {
@@ -290,6 +292,8 @@ export default async function ProductsPage() {
           </div>
           <ProductSection title="根菜・芋類" items={rootCards} />
           <ProductSection title="葉物野菜" items={leafCards} />
+          <ProductSection title="ネギ類" items={alliumCards} />
+          <ProductSection title="果物" items={fruitCards} />
           <ProductSection title="蜂蜜" items={honeyCards} />
           <ProductSection title="加工品・その他" items={otherCards} />
         </div>
