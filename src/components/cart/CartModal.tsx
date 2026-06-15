@@ -381,8 +381,8 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                             }, 0);
                             const bundledTotal = itemsBodyShown + shipFeeShown + profitShown; // 追加送料・クール抜きの本体合計（税込）
                             const bundleDiscount = singlePurchaseTotal - bundledTotal;
-                            // カートが「1種類のみ」かつ「バリエーションマッチがある」場合は同梱割引を表示しない
-                            const isSingleVariantPurchase = cartItems.length === 1 && !!matchedVariant;
+                            // カートが「1種類のみ」の場合は同梱割引を表示しない
+                            const isSingleVariantPurchase = cartItems.length === 1;
                             const showBundleDiscount = bundleDiscount !== 0 && !isSingleVariantPurchase;
 
                             return (
