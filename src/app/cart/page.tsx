@@ -175,10 +175,13 @@ export default function CartPage() {
     // 宅配便/コンパクト商品（clickpostMax = 0）が混じれば自動的に宅配便扱いになる
     const isClickpost = allClickpostable && totalQuantity <= minClickpostMax;
 
+    const singleItemShipType = cartItems.length === 1
+        ? ((cartItems[0] as { shipType?: string }).shipType || matchedInv?.shipType || "")
+        : "";
     const effectiveShipType = isClickpost
         ? "clickpost"
-        : (cartItems.length === 1 && matchedInv?.shipType)
-            ? matchedInv.shipType
+        : singleItemShipType
+            ? singleItemShipType
             : weightBasedShipType;
 
     const itemsTotalCost = cartItems.reduce((sum, item) => {

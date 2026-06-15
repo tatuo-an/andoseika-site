@@ -196,10 +196,14 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
     const minClickpostMax = allClickpostable ? Math.min(...clickpostMaxes) : 0;
     const isClickpost = allClickpostable && totalQuantity <= minClickpostMax;
 
+    // 単一商品: その商品の shipType を優先（管理画面で指定した配送区分を尊重）
+    const singleItemShipType = cartItems.length === 1
+        ? ((cartItems[0] as { shipType?: string }).shipType || matchedInv?.shipType || "")
+        : "";
     const effectiveShipType = isClickpost
         ? "clickpost"
-        : (cartItems.length === 1 && matchedInv?.shipType)
-            ? matchedInv.shipType
+        : singleItemShipType
+            ? singleItemShipType
             : weightBasedShipType;
 
     const baseShipFee = effectiveShipType && baseRow ? getRate(baseRow, effectiveShipType) : 0;
