@@ -192,20 +192,20 @@ export default async function ProductsPage() {
                 <FavoriteButton productId={product.id} size="sm" />
               </div>
             </div>
-            <div className="p-3 space-y-1.5">
+            <div className="p-4 space-y-2">
               {inv.badges.length > 0 && (
-                <div className="flex flex-wrap gap-1">
+                <div className="flex flex-wrap gap-1.5">
                   {inv.badges.map((badge) => (
-                    <span key={badge} className={`text-[10px] px-1.5 py-0.5 rounded-full border font-medium ${BADGE_COLORS[badge] ?? DEFAULT_BADGE_COLOR}`}>{badge}</span>
+                    <span key={badge} className={`text-sm px-2.5 py-1 rounded-full border font-medium ${BADGE_COLORS[badge] ?? DEFAULT_BADGE_COLOR}`}>{badge}</span>
                   ))}
                 </div>
               )}
-              <h2 className="font-bold text-stone-900 text-sm line-clamp-2 group-hover:text-primary transition-colors">{displayName}</h2>
+              <h2 className="font-bold text-stone-900 text-xl line-clamp-2 group-hover:text-primary transition-colors">{displayName}</h2>
               <div className="flex justify-end items-baseline gap-2">
                 {onSale && (
-                  <span className="text-xs text-stone-400 line-through">¥{originalTaxed.toLocaleString()}</span>
+                  <span className="text-base text-stone-400 line-through">¥{originalTaxed.toLocaleString()}</span>
                 )}
-                <span className={`font-bold ${onSale ? "text-red-500" : "text-stone-900"}`}>¥{displayTaxed.toLocaleString()}</span>
+                <span className={`font-bold text-2xl ${onSale ? "text-red-500" : "text-stone-900"}`}>¥{displayTaxed.toLocaleString()}</span>
               </div>
             </div>
           </div>
@@ -244,17 +244,17 @@ export default async function ProductsPage() {
                 <FavoriteButton productId={`family:${familyName}`} size="sm" />
               </div>
             </div>
-            <div className="p-3 space-y-1.5">
+            <div className="p-4 space-y-2">
               {repInv.badges.length > 0 && (
-                <div className="flex flex-wrap gap-1">
+                <div className="flex flex-wrap gap-1.5">
                   {repInv.badges.map((badge) => (
-                    <span key={badge} className={`text-[10px] px-1.5 py-0.5 rounded-full border font-medium ${BADGE_COLORS[badge] ?? DEFAULT_BADGE_COLOR}`}>{badge}</span>
+                    <span key={badge} className={`text-sm px-2.5 py-1 rounded-full border font-medium ${BADGE_COLORS[badge] ?? DEFAULT_BADGE_COLOR}`}>{badge}</span>
                   ))}
                 </div>
               )}
-              <h2 className="font-bold text-stone-900 text-sm line-clamp-2 group-hover:text-primary transition-colors">{familyName}</h2>
+              <h2 className="font-bold text-stone-900 text-xl line-clamp-2 group-hover:text-primary transition-colors">{familyName}</h2>
               <div className="flex justify-end">
-                <span className="font-bold text-stone-900">¥{minPrice.toLocaleString()}〜</span>
+                <span className="font-bold text-2xl text-stone-900">¥{minPrice.toLocaleString()}〜</span>
               </div>
             </div>
           </div>
