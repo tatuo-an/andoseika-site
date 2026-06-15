@@ -1,14 +1,24 @@
 "use client";
 
 import Link from "next/link";
-import { ShoppingCart, Menu, User } from "lucide-react";
+import { ShoppingCart, Menu, User, X } from "lucide-react";
 import { useShoppingCart } from "use-shopping-cart";
 import { useState } from "react";
 import { CartModal } from "@/components/cart/CartModal";
 
+const NAV_ITEMS = [
+    { href: "/products", label: "商品一覧" },
+    { href: "/experience", label: "体験・予約" },
+    { href: "/about", label: "私たちについて" },
+    { href: "/business", label: "業務用・卸" },
+    { href: "/news", label: "お知らせ" },
+    { href: "/supporter", label: "サポーター募集", highlight: true },
+];
+
 export function Header() {
     const { cartCount } = useShoppingCart();
     const [isCartOpen, setIsCartOpen] = useState(false);
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     return (
         <>
@@ -25,24 +35,15 @@ export function Header() {
                     </Link>
 
                     <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-stone-600">
-                        <Link href="/products" className="hover:text-primary transition-colors">
-                            商品一覧
-                        </Link>
-                        <Link href="/experience" className="hover:text-primary transition-colors">
-                            体験・予約
-                        </Link>
-                        <Link href="/about" className="hover:text-primary transition-colors">
-                            私たちについて
-                        </Link>
-                        <Link href="/business" className="hover:text-primary transition-colors">
-                            業務用・卸
-                        </Link>
-                        <Link href="/news" className="hover:text-primary transition-colors">
-                            お知らせ
-                        </Link>
-                        <Link href="/supporter" className="text-primary font-bold hover:text-primary/80 transition-colors">
-                            サポーター募集
-                        </Link>
+                        {NAV_ITEMS.map((item) => (
+                            <Link
+                                key={item.href}
+                                href={item.href}
+                                className={item.highlight ? "text-primary font-bold hover:text-primary/80 transition-colors" : "hover:text-primary transition-colors"}
+                            >
+                                {item.label}
+                            </Link>
+                        ))}
                     </nav>
 
                     <div className="flex items-center gap-4">
@@ -65,13 +66,48 @@ export function Header() {
                             )}
                             <span className="sr-only">カート</span>
                         </button>
-                        <button className="md:hidden p-2 hover:bg-stone-100 rounded-full transition-colors">
+                        <button
+                            onClick={() => setIsMenuOpen(true)}
+                            className="md:hidden p-2 hover:bg-stone-100 rounded-full transition-colors"
+                        >
                             <Menu className="h-5 w-5 text-stone-600" />
                             <span className="sr-only">メニュー</span>
                         </button>
                     </div>
                 </div>
             </header>
+
+            {/* モバイルメニュー */}
+            {isMenuOpen && (
+                <div className="fixed inset-0 z-[100] md:hidden">
+                    <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setIsMenuOpen(false)} />
+                    <div className="absolute right-0 top-0 h-full w-full max-w-xs bg-white shadow-2xl flex flex-col animate-slide-in-right">
+                        <div className="p-4 border-b border-stone-100 flex items-center justify-between bg-stone-50">
+                            <span className="font-bold text-stone-900">メニュー</span>
+                            <button onClick={() => setIsMenuOpen(false)} className="p-2 hover:bg-stone-200 rounded-full transition-colors">
+                                <X className="h-5 w-5 text-stone-500" />
+                            </button>
+                        </div>
+                        <nav className="flex-1 overflow-y-auto p-4 space-y-1">
+                            {NAV_ITEMS.map((item) => (
+                                <Link
+                                    key={item.href}
+                                    href={item.href}
+                                    onClick={() => setIsMenuOpen(false)}
+                                    className={`block px-4 py-3 rounded-lg text-base font-medium transition-colors ${
+                                        item.highlight
+                                            ? "text-primary bg-primary/5 hover:bg-primary/10 font-bold"
+                                            : "text-stone-700 hover:bg-stone-100"
+                                    }`}
+                                >
+                                    {item.label}
+                                </Link>
+                            ))}
+                        </nav>
+                    </div>
+                </div>
+            )}
+
             <CartModal isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
         </>
     );
