@@ -157,6 +157,7 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
     const cartFamilies = new Set(cartItems.map(i => (i as { family?: string }).family).filter(Boolean) as string[]);
     const matchedVariant: InvItem | null = (() => {
         if (cartFamilies.size !== 1 || inventory.length === 0) return null;
+        if (totalWeightG <= 0) return null; // 重量が取れない商品名（"1玉"等）はマッチング無効
         const family = [...cartFamilies][0];
         const variants = inventory.filter(v => v.family === family);
         return variants.find(v => extractWeightG(v.name) === totalWeightG && v.price !== null) ?? null;
