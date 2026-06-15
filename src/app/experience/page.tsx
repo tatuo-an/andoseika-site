@@ -32,7 +32,7 @@ export default function ExperiencePage() {
                 <div className="container mx-auto px-4 md:px-6 py-16 space-y-24">
                     {/* Beekeeping */}
                     <div className="grid md:grid-cols-2 gap-12 items-center">
-                        <div className="relative aspect-square md:aspect-[4/3] w-full rounded-2xl overflow-hidden bg-stone-100 shadow-lg">
+                        <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-stone-100 shadow-lg">
                             <Image
                                 src="/images/experience/beekeeping.jpg"
                                 alt="養蜂体験"
@@ -108,7 +108,7 @@ export default function ExperiencePage() {
                                 予約状況を確認する
                             </button>
                         </div>
-                        <div className="order-1 md:order-2 relative aspect-square md:aspect-[4/3] w-full rounded-2xl overflow-hidden bg-stone-100 shadow-lg">
+                        <div className="order-1 md:order-2 relative aspect-square w-full rounded-2xl overflow-hidden bg-stone-100 shadow-lg">
                             <Image
                                 src="/images/experience/harvesting_01.jpg"
                                 alt="芋掘り体験"
