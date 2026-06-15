@@ -166,9 +166,7 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
     const clickpostMaxes = cartItems.map(i => (i as { clickpostMax?: number }).clickpostMax ?? 0);
     const allClickpostable = clickpostMaxes.length > 0 && clickpostMaxes.every(m => m > 0);
     const minClickpostMax = allClickpostable ? Math.min(...clickpostMaxes) : 0;
-    // 全商品の配送区分が clickpost のときのみ純クリックポスト送り（コンパクト・宅配便と混在する場合は宅配便扱い）
-    const allShipTypeClickpost = cartItems.length > 0 && cartItems.every(i => (i as { shipType?: string }).shipType === "clickpost");
-    const isClickpost = allClickpostable && totalQuantity <= minClickpostMax && allShipTypeClickpost;
+    const isClickpost = allClickpostable && totalQuantity <= minClickpostMax;
 
     const effectiveShipType = isClickpost
         ? "clickpost"

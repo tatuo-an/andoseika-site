@@ -148,9 +148,9 @@ export default function CartPage() {
     const clickpostMaxes = cartItems.map(i => (i as { clickpostMax?: number }).clickpostMax ?? 0);
     const allClickpostable = clickpostMaxes.length > 0 && clickpostMaxes.every(m => m > 0);
     const minClickpostMax = allClickpostable ? Math.min(...clickpostMaxes) : 0;
-    // 全商品の配送区分が clickpost のときのみ純クリックポスト送り（コンパクト・宅配便と混在する場合は宅配便扱い）
-    const allShipTypeClickpost = cartItems.length > 0 && cartItems.every(i => (i as { shipType?: string }).shipType === "clickpost");
-    const isClickpost = allClickpostable && totalQuantity <= minClickpostMax && allShipTypeClickpost;
+    // 全商品が clickpost 同梱可能（clickpostMax > 0）かつ 合計数量 ≤ 最小同梱数 → クリックポスト送り
+    // 宅配便/コンパクト商品（clickpostMax = 0）が混じれば自動的に宅配便扱いになる
+    const isClickpost = allClickpostable && totalQuantity <= minClickpostMax;
 
     const effectiveShipType = isClickpost
         ? "clickpost"
