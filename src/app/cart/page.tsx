@@ -336,6 +336,24 @@ export default function CartPage() {
                         買い物を続ける
                     </Link>
                     <h1 className="text-2xl font-bold text-stone-900 mb-6">カート</h1>
+                    {/* DEBUG: 一時的なデバッグ情報 */}
+                    <div className="bg-yellow-100 border border-yellow-300 rounded p-3 mb-4 text-xs">
+                        <p>inventory: {inventory.length}件</p>
+                        <p>minProfitRate: {String(minProfitRate)}</p>
+                        <p>profit(税抜): {profit} / profitNet: {profitNet} / profitShown: {profitShown}</p>
+                        {cartItems.map((item) => {
+                            const it = item as { id: string; name?: string; price?: number; cost?: number | null; profitRate?: number | null; shipType?: string };
+                            const inv = inventory.find(v => v.id === it.id);
+                            return (
+                                <div key={it.id} className="mt-2 pt-2 border-t border-yellow-200">
+                                    <p>id: {it.id}</p>
+                                    <p>name: {it.name}</p>
+                                    <p>item.price: {it.price} / cost: {String(it.cost)} / profitRate: {String(it.profitRate)} / shipType: {it.shipType}</p>
+                                    <p>inv: {inv ? `price=${inv.price} cost=${String((inv as { cost?: number | null }).cost)} profitRate=${String((inv as { profitRate?: number | null }).profitRate)}` : "NOT FOUND"}</p>
+                                </div>
+                            );
+                        })}
+                    </div>
 
                     {/* 商品一覧 */}
                     <div className="bg-white rounded-2xl shadow-sm p-6 mb-6 space-y-4">
