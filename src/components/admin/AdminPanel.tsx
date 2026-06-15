@@ -48,6 +48,7 @@ export type InventoryItem = {
     shipMode: string;           // 発送モード: "" | "days" | "weekdays"
     shipValue: string;          // days: "3-5", weekdays: "月,木"
     compactMax: number;         // コンパクト最大同梱数(0=未設定/制限なし、N=同梱可能数)
+    category: string;           // カテゴリ (root/leaf/honey/processed/other)
 };
 
 const PRESET_BADGES = ["新物", "訳あり", "秀品", "贈答用", "栽培期間中農薬不使用", "慣行栽培"];
@@ -126,6 +127,7 @@ export function AdminPanel({
             shipMode: inv.shipMode ?? "",
             shipValue: inv.shipValue ?? "",
             compactMax: inv.compactMax ?? 0,
+            category: inv.category ?? "",
         }))
     );
 
@@ -195,6 +197,14 @@ export function AdminPanel({
         setSavedInventory(false);
     };
 
+    // ファミリーのカテゴリを一括更新
+    const updateFamilyCategory = (family: string, category: string) => {
+        setItems((prev) => prev.map((item) =>
+            item.family?.trim() === family ? { ...item, category } : item
+        ));
+        setSavedInventory(false);
+    };
+
     // ファミリーの発送日設定を一括更新
     const updateFamilyShip = (family: string, shipMode: string, shipValue: string) => {
         setItems((prev) => prev.map((item) =>
@@ -258,7 +268,7 @@ export function AdminPanel({
             const familyImages = familyMember?.familyImages ?? [];
             const coolAvailable = familyMember?.coolAvailable ?? false;
             const description = familyMember?.description ?? "";
-            next.splice(lastIdx + 1, 0, { id: newId, name: "バリエーション名", stock: -1, price: null, shipType: "", hidden: false, deleted: false, nextShipment: "", badges: [], family, imageUrl: "", familyImages: [...familyImages], cost: null, profitRate: null, coolAvailable, description, clickpostMax: 0, options: familyMember?.options ?? "", salePercent: familyMember?.salePercent ?? 0, saleStart: familyMember?.saleStart ?? "", saleEnd: familyMember?.saleEnd ?? "", shipMode: familyMember?.shipMode ?? "", shipValue: familyMember?.shipValue ?? "", compactMax: 0 });
+            next.splice(lastIdx + 1, 0, { id: newId, name: "バリエーション名", stock: -1, price: null, shipType: "", hidden: false, deleted: false, nextShipment: "", badges: [], family, imageUrl: "", familyImages: [...familyImages], cost: null, profitRate: null, coolAvailable, description, clickpostMax: 0, options: familyMember?.options ?? "", salePercent: familyMember?.salePercent ?? 0, saleStart: familyMember?.saleStart ?? "", saleEnd: familyMember?.saleEnd ?? "", shipMode: familyMember?.shipMode ?? "", shipValue: familyMember?.shipValue ?? "", compactMax: 0, category: familyMember?.category ?? "" });
             return next;
         });
         setSavedInventory(false);
@@ -406,6 +416,7 @@ export function AdminPanel({
             shipMode: "",
             shipValue: "",
             compactMax: 0,
+            category: "",
         }]);
         setSavedInventory(false);
     };
@@ -437,6 +448,7 @@ export function AdminPanel({
             shipMode: "",
             shipValue: "",
             compactMax: 0,
+            category: "",
         }]);
         setSavedInventory(false);
     };
@@ -550,6 +562,18 @@ export function AdminPanel({
                                                                     value={fam}
                                                                     onCommit={(newName) => renameFamily(fam, newName)}
                                                                 />
+                                                                <select
+                                                                    value={familyItems[0]?.category ?? ""}
+                                                                    onChange={(e) => updateFamilyCategory(fam, e.target.value)}
+                                                                    title="カテゴリ（一覧画面のセクション分け）"
+                                                                    className="text-xs border border-stone-200 rounded-lg px-1.5 py-0.5 bg-white focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                                                >
+                                                                    <option value="">カテゴリ未設定</option>
+                                                                    <option value="root">根菜・芋類</option>
+                                                                    <option value="leaf">葉物野菜</option>
+                                                                    <option value="honey">蜂蜜</option>
+                                                                    <option value="processed">加工品・その他</option>
+                                                                </select>
                                                                 <span className="text-xs text-stone-400 whitespace-nowrap">{familyItems.length}バリエーション</span>
                                                                 <button
                                                                     onClick={() => toggleFamilyCool(fam)}

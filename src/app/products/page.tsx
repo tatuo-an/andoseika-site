@@ -21,7 +21,7 @@ export const revalidate = 60;
 type InventoryData = {
   stock: number; variantName: string; hidden: boolean;
   nextShipment: string; badges: string[]; family: string; price: number | null; imageUrl: string; cost: number | null; description: string; familyImages: string[];
-  salePercent: number; saleStart: string; saleEnd: string;
+  salePercent: number; saleStart: string; saleEnd: string; category: string;
 };
 
 /** 販売価格を税込みに変換: 本体(原価)8%, 送料+サービス料(残り)10% */
@@ -44,7 +44,7 @@ async function getInventoryMap(): Promise<InventoryResult> {
     const sheets = google.sheets({ version: "v4", auth: authClient });
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-      range: "商品在庫!A:U",
+      range: "商品在庫!A:Y",
     });
     const rows = res.data.values ?? [];
     const map: Record<string, InventoryData> = {};
@@ -67,6 +67,7 @@ async function getInventoryMap(): Promise<InventoryResult> {
           salePercent: r[18] !== undefined && r[18] !== "" ? parseInt(r[18], 10) : 0,
           saleStart: r[19] ?? "",
           saleEnd: r[20] ?? "",
+          category: r[24] ?? "",
         };
       }
     });
@@ -137,16 +138,15 @@ export default async function ProductsPage() {
         repId: rep.id,
         minPrice,
         allSoldOut,
-        category: repProduct?.category ?? "other",
+        category: inv.category || repProduct?.category || "other",
       });
     } else {
-      // 単品はMicroCMS必須（フォールバックなし）
       if (!product) continue;
       cards.push({ type: "single", product, inv });
     }
   }
 
-  const getCategory = (c: CardItem) => c.type === "single" ? c.product.category : c.category;
+  const getCategory = (c: CardItem) => c.type === "single" ? (c.inv.category || c.product.category) : c.category;
   const rootCards = cards.filter(c => getCategory(c) === "root");
   const leafCards = cards.filter(c => getCategory(c) === "leaf");
   const honeyCards = cards.filter(c => getCategory(c) === "honey");
