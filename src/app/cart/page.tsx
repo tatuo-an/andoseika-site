@@ -147,7 +147,11 @@ export default function CartPage() {
 
     const rawCartItems = Object.values(cartDetails ?? {});
     const cartItems = rawCartItems.map(item => enrichItem(item, inventory));
-    const totalWeightG = cartItems.reduce((sum, item) => sum + extractWeightG(item.name) * item.quantity, 0);
+    const totalWeightG = cartItems.reduce((sum, item) => {
+        const inv = inventory.find(v => v.id === item.id);
+        const weightName = inv?.name || item.name;
+        return sum + extractWeightG(weightName) * item.quantity;
+    }, 0);
     const weightBasedShipType = totalWeightG > 0 ? weightToShipSize(totalWeightG) : null;
 
     const cartFamilies = new Set(cartItems.map(i => (i as { family?: string }).family).filter(Boolean) as string[]);
@@ -156,7 +160,9 @@ export default function CartPage() {
         if (totalWeightG <= 0) return null;
         const family = [...cartFamilies][0];
         const variants = inventory.filter(v => v.family === family);
-        return variants.find(v => extractWeightG(v.name) === totalWeightG && v.price !== null) ?? null;
+        const match = variants.find(v => extractWeightG(v.name) === totalWeightG && v.price !== null);
+        if (variants.length === 1 && cartItems.length === 1 && cartItems[0].quantity === 1) return null;
+        return match ?? null;
     })();
     const matchedInv = matchedVariant ? inventory.find(v => v.id === matchedVariant.id) : null;
     const matchedIsCompact = matchedInv?.shipType === "compact";

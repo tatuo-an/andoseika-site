@@ -150,17 +150,26 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
     const rawCartItems = Object.values(cartDetails ?? {});
     // inventory から原価・利益率などを復元
     const cartItems = rawCartItems.map(item => enrichItem(item, inventory));
-    const totalWeightG = cartItems.reduce((sum, item) => sum + extractWeightG(item.name) * item.quantity, 0);
+    const totalWeightG = cartItems.reduce((sum, item) => {
+        // inventoryから正しいバリエーション名（重量含む）を取得
+        const inv = inventory.find(v => v.id === item.id);
+        const weightName = inv?.name || item.name;
+        return sum + extractWeightG(weightName) * item.quantity;
+    }, 0);
     const weightBasedShipType = totalWeightG > 0 ? weightToShipSize(totalWeightG) : null;
 
     // ファミリーマッチ判定: 全アイテムが同ファミリーで、合計重量が単一バリエーションと一致
     const cartFamilies = new Set(cartItems.map(i => (i as { family?: string }).family).filter(Boolean) as string[]);
     const matchedVariant: InvItem | null = (() => {
         if (cartFamilies.size !== 1 || inventory.length === 0) return null;
-        if (totalWeightG <= 0) return null; // 重量が取れない商品名（"1玉"等）はマッチング無効
+        if (totalWeightG <= 0) return null;
         const family = [...cartFamilies][0];
         const variants = inventory.filter(v => v.family === family);
-        return variants.find(v => extractWeightG(v.name) === totalWeightG && v.price !== null) ?? null;
+        const match = variants.find(v => extractWeightG(v.name) === totalWeightG && v.price !== null);
+        // バリエーションが1つだけのファミリーでは、合計重量がそのバリエーションと一致するときのみマッチ扱いだが、
+        // 「ファミリーに同じ重量の他バリエーションが無い場合」はマッチ不要なのでスキップ
+        if (variants.length === 1 && cartItems.length === 1 && cartItems[0].quantity === 1) return null;
+        return match ?? null;
     })();
 
     // 原価合計・最低利益率
@@ -370,15 +379,6 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
 
                 {cartCount! > 0 && (
                     <div className="p-6 border-t border-stone-100 bg-stone-50 space-y-3">
-                        {/* DEBUG: 送料計算のデバッグ情報 */}
-                        <div className="bg-yellow-100 border border-yellow-300 rounded p-2 text-[10px] leading-tight">
-                            <p>shipRows: {shippingRows.length}件 / inventory: {inventory.length}件</p>
-                            <p>baseRow: {baseRow ? `${baseRow.region} (compact=${baseRow.compact})` : "null"}</p>
-                            <p>effectiveShipType: {String(effectiveShipType)} / baseShipFee: {baseShipFee}</p>
-                            <p>matchedVariant: {matchedVariant ? `${matchedVariant.name} (price=${matchedVariant.price})` : "null"}</p>
-                            <p>matchedInv.shipType: {matchedInv?.shipType ?? "null"}</p>
-                            <p>totalWeightG: {totalWeightG} / weightBasedShipType: {String(weightBasedShipType)}</p>
-                        </div>
                         {/* 内訳表示 */}
                         {addressLoaded && (() => {
                             // 単品購入時価格の合計（税込・セール反映）
