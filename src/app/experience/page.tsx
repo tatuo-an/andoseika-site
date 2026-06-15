@@ -2,8 +2,9 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import Image from "next/image";
 import Link from "next/link";
-import { Calendar, Clock, Users } from "lucide-react";
+import { Clock, Users } from "lucide-react";
 import { Metadata } from "next";
+import { BookingButton } from "@/components/experience/BookingButton";
 
 export const metadata: Metadata = {
     title: "体験・予約",
@@ -68,9 +69,7 @@ export default function ExperiencePage() {
                                 <p className="text-xs text-stone-500">※小学生以下 ¥1,500、未就学児無料</p>
                             </div>
 
-                            <button className="w-full md:w-auto px-8 py-3 bg-primary text-white font-bold rounded-full hover:bg-primary/90 transition-colors shadow-md">
-                                予約状況を確認する
-                            </button>
+                            <BookingButton experienceName="養蜂体験" durationMin={60} />
                         </div>
                     </div>
 
@@ -104,9 +103,7 @@ export default function ExperiencePage() {
                                 <p className="text-xs text-stone-500">※お持ち帰りは別途量り売り</p>
                             </div>
 
-                            <button className="w-full md:w-auto px-8 py-3 bg-primary text-white font-bold rounded-full hover:bg-primary/90 transition-colors shadow-md">
-                                予約状況を確認する
-                            </button>
+                            <BookingButton experienceName="芋掘り体験" durationMin={90} />
                         </div>
                         <div className="order-1 md:order-2 relative aspect-square w-full rounded-2xl overflow-hidden bg-stone-100 shadow-lg">
                             <Image
