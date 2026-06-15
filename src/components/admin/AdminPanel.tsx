@@ -796,85 +796,93 @@ function SortableRow({
         <div ref={setNodeRef} style={style}
             className={`px-3 py-3 ${item.hidden ? "opacity-50 bg-stone-50" : "hover:bg-stone-50/60"} ${isDragging ? "bg-primary/5 shadow-lg" : ""}`}>
 
-            {/* 1行目: ドラッグ＋画像＋商品名＋ステータス＋操作ボタン */}
-            <div className="flex items-center gap-2 mb-1.5">
-                <button
-                    {...attributes}
-                    {...listeners}
-                    className="cursor-grab active:cursor-grabbing p-1 text-stone-300 hover:text-stone-500 transition-colors touch-none flex-shrink-0"
-                >
-                    <GripVertical className="w-4 h-4" />
-                </button>
-                <ImageUploadButton
-                    currentImageUrl={item.imageUrl}
-                    onUploaded={(url) => onUpdate(item.id, "imageUrl", url)}
-                />
-                <input
-                    value={item.name}
-                    onChange={(e) => onUpdate(item.id, "name", e.target.value)}
-                    className="w-24 min-w-0 border border-stone-200 rounded-lg px-2 py-1 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/30"
-                />
+            {/* 1行目: ドラッグ＋画像＋名前＋在庫＋価格類＋ステータス＋操作 */}
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2 mb-2">
+                <div className="flex items-center gap-2">
+                    <button
+                        {...attributes}
+                        {...listeners}
+                        className="cursor-grab active:cursor-grabbing p-1 text-stone-300 hover:text-stone-500 transition-colors touch-none flex-shrink-0"
+                    >
+                        <GripVertical className="w-4 h-4" />
+                    </button>
+                    <ImageUploadButton
+                        currentImageUrl={item.imageUrl}
+                        onUploaded={(url) => onUpdate(item.id, "imageUrl", url)}
+                    />
+                    <input
+                        value={item.name}
+                        onChange={(e) => onUpdate(item.id, "name", e.target.value)}
+                        placeholder="バリエーション名"
+                        className="w-36 border border-stone-200 rounded-lg px-2 py-1.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    />
+                </div>
                 {/* 在庫数 */}
-                <div className="flex items-center gap-1">
-                    <span className="text-xs text-stone-400">在庫</span>
+                <div className="flex flex-col">
+                    <span className="text-[10px] text-stone-400 leading-none mb-0.5">在庫</span>
                     <input type="number" min={-1} value={item.stock}
                         onChange={(e) => { const v = parseInt(e.target.value, 10); onUpdate(item.id, "stock", isNaN(v) ? -1 : v); }}
-                        className="w-14 text-center border border-stone-200 rounded-lg px-1 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                        className="w-16 text-center border border-stone-200 rounded-lg px-1 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
                 </div>
                 {/* 原価 */}
-                <div className="flex items-center gap-1">
-                    <span className="text-xs text-stone-400">原価</span>
+                <div className="flex flex-col">
+                    <span className="text-[10px] text-stone-400 leading-none mb-0.5">原価</span>
                     <input type="number" min={0} value={item.cost ?? ""} placeholder="−"
                         onChange={(e) => onUpdate(item.id, "cost", e.target.value ? parseInt(e.target.value, 10) : null)}
-                        className="w-20 text-center border border-stone-200 rounded-lg px-1 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                        className="w-20 text-center border border-stone-200 rounded-lg px-1 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
                 </div>
                 {/* 利益率 */}
-                <div className="flex items-center gap-1">
-                    <span className="text-xs text-stone-400">利益率</span>
+                <div className="flex flex-col">
+                    <span className="text-[10px] text-stone-400 leading-none mb-0.5">利益率(%)</span>
                     <input type="number" min={0} step="1" value={item.profitRate ?? ""} placeholder="−"
                         onChange={(e) => onUpdate(item.id, "profitRate", e.target.value ? parseFloat(e.target.value) : null)}
-                        className="w-14 text-center border border-stone-200 rounded-lg px-1 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
-                    <span className="text-xs text-stone-400">%</span>
+                        className="w-16 text-center border border-stone-200 rounded-lg px-1 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
                 </div>
                 {/* 販売価格 */}
-                <div className="flex items-center gap-1">
-                    <span className="text-xs text-stone-400">販売</span>
+                <div className="flex flex-col">
+                    <span className="text-[10px] text-primary leading-none mb-0.5 font-bold">販売価格</span>
                     <input type="number" min={0} value={item.price ?? ""} placeholder="−"
                         onChange={(e) => onUpdate(item.id, "price", e.target.value ? parseInt(e.target.value, 10) : null)}
                         title="原価・利益率・配送区分から自動算出されます（手動上書きも可）"
-                        className="w-24 text-center border border-stone-200 rounded-lg px-1 py-1 text-sm font-medium bg-primary/5 focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                        className="w-24 text-center border border-stone-200 rounded-lg px-1 py-1.5 text-sm font-bold bg-primary/5 focus:outline-none focus:ring-2 focus:ring-primary/30" />
                 </div>
                 {/* 配送区分 */}
-                <select value={item.shipType}
-                    onChange={(e) => onUpdate(item.id, "shipType", e.target.value)}
-                    className="border border-stone-200 rounded-lg px-1.5 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30">
-                    {shipTypes.map((t) => (
-                        <option key={t.value} value={t.value}>{t.label}</option>
-                    ))}
-                </select>
-                {/* 次回出荷 */}
-                <input
-                    value={item.nextShipment}
-                    onChange={(e) => onUpdate(item.id, "nextShipment", e.target.value)}
-                    placeholder="次回入荷"
-                    className="w-20 border border-stone-200 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-primary/30"
-                />
+                <div className="flex flex-col">
+                    <span className="text-[10px] text-stone-400 leading-none mb-0.5">配送区分</span>
+                    <select value={item.shipType}
+                        onChange={(e) => onUpdate(item.id, "shipType", e.target.value)}
+                        className="border border-stone-200 rounded-lg px-1.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30">
+                        {shipTypes.map((t) => (
+                            <option key={t.value} value={t.value}>{t.label}</option>
+                        ))}
+                    </select>
+                </div>
+                {/* 次回入荷 */}
+                <div className="flex flex-col">
+                    <span className="text-[10px] text-stone-400 leading-none mb-0.5">次回入荷</span>
+                    <input
+                        value={item.nextShipment}
+                        onChange={(e) => onUpdate(item.id, "nextShipment", e.target.value)}
+                        placeholder="例: 10月頃"
+                        className="w-24 border border-stone-200 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    />
+                </div>
                 {/* クリックポスト最大同梱数 */}
-                <div className="flex items-center gap-0.5" title="クリックポストに何個まで同梱可能か（0=不可）">
-                    <span className="text-xs text-stone-400 whitespace-nowrap">CP</span>
+                <div className="flex flex-col" title="クリックポストに何個まで同梱可能か（0=不可）">
+                    <span className="text-[10px] text-stone-400 leading-none mb-0.5">CP</span>
                     <input
                         type="number" min={0} value={item.clickpostMax}
                         onChange={(e) => onUpdate(item.id, "clickpostMax", parseInt(e.target.value, 10) || 0)}
-                        className="w-12 text-center border border-stone-200 rounded-lg px-1 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                        className="w-14 text-center border border-stone-200 rounded-lg px-1 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
                     />
                 </div>
                 {/* コンパクト最大同梱数 */}
-                <div className="flex items-center gap-0.5" title="コンパクトに何個まで同梱可能か（0=未設定/制限なし）">
-                    <span className="text-xs text-stone-400 whitespace-nowrap">CO</span>
+                <div className="flex flex-col" title="コンパクトに何個まで同梱可能か（0=未設定/制限なし）">
+                    <span className="text-[10px] text-stone-400 leading-none mb-0.5">CO</span>
                     <input
                         type="number" min={0} value={item.compactMax}
                         onChange={(e) => onUpdate(item.id, "compactMax", parseInt(e.target.value, 10) || 0)}
-                        className="w-12 text-center border border-stone-200 rounded-lg px-1 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                        className="w-14 text-center border border-stone-200 rounded-lg px-1 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
                     />
                 </div>
                 <div className="ml-auto flex items-center gap-1 flex-shrink-0">
