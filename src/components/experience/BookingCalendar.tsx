@@ -53,11 +53,15 @@ export function BookingCalendar({
 
     const slots = generateSlots(durationMin);
 
-    // 7日間の日付配列を生成
+    // 予約可能開始日 = 今日から7日後
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const startDate = new Date(today);
-    startDate.setDate(today.getDate() + weekOffset * 7);
+    const earliestBookable = new Date(today);
+    earliestBookable.setDate(today.getDate() + 7);
+
+    // 表示開始日 = 予約可能開始日 + weekOffset 週
+    const startDate = new Date(earliestBookable);
+    startDate.setDate(earliestBookable.getDate() + weekOffset * 7);
     const dates = Array.from({ length: 7 }, (_, i) => {
         const d = new Date(startDate);
         d.setDate(startDate.getDate() + i);
@@ -86,7 +90,7 @@ export function BookingCalendar({
                 <div className="p-5 border-b border-stone-100 bg-stone-50 rounded-t-2xl flex items-center justify-between">
                     <div>
                         <h2 className="text-lg font-bold text-stone-900">{experienceName} の予約</h2>
-                        <p className="text-xs text-stone-500 mt-0.5">所要時間 {durationMin}分 / 営業 9:00〜17:00 / 休憩 12:00〜13:00</p>
+                        <p className="text-xs text-stone-500 mt-0.5">所要時間 {durationMin}分 / 営業 9:00〜17:00 / 休憩 12:00〜13:00 / 予約は1週間先から</p>
                     </div>
                     <button onClick={onClose} className="p-2 hover:bg-stone-200 rounded-full transition-colors">
                         <X className="h-5 w-5 text-stone-500" />
@@ -141,7 +145,7 @@ export function BookingCalendar({
                                     {dates.map((d, i) => {
                                         const dateStr = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, "0")}-${d.getDate().toString().padStart(2, "0")}`;
                                         const isSelected = selectedDate === dateStr && selectedSlot === slot.startMin;
-                                        const isPast = d.getTime() < today.getTime();
+                                        const isPast = d.getTime() < earliestBookable.getTime();
                                         return (
                                             <td key={i} className="border-b border-stone-100 p-1">
                                                 <button
