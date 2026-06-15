@@ -404,31 +404,38 @@ export default function CartPage() {
                         )}
                     </div>
 
-                    {/* お届け希望日時 */}
-                    <div className="bg-white rounded-2xl shadow-sm p-6 mb-6">
-                        <h2 className="font-bold text-stone-900 flex items-center gap-2 mb-4">
-                            <Calendar className="w-5 h-5 text-primary" />
-                            お届け希望日時
-                        </h2>
-                        <div className="grid grid-cols-2 gap-3">
-                            <div>
-                                <label className="block text-xs text-stone-500 mb-1">日付</label>
-                                <select value={desiredDate} onChange={(e) => setDesiredDate(e.target.value)}
-                                    className="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30">
-                                    <option value="">指定なし</option>
-                                    {dateOptions.map(d => <option key={d.value} value={d.value}>{d.label}</option>)}
-                                </select>
+                    {/* お届け希望日時（クリックポスト時は非表示） */}
+                    {!isClickpost && (
+                        <div className="bg-white rounded-2xl shadow-sm p-6 mb-6">
+                            <h2 className="font-bold text-stone-900 flex items-center gap-2 mb-4">
+                                <Calendar className="w-5 h-5 text-primary" />
+                                お届け希望日時
+                            </h2>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-xs text-stone-500 mb-1">日付</label>
+                                    <select value={desiredDate} onChange={(e) => setDesiredDate(e.target.value)}
+                                        className="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30">
+                                        <option value="">指定なし</option>
+                                        {dateOptions.map(d => <option key={d.value} value={d.value}>{d.label}</option>)}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-xs text-stone-500 mb-1">時間帯</label>
+                                    <select value={desiredTime} onChange={(e) => setDesiredTime(e.target.value)}
+                                        className="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30">
+                                        {TIME_SLOTS.map(t => <option key={t} value={t}>{t}</option>)}
+                                    </select>
+                                </div>
                             </div>
-                            <div>
-                                <label className="block text-xs text-stone-500 mb-1">時間帯</label>
-                                <select value={desiredTime} onChange={(e) => setDesiredTime(e.target.value)}
-                                    className="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30">
-                                    {TIME_SLOTS.map(t => <option key={t} value={t}>{t}</option>)}
-                                </select>
-                            </div>
+                            <p className="text-xs text-stone-400 mt-2">※ 配送状況により希望どおりお届けできない場合があります</p>
                         </div>
-                        <p className="text-xs text-stone-400 mt-2">※ 配送状況により希望どおりお届けできない場合があります</p>
-                    </div>
+                    )}
+                    {isClickpost && (
+                        <div className="bg-stone-50 border border-stone-200 rounded-xl p-4 mb-6 text-sm text-stone-500">
+                            ※ クリックポスト発送のため、お届け日時の指定はできません
+                        </div>
+                    )}
 
                     {/* オプション */}
                     {familyOptionsMap.size > 0 && (
