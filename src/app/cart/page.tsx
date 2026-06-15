@@ -16,6 +16,7 @@ type ShippingRow = {
     compact: number; clickpost: number;
 };
 type InvItem = { id: string; name: string; price: number | null; family: string; coolAvailable?: boolean; shipType?: string; clickpostMax?: number };
+type SuggestCard = { id: string; href: string; name: string; image: string; displayPrice: number; salePercent: number; isSoldOut: boolean; family: string };
 
 // === 計算ユーティリティ ===
 function getRate(row: ShippingRow, shipType: string): number {
@@ -98,6 +99,7 @@ export default function CartPage() {
     const [addressPickerOpen, setAddressPickerOpen] = useState(false);
     const [shippingRows, setShippingRows] = useState<ShippingRow[]>([]);
     const [inventory, setInventory] = useState<InvItem[]>([]);
+    const [suggestions, setSuggestions] = useState<SuggestCard[]>([]);
     const [loaded, setLoaded] = useState(false);
     const [coolRequested, setCoolRequested] = useState(false);
     const [selectedOptions, setSelectedOptions] = useState<Set<string>>(new Set());
@@ -111,10 +113,12 @@ export default function CartPage() {
             fetch("/api/address").then(r => r.json()).catch(() => ({ addresses: [] })),
             fetch("/api/shipping").then(r => r.json()).catch(() => ({ shipping: [] })),
             fetch("/api/inventory-public").then(r => r.json()).catch(() => ({ inventory: [] })),
-        ]).then(([addrData, shipData, invData]) => {
+            fetch("/api/products-list").then(r => r.json()).catch(() => ({ products: [] })),
+        ]).then(([addrData, shipData, invData, prodData]) => {
             setAddresses(addrData.addresses ?? []);
             setShippingRows(shipData.shipping?.length ? shipData.shipping : DEFAULT_SHIPPING);
             setInventory(invData.inventory ?? []);
+            setSuggestions(prodData.products ?? []);
             setLoaded(true);
         });
     }, []);
@@ -440,6 +444,45 @@ export default function CartPage() {
                             ))}
                         </div>
                     )}
+
+                    {/* まとめてお得！ */}
+                    {(() => {
+                        const cartFamiliesSet = new Set(cartItems.map(i => (i as { family?: string }).family).filter(Boolean) as string[]);
+                        const cartIds = new Set(cartItems.map(i => i.id));
+                        const filtered = suggestions.filter(s => {
+                            if (s.isSoldOut) return false;
+                            if (s.family && cartFamiliesSet.has(s.family)) return false;
+                            if (cartIds.has(s.id)) return false;
+                            return true;
+                        }).slice(0, 6);
+                        if (filtered.length === 0) return null;
+                        return (
+                            <div className="bg-white rounded-2xl shadow-sm p-6 mb-6">
+                                <h2 className="font-bold text-stone-900 mb-4">まとめてお得！</h2>
+                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                                    {filtered.map(s => (
+                                        <Link key={s.id} href={s.href} className="group block">
+                                            <div className="relative aspect-square bg-stone-100 rounded-lg overflow-hidden mb-2">
+                                                {s.image && (
+                                                    // eslint-disable-next-line @next/next/no-img-element
+                                                    <img src={s.image} alt={s.name} className="w-full h-full object-contain group-hover:scale-105 transition-transform" />
+                                                )}
+                                                {s.salePercent > 0 && (
+                                                    <span className="absolute top-2 right-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow">
+                                                        {s.salePercent}% OFF
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <p className="text-xs font-medium text-stone-800 line-clamp-1 group-hover:text-primary">{s.name}</p>
+                                            <p className={`text-sm font-bold ${s.salePercent > 0 ? "text-red-500" : "text-stone-900"}`}>
+                                                ¥{s.displayPrice.toLocaleString()}{s.family ? "〜" : ""}
+                                            </p>
+                                        </Link>
+                                    ))}
+                                </div>
+                            </div>
+                        );
+                    })()}
 
                     {/* クール便 */}
                     {coolEligible && effectiveShipType && coolSurchargeBySize(effectiveShipType) > 0 && (
