@@ -31,6 +31,7 @@ function UserCancelModal({ onConfirm, onCancel, loading }: {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   const reason = USER_CANCEL_REASONS.find((r) => r.value === selected);
   const needsImage = reason?.requireImage ?? false;
@@ -47,12 +48,19 @@ function UserCancelModal({ onConfirm, onCancel, loading }: {
     if (!reason) return;
     if (needsImage && imageFile) {
       setUploading(true);
+      setUploadError(null);
       try {
         const fd = new FormData();
         fd.append("file", imageFile);
         const res = await fetch("/api/my/upload-image", { method: "POST", body: fd });
         const data = await res.json();
+        if (!res.ok || !data.url) {
+          setUploadError("画像のアップロードに失敗しました。もう一度お試しください。");
+          return;
+        }
         onConfirm(reason.label, data.url);
+      } catch {
+        setUploadError("通信エラーが発生しました。もう一度お試しください。");
       } finally { setUploading(false); }
     } else {
       onConfirm(reason.label);
@@ -90,6 +98,9 @@ function UserCancelModal({ onConfirm, onCancel, loading }: {
           </div>
         )}
 
+        {uploadError && (
+          <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2 mb-3">{uploadError}</p>
+        )}
         <div className="flex gap-2">
           <button onClick={onCancel} className="flex-1 py-2.5 border border-stone-200 rounded-xl text-sm text-stone-600 hover:bg-stone-50 transition-colors">戻る</button>
           <button
