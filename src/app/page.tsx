@@ -111,7 +111,7 @@ export default async function Home() {
 
       <main className="flex-1">
         {/* ── Hero Banner ── */}
-        <section className="relative h-[60vh] w-full overflow-hidden bg-stone-900">
+        <section className="relative h-[30vh] w-full overflow-hidden bg-stone-900">
           <Image
             src="/images/hero/hero_sand_dunes.jpg"
             alt="鳥取の砂丘長芋畑"
@@ -119,17 +119,16 @@ export default async function Home() {
             className="object-cover opacity-80"
             priority
           />
-          <div className="absolute inset-0 bg-gradient-to-l from-black/65 via-black/30 to-transparent" />
-          <div className="relative h-full container mx-auto px-4 md:px-6 flex flex-col justify-center items-end">
-            <div className="max-w-xl space-y-5 text-right">
-              <p className="text-sm font-bold tracking-widest uppercase text-white/70">鳥取・安藤青果</p>
-              <h1 className="text-3xl md:text-5xl font-bold text-white leading-tight font-heading drop-shadow">
-                鳥取の畑から、<br />まっすぐ届ける。
-              </h1>
-              <p className="text-stone-200 text-base leading-relaxed">
-                長芋・白ネギ・蜂蜜など、旬の農産物を産地直送でお届けします。
-              </p>
-            </div>
+          <div className="absolute inset-0 bg-black/40" />
+          <div className="relative h-full container mx-auto px-4 md:px-6 flex items-center justify-between gap-8">
+            <h1 className="text-2xl md:text-4xl font-bold text-white leading-tight font-heading drop-shadow whitespace-nowrap">
+              鳥取の畑から、<br />まっすぐ届ける。
+            </h1>
+            <p className="text-stone-200 text-sm md:text-base leading-relaxed text-right max-w-xs">
+              鳥取県の農家・安藤青果が育てた<br />
+              長芋・白ネギ・蜂蜜などを<br />
+              産地直送でお届けします。
+            </p>
           </div>
         </section>
 
