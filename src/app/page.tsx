@@ -200,7 +200,7 @@ export default async function Home() {
 
               {/* 体験 */}
               <Link href="/experience" className="group relative overflow-hidden rounded-2xl aspect-[16/7] bg-amber-900 block shadow hover:shadow-lg transition-shadow">
-                <Image src="/images/experience/beekeeping.jpg" alt="体験" fill className="object-cover opacity-60 group-hover:scale-105 transition-transform duration-500" />
+                <Image src="/images/experience/experience_combined.png" alt="体験" fill className="object-cover opacity-60 group-hover:scale-105 transition-transform duration-500" />
                 <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent" />
                 <div className="absolute inset-0 flex flex-col justify-center px-8">
                   <p className="text-white/70 text-xs font-bold tracking-widest uppercase mb-1">Experience</p>
