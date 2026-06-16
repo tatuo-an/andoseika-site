@@ -373,12 +373,12 @@ export function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
                       </div>
                     )}
                     <div className="flex gap-2">
-                      <input
-                        type="text"
+                      <textarea
+                        rows={2}
                         value={msgText[order.orderNumber] ?? ""}
                         onChange={(e) => setMsgText((p) => ({ ...p, [order.orderNumber]: e.target.value }))}
-                        placeholder="お客様へメッセージを送る（Enter送信）"
-                        className="flex-1 border border-stone-200 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary/30 bg-white"
+                        placeholder="お客様へメッセージを送る"
+                        className="flex-1 border border-stone-200 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary/30 bg-white resize-none"
                       />
                       <button
                         onClick={() => sendAdminMessage(order.orderNumber)}
