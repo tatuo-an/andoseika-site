@@ -10,9 +10,10 @@ const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   paid:             { label: "発送準備中",     color: "bg-yellow-100 text-yellow-800 border-yellow-200" },
   shipping:         { label: "発送済み",       color: "bg-blue-100 text-blue-800 border-blue-200" },
   delivered:        { label: "受取完了",       color: "bg-green-100 text-green-800 border-green-200" },
-  cancelled:        { label: "キャンセル",     color: "bg-stone-100 text-stone-500 border-stone-200" },
-  cancel_requested: { label: "キャンセル申請中", color: "bg-red-100 text-red-700 border-red-200" },
-  completed:        { label: "取引完了",       color: "bg-teal-100 text-teal-700 border-teal-200" },
+  cancelled:              { label: "キャンセル",       color: "bg-stone-100 text-stone-500 border-stone-200" },
+  cancel_requested:       { label: "キャンセル申請中", color: "bg-red-100 text-red-700 border-red-200" },
+  admin_cancel_requested: { label: "キャンセル申請中", color: "bg-red-100 text-red-700 border-red-200" },
+  completed:              { label: "取引完了",         color: "bg-teal-100 text-teal-700 border-teal-200" },
 };
 
 const TABS = [
@@ -26,7 +27,7 @@ type Tab = typeof TABS[number]["key"];
 
 function filterOrders(orders: Order[], tab: Tab): Order[] {
   if (tab === "all")       return orders;
-  if (tab === "active")    return orders.filter((o) => o.status === "paid" || o.status === "shipping" || o.status === "cancel_requested");
+  if (tab === "active")    return orders.filter((o) => o.status === "paid" || o.status === "shipping" || o.status === "cancel_requested" || o.status === "admin_cancel_requested");
   if (tab === "delivered") return orders.filter((o) => o.status === "delivered");
   if (tab === "cancelled") return orders.filter((o) => o.status === "cancelled");
   return orders;
@@ -214,9 +215,9 @@ export function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
       await fetch(`/api/admin/orders/${encodeURIComponent(orderNumber)}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "cancel_requested" }),
+        body: JSON.stringify({ status: "admin_cancel_requested" }),
       });
-      setOrders((prev) => prev.map((o) => o.orderNumber === orderNumber ? { ...o, status: "cancel_requested" } : o));
+      setOrders((prev) => prev.map((o) => o.orderNumber === orderNumber ? { ...o, status: "admin_cancel_requested" } : o));
 
       const autoMsg = `誠に申し訳ございません。\n以下の理由によりキャンセルをお願いしたい状況です。\n\n【理由】${reasonLabel}\n\nご同意いただける場合は注文詳細画面の「同意する」を押してください。\nご不明な点はメッセージよりお問い合わせください。`;
       const res = await fetch(`/api/admin/orders/${encodeURIComponent(orderNumber)}/message`, {
@@ -363,10 +364,16 @@ export function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
           const isUpdating = updating === order.orderNumber;
 
           return (
-            <div key={order.orderNumber} className={`bg-white rounded-xl overflow-hidden shadow-sm border ${order.status === "cancel_requested" ? "border-red-300" : "border-stone-200"}`}>
+            <div key={order.orderNumber} className={`bg-white rounded-xl overflow-hidden shadow-sm border ${(order.status === "cancel_requested" || order.status === "admin_cancel_requested") ? "border-red-300" : "border-stone-200"}`}>
               {/* キャンセル申請バナー */}
               {order.status === "cancel_requested" && (
                 <div className="flex items-center gap-2 bg-red-500 text-white px-4 py-2 text-xs font-bold">
+                  <XCircle className="w-3.5 h-3.5 shrink-0" />
+                  お客様よりキャンセル申請が届いています。確認してください。
+                </div>
+              )}
+              {order.status === "admin_cancel_requested" && (
+                <div className="flex items-center gap-2 bg-orange-400 text-white px-4 py-2 text-xs font-bold">
                   <XCircle className="w-3.5 h-3.5 shrink-0" />
                   キャンセル申請中 — お客様の同意待ちです。
                 </div>
@@ -387,6 +394,7 @@ export function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-bold text-stone-900 truncate">{order.productNames}</p>
                   <p className="text-xs text-stone-400">{order.createdAt} · {order.name}</p>
+                  {order.estimatedDate && <p className="text-xs text-blue-600">お届け予定: {order.estimatedDate}</p>}
                 </div>
                 <div className="text-right shrink-0">
                   <p className="text-sm font-bold text-stone-900">¥{order.amount.toLocaleString()}</p>
@@ -434,6 +442,12 @@ export function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
                           <div className="col-span-2">
                             <p className="text-xs text-stone-400 mb-0.5">配達希望</p>
                             <p className="text-stone-700">{order.desiredDate} {order.desiredTime}</p>
+                          </div>
+                        )}
+                        {order.estimatedDate && (
+                          <div className="col-span-2">
+                            <p className="text-xs text-stone-400 mb-0.5">お届け予定日</p>
+                            <p className="text-stone-700">{order.estimatedDate}</p>
                           </div>
                         )}
                         <div className="col-span-2">
