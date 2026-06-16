@@ -127,7 +127,10 @@ export default function CartPage() {
     const [skipMode, setSkipMode] = useState(false);
 
     useEffect(() => {
-        setSkipMode(localStorage.getItem("ando_skip_payment") === "true");
+        fetch("/api/admin/settings")
+            .then((r) => r.json())
+            .then((d) => setSkipMode(d.skip_payment === "true"))
+            .catch(() => {});
     }, []);
 
     useEffect(() => {
@@ -299,16 +302,14 @@ export default function CartPage() {
         return arr;
     })();
 
-    const isSkipMode = () => localStorage.getItem("ando_skip_payment") === "true";
-
     const handleCheckout = async () => {
         if (!selectedAddress) {
             alert("配送先を選択してください");
             return;
         }
 
-        // 決済スキップモード（管理者テスト用）
-        if (isSkipMode()) {
+        // 決済スキップモード
+        if (skipMode) {
             try {
                 const res = await fetch("/api/test-order", {
                     method: "POST",
