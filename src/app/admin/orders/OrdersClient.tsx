@@ -323,7 +323,7 @@ export function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
                                           [order.orderNumber]: (prev[order.orderNumber] ?? []).map((msg, j) => j === i ? { ...msg, message: "__retracted__" } : msg),
                                         }));
                                       }}
-                                      className="text-[9px] text-stone-300 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                                      className="text-[9px] text-stone-400 hover:text-red-400 transition-colors"
                                     >
                                       取り消し
                                     </button>
