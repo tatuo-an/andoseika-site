@@ -124,6 +124,23 @@ export default function OrderDetailPage() {
                     </div>
                   </div>
                 )}
+                {order.status === "shipping" && (
+                  <button
+                    onClick={async () => {
+                      if (!confirm("商品を受け取りましたか？")) return;
+                      setCompleting(true);
+                      try {
+                        const res = await fetch(`/api/my/orders/${orderNumber}/delivered`, { method: "POST" });
+                        if (res.ok) setOrder((prev) => prev ? { ...prev, status: "delivered" } : prev);
+                      } finally { setCompleting(false); }
+                    }}
+                    disabled={completing}
+                    className="mt-5 w-full flex items-center justify-center gap-2 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors text-sm font-bold disabled:opacity-50"
+                  >
+                    <CheckCircle className="w-4 h-4" />
+                    {completing ? "処理中..." : "受取完了"}
+                  </button>
+                )}
               </div>
 
               {/* 取引メッセージ */}
@@ -234,25 +251,6 @@ export default function OrderDetailPage() {
                 {order.desiredDate && <p className="text-stone-500">希望日: {order.desiredDate}</p>}
                 {order.desiredTime && order.desiredTime !== "指定なし" && <p className="text-stone-500">時間帯: {order.desiredTime}</p>}
               </div>
-
-              {/* 受取完了ボタン */}
-              {order.status === "shipping" && (
-                <button
-                  onClick={async () => {
-                    if (!confirm("商品を受け取りましたか？")) return;
-                    setCompleting(true);
-                    try {
-                      const res = await fetch(`/api/my/orders/${orderNumber}/delivered`, { method: "POST" });
-                      if (res.ok) setOrder((prev) => prev ? { ...prev, status: "delivered" } : prev);
-                    } finally { setCompleting(false); }
-                  }}
-                  disabled={completing}
-                  className="w-full flex items-center justify-center gap-2 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors text-sm font-bold disabled:opacity-50"
-                >
-                  <CheckCircle className="w-4 h-4" />
-                  {completing ? "処理中..." : "受取完了"}
-                </button>
-              )}
 
               {/* キャンセルボタン */}
               {order.status === "paid" && (
