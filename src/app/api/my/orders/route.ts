@@ -20,7 +20,7 @@ export async function GET() {
   const sheets = google.sheets({ version: "v4", auth: authClient });
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-    range: "注文管理!A:L",
+    range: "注文管理!A:O",
   });
 
   const rows = res.data.values ?? [];
@@ -35,6 +35,7 @@ export async function GET() {
       amount: parseInt(r[7] ?? "0", 10) || 0,
       status: r[8] ?? "paid",
       desiredDate: r[10] ?? "",
+      estimatedDate: r[14] ?? "",
     }))
     .reverse()
     .slice(0, 5);

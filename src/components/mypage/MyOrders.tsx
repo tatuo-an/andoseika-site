@@ -21,6 +21,7 @@ type Order = {
   amount: number;
   status: string;
   desiredDate: string;
+  estimatedDate: string;
 };
 
 export function MyOrders() {
@@ -77,6 +78,9 @@ export function MyOrders() {
                 </span>
               </div>
               <p className="text-sm font-medium text-stone-800 line-clamp-1">{order.productNames}</p>
+              {order.estimatedDate && (
+                <p className="text-xs text-blue-600 mt-0.5">お届け予定: {order.estimatedDate}</p>
+              )}
               <div className="flex items-center justify-between mt-1">
                 <p className="text-sm font-bold text-stone-900">¥{order.amount.toLocaleString()}</p>
                 <p className="text-[10px] font-mono text-stone-400">{order.orderNumber}</p>
