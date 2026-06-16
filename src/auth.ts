@@ -3,6 +3,7 @@ import Google from "next-auth/providers/google";
 import Line from "next-auth/providers/line";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  trustHost: true,
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -11,6 +12,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     Line({
       clientId: process.env.LINE_CLIENT_ID!,
       clientSecret: process.env.LINE_CLIENT_SECRET!,
+      profile(profile) {
+        return {
+          id: profile.sub,
+          name: profile.name,
+          email: profile.email ?? `${profile.sub}@line.user`,
+          image: profile.picture,
+        };
+      },
     }),
   ],
   pages: {
