@@ -124,6 +124,11 @@ export default function CartPage() {
     // お届け希望日時
     const [desiredDate, setDesiredDate] = useState("");
     const [desiredTime, setDesiredTime] = useState("指定なし");
+    const [skipMode, setSkipMode] = useState(false);
+
+    useEffect(() => {
+        setSkipMode(localStorage.getItem("ando_skip_payment") === "true");
+    }, []);
 
     useEffect(() => {
         Promise.all([
@@ -294,11 +299,36 @@ export default function CartPage() {
         return arr;
     })();
 
+    const isSkipMode = () => localStorage.getItem("ando_skip_payment") === "true";
+
     const handleCheckout = async () => {
         if (!selectedAddress) {
             alert("配送先を選択してください");
             return;
         }
+
+        // 決済スキップモード（管理者テスト用）
+        if (isSkipMode()) {
+            try {
+                const res = await fetch("/api/test-order", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        cartDetails,
+                        shippingAddress: selectedAddress,
+                        desiredDeliveryDate: desiredDate,
+                        desiredDeliveryTime: desiredTime,
+                        grandTotal,
+                    }),
+                });
+                if (!res.ok) { alert("テスト注文の作成に失敗しました"); return; }
+                window.location.href = "/success";
+            } catch (error) {
+                console.error(error);
+            }
+            return;
+        }
+
         try {
             const response = await fetch("/api/checkout_sessions", {
                 method: "POST",
@@ -572,15 +602,29 @@ export default function CartPage() {
                         </div>
                     </div>
 
+                    {skipMode && (
+                        <div className="mb-4 flex items-center gap-2 bg-amber-50 border border-amber-300 rounded-xl px-4 py-3 text-sm text-amber-800">
+                            <span className="text-base">🧪</span>
+                            <span><b>決済スキップモード ON</b> — Stripeをスキップしてテスト注文を作成します</span>
+                        </div>
+                    )}
                     <button onClick={handleCheckout} disabled={!selectedAddress}
-                        className="w-full py-4 bg-primary text-white font-bold rounded-full hover:bg-primary/90 transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">
-                        {selectedAddress ? "お支払いへ進む" : "配送先を登録してください"}
+                        className={`w-full py-4 font-bold rounded-full transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed ${
+                            skipMode
+                                ? "bg-amber-400 hover:bg-amber-500 text-white"
+                                : "bg-primary hover:bg-primary/90 text-white"
+                        }`}>
+                        {skipMode
+                            ? (selectedAddress ? "🧪 テスト注文を作成" : "配送先を登録してください")
+                            : (selectedAddress ? "お支払いへ進む" : "配送先を登録してください")}
                     </button>
-                    <p className="text-xs text-center text-stone-500 mt-3">
-                        Stripeのセキュアな決済画面へ移動します。ご注文前に
-                        <Link href="/tokusho" className="font-medium text-primary hover:underline">特定商取引法に基づく表示</Link>
-                        をご確認ください。
-                    </p>
+                    {!skipMode && (
+                        <p className="text-xs text-center text-stone-500 mt-3">
+                            Stripeのセキュアな決済画面へ移動します。ご注文前に
+                            <Link href="/tokusho" className="font-medium text-primary hover:underline">特定商取引法に基づく表示</Link>
+                            をご確認ください。
+                        </p>
+                    )}
                 </div>
             </main>
             <Footer />

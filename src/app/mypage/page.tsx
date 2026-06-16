@@ -6,6 +6,7 @@ import { User, Package, MapPin, LogOut, Settings, Heart, CalendarDays } from "lu
 import Link from "next/link";
 import { isAdmin } from "@/lib/admin";
 import { OnlineCounter } from "@/components/admin/OnlineCounter";
+import { SkipModeToggle } from "@/components/admin/SkipModeToggle";
 
 export default async function MyPage() {
   const session = await auth();
@@ -84,6 +85,7 @@ export default async function MyPage() {
           {isAdmin(user.email) && (
             <div className="mb-6 space-y-3">
               <OnlineCounter />
+              <SkipModeToggle />
               <Link
                 href="/admin"
                 className="flex items-center gap-2 bg-stone-100 hover:bg-stone-200 text-stone-700 px-5 py-3 rounded-full text-sm font-bold transition-colors w-fit"
