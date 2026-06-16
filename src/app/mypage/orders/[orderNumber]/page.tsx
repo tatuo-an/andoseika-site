@@ -252,6 +252,7 @@ export default function OrderDetailPage() {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    window.scrollTo(0, 0);
     fetch(`/api/my/orders/${orderNumber}`)
       .then((r) => r.json())
       .then((d) => { setOrder(d.order); setMessages(d.messages ?? []); })
