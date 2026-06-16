@@ -87,33 +87,38 @@ function CancelModal({ onConfirm, onCancel, loading }: {
 
 // 追跡番号入力モーダル
 function ShippingModal({ onConfirm, onCancel, loading }: {
-  onConfirm: (trackingNumber: string) => void;
+  onConfirm: (trackingNumber: string, estimatedDate: string) => void;
   onCancel: () => void;
   loading: boolean;
 }) {
   const [trackingNumber, setTrackingNumber] = useState("");
+  const [estimatedDate, setEstimatedDate] = useState("");
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm">
         <h3 className="font-bold text-stone-900 mb-1">発送済みにする</h3>
-        <p className="text-sm text-stone-500 mb-4">追跡番号を入力してください。お客様へ自動でメッセージが送信されます。</p>
+        <p className="text-sm text-stone-500 mb-4">追跡番号と発送予定日を入力してください。お客様へ自動でメッセージが送信されます。</p>
         <input
           type="text"
           value={trackingNumber}
           onChange={(e) => setTrackingNumber(e.target.value)}
-          placeholder="例：1234-5678-9012"
+          placeholder="追跡番号（例：1234-5678-9012）"
           autoFocus
+          className="w-full border border-stone-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 mb-3"
+        />
+        <label className="block text-xs text-stone-500 mb-1">発送予定日（任意）</label>
+        <input
+          type="date"
+          value={estimatedDate}
+          onChange={(e) => setEstimatedDate(e.target.value)}
           className="w-full border border-stone-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 mb-4"
         />
         <div className="flex gap-2">
-          <button
-            onClick={onCancel}
-            className="flex-1 py-2.5 border border-stone-200 rounded-xl text-sm text-stone-600 hover:bg-stone-50 transition-colors"
-          >
+          <button onClick={onCancel} className="flex-1 py-2.5 border border-stone-200 rounded-xl text-sm text-stone-600 hover:bg-stone-50 transition-colors">
             キャンセル
           </button>
           <button
-            onClick={() => { if (trackingNumber.trim()) onConfirm(trackingNumber.trim()); }}
+            onClick={() => { if (trackingNumber.trim()) onConfirm(trackingNumber.trim(), estimatedDate); }}
             disabled={!trackingNumber.trim() || loading}
             className="flex-1 py-2.5 bg-primary text-white rounded-xl text-sm font-bold hover:bg-primary/90 transition-colors disabled:opacity-50"
           >
@@ -171,19 +176,20 @@ export function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
     }
   }
 
-  async function handleShipConfirm(orderNumber: string, trackingNumber: string) {
+  async function handleShipConfirm(orderNumber: string, trackingNumber: string, estimatedDate: string) {
     setUpdating(orderNumber);
     try {
       // ステータス更新
       await fetch(`/api/admin/orders/${encodeURIComponent(orderNumber)}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "shipping" }),
+        body: JSON.stringify({ status: "shipping", estimatedDate }),
       });
       setOrders((prev) => prev.map((o) => o.orderNumber === orderNumber ? { ...o, status: "shipping" } : o));
 
       // 自動メッセージ送信
-      const autoMsg = `商品を発送しました。\n追跡番号：${trackingNumber}\n\nお届けまでしばらくお待ちください。`;
+      const dateStr = estimatedDate ? `\n発送予定日：${estimatedDate}` : "";
+      const autoMsg = `商品を発送しました。\n追跡番号：${trackingNumber}${dateStr}\n\nお届けまでしばらくお待ちください。`;
       const res = await fetch(`/api/admin/orders/${encodeURIComponent(orderNumber)}/message`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -298,7 +304,7 @@ export function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
       {shippingModal && (
         <ShippingModal
           loading={updating === shippingModal}
-          onConfirm={(trackingNumber) => handleShipConfirm(shippingModal, trackingNumber)}
+          onConfirm={(trackingNumber, estimatedDate) => handleShipConfirm(shippingModal, trackingNumber, estimatedDate)}
           onCancel={() => setShippingModal(null)}
         />
       )}

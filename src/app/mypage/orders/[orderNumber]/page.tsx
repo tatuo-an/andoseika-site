@@ -11,6 +11,7 @@ type Order = {
   orderNumber: string; createdAt: string; name: string; productNames: string;
   amount: number; status: string; address: string; desiredDate: string; desiredTime: string;
   complaint: string;
+  estimatedDate: string;
 };
 type Message = { senderType: string; senderName: string; message: string; sentAt: string };
 
@@ -392,6 +393,11 @@ export default function OrderDetailPage() {
                       ))}
                     </div>
                   </div>
+                )}
+                {order.estimatedDate && order.status === "shipping" && (
+                  <p className="mt-4 text-sm text-stone-600 text-center">
+                    発送予定日：<span className="font-bold text-stone-900">{order.estimatedDate}</span>
+                  </p>
                 )}
                 {order.complaint && (
                   <div className="mt-5 flex items-center gap-2 bg-orange-50 border border-orange-200 rounded-xl px-4 py-3">

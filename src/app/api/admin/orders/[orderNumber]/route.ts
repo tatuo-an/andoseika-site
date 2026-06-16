@@ -13,7 +13,7 @@ export async function PATCH(
   }
 
   const { orderNumber } = await params;
-  const { status, clearComplaint } = await req.json() as { status: string; clearComplaint?: boolean };
+  const { status, clearComplaint, estimatedDate } = await req.json() as { status: string; clearComplaint?: boolean; estimatedDate?: string };
 
   const authClient = new google.auth.GoogleAuth({
     credentials: {
@@ -39,6 +39,7 @@ export async function PATCH(
     { range: `注文管理!I${sheetRow}`, values: [[status]] },
   ];
   if (clearComplaint) updateData.push({ range: `注文管理!M${sheetRow}`, values: [[""]] });
+  if (estimatedDate !== undefined) updateData.push({ range: `注文管理!O${sheetRow}`, values: [[estimatedDate]] });
 
   await sheets.spreadsheets.values.batchUpdate({
     spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
