@@ -4,7 +4,7 @@ import { google } from "googleapis";
 export const dynamic = "force-dynamic";
 
 const SHEET = "オンライン";
-const TTL_MS = 3 * 60 * 1000; // 3分
+const TTL_MS = 90 * 1000; // 90秒
 
 async function getSheets() {
   const auth = new google.auth.GoogleAuth({

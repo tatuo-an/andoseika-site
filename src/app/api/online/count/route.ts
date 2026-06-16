@@ -3,7 +3,7 @@ import { google } from "googleapis";
 
 export const dynamic = "force-dynamic";
 
-const TTL_MS = 3 * 60 * 1000;
+const TTL_MS = 90 * 1000;
 
 export async function GET() {
   const auth = new google.auth.GoogleAuth({

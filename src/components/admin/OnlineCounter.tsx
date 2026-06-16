@@ -23,22 +23,46 @@ async function ping(): Promise<number> {
   return data.online ?? 0;
 }
 
+function sendRemove() {
+  const sid = sessionStorage.getItem("ando_sid");
+  if (!sid) return;
+  // sendBeacon はページ閉じても確実に送信される
+  navigator.sendBeacon(
+    "/api/online/remove",
+    new Blob([JSON.stringify({ sessionId: sid })], { type: "application/json" })
+  );
+}
+
 export function OnlineCounter({ isAdmin }: { isAdmin: boolean }) {
   const [online, setOnline] = useState<number | null>(null);
 
   useEffect(() => {
-    // 初回ping（自分を登録しつつカウント取得）
     ping().then(setOnline);
 
-    // 30秒ごとにハートビート
     const interval = setInterval(() => {
       ping().then(setOnline);
     }, 30_000);
 
-    return () => clearInterval(interval);
+    // タブを閉じた・ページ離脱時に自分を削除
+    window.addEventListener("beforeunload", sendRemove);
+
+    // タブを隠した場合（別タブに切り替え）→ 30秒後にpingが途切れるので許容
+    // タブに戻ってきたら再登録
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        ping().then(setOnline);
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("beforeunload", sendRemove);
+      document.removeEventListener("visibilitychange", handleVisibility);
+      sendRemove();
+    };
   }, []);
 
-  // 管理者のみ表示
   if (!isAdmin) return null;
 
   return (
