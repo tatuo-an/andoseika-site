@@ -463,13 +463,35 @@ export default function OrderDetailPage() {
                     {completing ? "処理中..." : "受取完了"}
                   </button>
                 )}
-                {order.status === "delivered" && (
+                {order.status === "delivered" && !order.complaint && (
                   <button
                     onClick={() => setShowCancelModal(true)}
                     className="mt-5 w-full flex items-center justify-center gap-2 py-3 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-colors text-sm font-bold"
                   >
                     <XCircle className="w-4 h-4" />
                     問題を報告する
+                  </button>
+                )}
+                {order.status === "delivered" && order.complaint && (
+                  <button
+                    onClick={async () => {
+                      if (!confirm("問題報告を取り消しますか？")) return;
+                      const complaintMsg = [...messages].reverse().find((m) => /^【問題報告】/.test(m.message));
+                      if (!complaintMsg) return;
+                      const res = await fetch(`/api/my/orders/${orderNumber}/message`, {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ sentAt: complaintMsg.sentAt }),
+                      });
+                      if (res.ok) {
+                        setMessages((prev) => prev.map((m) => m.sentAt === complaintMsg.sentAt ? { ...m, message: "__retracted__" } : m));
+                        setOrder((prev) => prev ? { ...prev, complaint: "" } : prev);
+                      }
+                    }}
+                    className="mt-5 w-full flex items-center justify-center gap-2 py-3 border border-stone-300 text-stone-600 rounded-xl hover:bg-stone-50 transition-colors text-sm font-medium"
+                  >
+                    <XCircle className="w-4 h-4" />
+                    問題報告を取り消す
                   </button>
                 )}
               </div>
