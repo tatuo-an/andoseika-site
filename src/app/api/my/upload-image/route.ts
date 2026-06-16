@@ -5,12 +5,11 @@ import { auth } from "@/auth";
 export const runtime = "nodejs";
 
 async function getAccessToken(): Promise<string> {
-  const jwtClient = new google.auth.JWT(
-    process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
-    undefined,
-    process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-    ["https://www.googleapis.com/auth/drive"],
-  );
+  const jwtClient = new google.auth.JWT({
+    email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
+    key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+    scopes: ["https://www.googleapis.com/auth/drive"],
+  });
   const tokens = await jwtClient.authorize();
   if (!tokens.access_token) throw new Error("Failed to get access token");
   return tokens.access_token;
@@ -77,12 +76,11 @@ export async function POST(req: NextRequest) {
 
     // シート記録（失敗しても URL は返す）
     try {
-      const sheetsAuth = new google.auth.JWT(
-        process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
-        undefined,
-        process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-        ["https://www.googleapis.com/auth/spreadsheets"],
-      );
+      const sheetsAuth = new google.auth.JWT({
+        email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
+        key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+        scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+      });
       const sheets = google.sheets({ version: "v4", auth: sheetsAuth });
       const uploadedAt = new Date().toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" });
       await sheets.spreadsheets.values.append({
