@@ -43,6 +43,7 @@ function UserCancelModal({ onConfirm, onCancel, loading, orderStatus }: {
   const reasons: readonly Reason[] = isAfterReceive ? REASONS_AFTER_RECEIVE : isShipping ? REASONS_SHIPPING : REASONS_BEFORE_SHIP;
 
   const [selected, setSelected] = useState("");
+  const [desiredAction, setDesiredAction] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [compressedFile, setCompressedFile] = useState<File | null>(null);
   const [compressing, setCompressing] = useState(false);
@@ -54,7 +55,7 @@ function UserCancelModal({ onConfirm, onCancel, loading, orderStatus }: {
   const reason = reasons.find((r) => r.value === selected);
   const needsImage = reason?.requireImage ?? false;
   const displayFile = compressedFile ?? imageFile;
-  const canSubmit = selected && (!needsImage || displayFile) && !loading && !uploading && !compressing;
+  const canSubmit = selected && (!needsImage || displayFile) && !loading && !uploading && !compressing && (!isAfterReceive || desiredAction);
 
   function formatSize(bytes: number) {
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)}KB`;
@@ -133,12 +134,14 @@ function UserCancelModal({ onConfirm, onCancel, loading, orderStatus }: {
           setUploadError((data.error ?? "画像のアップロードに失敗しました") + (data.detail ? `\n${data.detail}` : ""));
           return;
         }
-        onConfirm(reason.label, data.url);
+        const actionLabel = desiredAction === "resend" ? "再送希望" : desiredAction === "refund" ? "返金希望" : "どちらでもよい";
+        onConfirm(`${reason.label}（${actionLabel}）`, data.url);
       } catch {
         setUploadError("通信エラーが発生しました。もう一度お試しください。");
       } finally { setUploading(false); }
     } else {
-      onConfirm(reason.label);
+      const actionLabel = desiredAction === "resend" ? "再送希望" : desiredAction === "refund" ? "返金希望" : desiredAction === "either" ? "どちらでもよい" : "";
+      onConfirm(actionLabel ? `${reason.label}（${actionLabel}）` : reason.label);
     }
   }
 
@@ -186,6 +189,27 @@ function UserCancelModal({ onConfirm, onCancel, loading, orderStatus }: {
                 </p>
               )}
               {preview && <img src={preview} alt="preview" className="mt-2 rounded-lg max-h-36 object-contain w-full border border-stone-100" />}
+            </div>
+          </div>
+        )}
+
+        {isAfterReceive && selected && (
+          <div className="mb-4">
+            <p className="text-sm font-medium text-stone-800 mb-2">ご希望の対応</p>
+            <div className="space-y-2">
+              {[
+                { value: "resend", label: "再送希望", desc: "同じ商品を再度お届けします" },
+                { value: "refund", label: "返金希望", desc: "ご購入金額を返金します" },
+                { value: "either", label: "どちらでもよい", desc: "店舗にお任せします" },
+              ].map((a) => (
+                <label key={a.value} className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${desiredAction === a.value ? "border-red-400 bg-red-50" : "border-stone-200 hover:border-stone-300"}`}>
+                  <input type="radio" name="desired_action" value={a.value} checked={desiredAction === a.value} onChange={() => setDesiredAction(a.value)} className="mt-0.5 accent-red-500" />
+                  <div>
+                    <p className="text-sm font-medium text-stone-800">{a.label}</p>
+                    <p className="text-xs text-stone-500">{a.desc}</p>
+                  </div>
+                </label>
+              ))}
             </div>
           </div>
         )}
