@@ -396,7 +396,7 @@ export default function OrderDetailPage() {
                 )}
                 {order.estimatedDate && order.status === "shipping" && (
                   <p className="mt-4 text-sm text-stone-600 text-center">
-                    発送予定日：<span className="font-bold text-stone-900">{order.estimatedDate}</span>
+                    お届け予定日：<span className="font-bold text-stone-900">{order.estimatedDate}</span>
                   </p>
                 )}
                 {order.complaint && (
