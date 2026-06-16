@@ -5,6 +5,7 @@ import { ShoppingCart, Menu, User, X } from "lucide-react";
 import { useShoppingCart } from "use-shopping-cart";
 import { useState } from "react";
 import { CartModal } from "@/components/cart/CartModal";
+import { OnlineTracker } from "@/components/layout/OnlineTracker";
 
 const NAV_ITEMS = [
     { href: "/products", label: "商品一覧" },
@@ -21,6 +22,7 @@ export function Header() {
 
     return (
         <>
+            <OnlineTracker />
             <header className="sticky top-0 z-50 w-full border-b border-stone-200 bg-white/80 backdrop-blur-md">
                 <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
                     <Link href="/" className="flex items-center gap-2">

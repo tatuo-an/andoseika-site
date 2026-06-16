@@ -83,7 +83,7 @@ export default async function MyPage() {
           {/* 管理者エリア */}
           {isAdmin(user.email) && (
             <div className="mb-6 space-y-3">
-              <OnlineCounter isAdmin={true} />
+              <OnlineCounter />
               <Link
                 href="/admin"
                 className="flex items-center gap-2 bg-stone-100 hover:bg-stone-200 text-stone-700 px-5 py-3 rounded-full text-sm font-bold transition-colors w-fit"
