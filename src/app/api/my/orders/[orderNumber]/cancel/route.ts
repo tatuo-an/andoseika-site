@@ -1,12 +1,14 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { google } from "googleapis";
 import { auth } from "@/auth";
 
-export async function POST(_: Request, { params }: { params: Promise<{ orderNumber: string }> }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ orderNumber: string }> }) {
   const session = await auth();
   if (!session?.user?.email) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { orderNumber } = await params;
+  const { reasonLabel, imageUrl } = await req.json().catch(() => ({})) as { reasonLabel?: string; imageUrl?: string };
+
   const a = new google.auth.GoogleAuth({
     credentials: {
       client_email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
@@ -32,6 +34,19 @@ export async function POST(_: Request, { params }: { params: Promise<{ orderNumb
     valueInputOption: "RAW",
     requestBody: { values: [["cancelled"]] },
   });
+
+  if (reasonLabel) {
+    const sentAt = new Date().toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" });
+    const msg = imageUrl
+      ? `キャンセルを申請しました。\n【理由】${reasonLabel}\n【写真】${imageUrl}`
+      : `キャンセルを申請しました。\n【理由】${reasonLabel}`;
+    await sheets.spreadsheets.values.append({
+      spreadsheetId: id,
+      range: "注文メッセージ!A:E",
+      valueInputOption: "RAW",
+      requestBody: { values: [[orderNumber, "user", session.user.name ?? "お客様", msg, sentAt]] },
+    });
+  }
 
   return NextResponse.json({ ok: true });
 }

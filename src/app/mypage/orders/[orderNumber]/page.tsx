@@ -13,6 +13,98 @@ type Order = {
 };
 type Message = { senderType: string; senderName: string; message: string; sentAt: string };
 
+const USER_CANCEL_REASONS = [
+  { value: "wrong_item",    label: "注文の間違い",     desc: "商品・数量を誤って注文してしまったため",     requireImage: false },
+  { value: "change_date",   label: "配達日・時間の変更", desc: "都合により受け取り日時を変更したいため",   requireImage: false },
+  { value: "no_longer",     label: "不要になった",     desc: "諸事情により商品が不要になったため",         requireImage: false },
+  { value: "bought_else",   label: "他で購入した",     desc: "別の方法で同商品を購入したため",             requireImage: false },
+  { value: "defect",        label: "商品の不具合",     desc: "破損・品質不良など（写真の添付が必要です）", requireImage: true  },
+  { value: "other",         label: "その他",           desc: "担当者へメッセージにてお伝えします",         requireImage: false },
+] as const;
+
+function UserCancelModal({ onConfirm, onCancel, loading }: {
+  onConfirm: (reasonLabel: string, imageUrl?: string) => void;
+  onCancel: () => void;
+  loading: boolean;
+}) {
+  const [selected, setSelected] = useState("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [preview, setPreview] = useState<string | null>(null);
+
+  const reason = USER_CANCEL_REASONS.find((r) => r.value === selected);
+  const needsImage = reason?.requireImage ?? false;
+  const canSubmit = selected && (!needsImage || imageFile) && !loading && !uploading;
+
+  function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    setImageFile(f);
+    setPreview(URL.createObjectURL(f));
+  }
+
+  async function handleConfirm() {
+    if (!reason) return;
+    if (needsImage && imageFile) {
+      setUploading(true);
+      try {
+        const fd = new FormData();
+        fd.append("file", imageFile);
+        const res = await fetch("/api/my/upload-image", { method: "POST", body: fd });
+        const data = await res.json();
+        onConfirm(reason.label, data.url);
+      } finally { setUploading(false); }
+    } else {
+      onConfirm(reason.label);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm max-h-[90vh] overflow-y-auto">
+        <h3 className="font-bold text-stone-900 mb-1">注文をキャンセルする</h3>
+        <p className="text-sm text-stone-500 mb-4">キャンセル理由を選択してください。</p>
+        <div className="space-y-2 mb-4">
+          {USER_CANCEL_REASONS.map((r) => (
+            <label key={r.value} className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${selected === r.value ? "border-red-400 bg-red-50" : "border-stone-200 hover:border-stone-300"}`}>
+              <input type="radio" name="user_reason" value={r.value} checked={selected === r.value} onChange={() => { setSelected(r.value); setImageFile(null); setPreview(null); }} className="mt-0.5 accent-red-500" />
+              <div>
+                <p className="text-sm font-medium text-stone-800">{r.label}</p>
+                <p className="text-xs text-stone-500">{r.desc}</p>
+              </div>
+            </label>
+          ))}
+        </div>
+
+        {needsImage && (
+          <div className="mb-4 space-y-2">
+            <div className="p-3 bg-amber-50 border border-amber-300 rounded-xl">
+              <p className="text-xs font-bold text-amber-800 mb-1">⚠️ 写真の撮影をお願いします</p>
+              <p className="text-xs text-amber-700">商品の不具合（破損・変色・異物など）がわかるよう、現在の状態を撮影した写真を添付してください。写真がない場合は対応できかねる場合があります。</p>
+            </div>
+            <div className="p-3 border border-stone-200 rounded-xl">
+              <p className="text-xs text-stone-500 mb-2">写真を選択（必須・5MBまで）</p>
+              <input type="file" accept="image/*" onChange={handleFile} className="text-xs text-stone-600 w-full" />
+              {preview && <img src={preview} alt="preview" className="mt-2 rounded-lg max-h-36 object-contain w-full border border-stone-100" />}
+            </div>
+          </div>
+        )}
+
+        <div className="flex gap-2">
+          <button onClick={onCancel} className="flex-1 py-2.5 border border-stone-200 rounded-xl text-sm text-stone-600 hover:bg-stone-50 transition-colors">戻る</button>
+          <button
+            onClick={handleConfirm}
+            disabled={!canSubmit}
+            className="flex-1 py-2.5 bg-red-500 text-white rounded-xl text-sm font-bold hover:bg-red-600 transition-colors disabled:opacity-50"
+          >
+            {uploading ? "アップロード中..." : loading ? "処理中..." : "キャンセルする"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const STEPS = ["注文", "支払い", "発送準備", "発送済み", "受取完了"];
 const STATUS_STEP: Record<string, number> = { paid: 2, shipping: 3, delivered: 4, cancelled: -1, cancel_requested: 2 };
 
@@ -25,6 +117,7 @@ export default function OrderDetailPage() {
   const [msgText, setMsgText] = useState("");
   const [sending, setSending] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
   const [completing, setCompleting] = useState(false);
   const [responding, setResponding] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -57,13 +150,25 @@ export default function OrderDetailPage() {
     } finally { setSending(false); }
   }
 
-  async function cancelOrder() {
-    if (!confirm("注文をキャンセルしますか？")) return;
+  async function cancelOrder(reasonLabel: string, imageUrl?: string) {
     setCancelling(true);
     try {
-      const res = await fetch(`/api/my/orders/${orderNumber}/cancel`, { method: "POST" });
-      if (res.ok) setOrder((prev) => prev ? { ...prev, status: "cancelled" } : prev);
-    } finally { setCancelling(false); }
+      const res = await fetch(`/api/my/orders/${orderNumber}/cancel`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reasonLabel, imageUrl }),
+      });
+      if (res.ok) {
+        setOrder((prev) => prev ? { ...prev, status: "cancelled" } : prev);
+        const msgText = imageUrl
+          ? `キャンセルを申請しました。\n【理由】${reasonLabel}\n【写真】${imageUrl}`
+          : `キャンセルを申請しました。\n【理由】${reasonLabel}`;
+        setMessages((prev) => [...prev, {
+          senderType: "user", senderName: "お客様", message: msgText,
+          sentAt: new Date().toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" }),
+        }]);
+      }
+    } finally { setCancelling(false); setShowCancelModal(false); }
   }
 
   const step = order ? (STATUS_STEP[order.status] ?? 0) : 0;
@@ -82,6 +187,13 @@ export default function OrderDetailPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-stone-50">
+      {showCancelModal && (
+        <UserCancelModal
+          loading={cancelling}
+          onConfirm={(reasonLabel, imageUrl) => cancelOrder(reasonLabel, imageUrl)}
+          onCancel={() => setShowCancelModal(false)}
+        />
+      )}
       <Header />
       <main className="flex-1 py-8">
         <div className="container mx-auto px-4 md:px-6 max-w-4xl">
@@ -226,12 +338,11 @@ export default function OrderDetailPage() {
               {/* キャンセルボタン */}
               {order.status === "paid" && (
                 <button
-                  onClick={cancelOrder}
-                  disabled={cancelling}
-                  className="w-full flex items-center justify-center gap-2 py-3 border border-red-200 text-red-600 rounded-xl hover:bg-red-50 transition-colors text-sm font-medium disabled:opacity-50"
+                  onClick={() => setShowCancelModal(true)}
+                  className="w-full flex items-center justify-center gap-2 py-3 border border-red-200 text-red-600 rounded-xl hover:bg-red-50 transition-colors text-sm font-medium"
                 >
                   <XCircle className="w-4 h-4" />
-                  {cancelling ? "処理中..." : "注文をキャンセルする"}
+                  注文をキャンセルする
                 </button>
               )}
             </div>
