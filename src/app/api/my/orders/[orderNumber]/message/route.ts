@@ -73,12 +73,28 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ or
   const rowIndex = rows.findIndex((r) => r[0] === orderNumber && r[1] === "user" && r[4] === sentAt);
   if (rowIndex === -1) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
+  const retractedMsg = rows[rowIndex][3] ?? "";
   await sheets.spreadsheets.values.update({
     spreadsheetId: id,
     range: `注文メッセージ!D${rowIndex + 1}`,
     valueInputOption: "RAW",
     requestBody: { values: [["__retracted__"]] },
   });
+
+  // 問題報告・配送問い合わせメッセージを取り消した場合はM列もクリア
+  if (/^【(問題報告|配送問い合わせ)】/.test(retractedMsg)) {
+    const orderRes = await sheets.spreadsheets.values.get({ spreadsheetId: id, range: "注文管理!A:A" });
+    const orderRows = orderRes.data.values ?? [];
+    const orderRowIndex = orderRows.findIndex((r) => r[0] === orderNumber);
+    if (orderRowIndex !== -1) {
+      await sheets.spreadsheets.values.update({
+        spreadsheetId: id,
+        range: `注文管理!M${orderRowIndex + 1}`,
+        valueInputOption: "RAW",
+        requestBody: { values: [[""]] },
+      });
+    }
+  }
 
   return NextResponse.json({ ok: true });
 }
