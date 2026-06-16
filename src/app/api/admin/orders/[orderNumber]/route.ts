@@ -13,7 +13,7 @@ export async function PATCH(
   }
 
   const { orderNumber } = await params;
-  const { status } = await req.json() as { status: string };
+  const { status, clearComplaint } = await req.json() as { status: string; clearComplaint?: boolean };
 
   const authClient = new google.auth.GoogleAuth({
     credentials: {
@@ -35,11 +35,14 @@ export async function PATCH(
   }
 
   const sheetRow = rowIndex + 1;
-  await sheets.spreadsheets.values.update({
+  const updateData: { range: string; values: string[][] }[] = [
+    { range: `注文管理!I${sheetRow}`, values: [[status]] },
+  ];
+  if (clearComplaint) updateData.push({ range: `注文管理!M${sheetRow}`, values: [[""]] });
+
+  await sheets.spreadsheets.values.batchUpdate({
     spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-    range: `注文管理!I${sheetRow}`,
-    valueInputOption: "USER_ENTERED",
-    requestBody: { values: [[status]] },
+    requestBody: { valueInputOption: "RAW", data: updateData },
   });
 
   return NextResponse.json({ ok: true });

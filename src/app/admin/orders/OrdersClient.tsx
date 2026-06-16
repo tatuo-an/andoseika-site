@@ -438,6 +438,51 @@ export function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
                       {/* Status actions */}
                       <div className="flex flex-wrap gap-2 pt-2 border-t border-stone-200">
                         <p className="text-xs text-stone-500 w-full">ステータス変更：</p>
+                        {order.complaint?.includes("再送希望") && (
+                          <button
+                            onClick={async () => {
+                              if (!confirm("再送対応しますか？ステータスを発送前に戻します。")) return;
+                              setUpdating(order.orderNumber);
+                              try {
+                                const res = await fetch(`/api/admin/orders/${encodeURIComponent(order.orderNumber)}`, {
+                                  method: "PATCH",
+                                  headers: { "Content-Type": "application/json" },
+                                  body: JSON.stringify({ status: "paid", clearComplaint: true }),
+                                });
+                                if (res.ok) setOrders((prev) => prev.map((o) => o.orderNumber === order.orderNumber ? { ...o, status: "paid", complaint: "" } : o));
+                              } finally { setUpdating(null); }
+                            }}
+                            disabled={isUpdating}
+                            className="flex items-center gap-1.5 px-4 py-2 bg-blue-500 text-white text-sm font-bold rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50"
+                          >
+                            <Truck className="w-4 h-4" />
+                            再送する
+                          </button>
+                        )}
+                        {order.complaint?.includes("返金希望") && (
+                          <button
+                            onClick={async () => {
+                              if (!confirm("返金処理を実行しますか？この操作は取り消せません。")) return;
+                              setUpdating(order.orderNumber);
+                              try {
+                                const res = await fetch(`/api/admin/orders/${encodeURIComponent(order.orderNumber)}/refund`, { method: "POST" });
+                                const data = await res.json();
+                                if (res.ok) {
+                                  setOrders((prev) => prev.map((o) => o.orderNumber === order.orderNumber ? { ...o, status: "cancelled", complaint: "" } : o));
+                                  alert("返金処理が完了しました");
+                                } else {
+                                  alert("返金に失敗しました: " + (data.error ?? ""));
+                                }
+                              } finally { setUpdating(null); }
+                            }}
+                            disabled={isUpdating}
+                            className="flex items-center gap-1.5 px-4 py-2 bg-red-500 text-white text-sm font-bold rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50"
+                          >
+                            <XCircle className="w-4 h-4" />
+                            返金する
+                          </button>
+                        )}
+
                         {order.status === "paid" && (
                           <button
                             onClick={() => setShippingModal(order.orderNumber)}
