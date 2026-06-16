@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { google } from "googleapis";
 import { auth } from "@/auth";
 import { isAdmin } from "@/lib/admin";
@@ -38,10 +38,16 @@ async function ensureHeader(sheets: ReturnType<typeof google.sheets>, id: string
   return "header added";
 }
 
-export async function POST() {
-  const session = await auth();
-  if (!isAdmin(session?.user?.email)) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+const GAS_SECRET = process.env.GAS_SECRET ?? "";
+
+export async function POST(req: NextRequest) {
+  // GASからの呼び出し（シークレットキー）またはログイン管理者
+  const gasKey = req.headers.get("x-gas-secret");
+  if (gasKey !== GAS_SECRET || !GAS_SECRET) {
+    const session = await auth();
+    if (!isAdmin(session?.user?.email)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
   }
 
   const sheets = await getSheets();
