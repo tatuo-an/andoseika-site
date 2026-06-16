@@ -4,8 +4,6 @@ import { auth } from "@/auth";
 import { isAdmin } from "@/lib/admin";
 import Stripe from "stripe";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
-
 function getSheets() {
   const a = new google.auth.GoogleAuth({
     credentials: {
@@ -22,6 +20,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ ord
   if (!isAdmin(session?.user?.email)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const { orderNumber } = await params;
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
   const sheets = getSheets();
   const id = process.env.GOOGLE_SPREADSHEET_ID!;
 

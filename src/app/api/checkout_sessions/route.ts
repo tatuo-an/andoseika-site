@@ -29,8 +29,10 @@ export async function POST(req: NextRequest) {
         }
 
         const body = await req.json();
-        const { cartDetails, quote, shippingAddress, desiredDeliveryDate, desiredDeliveryTime } = body as {
+        const { cartDetails, quote, shippingAddress, desiredDeliveryDate, desiredDeliveryTime, shipMode, shipValue } = body as {
             cartDetails?: Record<string, CartItem & { cost?: number | null }>;
+            shipMode?: string;
+            shipValue?: string;
             quote?: {
                 matchedVariantId: string | null;
                 matchedVariantName: string | null;
@@ -181,6 +183,8 @@ export async function POST(req: NextRequest) {
                     shippingPhone: shippingAddress?.phone ?? "",
                     desiredDeliveryDate: desiredDeliveryDate ?? "",
                     desiredDeliveryTime: desiredDeliveryTime ?? "",
+                    shipMode: shipMode ?? "",
+                    shipValue: shipValue ?? "",
                 },
             },
         };

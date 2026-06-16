@@ -86,13 +86,13 @@ const DEFAULT_SHIPPING: ShippingRow[] = [
     { region: "それ以外", prefectures: "東京都,神奈川県,埼玉県,千葉県,茨城県,栃木県,群馬県,新潟県,富山県,石川県,福井県,山梨県,長野県,岐阜県,静岡県,愛知県,三重県,滋賀県,京都府,大阪府,兵庫県,奈良県,和歌山県,鳥取県,島根県,岡山県,広島県,山口県,徳島県,香川県,愛媛県,高知県,福岡県,佐賀県,長崎県,熊本県,大分県,宮崎県,鹿児島県", s60: 600, s80: 700, s100: 800, s120: 1000, s140: 1200, s160: 1400, s180: 1600, s200: 1800, compact: 690, clickpost: 185 },
 ];
 
-type InvItem = { id: string; name: string; price: number | null; family: string; coolAvailable?: boolean; shipType?: string; clickpostMax?: number; cost?: number | null; profitRate?: number | null; compactMax?: number };
+type InvItem = { id: string; name: string; price: number | null; family: string; coolAvailable?: boolean; shipType?: string; clickpostMax?: number; cost?: number | null; profitRate?: number | null; compactMax?: number; shipMode?: string; shipValue?: string };
 
 // カートのitemに保存されたフィールドが欠落していても、inventoryから復元する
 function enrichItem<T extends { id: string }>(item: T, inventory: InvItem[]): T {
     const inv = inventory.find(v => v.id === item.id);
     if (!inv) return item;
-    const it = item as T & { cost?: number | null; profitRate?: number | null; shipType?: string; coolAvailable?: boolean; clickpostMax?: number; compactMax?: number; family?: string };
+    const it = item as T & { cost?: number | null; profitRate?: number | null; shipType?: string; coolAvailable?: boolean; clickpostMax?: number; compactMax?: number; family?: string; shipMode?: string; shipValue?: string };
     return {
         ...item,
         cost: it.cost ?? inv.cost ?? null,
@@ -102,6 +102,8 @@ function enrichItem<T extends { id: string }>(item: T, inventory: InvItem[]): T 
         clickpostMax: it.clickpostMax ?? inv.clickpostMax ?? 0,
         compactMax: it.compactMax ?? inv.compactMax ?? 0,
         family: it.family || inv.family || "",
+        shipMode: it.shipMode || inv.shipMode || "",
+        shipValue: it.shipValue || inv.shipValue || "",
     } as T;
 }
 type OptionEntry = { label: string; amount: number };
@@ -303,6 +305,10 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
             alert("配送先を選択してください");
             return;
         }
+        // カート内の商品からshipMode/shipValueを取得（全商品で共通のものを使う）
+        const firstWithShip = cartItems.find(i => (i as { shipMode?: string }).shipMode);
+        const cartShipMode = (firstWithShip as { shipMode?: string } | undefined)?.shipMode ?? "";
+        const cartShipValue = (firstWithShip as { shipValue?: string } | undefined)?.shipValue ?? "";
         try {
             const response = await fetch("/api/checkout_sessions", {
                 method: "POST",
@@ -310,6 +316,8 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                 body: JSON.stringify({
                     cartDetails,
                     shippingAddress: selectedAddress,
+                    shipMode: cartShipMode,
+                    shipValue: cartShipValue,
                     quote: {
                         matchedVariantId: matchedVariant?.id ?? null,
                         matchedVariantName: matchedVariant?.name ?? null,
