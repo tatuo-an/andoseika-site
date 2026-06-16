@@ -49,22 +49,22 @@ export function Header() {
                     <div className="flex items-center gap-4">
                         <Link
                             href="/mypage"
-                            className="p-2 hover:bg-stone-100 rounded-full transition-colors"
+                            className="flex flex-col items-center gap-0.5 px-2 py-1 hover:bg-stone-100 rounded-lg transition-colors"
                         >
                             <User className="h-5 w-5 text-stone-600" />
-                            <span className="sr-only">マイページ</span>
+                            <span className="text-[10px] text-stone-500 font-medium">マイページ</span>
                         </Link>
                         <button
                             onClick={() => setIsCartOpen(true)}
-                            className="relative p-2 hover:bg-stone-100 rounded-full transition-colors"
+                            className="relative flex flex-col items-center gap-0.5 px-2 py-1 hover:bg-stone-100 rounded-lg transition-colors"
                         >
                             <ShoppingCart className="h-5 w-5 text-stone-600" />
                             {cartCount! > 0 && (
-                                <span className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center bg-primary text-white text-xs font-bold rounded-full">
+                                <span className="absolute -top-1 right-0 h-5 w-5 flex items-center justify-center bg-primary text-white text-xs font-bold rounded-full">
                                     {cartCount}
                                 </span>
                             )}
-                            <span className="sr-only">カート</span>
+                            <span className="text-[10px] text-stone-500 font-medium">カート</span>
                         </button>
                         <button
                             onClick={() => setIsMenuOpen(true)}
