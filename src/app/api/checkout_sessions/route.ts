@@ -58,6 +58,7 @@ export async function POST(req: NextRequest) {
         if (!cartDetails) {
             return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
         }
+        console.log("[checkout] shipMode:", shipMode, "shipValue:", shipValue);
 
         const baseUrl = getBaseUrl(req);
         const legalDisclosureUrl = new URL("/tokusho", baseUrl).toString();
