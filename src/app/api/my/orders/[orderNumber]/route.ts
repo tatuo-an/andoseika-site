@@ -4,6 +4,12 @@ import { auth } from "@/auth";
 
 export const dynamic = "force-dynamic";
 
+function normalizePhone(p: string): string {
+  const digits = (p ?? "").replace(/\D/g, "");
+  if (digits.length === 10) return "0" + digits;
+  return p ?? "";
+}
+
 function getSheets() {
   const a = new google.auth.GoogleAuth({
     credentials: {
@@ -35,7 +41,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ orderNumbe
 
   const order = {
     orderNumber: row[0], createdAt: row[1], name: row[2], email: row[3],
-    phone: row[4], address: row[5], productNames: row[6],
+    phone: normalizePhone(row[4]), address: row[5], productNames: row[6],
     amount: parseInt(row[7] ?? "0", 10) || 0,
     status: row[8] ?? "paid", sessionId: row[9],
     desiredDate: row[10], desiredTime: row[11],

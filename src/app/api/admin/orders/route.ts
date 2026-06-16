@@ -3,6 +3,12 @@ import { google } from "googleapis";
 import { auth } from "@/auth";
 import { isAdmin } from "@/lib/admin";
 
+function normalizePhone(p: string): string {
+  const digits = p.replace(/\D/g, "");
+  if (digits.length === 10) return "0" + digits;
+  return p;
+}
+
 export type Order = {
   orderNumber: string;
   createdAt: string;
@@ -45,7 +51,7 @@ export async function GET() {
       createdAt: r[1] ?? "",
       name: r[2] ?? "",
       email: r[3] ?? "",
-      phone: r[4] ?? "",
+      phone: normalizePhone(r[4] ?? ""),
       address: r[5] ?? "",
       productNames: r[6] ?? "",
       amount: parseInt(r[7] ?? "0", 10) || 0,
