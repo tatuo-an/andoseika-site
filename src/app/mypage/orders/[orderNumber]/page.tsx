@@ -186,7 +186,6 @@ export default function OrderDetailPage() {
                     <textarea
                       value={msgText}
                       onChange={(e) => setMsgText(e.target.value)}
-                      onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }}}
                       placeholder="メッセージを入力（Enterで送信）"
                       rows={2}
                       className="flex-1 border border-stone-200 rounded-xl px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/30"

@@ -46,7 +46,6 @@ function ShippingModal({ onConfirm, onCancel, loading }: {
           type="text"
           value={trackingNumber}
           onChange={(e) => setTrackingNumber(e.target.value)}
-          onKeyDown={(e) => { if (e.key === "Enter" && trackingNumber.trim()) onConfirm(trackingNumber.trim()); }}
           placeholder="例：1234-5678-9012"
           autoFocus
           className="w-full border border-stone-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 mb-4"
@@ -348,7 +347,6 @@ export function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
                         type="text"
                         value={msgText[order.orderNumber] ?? ""}
                         onChange={(e) => setMsgText((p) => ({ ...p, [order.orderNumber]: e.target.value }))}
-                        onKeyDown={(e) => { if (e.key === "Enter") sendAdminMessage(order.orderNumber); }}
                         placeholder="お客様へメッセージを送る（Enter送信）"
                         className="flex-1 border border-stone-200 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary/30 bg-white"
                       />
