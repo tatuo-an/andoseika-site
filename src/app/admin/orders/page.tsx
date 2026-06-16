@@ -56,6 +56,7 @@ export default async function AdminOrdersPage() {
   const countActive = orders.filter((o) => o.status === "paid" || o.status === "shipping").length;
   const countDone = orders.filter((o) => o.status === "delivered").length;
   const countCancelled = orders.filter((o) => o.status === "cancelled").length;
+  const countComplaints = orders.filter((o) => o.complaint).length;
 
   return (
     <div className="min-h-screen bg-stone-50 flex flex-col">
@@ -64,12 +65,13 @@ export default async function AdminOrdersPage() {
         <h1 className="text-2xl font-bold text-stone-900 mb-6">注文管理</h1>
 
         {/* Summary cards */}
-        <div className="grid grid-cols-4 gap-3 mb-6">
+        <div className="grid grid-cols-5 gap-3 mb-6">
           {[
-            { label: "すべて",     count: countAll,       color: "text-stone-700" },
-            { label: "取引中",     count: countActive,    color: "text-yellow-700" },
-            { label: "完了",       count: countDone,      color: "text-green-700" },
-            { label: "キャンセル", count: countCancelled, color: "text-stone-400" },
+            { label: "すべて",     count: countAll,        color: "text-stone-700" },
+            { label: "取引中",     count: countActive,     color: "text-yellow-700" },
+            { label: "完了",       count: countDone,       color: "text-green-700" },
+            { label: "キャンセル", count: countCancelled,  color: "text-stone-400" },
+            { label: "クレーム",   count: countComplaints, color: "text-orange-600" },
           ].map((s) => (
             <div key={s.label} className="bg-white rounded-xl border border-stone-200 px-4 py-3 text-center shadow-sm">
               <p className={`text-2xl font-bold ${s.color}`}>{s.count}</p>
