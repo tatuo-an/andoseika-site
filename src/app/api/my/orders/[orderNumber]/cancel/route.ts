@@ -32,7 +32,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ ord
     spreadsheetId: id,
     range: `注文管理!I${rowIndex + 1}`,
     valueInputOption: "RAW",
-    requestBody: { values: [["cancelled"]] },
+    requestBody: { values: [["cancel_requested"]] },
   });
 
   if (reasonLabel) {

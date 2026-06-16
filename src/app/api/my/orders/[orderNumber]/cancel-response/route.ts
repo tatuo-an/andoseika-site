@@ -26,7 +26,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ ord
 
   const row = rows[rowIndex];
   if (row[3] !== session.user.email) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  if (row[8] !== "cancel_requested") return NextResponse.json({ error: "Not in cancel_requested state" }, { status: 400 });
+  if (row[8] !== "admin_cancel_requested") return NextResponse.json({ error: "Not in admin_cancel_requested state" }, { status: 400 });
 
   const newStatus = action === "approve" ? "cancelled" : "paid";
   await sheets.spreadsheets.values.update({
