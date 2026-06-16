@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Package, Truck, CheckCircle, XCircle, ChevronDown, ChevronUp, RefreshCw, Send } from "lucide-react";
+import { useState, useMemo } from "react";
+import { Package, Truck, CheckCircle, XCircle, ChevronDown, ChevronUp, RefreshCw, Send, Search } from "lucide-react";
 import type { Order } from "@/app/api/admin/orders/route";
 
 type Message = { senderType: string; senderName: string; message: string; sentAt: string };
@@ -80,10 +80,25 @@ export function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
   const [msgLoading, setMsgLoading] = useState<string | null>(null);
   const [msgText, setMsgText] = useState<Record<string, string>>({});
   const [sending, setSending] = useState<string | null>(null);
-  const [shippingModal, setShippingModal] = useState<string | null>(null); // orderNumber
+  const [shippingModal, setShippingModal] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const filtered = filterOrders(orders, tab);
-  const countOf = (t: Tab) => filterOrders(orders, t).length;
+  const searched = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return orders;
+    return orders.filter((o) =>
+      o.orderNumber.toLowerCase().includes(q) ||
+      o.name.toLowerCase().includes(q) ||
+      o.email?.toLowerCase().includes(q) ||
+      o.phone?.includes(q) ||
+      o.productNames.toLowerCase().includes(q) ||
+      o.createdAt.includes(q) ||
+      o.address?.toLowerCase().includes(q)
+    );
+  }, [orders, searchQuery]);
+
+  const filtered = filterOrders(searched, tab);
+  const countOf = (t: Tab) => filterOrders(searched, t).length;
 
   async function updateStatus(orderNumber: string, status: string) {
     setUpdating(orderNumber);
@@ -187,6 +202,21 @@ export function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
           onCancel={() => setShippingModal(null)}
         />
       )}
+
+      {/* Search */}
+      <div className="relative mb-4">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="注文番号・氏名・商品名・日付などで検索"
+          className="w-full pl-9 pr-4 py-2.5 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 bg-white"
+        />
+        {searchQuery && (
+          <button onClick={() => setSearchQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 text-xs">✕</button>
+        )}
+      </div>
 
       {/* Tabs */}
       <div className="flex items-center gap-1 mb-4 border-b border-stone-200 pb-0">
