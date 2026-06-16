@@ -2,7 +2,7 @@ import { auth, signOut } from "@/auth";
 import { redirect } from "next/navigation";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
-import { User, Package, MapPin, LogOut, Settings, Heart } from "lucide-react";
+import { User, Package, MapPin, LogOut, Settings, Heart, CalendarDays } from "lucide-react";
 import Link from "next/link";
 import { isAdmin } from "@/lib/admin";
 
@@ -58,6 +58,15 @@ export default async function MyPage() {
               </div>
               <p className="text-sm text-stone-500">よく使う配送先住所を保存できます</p>
               <p className="text-xs text-primary mt-3 font-medium">設定する →</p>
+            </Link>
+
+            <Link href="/mypage/bookings" className="bg-white rounded-2xl shadow-sm p-6 hover:shadow-md transition-shadow block">
+              <div className="flex items-center gap-3 mb-3">
+                <CalendarDays className="w-5 h-5 text-primary" />
+                <h2 className="font-bold text-stone-900">体験予約</h2>
+              </div>
+              <p className="text-sm text-stone-500">予約した体験の日程を確認できます</p>
+              <p className="text-xs text-primary mt-3 font-medium">確認する →</p>
             </Link>
 
             <div className="bg-white rounded-2xl shadow-sm p-6">
