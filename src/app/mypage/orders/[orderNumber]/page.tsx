@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
-import { ChevronLeft, Send, XCircle } from "lucide-react";
+import { ChevronLeft, Send, XCircle, CheckCircle } from "lucide-react";
 import Link from "next/link";
 
 type Order = {
@@ -25,6 +25,7 @@ export default function OrderDetailPage() {
   const [msgText, setMsgText] = useState("");
   const [sending, setSending] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [completing, setCompleting] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -216,6 +217,25 @@ export default function OrderDetailPage() {
                 {order.desiredDate && <p className="text-stone-500">希望日: {order.desiredDate}</p>}
                 {order.desiredTime && order.desiredTime !== "指定なし" && <p className="text-stone-500">時間帯: {order.desiredTime}</p>}
               </div>
+
+              {/* 受取完了ボタン */}
+              {order.status === "shipping" && (
+                <button
+                  onClick={async () => {
+                    if (!confirm("商品を受け取りましたか？")) return;
+                    setCompleting(true);
+                    try {
+                      const res = await fetch(`/api/my/orders/${orderNumber}/delivered`, { method: "POST" });
+                      if (res.ok) setOrder((prev) => prev ? { ...prev, status: "delivered" } : prev);
+                    } finally { setCompleting(false); }
+                  }}
+                  disabled={completing}
+                  className="w-full flex items-center justify-center gap-2 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors text-sm font-bold disabled:opacity-50"
+                >
+                  <CheckCircle className="w-4 h-4" />
+                  {completing ? "処理中..." : "受取完了"}
+                </button>
+              )}
 
               {/* キャンセルボタン */}
               {order.status === "paid" && (

@@ -347,16 +347,7 @@ export function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
                         {isUpdating ? "処理中…" : "発送済みにする"}
                       </button>
                     )}
-                    {order.status === "shipping" && (
-                      <button
-                        onClick={() => updateStatus(order.orderNumber, "delivered")}
-                        disabled={isUpdating}
-                        className="flex items-center gap-1.5 px-4 py-2 bg-green-600 text-white text-sm font-bold rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
-                      >
-                        <CheckCircle className="w-4 h-4" />
-                        {isUpdating ? "処理中…" : "受取完了にする"}
-                      </button>
-                    )}
+
                     {order.status !== "cancelled" && order.status !== "delivered" && (
                       <button
                         onClick={() => {
