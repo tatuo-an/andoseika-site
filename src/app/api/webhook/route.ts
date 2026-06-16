@@ -136,6 +136,8 @@ export async function POST(req: NextRequest) {
 
     // お届け予定日: 配達希望日があればそちら優先、なければshipMode/shipValueから計算
     const estimatedDate = desiredDate || calcEstimatedDate(shipMode, shipValue);
+    console.log("[webhook] meta:", JSON.stringify(meta));
+    console.log("[webhook] shipMode:", shipMode, "shipValue:", shipValue, "estimatedDate:", estimatedDate);
 
     const lineItems = await stripe.checkout.sessions.listLineItems(sessionId, { limit: 10 });
     const productNames = lineItems.data.map((item) => item.description).join(", ");
