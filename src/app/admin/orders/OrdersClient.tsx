@@ -214,11 +214,11 @@ export function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
       await fetch(`/api/admin/orders/${encodeURIComponent(orderNumber)}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "cancel_requested" }),
+        body: JSON.stringify({ status: "cancelled" }),
       });
-      setOrders((prev) => prev.map((o) => o.orderNumber === orderNumber ? { ...o, status: "cancel_requested" } : o));
+      setOrders((prev) => prev.map((o) => o.orderNumber === orderNumber ? { ...o, status: "cancelled" } : o));
 
-      const autoMsg = `誠に申し訳ございません。\n以下の理由によりキャンセルをお願いしたい状況です。\n\n【理由】${reasonLabel}\n\nご同意いただける場合は注文詳細画面の「同意する」を押してください。\nご不明な点はメッセージよりお問い合わせください。`;
+      const autoMsg = `誠に申し訳ございません。\n以下の理由によりご注文をキャンセルさせていただきました。\n\n【理由】${reasonLabel}\n\nご不明な点はメッセージよりお問い合わせください。`;
       const res = await fetch(`/api/admin/orders/${encodeURIComponent(orderNumber)}/message`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
