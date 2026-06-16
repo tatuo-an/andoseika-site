@@ -131,6 +131,8 @@ function ShippingModal({ onConfirm, onCancel, loading }: {
   );
 }
 
+const PAGE_SIZE = 20;
+
 export function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
   const [orders, setOrders] = useState<Order[]>(initialOrders);
   const [tab, setTab] = useState<Tab>("all");
@@ -145,6 +147,16 @@ export function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
   const [cancelModal, setCancelModal] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+  const [filterStatus, setFilterStatus] = useState("");
+  const [filterProduct, setFilterProduct] = useState("");
+  const [sortDir, setSortDir] = useState<"desc" | "asc">("desc");
+  const [page, setPage] = useState(1);
+
+  const productOptions = useMemo(() => {
+    const names = new Set<string>();
+    orders.forEach((o) => o.productNames.split(",").forEach((n) => names.add(n.trim())));
+    return Array.from(names).sort();
+  }, [orders]);
 
   const searched = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -160,8 +172,24 @@ export function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
     );
   }, [orders, searchQuery]);
 
-  const filtered = filterOrders(searched, tab);
+  const filtered = useMemo(() => {
+    let result = filterOrders(searched, tab);
+    if (filterStatus) result = result.filter((o) => o.status === filterStatus);
+    if (filterProduct) result = result.filter((o) => o.productNames.includes(filterProduct));
+    result = [...result].sort((a, b) =>
+      sortDir === "desc"
+        ? b.createdAt.localeCompare(a.createdAt)
+        : a.createdAt.localeCompare(b.createdAt)
+    );
+    return result;
+  }, [searched, tab, filterStatus, filterProduct, sortDir]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const pagedOrders = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
   const countOf = (t: Tab) => filterOrders(searched, t).length;
+
+  function resetPage() { setPage(1); }
 
   async function updateStatus(orderNumber: string, status: string) {
     setUpdating(orderNumber);
@@ -350,7 +378,7 @@ export function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
         {TABS.map((t) => (
           <button
             key={t.key}
-            onClick={() => setTab(t.key)}
+            onClick={() => { setTab(t.key); resetPage(); }}
             className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
               tab === t.key
                 ? "border-primary text-primary"
@@ -373,12 +401,51 @@ export function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
         </div>
       </div>
 
+      {/* Filters */}
+      <div className="flex flex-wrap gap-2 mb-4">
+        <select
+          value={filterStatus}
+          onChange={(e) => { setFilterStatus(e.target.value); resetPage(); }}
+          className="border border-stone-200 rounded-lg px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/30"
+        >
+          <option value="">すべてのステータス</option>
+          {Object.entries(STATUS_LABELS).map(([k, v]) => (
+            <option key={k} value={k}>{v.label}</option>
+          ))}
+        </select>
+        <select
+          value={filterProduct}
+          onChange={(e) => { setFilterProduct(e.target.value); resetPage(); }}
+          className="border border-stone-200 rounded-lg px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/30 max-w-[200px] truncate"
+        >
+          <option value="">すべての商品</option>
+          {productOptions.map((n) => (
+            <option key={n} value={n}>{n}</option>
+          ))}
+        </select>
+        <button
+          onClick={() => { setSortDir((d) => d === "desc" ? "asc" : "desc"); resetPage(); }}
+          className="flex items-center gap-1 border border-stone-200 rounded-lg px-3 py-1.5 text-sm bg-white hover:bg-stone-50 transition-colors"
+        >
+          日付 {sortDir === "desc" ? "↓ 新しい順" : "↑ 古い順"}
+        </button>
+        {(filterStatus || filterProduct) && (
+          <button
+            onClick={() => { setFilterStatus(""); setFilterProduct(""); resetPage(); }}
+            className="text-xs text-stone-400 hover:text-stone-600 px-2"
+          >
+            フィルタ解除
+          </button>
+        )}
+        <span className="ml-auto text-xs text-stone-400 self-center">{filtered.length}件</span>
+      </div>
+
       {/* Order list */}
       <div className="space-y-3">
-        {filtered.length === 0 && (
+        {pagedOrders.length === 0 && (
           <div className="text-center py-16 text-stone-400 text-sm">注文がありません</div>
         )}
-        {filtered.map((order) => {
+        {pagedOrders.map((order) => {
           const st = STATUS_LABELS[order.status] ?? { label: order.status, color: "bg-stone-100 text-stone-600 border-stone-200" };
           const isExpanded = expandedId === order.orderNumber;
           const isUpdating = updating === order.orderNumber;
@@ -639,6 +706,61 @@ export function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
           );
         })}
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-1 mt-6">
+          <button
+            onClick={() => setPage(1)}
+            disabled={page === 1}
+            className="px-2 py-1.5 text-xs rounded-lg border border-stone-200 hover:bg-stone-50 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            «
+          </button>
+          <button
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page === 1}
+            className="px-3 py-1.5 text-xs rounded-lg border border-stone-200 hover:bg-stone-50 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            前へ
+          </button>
+          {Array.from({ length: totalPages }, (_, i) => i + 1)
+            .filter((p) => p === 1 || p === totalPages || Math.abs(p - page) <= 2)
+            .reduce<(number | "...")[]>((acc, p, i, arr) => {
+              if (i > 0 && p - (arr[i - 1] as number) > 1) acc.push("...");
+              acc.push(p);
+              return acc;
+            }, [])
+            .map((p, i) =>
+              p === "..." ? (
+                <span key={`ellipsis-${i}`} className="px-2 text-xs text-stone-400">…</span>
+              ) : (
+                <button
+                  key={p}
+                  onClick={() => setPage(p as number)}
+                  className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${page === p ? "bg-primary text-white border-primary" : "border-stone-200 hover:bg-stone-50"}`}
+                >
+                  {p}
+                </button>
+              )
+            )}
+          <button
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page === totalPages}
+            className="px-3 py-1.5 text-xs rounded-lg border border-stone-200 hover:bg-stone-50 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            次へ
+          </button>
+          <button
+            onClick={() => setPage(totalPages)}
+            disabled={page === totalPages}
+            className="px-2 py-1.5 text-xs rounded-lg border border-stone-200 hover:bg-stone-50 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            »
+          </button>
+          <span className="text-xs text-stone-400 ml-2">{page} / {totalPages} ページ</span>
+        </div>
+      )}
     </div>
   );
 }
