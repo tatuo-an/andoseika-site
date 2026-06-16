@@ -200,7 +200,6 @@ function UserCancelModal({ onConfirm, onCancel, loading, orderStatus }: {
               {[
                 { value: "resend", label: "再送希望", desc: "同じ商品を再度お届けします" },
                 { value: "refund", label: "返金希望", desc: "ご購入金額を返金します" },
-                { value: "either", label: "どちらでもよい", desc: "店舗にお任せします" },
               ].map((a) => (
                 <label key={a.value} className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${desiredAction === a.value ? "border-red-400 bg-red-50" : "border-stone-200 hover:border-stone-300"}`}>
                   <input type="radio" name="desired_action" value={a.value} checked={desiredAction === a.value} onChange={() => setDesiredAction(a.value)} className="mt-0.5 accent-red-500" />
