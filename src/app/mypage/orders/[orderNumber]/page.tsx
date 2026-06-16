@@ -446,6 +446,24 @@ export default function OrderDetailPage() {
                     </div>
                   </div>
                 )}
+                {order.status === "paid" && (
+                  <button
+                    onClick={() => setShowCancelModal(true)}
+                    className="mt-5 w-full flex items-center justify-center gap-2 py-3 border border-red-200 text-red-600 rounded-xl hover:bg-red-50 transition-colors text-sm font-medium"
+                  >
+                    <XCircle className="w-4 h-4" />
+                    注文をキャンセルする
+                  </button>
+                )}
+                {order.status === "shipping" && (
+                  <button
+                    onClick={() => setShowCancelModal(true)}
+                    className="mt-5 w-full flex items-center justify-center gap-2 py-3 border border-stone-200 text-stone-600 rounded-xl hover:bg-stone-50 transition-colors text-sm font-medium"
+                  >
+                    <XCircle className="w-4 h-4" />
+                    配送について問い合わせる
+                  </button>
+                )}
                 {order.status === "shipping" && (
                   <button
                     onClick={async () => {
@@ -532,27 +550,6 @@ export default function OrderDetailPage() {
                 {order.desiredTime && order.desiredTime !== "指定なし" && <p className="text-stone-500">時間帯: {order.desiredTime}</p>}
               </div>
 
-              {/* キャンセルボタン（発送前） */}
-              {order.status === "paid" && (
-                <button
-                  onClick={() => setShowCancelModal(true)}
-                  className="w-full flex items-center justify-center gap-2 py-3 border border-red-200 text-red-600 rounded-xl hover:bg-red-50 transition-colors text-sm font-medium"
-                >
-                  <XCircle className="w-4 h-4" />
-                  注文をキャンセルする
-                </button>
-              )}
-
-              {/* 遅延問い合わせボタン（発送済み） */}
-              {order.status === "shipping" && (
-                <button
-                  onClick={() => setShowCancelModal(true)}
-                  className="w-full flex items-center justify-center gap-2 py-3 border border-stone-200 text-stone-600 rounded-xl hover:bg-stone-50 transition-colors text-sm font-medium"
-                >
-                  <XCircle className="w-4 h-4" />
-                  配送について問い合わせる
-                </button>
-              )}
 
             </div>
 
