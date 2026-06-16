@@ -13,27 +13,37 @@ type Order = {
 };
 type Message = { senderType: string; senderName: string; message: string; sentAt: string };
 
-const USER_CANCEL_REASONS = [
-  { value: "wrong_item",    label: "注文の間違い",     desc: "商品・数量を誤って注文してしまったため",     requireImage: false },
-  { value: "change_date",   label: "配達日・時間の変更", desc: "都合により受け取り日時を変更したいため",   requireImage: false },
-  { value: "no_longer",     label: "不要になった",     desc: "諸事情により商品が不要になったため",         requireImage: false },
-  { value: "bought_else",   label: "他で購入した",     desc: "別の方法で同商品を購入したため",             requireImage: false },
-  { value: "defect",        label: "商品の不具合",     desc: "破損・品質不良など（写真の添付が必要です）", requireImage: true  },
-  { value: "other",         label: "その他",           desc: "担当者へメッセージにてお伝えします",         requireImage: false },
+const REASONS_BEFORE_SHIP = [
+  { value: "wrong_item",  label: "注文の間違い",       desc: "商品・数量を誤って注文してしまったため",   requireImage: false },
+  { value: "change_date", label: "配達日・時間の変更", desc: "都合により受け取り日時を変更したいため",   requireImage: false },
+  { value: "no_longer",   label: "不要になった",       desc: "諸事情により商品が不要になったため",       requireImage: false },
+  { value: "bought_else", label: "他で購入した",       desc: "別の方法で同商品を購入したため",           requireImage: false },
+  { value: "other",       label: "その他",             desc: "担当者へメッセージにてお伝えします",       requireImage: false },
 ] as const;
 
-function UserCancelModal({ onConfirm, onCancel, loading }: {
+const REASONS_AFTER_RECEIVE = [
+  { value: "defect",  label: "商品の不具合", desc: "破損・品質不良など（写真の添付が必要です）", requireImage: true  },
+  { value: "other",   label: "その他",       desc: "担当者へメッセージにてお伝えします",         requireImage: false },
+] as const;
+
+type Reason = { value: string; label: string; desc: string; requireImage: boolean };
+
+function UserCancelModal({ onConfirm, onCancel, loading, orderStatus }: {
   onConfirm: (reasonLabel: string, imageUrl?: string) => void;
   onCancel: () => void;
   loading: boolean;
+  orderStatus: string;
 }) {
+  const isAfterReceive = orderStatus === "delivered";
+  const reasons: readonly Reason[] = isAfterReceive ? REASONS_AFTER_RECEIVE : REASONS_BEFORE_SHIP;
+
   const [selected, setSelected] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
-  const reason = USER_CANCEL_REASONS.find((r) => r.value === selected);
+  const reason = reasons.find((r) => r.value === selected);
   const needsImage = reason?.requireImage ?? false;
   const canSubmit = selected && (!needsImage || imageFile) && !loading && !uploading;
 
@@ -70,10 +80,10 @@ function UserCancelModal({ onConfirm, onCancel, loading }: {
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm max-h-[90vh] overflow-y-auto">
-        <h3 className="font-bold text-stone-900 mb-1">注文をキャンセルする</h3>
-        <p className="text-sm text-stone-500 mb-4">キャンセル理由を選択してください。</p>
+        <h3 className="font-bold text-stone-900 mb-1">{isAfterReceive ? "問題を報告する" : "注文をキャンセルする"}</h3>
+        <p className="text-sm text-stone-500 mb-4">{isAfterReceive ? "問題の内容を選択してください。" : "キャンセル理由を選択してください。"}</p>
         <div className="space-y-2 mb-4">
-          {USER_CANCEL_REASONS.map((r) => (
+          {reasons.map((r) => (
             <label key={r.value} className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${selected === r.value ? "border-red-400 bg-red-50" : "border-stone-200 hover:border-stone-300"}`}>
               <input type="radio" name="user_reason" value={r.value} checked={selected === r.value} onChange={() => { setSelected(r.value); setImageFile(null); setPreview(null); }} className="mt-0.5 accent-red-500" />
               <div>
@@ -108,7 +118,7 @@ function UserCancelModal({ onConfirm, onCancel, loading }: {
             disabled={!canSubmit}
             className="flex-1 py-2.5 bg-red-500 text-white rounded-xl text-sm font-bold hover:bg-red-600 transition-colors disabled:opacity-50"
           >
-            {uploading ? "アップロード中..." : loading ? "処理中..." : "キャンセルする"}
+            {uploading ? "アップロード中..." : loading ? "処理中..." : isAfterReceive ? "報告する" : "キャンセルする"}
           </button>
         </div>
       </div>
@@ -163,21 +173,42 @@ export default function OrderDetailPage() {
 
   async function cancelOrder(reasonLabel: string, imageUrl?: string) {
     setCancelling(true);
+    const isAfterReceive = order?.status === "delivered";
     try {
-      const res = await fetch(`/api/my/orders/${orderNumber}/cancel`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ reasonLabel, imageUrl }),
-      });
-      if (res.ok) {
-        setOrder((prev) => prev ? { ...prev, status: "cancelled" } : prev);
-        const msgText = imageUrl
-          ? `キャンセルを申請しました。\n【理由】${reasonLabel}\n【写真】${imageUrl}`
-          : `キャンセルを申請しました。\n【理由】${reasonLabel}`;
-        setMessages((prev) => [...prev, {
-          senderType: "user", senderName: "お客様", message: msgText,
-          sentAt: new Date().toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" }),
-        }]);
+      if (isAfterReceive) {
+        // 受取後は問題報告メッセージのみ送信（ステータス変更なし）
+        const msgBody = imageUrl
+          ? `【問題報告】${reasonLabel}\n【写真】${imageUrl}`
+          : `【問題報告】${reasonLabel}`;
+        const res = await fetch(`/api/my/orders/${orderNumber}/message`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: msgBody }),
+        });
+        const data = await res.json();
+        if (data.ok) {
+          setMessages((prev) => [...prev, {
+            senderType: "user", senderName: "お客様", message: msgBody,
+            sentAt: data.sentAt,
+          }]);
+        }
+      } else {
+        // 発送前はキャンセル処理
+        const res = await fetch(`/api/my/orders/${orderNumber}/cancel`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ reasonLabel, imageUrl }),
+        });
+        if (res.ok) {
+          setOrder((prev) => prev ? { ...prev, status: "cancelled" } : prev);
+          const msgText = imageUrl
+            ? `キャンセルを申請しました。\n【理由】${reasonLabel}\n【写真】${imageUrl}`
+            : `キャンセルを申請しました。\n【理由】${reasonLabel}`;
+          setMessages((prev) => [...prev, {
+            senderType: "user", senderName: "お客様", message: msgText,
+            sentAt: new Date().toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" }),
+          }]);
+        }
       }
     } finally { setCancelling(false); setShowCancelModal(false); }
   }
@@ -201,6 +232,7 @@ export default function OrderDetailPage() {
       {showCancelModal && (
         <UserCancelModal
           loading={cancelling}
+          orderStatus={order?.status ?? "paid"}
           onConfirm={(reasonLabel, imageUrl) => cancelOrder(reasonLabel, imageUrl)}
           onCancel={() => setShowCancelModal(false)}
         />
@@ -346,7 +378,7 @@ export default function OrderDetailPage() {
                 {order.desiredTime && order.desiredTime !== "指定なし" && <p className="text-stone-500">時間帯: {order.desiredTime}</p>}
               </div>
 
-              {/* キャンセルボタン */}
+              {/* キャンセルボタン（発送前） */}
               {order.status === "paid" && (
                 <button
                   onClick={() => setShowCancelModal(true)}
@@ -354,6 +386,17 @@ export default function OrderDetailPage() {
                 >
                   <XCircle className="w-4 h-4" />
                   注文をキャンセルする
+                </button>
+              )}
+
+              {/* 問題報告ボタン（受取後） */}
+              {order.status === "delivered" && (
+                <button
+                  onClick={() => setShowCancelModal(true)}
+                  className="w-full flex items-center justify-center gap-2 py-3 border border-stone-200 text-stone-600 rounded-xl hover:bg-stone-50 transition-colors text-sm font-medium"
+                >
+                  <XCircle className="w-4 h-4" />
+                  問題を報告する
                 </button>
               )}
             </div>
