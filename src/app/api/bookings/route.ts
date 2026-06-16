@@ -5,7 +5,7 @@ import { google } from "googleapis";
 export const dynamic = "force-dynamic";
 
 const SPREADSHEET_ID = process.env.GOOGLE_SPREADSHEET_ID!;
-const SHEET_NAME = "予約";
+const SHEET_NAME = "体験予約";
 // 列: A=予約ID, B=メール, C=名前, D=電話, E=体験名, F=日付, G=開始時刻, H=所要分, I=人数, J=ステータス, K=作成日時
 
 function getSheets() {
