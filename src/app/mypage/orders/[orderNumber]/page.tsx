@@ -10,6 +10,7 @@ import Link from "next/link";
 type Order = {
   orderNumber: string; createdAt: string; name: string; productNames: string;
   amount: number; status: string; address: string; desiredDate: string; desiredTime: string;
+  complaint: string;
 };
 type Message = { senderType: string; senderName: string; message: string; sentAt: string };
 
@@ -389,6 +390,15 @@ export default function OrderDetailPage() {
                           <span className={`text-xs whitespace-nowrap ${i <= step ? "text-stone-800 font-medium" : "text-stone-400"}`}>{s}</span>
                         </div>
                       ))}
+                    </div>
+                  </div>
+                )}
+                {order.complaint && (
+                  <div className="mt-5 flex items-center gap-2 bg-orange-50 border border-orange-200 rounded-xl px-4 py-3">
+                    <XCircle className="w-4 h-4 text-orange-500 shrink-0" />
+                    <div>
+                      <p className="text-sm font-bold text-orange-700">問題報告中</p>
+                      <p className="text-xs text-orange-600">{order.complaint}</p>
                     </div>
                   </div>
                 )}

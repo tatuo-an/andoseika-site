@@ -30,7 +30,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ orderNumbe
   const id = process.env.GOOGLE_SPREADSHEET_ID!;
 
   const [orderRes, msgRes] = await Promise.all([
-    sheets.spreadsheets.values.get({ spreadsheetId: id, range: "注文管理!A:L" }),
+    sheets.spreadsheets.values.get({ spreadsheetId: id, range: "注文管理!A:M" }),
     sheets.spreadsheets.values.get({ spreadsheetId: id, range: "注文メッセージ!A:E" }).catch(() => ({ data: { values: [] } })),
   ]);
 
@@ -45,6 +45,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ orderNumbe
     amount: parseInt(row[7] ?? "0", 10) || 0,
     status: row[8] ?? "paid", sessionId: row[9],
     desiredDate: row[10], desiredTime: row[11],
+    complaint: row[12] ?? "",
   };
 
   const msgRows = (msgRes.data.values ?? []) as string[][];
