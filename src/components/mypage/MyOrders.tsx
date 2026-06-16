@@ -79,7 +79,10 @@ export function MyOrders() {
               </div>
               <p className="text-sm font-medium text-stone-800 line-clamp-1">{order.productNames}</p>
               {order.estimatedDate && (
-                <p className="text-xs text-blue-600 mt-0.5">お届け予定: {order.estimatedDate}</p>
+                <div className="mt-0.5">
+                  <p className="text-xs text-blue-600">お届け予定: {order.estimatedDate}</p>
+                  <p className="text-[10px] text-stone-400">※発送は予告なく前倒しする場合があります</p>
+                </div>
               )}
               <div className="flex items-center justify-between mt-1">
                 <p className="text-sm font-bold text-stone-900">¥{order.amount.toLocaleString()}</p>

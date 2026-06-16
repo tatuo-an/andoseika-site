@@ -234,7 +234,7 @@ function UserCancelModal({ onConfirm, onCancel, loading, orderStatus }: {
 }
 
 const STEPS = ["注文", "支払い", "発送準備", "発送済み", "受取完了"];
-const STATUS_STEP: Record<string, number> = { paid: 2, shipping: 3, delivered: 4, completed: 4, cancelled: -1, cancel_requested: 2 };
+const STATUS_STEP: Record<string, number> = { paid: 2, shipping: 3, delivered: 4, completed: 4, cancelled: -1, cancel_requested: 2, admin_cancel_requested: 2 };
 
 export default function OrderDetailPage() {
   const { orderNumber } = useParams<{ orderNumber: string }>();
@@ -312,7 +312,7 @@ export default function OrderDetailPage() {
           body: JSON.stringify({ reasonLabel, imageUrl }),
         });
         if (res.ok) {
-          setOrder((prev) => prev ? { ...prev, status: "cancelled" } : prev);
+          setOrder((prev) => prev ? { ...prev, status: "cancel_requested" } : prev);
           const msgText = imageUrl
             ? `キャンセルを申請しました。\n【理由】${reasonLabel}\n【写真】${imageUrl}`
             : `キャンセルを申請しました。\n【理由】${reasonLabel}`;
@@ -418,9 +418,12 @@ export default function OrderDetailPage() {
                   </div>
                 )}
                 {order.estimatedDate && (
-                  <p className="mt-4 text-sm text-stone-600 text-center">
-                    お届け予定日：<span className="font-bold text-stone-900">{order.estimatedDate}</span>
-                  </p>
+                  <div className="mt-4 text-center">
+                    <p className="text-sm text-stone-600">
+                      お届け予定日：<span className="font-bold text-stone-900">{order.estimatedDate}</span>
+                    </p>
+                    <p className="text-xs text-stone-400 mt-0.5">※発送は予告なく前倒しする場合があります</p>
+                  </div>
                 )}
                 {order.complaint && (
                   <div className="mt-5 flex items-center gap-2 bg-orange-50 border border-orange-200 rounded-xl px-4 py-3">
@@ -433,7 +436,13 @@ export default function OrderDetailPage() {
                 )}
                 {order.status === "cancel_requested" && (
                   <div className="mt-5 border border-red-200 bg-red-50 rounded-xl p-4">
-                    <p className="text-sm font-bold text-red-700 mb-1">キャンセル申請が届いています</p>
+                    <p className="text-sm font-bold text-red-700 mb-1">キャンセル申請中</p>
+                    <p className="text-xs text-red-600">店舗が確認しています。しばらくお待ちください。</p>
+                  </div>
+                )}
+                {order.status === "admin_cancel_requested" && (
+                  <div className="mt-5 border border-red-200 bg-red-50 rounded-xl p-4">
+                    <p className="text-sm font-bold text-red-700 mb-1">キャンセルのご依頼が届いています</p>
                     <p className="text-xs text-red-600 mb-4">店舗よりキャンセルのご依頼があります。取引メッセージをご確認の上、同意または拒否してください。</p>
                     <div className="flex gap-2">
                       <button

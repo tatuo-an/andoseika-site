@@ -394,7 +394,12 @@ export function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-bold text-stone-900 truncate">{order.productNames}</p>
                   <p className="text-xs text-stone-400">{order.createdAt} · {order.name}</p>
-                  {order.estimatedDate && <p className="text-xs text-blue-600">お届け予定: {order.estimatedDate}</p>}
+                  {order.estimatedDate && (
+                    <div>
+                      <p className="text-xs text-blue-600">お届け予定: {order.estimatedDate}</p>
+                      <p className="text-[10px] text-stone-400">※発送は予告なく前倒しする場合があります</p>
+                    </div>
+                  )}
                 </div>
                 <div className="text-right shrink-0">
                   <p className="text-sm font-bold text-stone-900">¥{order.amount.toLocaleString()}</p>
