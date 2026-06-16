@@ -350,7 +350,14 @@ export function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
           const isUpdating = updating === order.orderNumber;
 
           return (
-            <div key={order.orderNumber} className="bg-white rounded-xl border border-stone-200 overflow-hidden shadow-sm">
+            <div key={order.orderNumber} className={`bg-white rounded-xl overflow-hidden shadow-sm border ${order.status === "cancel_requested" ? "border-red-300" : "border-stone-200"}`}>
+              {/* キャンセル申請バナー */}
+              {order.status === "cancel_requested" && (
+                <div className="flex items-center gap-2 bg-red-500 text-white px-4 py-2 text-xs font-bold">
+                  <XCircle className="w-3.5 h-3.5 shrink-0" />
+                  お客様よりキャンセル申請が届いています。内容を確認してください。
+                </div>
+              )}
               {/* Header row */}
               <div
                 className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-stone-50 transition-colors"
