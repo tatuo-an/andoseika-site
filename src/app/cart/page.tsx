@@ -308,6 +308,10 @@ export default function CartPage() {
             return;
         }
 
+        const firstWithShip = cartItems.find(i => (i as { shipMode?: string }).shipMode);
+        const cartShipMode = (firstWithShip as { shipMode?: string } | undefined)?.shipMode ?? "";
+        const cartShipValue = (firstWithShip as { shipValue?: string } | undefined)?.shipValue ?? "";
+
         // 決済スキップモード
         if (skipMode) {
             try {
@@ -320,6 +324,8 @@ export default function CartPage() {
                         desiredDeliveryDate: desiredDate,
                         desiredDeliveryTime: desiredTime,
                         grandTotal,
+                        shipMode: cartShipMode,
+                        shipValue: cartShipValue,
                     }),
                 });
                 if (!res.ok) { alert("テスト注文の作成に失敗しました"); return; }
@@ -339,6 +345,8 @@ export default function CartPage() {
                     shippingAddress: selectedAddress,
                     desiredDeliveryDate: desiredDate,
                     desiredDeliveryTime: desiredTime,
+                    shipMode: cartShipMode,
+                    shipValue: cartShipValue,
                     quote: {
                         matchedVariantId: matchedVariant?.id ?? null,
                         matchedVariantName: matchedVariant?.name ?? null,
