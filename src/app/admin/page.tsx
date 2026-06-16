@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { isAdmin } from "@/lib/admin";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import Link from "next/link";
+import { ShoppingBag } from "lucide-react";
 import { client } from "@/lib/microcms";
 import { Product } from "@/types/microcms";
 import localProducts from "@/data/products.json";
@@ -126,7 +128,15 @@ export default async function AdminPage() {
             <main className="flex-1 py-16">
                 <div className="container mx-auto px-4 md:px-6 max-w-5xl">
                     <h1 className="text-3xl font-bold text-stone-900 mb-2">管理画面</h1>
-                    <p className="text-stone-500 text-sm mb-8">在庫・価格・送料を管理できます</p>
+                    <div className="flex gap-3 mb-8">
+                        <Link
+                            href="/admin/orders"
+                            className="flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-bold rounded-lg hover:bg-primary/90 transition-colors shadow-sm"
+                        >
+                            <ShoppingBag className="w-4 h-4" />
+                            注文管理
+                        </Link>
+                    </div>
                     <AdminPanel
                         products={products}
                         initialInventory={inventory}
