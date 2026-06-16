@@ -11,7 +11,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     Line({
       clientId: process.env.LINE_CLIENT_ID!,
       clientSecret: process.env.LINE_CLIENT_SECRET!,
-      authorization: { params: { scope: "profile openid" } },
     }),
   ],
   pages: {
