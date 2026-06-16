@@ -31,10 +31,13 @@ export async function POST(req: NextRequest) {
     const buffer = Buffer.from(await file.arrayBuffer());
     const token = await getAccessToken();
 
+    const folderId = process.env.GOOGLE_DRIVE_UPLOAD_FOLDER_ID;
+    if (!folderId) throw new Error("GOOGLE_DRIVE_UPLOAD_FOLDER_ID is not set");
+
     const boundary = "ando_boundary_" + Date.now();
-    const metadata = JSON.stringify({ name: `complaint_${Date.now()}`, mimeType: file.type });
+    const meta: Record<string, unknown> = { name: `complaint_${Date.now()}`, mimeType: file.type, parents: [folderId] };
     const bodyParts = Buffer.concat([
-      Buffer.from(`--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${metadata}\r\n--${boundary}\r\nContent-Type: ${file.type}\r\n\r\n`),
+      Buffer.from(`--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(meta)}\r\n--${boundary}\r\nContent-Type: ${file.type}\r\n\r\n`),
       buffer,
       Buffer.from(`\r\n--${boundary}--`),
     ]);
