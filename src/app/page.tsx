@@ -2,7 +2,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, ChevronRight } from "lucide-react";
+import { ArrowRight, ChevronRight, ShoppingBasket, Leaf, Heart, Building2 } from "lucide-react";
 import { client } from "@/lib/microcms";
 import { Product } from "@/types/microcms";
 import { google } from "googleapis";
@@ -96,10 +96,10 @@ async function getTopProducts(): Promise<{ id: string; name: string; image: stri
 }
 
 const CATEGORIES = [
-  { href: "/products", label: "商品一覧", image: "/images/products/nagaimo_1kg_new.png", desc: "長芋・白ネギ・蜂蜜など" },
-  { href: "/experience", label: "体験・予約", image: "/images/experience/beekeeping.jpg", desc: "養蜂・芋掘り体験" },
-  { href: "/supporter", label: "サポーター", image: "/images/hero/hero_nagaimo_field.jpg", desc: "農家を応援する会員制" },
-  { href: "/business", label: "業務用・卸", image: "/images/hero/brand_concept.jpg", desc: "飲食店・法人向け" },
+  { href: "/products", label: "商品一覧", icon: ShoppingBasket },
+  { href: "/experience", label: "体験・予約", icon: Leaf },
+  { href: "/supporter", label: "サポーター", icon: Heart },
+  { href: "/business", label: "業務用・卸", icon: Building2 },
 ];
 
 export default async function Home() {
@@ -130,16 +130,13 @@ export default async function Home() {
         {/* ── Category Shortcuts ── */}
         <section className="bg-white border-b border-stone-200">
           <div className="container mx-auto px-4 md:px-6">
-            <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-y md:divide-y-0 divide-stone-100">
+            <div className="grid grid-cols-4 divide-x divide-stone-100">
               {CATEGORIES.map((cat) => (
-                <Link key={cat.href} href={cat.href} className="flex flex-col items-center gap-3 py-5 px-3 hover:bg-stone-50 transition-colors group">
-                  <div className="relative w-14 h-14 rounded-full overflow-hidden bg-stone-100 shadow-sm">
-                    <Image src={cat.image} alt={cat.label} fill className="object-cover group-hover:scale-110 transition-transform duration-300" />
+                <Link key={cat.href} href={cat.href} className="flex flex-col items-center gap-2 py-4 px-2 hover:bg-stone-50 transition-colors group">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                    <cat.icon className="w-5 h-5 text-primary" />
                   </div>
-                  <div className="text-center">
-                    <p className="text-xs font-bold text-stone-800 whitespace-nowrap">{cat.label}</p>
-                    <p className="text-xs text-stone-400 mt-0.5 hidden md:block">{cat.desc}</p>
-                  </div>
+                  <p className="text-xs font-bold text-stone-800 whitespace-nowrap">{cat.label}</p>
                 </Link>
               ))}
             </div>
