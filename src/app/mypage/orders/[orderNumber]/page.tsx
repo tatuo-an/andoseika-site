@@ -50,7 +50,13 @@ function UserCancelModal({ onConfirm, onCancel, loading, orderStatus }: {
 
   const reason = reasons.find((r) => r.value === selected);
   const needsImage = reason?.requireImage ?? false;
-  const canSubmit = selected && (!needsImage || imageFile) && !loading && !uploading;
+  const fileTooLarge = imageFile ? imageFile.size > 10 * 1024 * 1024 : false;
+  const canSubmit = selected && (!needsImage || imageFile) && !fileTooLarge && !loading && !uploading;
+
+  function formatSize(bytes: number) {
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)}KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
+  }
 
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
@@ -70,7 +76,7 @@ function UserCancelModal({ onConfirm, onCancel, loading, orderStatus }: {
         const res = await fetch("/api/my/upload-image", { method: "POST", body: fd });
         const data = await res.json();
         if (!res.ok || !data.url) {
-          setUploadError("画像のアップロードに失敗しました。もう一度お試しください。");
+          setUploadError(data.error ?? "画像のアップロードに失敗しました。もう一度お試しください。");
           return;
         }
         onConfirm(reason.label, data.url);
@@ -112,6 +118,11 @@ function UserCancelModal({ onConfirm, onCancel, loading, orderStatus }: {
             <div className="p-3 border border-stone-200 rounded-xl">
               <p className="text-xs text-stone-500 mb-2">写真を選択（必須・5MBまで）</p>
               <input type="file" accept="image/*" onChange={handleFile} className="text-xs text-stone-600 w-full" />
+              {imageFile && (
+                <p className={`text-xs mt-1 ${imageFile.size > 10 * 1024 * 1024 ? "text-red-500 font-bold" : "text-stone-400"}`}>
+                  ファイルサイズ：{formatSize(imageFile.size)}{imageFile.size > 10 * 1024 * 1024 ? "（10MB超・送信不可）" : ""}
+                </p>
+              )}
               {preview && <img src={preview} alt="preview" className="mt-2 rounded-lg max-h-36 object-contain w-full border border-stone-100" />}
             </div>
           </div>

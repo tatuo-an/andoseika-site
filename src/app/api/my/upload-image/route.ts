@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { google } from "googleapis";
 import { auth } from "@/auth";
+import { Readable } from "stream";
 
 export const runtime = "nodejs";
 
@@ -13,9 +14,14 @@ export async function POST(req: NextRequest) {
     const file = formData.get("file") as File | null;
     if (!file) return NextResponse.json({ error: "No file" }, { status: 400 });
 
-    if (file.size > 5 * 1024 * 1024) return NextResponse.json({ error: "File too large" }, { status: 400 });
+    if (file.size > 10 * 1024 * 1024) {
+      return NextResponse.json({ error: "10MB以下の画像を選択してください" }, { status: 400 });
+    }
 
     const buffer = Buffer.from(await file.arrayBuffer());
+    const readable = new Readable();
+    readable.push(buffer);
+    readable.push(null);
 
     const a = new google.auth.GoogleAuth({
       credentials: {
@@ -33,12 +39,13 @@ export async function POST(req: NextRequest) {
       },
       media: {
         mimeType: file.type,
-        body: buffer,
+        body: readable,
       },
       fields: "id",
     });
 
-    const fileId = uploaded.data.id!;
+    const fileId = uploaded.data.id;
+    if (!fileId) throw new Error("No file ID returned");
 
     await drive.permissions.create({
       fileId,
@@ -48,7 +55,7 @@ export async function POST(req: NextRequest) {
     const url = `https://drive.google.com/file/d/${fileId}/view`;
     return NextResponse.json({ ok: true, url });
   } catch (e) {
-    console.error("upload error", e);
-    return NextResponse.json({ error: String(e) }, { status: 500 });
+    console.error("upload-image error:", e);
+    return NextResponse.json({ error: "アップロードに失敗しました", detail: String(e) }, { status: 500 });
   }
 }
