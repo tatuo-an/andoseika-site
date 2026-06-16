@@ -246,6 +246,7 @@ export default function OrderDetailPage() {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [completing, setCompleting] = useState(false);
   const [responding, setResponding] = useState(false);
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -336,6 +337,11 @@ export default function OrderDetailPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-stone-50">
+      {lightboxUrl && (
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4" onClick={() => setLightboxUrl(null)}>
+          <img src={lightboxUrl} alt="拡大画像" className="max-w-full max-h-full rounded-xl object-contain" />
+        </div>
+      )}
       {showCancelModal && (
         <UserCancelModal
           loading={cancelling}
@@ -561,11 +567,11 @@ export default function OrderDetailPage() {
                             }`}>
                               {m.message.split("\n").map((line, li) => {
                                 const isUrl = line.startsWith("https://") && /\.(png|jpg|jpeg|gif|webp)(\?|$)/i.test(line);
-                                if (isUrl) return <img key={li} src={line} alt="添付画像" className="mt-1 rounded-lg max-w-[200px] max-h-48 object-contain" />;
+                                if (isUrl) return <img key={li} src={line} alt="添付画像" onClick={() => setLightboxUrl(line)} className="mt-1 rounded-lg max-w-[200px] max-h-48 object-contain cursor-zoom-in" />;
                                 const urlMatch = line.match(/https?:\/\/\S+/);
                                 if (urlMatch && /\.(png|jpg|jpeg|gif|webp)/i.test(urlMatch[0])) {
                                   const before = line.slice(0, urlMatch.index);
-                                  return <span key={li}>{before && <span>{before}</span>}<img src={urlMatch[0]} alt="添付画像" className="mt-1 rounded-lg max-w-[200px] max-h-48 object-contain block" /></span>;
+                                  return <span key={li}>{before && <span>{before}</span>}<img src={urlMatch[0]} alt="添付画像" onClick={() => setLightboxUrl(urlMatch[0])} className="mt-1 rounded-lg max-w-[200px] max-h-48 object-contain block cursor-zoom-in" /></span>;
                                 }
                                 return <span key={li}>{line}{li < m.message.split("\n").length - 1 && <br />}</span>;
                               })}
