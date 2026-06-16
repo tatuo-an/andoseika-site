@@ -1,15 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { google } from "googleapis";
 import { auth } from "@/auth";
-
-const ADMIN_EMAIL = "imamura0510@gmail.com";
+import { isAdmin } from "@/lib/admin";
 
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ orderNumber: string }> }
 ) {
   const session = await auth();
-  if (session?.user?.email !== ADMIN_EMAIL) {
+  if (!isAdmin(session?.user?.email)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 

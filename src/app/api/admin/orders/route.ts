@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { google } from "googleapis";
 import { auth } from "@/auth";
-
-const ADMIN_EMAIL = "imamura0510@gmail.com";
+import { isAdmin } from "@/lib/admin";
 
 export type Order = {
   orderNumber: string;
@@ -21,7 +20,7 @@ export type Order = {
 
 export async function GET() {
   const session = await auth();
-  if (session?.user?.email !== ADMIN_EMAIL) {
+  if (!isAdmin(session?.user?.email)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 

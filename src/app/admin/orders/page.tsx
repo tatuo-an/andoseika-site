@@ -1,11 +1,10 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
+import { isAdmin } from "@/lib/admin";
 import { Header } from "@/components/layout/Header";
 import { google } from "googleapis";
 import { OrdersClient } from "./OrdersClient";
 import type { Order } from "@/app/api/admin/orders/route";
-
-const ADMIN_EMAIL = "imamura0510@gmail.com";
 
 async function getOrders(): Promise<Order[]> {
   try {
@@ -46,7 +45,7 @@ async function getOrders(): Promise<Order[]> {
 
 export default async function AdminOrdersPage() {
   const session = await auth();
-  if (session?.user?.email !== ADMIN_EMAIL) {
+  if (!isAdmin(session?.user?.email)) {
     redirect("/login");
   }
 
