@@ -5,6 +5,7 @@ import { Footer } from "@/components/layout/Footer";
 import { User, Package, MapPin, LogOut, Settings, Heart, CalendarDays } from "lucide-react";
 import Link from "next/link";
 import { isAdmin } from "@/lib/admin";
+import { OnlineCounter } from "@/components/admin/OnlineCounter";
 
 export default async function MyPage() {
   const session = await auth();
@@ -79,15 +80,18 @@ export default async function MyPage() {
             </div>
           </div>
 
-          {/* 管理画面（管理者のみ） */}
+          {/* 管理者エリア */}
           {isAdmin(user.email) && (
-            <Link
-              href="/admin"
-              className="flex items-center gap-2 bg-stone-100 hover:bg-stone-200 text-stone-700 px-5 py-3 rounded-full text-sm font-bold transition-colors mb-4 w-fit"
-            >
-              <Settings className="w-4 h-4" />
-              管理画面
-            </Link>
+            <div className="mb-6 space-y-3">
+              <OnlineCounter isAdmin={true} />
+              <Link
+                href="/admin"
+                className="flex items-center gap-2 bg-stone-100 hover:bg-stone-200 text-stone-700 px-5 py-3 rounded-full text-sm font-bold transition-colors w-fit"
+              >
+                <Settings className="w-4 h-4" />
+                管理画面
+              </Link>
+            </div>
           )}
 
           {/* ログアウト */}
