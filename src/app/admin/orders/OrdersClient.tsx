@@ -32,12 +32,13 @@ function filterOrders(orders: Order[], tab: Tab): Order[] {
 }
 
 const CANCEL_REASONS = [
-  { value: "out_of_stock",    label: "商品準備不可",       desc: "在庫切れ・品質基準を満たさないため" },
-  { value: "shipping_delay",  label: "発送遅延",           desc: "配送業者の都合・天候等による遅延" },
-  { value: "weather",         label: "天候・災害の影響",   desc: "台風・大雪等により配送不可" },
-  { value: "area",            label: "配送エリア外",       desc: "ご住所への配送が対応できないため" },
-  { value: "order_error",     label: "注文内容の不備",     desc: "注文情報に不明点があるため" },
-  { value: "other",           label: "その他",             desc: "担当者よりご連絡いたします" },
+  { value: "sold_out",       label: "完売・在庫切れ",       desc: "ご注文いただいた商品が完売となったため" },
+  { value: "quality",        label: "品質基準外",           desc: "収穫物が品質基準を満たさなかったため" },
+  { value: "harvest",        label: "収穫量不足",           desc: "天候不良等により収穫量が確保できないため" },
+  { value: "weather",        label: "天候・自然災害の影響", desc: "台風・大雪等により発送・配送が困難なため" },
+  { value: "delay",          label: "準備・発送の遅延",     desc: "商品準備や配送業者の都合により間に合わないため" },
+  { value: "delivery",       label: "配送対応不可",         desc: "ご指定の日程・エリアへの配送が困難なため" },
+  { value: "other",          label: "その他",               desc: "担当者よりメッセージにてご連絡いたします" },
 ] as const;
 
 // キャンセル理由モーダル
