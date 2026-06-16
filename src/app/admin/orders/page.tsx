@@ -6,6 +6,14 @@ import { google } from "googleapis";
 import { OrdersClient } from "./OrdersClient";
 import type { Order } from "@/app/api/admin/orders/route";
 
+function normalizePhone(p: string): string {
+  if (!p) return p;
+  const digits = p.replace(/\D/g, "");
+  if (digits.length === 10 && !digits.startsWith("0")) return "0" + digits;
+  if (digits.length === 10 || digits.length === 11) return digits;
+  return p;
+}
+
 async function getOrders(): Promise<Order[]> {
   try {
     const authClient = new google.auth.GoogleAuth({
@@ -28,7 +36,7 @@ async function getOrders(): Promise<Order[]> {
         createdAt: r[1] ?? "",
         name: r[2] ?? "",
         email: r[3] ?? "",
-        phone: r[4] ?? "",
+        phone: normalizePhone(r[4] ?? ""),
         address: r[5] ?? "",
         productNames: r[6] ?? "",
         amount: parseInt(r[7] ?? "0", 10) || 0,

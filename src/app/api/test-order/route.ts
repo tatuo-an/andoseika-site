@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
         orderNumber, now,
         shippingAddress?.name ?? session?.user?.name ?? "",
         session?.user?.email ?? "",
-        shippingAddress?.phone ?? "",
+        shippingAddress?.phone ? `'${shippingAddress.phone}` : "",
         address,
         productNames,
         String(grandTotal ?? 0),

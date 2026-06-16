@@ -4,8 +4,10 @@ import { auth } from "@/auth";
 import { isAdmin } from "@/lib/admin";
 
 function normalizePhone(p: string): string {
+  if (!p) return p;
   const digits = p.replace(/\D/g, "");
-  if (digits.length === 10) return "0" + digits;
+  if (digits.length === 10 && !digits.startsWith("0")) return "0" + digits;
+  if (digits.length === 10 || digits.length === 11) return digits;
   return p;
 }
 

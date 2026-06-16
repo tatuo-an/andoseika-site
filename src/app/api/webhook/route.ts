@@ -111,7 +111,8 @@ export async function POST(req: NextRequest) {
     const name = session.customer_details?.name ?? "";
     const email = session.customer_details?.email ?? "";
     const rawPhone = session.customer_details?.phone ?? "";
-    const phone = rawPhone.startsWith("+81") ? "0" + rawPhone.slice(3) : rawPhone;
+    const phoneDigits = rawPhone.startsWith("+81") ? "0" + rawPhone.slice(3) : rawPhone;
+    const phone = phoneDigits ? `'${phoneDigits}` : "";
     const addr = session.customer_details?.address;
     const address = addr
       ? [addr.postal_code, addr.state, addr.city, addr.line1, addr.line2].filter(Boolean).join(" ")

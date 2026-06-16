@@ -5,9 +5,11 @@ import { auth } from "@/auth";
 export const dynamic = "force-dynamic";
 
 function normalizePhone(p: string): string {
-  const digits = (p ?? "").replace(/\D/g, "");
-  if (digits.length === 10) return "0" + digits;
-  return p ?? "";
+  if (!p) return p ?? "";
+  const digits = p.replace(/\D/g, "");
+  if (digits.length === 10 && !digits.startsWith("0")) return "0" + digits;
+  if (digits.length === 10 || digits.length === 11) return digits;
+  return p;
 }
 
 function getSheets() {
