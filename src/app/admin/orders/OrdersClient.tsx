@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Package, Truck, CheckCircle, XCircle, ChevronDown, ChevronUp, RefreshCw } from "lucide-react";
+import { Package, Truck, CheckCircle, XCircle, ChevronDown, ChevronUp, RefreshCw, Send } from "lucide-react";
 import type { Order } from "@/app/api/admin/orders/route";
+
+type Message = { senderType: string; senderName: string; message: string; sentAt: string };
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   paid:      { label: "発送準備中", color: "bg-yellow-100 text-yellow-800 border-yellow-200" },
@@ -34,6 +36,10 @@ export function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [updating, setUpdating] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [messages, setMessages] = useState<Record<string, Message[]>>({});
+  const [msgLoading, setMsgLoading] = useState<string | null>(null);
+  const [msgText, setMsgText] = useState<Record<string, string>>({});
+  const [sending, setSending] = useState<string | null>(null);
 
   const filtered = filterOrders(orders, tab);
 
@@ -51,6 +57,42 @@ export function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
     } finally {
       setUpdating(null);
     }
+  }
+
+  async function toggleExpand(orderNumber: string) {
+    const isExpanded = expandedId === orderNumber;
+    setExpandedId(isExpanded ? null : orderNumber);
+    if (!isExpanded && !messages[orderNumber]) {
+      setMsgLoading(orderNumber);
+      try {
+        const res = await fetch(`/api/admin/orders/${encodeURIComponent(orderNumber)}/message`);
+        const data = await res.json();
+        setMessages((prev) => ({ ...prev, [orderNumber]: data.messages ?? [] }));
+      } finally {
+        setMsgLoading(null);
+      }
+    }
+  }
+
+  async function sendAdminMessage(orderNumber: string) {
+    const text = (msgText[orderNumber] ?? "").trim();
+    if (!text) return;
+    setSending(orderNumber);
+    try {
+      const res = await fetch(`/api/admin/orders/${encodeURIComponent(orderNumber)}/message`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: text }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setMessages((prev) => ({
+          ...prev,
+          [orderNumber]: [...(prev[orderNumber] ?? []), { senderType: "admin", senderName: "安藤青果", message: text, sentAt: data.sentAt }],
+        }));
+        setMsgText((prev) => ({ ...prev, [orderNumber]: "" }));
+      }
+    } finally { setSending(null); }
   }
 
   async function refresh() {
@@ -109,7 +151,7 @@ export function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
               {/* Header row */}
               <div
                 className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-stone-50 transition-colors"
-                onClick={() => setExpandedId(isExpanded ? null : order.orderNumber)}
+                onClick={() => toggleExpand(order.orderNumber)}
               >
                 <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${st.color}`}>{st.label}</span>
                 <div className="flex-1 min-w-0">
@@ -164,6 +206,50 @@ export function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
                     <div className="col-span-2 md:col-span-3">
                       <p className="text-xs text-stone-400 mb-0.5">商品</p>
                       <p className="text-stone-700">{order.productNames}</p>
+                    </div>
+                  </div>
+
+                  {/* Messages */}
+                  <div className="border-t border-stone-200 pt-3">
+                    <p className="text-xs text-stone-400 mb-2 font-medium">取引メッセージ</p>
+                    {msgLoading === order.orderNumber ? (
+                      <p className="text-xs text-stone-400">読み込み中...</p>
+                    ) : (
+                      <div className="space-y-2 mb-3 max-h-40 overflow-y-auto">
+                        {(messages[order.orderNumber] ?? []).length === 0 && (
+                          <p className="text-xs text-stone-400">メッセージなし</p>
+                        )}
+                        {(messages[order.orderNumber] ?? []).map((m, i) => (
+                          <div key={i} className={`flex gap-2 ${m.senderType === "admin" ? "flex-row-reverse" : ""}`}>
+                            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${m.senderType === "admin" ? "bg-green-100 text-green-800" : "bg-stone-200 text-stone-600"}`}>
+                              {m.senderType === "admin" ? "店" : "客"}
+                            </div>
+                            <div className={`max-w-[70%] flex flex-col gap-0.5 ${m.senderType === "admin" ? "items-end" : "items-start"}`}>
+                              <span className="text-[10px] text-stone-400">{m.senderName} · {m.sentAt}</span>
+                              <div className={`rounded-xl px-3 py-1.5 text-xs ${m.senderType === "admin" ? "bg-primary text-white rounded-tr-none" : "bg-white border border-stone-200 text-stone-700 rounded-tl-none"}`}>
+                                {m.message}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={msgText[order.orderNumber] ?? ""}
+                        onChange={(e) => setMsgText((p) => ({ ...p, [order.orderNumber]: e.target.value }))}
+                        onKeyDown={(e) => { if (e.key === "Enter") sendAdminMessage(order.orderNumber); }}
+                        placeholder="お客様へメッセージを送る（Enter送信）"
+                        className="flex-1 border border-stone-200 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary/30 bg-white"
+                      />
+                      <button
+                        onClick={() => sendAdminMessage(order.orderNumber)}
+                        disabled={sending === order.orderNumber || !(msgText[order.orderNumber] ?? "").trim()}
+                        className="px-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-40"
+                      >
+                        <Send className="w-3.5 h-3.5" />
+                      </button>
                     </div>
                   </div>
 

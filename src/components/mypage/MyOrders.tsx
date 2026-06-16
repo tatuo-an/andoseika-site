@@ -65,7 +65,8 @@ export function MyOrders() {
         {orders.map((order) => {
           const st = STATUS[order.status as keyof typeof STATUS] ?? { label: order.status, color: "text-stone-500 bg-stone-50 border-stone-200" };
           return (
-            <div key={order.orderNumber} className="border border-stone-100 rounded-xl p-3">
+            <Link key={order.orderNumber} href={`/mypage/orders/${order.orderNumber}`}
+              className="block border border-stone-100 rounded-xl p-3 hover:border-primary/30 hover:bg-stone-50 transition-colors">
               <div className="flex items-start justify-between gap-2 mb-1.5">
                 <p className="text-xs text-stone-500">{order.createdAt.slice(0, 10)}</p>
                 <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${st.color}`}>
@@ -77,7 +78,7 @@ export function MyOrders() {
                 <p className="text-sm font-bold text-stone-900">¥{order.amount.toLocaleString()}</p>
                 <p className="text-[10px] font-mono text-stone-400">{order.orderNumber}</p>
               </div>
-            </div>
+            </Link>
           );
         })}
       </div>
