@@ -133,28 +133,51 @@ export default function OrderDetailPage() {
                   {messages.length === 0 && (
                     <p className="text-sm text-stone-400">メッセージはありません</p>
                   )}
-                  {messages.map((m, i) => (
-                    <div key={i} className={`flex gap-3 ${m.senderType === "user" ? "flex-row-reverse" : ""}`}>
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
-                        m.senderType === "admin" ? "bg-green-100 text-green-800" : "bg-primary/10 text-primary"
-                      }`}>
-                        {m.senderType === "admin" ? "店" : "客"}
-                      </div>
-                      <div className={`max-w-[75%] ${m.senderType === "user" ? "items-end" : "items-start"} flex flex-col gap-1`}>
-                        <div className="flex items-baseline gap-2">
-                          <span className="text-xs text-stone-500 font-medium">{m.senderName}</span>
-                          <span className="text-[10px] text-stone-400">{m.sentAt}</span>
-                        </div>
-                        <div className={`rounded-2xl px-4 py-2 text-sm ${
-                          m.senderType === "user"
-                            ? "bg-primary text-white rounded-tr-sm"
-                            : "bg-stone-100 text-stone-800 rounded-tl-sm"
+                  {messages.map((m, i) => {
+                    const retracted = m.message === "__retracted__";
+                    return (
+                      <div key={i} className={`flex gap-3 group ${m.senderType === "user" ? "flex-row-reverse" : ""}`}>
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
+                          m.senderType === "admin" ? "bg-green-100 text-green-800" : "bg-primary/10 text-primary"
                         }`}>
-                          {m.message}
+                          {m.senderType === "admin" ? "店" : "客"}
+                        </div>
+                        <div className={`max-w-[75%] ${m.senderType === "user" ? "items-end" : "items-start"} flex flex-col gap-1`}>
+                          <div className="flex items-baseline gap-2">
+                            <span className="text-xs text-stone-500 font-medium">{m.senderName}</span>
+                            <span className="text-[10px] text-stone-400">{m.sentAt}</span>
+                            {m.senderType === "user" && !retracted && (
+                              <button
+                                onClick={async () => {
+                                  if (!confirm("このメッセージを取り消しますか？")) return;
+                                  const res = await fetch(`/api/my/orders/${orderNumber}/message`, {
+                                    method: "PATCH",
+                                    headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify({ sentAt: m.sentAt }),
+                                  });
+                                  if (res.ok) setMessages((prev) => prev.map((msg, j) => j === i ? { ...msg, message: "__retracted__" } : msg));
+                                }}
+                                className="text-[10px] text-stone-300 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                取り消し
+                              </button>
+                            )}
+                          </div>
+                          {retracted ? (
+                            <p className="text-xs text-stone-400 italic px-1">このメッセージは取り消されました</p>
+                          ) : (
+                            <div className={`rounded-2xl px-4 py-2 text-sm ${
+                              m.senderType === "user"
+                                ? "bg-primary text-white rounded-tr-sm"
+                                : "bg-stone-100 text-stone-800 rounded-tl-sm"
+                            }`}>
+                              {m.message}
+                            </div>
+                          )}
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                   <div ref={bottomRef} />
                 </div>
 

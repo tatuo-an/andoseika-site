@@ -300,19 +300,47 @@ export function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
                         {(messages[order.orderNumber] ?? []).length === 0 && (
                           <p className="text-xs text-stone-400">メッセージなし</p>
                         )}
-                        {(messages[order.orderNumber] ?? []).map((m, i) => (
-                          <div key={i} className={`flex gap-2 ${m.senderType === "admin" ? "flex-row-reverse" : ""}`}>
-                            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${m.senderType === "admin" ? "bg-green-100 text-green-800" : "bg-stone-200 text-stone-600"}`}>
-                              {m.senderType === "admin" ? "店" : "客"}
-                            </div>
-                            <div className={`max-w-[70%] flex flex-col gap-0.5 ${m.senderType === "admin" ? "items-end" : "items-start"}`}>
-                              <span className="text-[10px] text-stone-400">{m.senderName} · {m.sentAt}</span>
-                              <div className={`rounded-xl px-3 py-1.5 text-xs whitespace-pre-wrap ${m.senderType === "admin" ? "bg-primary text-white rounded-tr-none" : "bg-white border border-stone-200 text-stone-700 rounded-tl-none"}`}>
-                                {m.message}
+                        {(messages[order.orderNumber] ?? []).map((m, i) => {
+                          const retracted = m.message === "__retracted__";
+                          return (
+                            <div key={i} className={`flex gap-2 group ${m.senderType === "admin" ? "flex-row-reverse" : ""}`}>
+                              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${m.senderType === "admin" ? "bg-green-100 text-green-800" : "bg-stone-200 text-stone-600"}`}>
+                                {m.senderType === "admin" ? "店" : "客"}
+                              </div>
+                              <div className={`max-w-[70%] flex flex-col gap-0.5 ${m.senderType === "admin" ? "items-end" : "items-start"}`}>
+                                <div className="flex items-baseline gap-1.5">
+                                  <span className="text-[10px] text-stone-400">{m.senderName} · {m.sentAt}</span>
+                                  {m.senderType === "admin" && !retracted && (
+                                    <button
+                                      onClick={async () => {
+                                        if (!confirm("このメッセージを取り消しますか？")) return;
+                                        const res = await fetch(`/api/admin/orders/${encodeURIComponent(order.orderNumber)}/message`, {
+                                          method: "PATCH",
+                                          headers: { "Content-Type": "application/json" },
+                                          body: JSON.stringify({ sentAt: m.sentAt }),
+                                        });
+                                        if (res.ok) setMessages((prev) => ({
+                                          ...prev,
+                                          [order.orderNumber]: (prev[order.orderNumber] ?? []).map((msg, j) => j === i ? { ...msg, message: "__retracted__" } : msg),
+                                        }));
+                                      }}
+                                      className="text-[9px] text-stone-300 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    >
+                                      取り消し
+                                    </button>
+                                  )}
+                                </div>
+                                {retracted ? (
+                                  <p className="text-[10px] text-stone-400 italic px-1">このメッセージは取り消されました</p>
+                                ) : (
+                                  <div className={`rounded-xl px-3 py-1.5 text-xs whitespace-pre-wrap ${m.senderType === "admin" ? "bg-primary text-white rounded-tr-none" : "bg-white border border-stone-200 text-stone-700 rounded-tl-none"}`}>
+                                    {m.message}
+                                  </div>
+                                )}
                               </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     )}
                     <div className="flex gap-2">
