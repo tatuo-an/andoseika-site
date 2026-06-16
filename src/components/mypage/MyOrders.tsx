@@ -5,10 +5,11 @@ import { Package, ChevronRight } from "lucide-react";
 import Link from "next/link";
 
 const STATUS = {
-  paid:      { label: "発送準備中", color: "text-yellow-700 bg-yellow-50 border-yellow-200" },
-  shipping:  { label: "発送済み",   color: "text-blue-700 bg-blue-50 border-blue-200" },
-  delivered: { label: "受取完了",   color: "text-green-700 bg-green-50 border-green-200" },
-  cancelled: { label: "キャンセル", color: "text-stone-500 bg-stone-50 border-stone-200" },
+  paid:             { label: "発送準備中",     color: "text-yellow-700 bg-yellow-50 border-yellow-200" },
+  shipping:         { label: "発送済み",       color: "text-blue-700 bg-blue-50 border-blue-200" },
+  delivered:        { label: "受取完了",       color: "text-green-700 bg-green-50 border-green-200" },
+  cancelled:        { label: "キャンセル",     color: "text-stone-500 bg-stone-50 border-stone-200" },
+  cancel_requested: { label: "キャンセル申請中", color: "text-red-700 bg-red-50 border-red-200" },
 } as const;
 
 type Order = {
