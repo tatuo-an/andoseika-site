@@ -24,7 +24,8 @@ const REASONS_BEFORE_SHIP = [
 ] as const;
 
 const REASONS_SHIPPING = [
-  { value: "late", label: "商品が届かない", desc: "お届け予定日を過ぎても商品が届いていないため", requireImage: false },
+  { value: "late",        label: "商品が届かない",                         desc: "お届け予定日を過ぎても商品が届いていないため",         requireImage: false },
+  { value: "change_date", label: "お届け日変更（お届け予定日に受け取れない）", desc: "都合によりお届け予定日に受け取ることができないため", requireImage: false },
 ] as const;
 
 const REASONS_AFTER_RECEIVE = [
