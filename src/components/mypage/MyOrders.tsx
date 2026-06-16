@@ -9,8 +9,9 @@ const STATUS = {
   shipping:         { label: "発送済み",       color: "text-blue-700 bg-blue-50 border-blue-200" },
   delivered:        { label: "受取完了",       color: "text-green-700 bg-green-50 border-green-200" },
   cancelled:        { label: "キャンセル",     color: "text-stone-500 bg-stone-50 border-stone-200" },
-  cancel_requested: { label: "キャンセル申請中", color: "text-red-700 bg-red-50 border-red-200" },
-  completed:        { label: "取引完了",         color: "text-teal-700 bg-teal-50 border-teal-200" },
+  cancel_requested:       { label: "キャンセル申請中", color: "text-red-700 bg-red-50 border-red-200" },
+  admin_cancel_requested: { label: "キャンセル申請中", color: "text-red-700 bg-red-50 border-red-200" },
+  completed:              { label: "取引完了",         color: "text-teal-700 bg-teal-50 border-teal-200" },
 } as const;
 
 type Order = {
