@@ -44,35 +44,89 @@ function UserCancelModal({ onConfirm, onCancel, loading, orderStatus }: {
 
   const [selected, setSelected] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [compressedFile, setCompressedFile] = useState<File | null>(null);
+  const [compressing, setCompressing] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
+  const MAX_SIZE = 5 * 1024 * 1024;
   const reason = reasons.find((r) => r.value === selected);
   const needsImage = reason?.requireImage ?? false;
-  const fileTooLarge = imageFile ? imageFile.size > 10 * 1024 * 1024 : false;
-  const canSubmit = selected && (!needsImage || imageFile) && !fileTooLarge && !loading && !uploading;
+  const displayFile = compressedFile ?? imageFile;
+  const canSubmit = selected && (!needsImage || displayFile) && !loading && !uploading && !compressing;
 
   function formatSize(bytes: number) {
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)}KB`;
     return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
   }
 
-  function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+  async function compressImage(file: File): Promise<File> {
+    return new Promise((resolve) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        const canvas = document.createElement("canvas");
+        let { width, height } = img;
+        // 長辺を最大 2048px に縮小
+        const maxDim = 2048;
+        if (width > maxDim || height > maxDim) {
+          if (width >= height) { height = Math.round(height * maxDim / width); width = maxDim; }
+          else { width = Math.round(width * maxDim / height); height = maxDim; }
+        }
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext("2d")!.drawImage(img, 0, 0, width, height);
+
+        // quality を下げながら 5MB 以下になるまで試す
+        let quality = 0.85;
+        const tryCompress = () => {
+          canvas.toBlob((blob) => {
+            if (!blob) { resolve(file); return; }
+            if (blob.size <= MAX_SIZE || quality <= 0.1) {
+              resolve(new File([blob], file.name.replace(/\.[^.]+$/, ".jpg"), { type: "image/jpeg" }));
+            } else {
+              quality -= 0.1;
+              tryCompress();
+            }
+          }, "image/jpeg", quality);
+        };
+        tryCompress();
+      };
+      img.src = url;
+    });
+  }
+
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
     if (!f) return;
     setImageFile(f);
+    setCompressedFile(null);
+    setUploadError(null);
     setPreview(URL.createObjectURL(f));
+
+    if (f.size > MAX_SIZE) {
+      setCompressing(true);
+      try {
+        const compressed = await compressImage(f);
+        setCompressedFile(compressed);
+        setPreview(URL.createObjectURL(compressed));
+      } finally {
+        setCompressing(false);
+      }
+    }
   }
 
   async function handleConfirm() {
     if (!reason) return;
-    if (needsImage && imageFile) {
+    const fileToUpload = compressedFile ?? imageFile;
+    if (needsImage && fileToUpload) {
       setUploading(true);
       setUploadError(null);
       try {
         const fd = new FormData();
-        fd.append("file", imageFile);
+        fd.append("file", fileToUpload);
         const res = await fetch("/api/my/upload-image", { method: "POST", body: fd });
         const data = await res.json();
         if (!res.ok || !data.url) {
@@ -116,11 +170,16 @@ function UserCancelModal({ onConfirm, onCancel, loading, orderStatus }: {
               <p className="text-xs text-amber-700">商品の不具合（破損・変色・異物など）がわかるよう、現在の状態を撮影した写真を添付してください。写真がない場合は対応できかねる場合があります。</p>
             </div>
             <div className="p-3 border border-stone-200 rounded-xl">
-              <p className="text-xs text-stone-500 mb-2">写真を選択（必須・5MBまで）</p>
+              <p className="text-xs text-stone-500 mb-2">写真を選択（必須・5MB以下、超えた場合は自動圧縮）</p>
               <input type="file" accept="image/*" onChange={handleFile} className="text-xs text-stone-600 w-full" />
-              {imageFile && (
-                <p className={`text-xs mt-1 ${imageFile.size > 10 * 1024 * 1024 ? "text-red-500 font-bold" : "text-stone-400"}`}>
-                  ファイルサイズ：{formatSize(imageFile.size)}{imageFile.size > 10 * 1024 * 1024 ? "（10MB超・送信不可）" : ""}
+              {compressing && (
+                <p className="text-xs mt-1 text-amber-600 font-medium">圧縮中...</p>
+              )}
+              {imageFile && !compressing && (
+                <p className="text-xs mt-1 text-stone-400">
+                  {compressedFile
+                    ? `${formatSize(imageFile.size)} → ${formatSize(compressedFile.size)}（自動圧縮済み）`
+                    : `ファイルサイズ：${formatSize(imageFile.size)}`}
                 </p>
               )}
               {preview && <img src={preview} alt="preview" className="mt-2 rounded-lg max-h-36 object-contain w-full border border-stone-100" />}
@@ -138,7 +197,7 @@ function UserCancelModal({ onConfirm, onCancel, loading, orderStatus }: {
             disabled={!canSubmit}
             className="flex-1 py-2.5 bg-red-500 text-white rounded-xl text-sm font-bold hover:bg-red-600 transition-colors disabled:opacity-50"
           >
-            {uploading ? "アップロード中..." : loading ? "処理中..." : isAfterReceive ? "報告する" : isShipping ? "問い合わせる" : "キャンセルする"}
+            {compressing ? "圧縮中..." : uploading ? "アップロード中..." : loading ? "処理中..." : isAfterReceive ? "報告する" : isShipping ? "問い合わせる" : "キャンセルする"}
           </button>
         </div>
       </div>

@@ -25,8 +25,8 @@ export async function POST(req: NextRequest) {
     const file = formData.get("file") as File | null;
     if (!file) return NextResponse.json({ error: "No file" }, { status: 400 });
 
-    if (file.size > 10 * 1024 * 1024) {
-      return NextResponse.json({ error: "10MB以下の画像を選択してください" }, { status: 400 });
+    if (file.size > 5 * 1024 * 1024) {
+      return NextResponse.json({ error: "5MB以下の画像を送信してください" }, { status: 400 });
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
