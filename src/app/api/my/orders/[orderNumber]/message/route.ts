@@ -38,6 +38,23 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ ord
     requestBody: { values: [[orderNumber, "user", session.user.name ?? "お客様", message.trim(), sentAt]] },
   });
 
+  // 問題報告・配送問い合わせの場合は注文管理シートのM列に記録
+  const complaintMatch = message.match(/^【(問題報告|配送問い合わせ)】(.+)/);
+  if (complaintMatch) {
+    const allOrders = await sheets.spreadsheets.values.get({ spreadsheetId: id, range: "注文管理!A:A" });
+    const rows = allOrders.data.values ?? [];
+    const rowIndex = rows.findIndex((r) => r[0] === orderNumber);
+    if (rowIndex !== -1) {
+      const label = complaintMatch[1] === "配送問い合わせ" ? `【配送】${complaintMatch[2].split("\n")[0]}` : complaintMatch[2].split("\n")[0];
+      await sheets.spreadsheets.values.update({
+        spreadsheetId: id,
+        range: `注文管理!M${rowIndex + 1}`,
+        valueInputOption: "RAW",
+        requestBody: { values: [[label]] },
+      });
+    }
+  }
+
   return NextResponse.json({ ok: true, sentAt });
 }
 

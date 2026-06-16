@@ -364,6 +364,13 @@ export function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
                   お客様よりキャンセル申請が届いています。内容を確認してください。
                 </div>
               )}
+              {/* 問題報告バナー */}
+              {order.complaint && (
+                <div className="flex items-center gap-2 bg-orange-500 text-white px-4 py-2 text-xs font-bold">
+                  <XCircle className="w-3.5 h-3.5 shrink-0" />
+                  問題報告：{order.complaint}
+                </div>
+              )}
               {/* Header row */}
               <div
                 className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-stone-50 transition-colors"
