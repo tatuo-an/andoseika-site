@@ -251,17 +251,17 @@ export default function OrderDetailPage() {
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  const initialLoadDone = useRef(false);
+  const isFirstLoad = useRef(true);
 
   useEffect(() => {
     fetch(`/api/my/orders/${orderNumber}`)
       .then((r) => r.json())
       .then((d) => { setOrder(d.order); setMessages(d.messages ?? []); })
-      .finally(() => { setLoading(false); initialLoadDone.current = true; });
+      .finally(() => setLoading(false));
   }, [orderNumber]);
 
   useEffect(() => {
-    if (!initialLoadDone.current) return;
+    if (isFirstLoad.current) { isFirstLoad.current = false; return; }
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
