@@ -9,10 +9,9 @@ import { CartModal } from "@/components/cart/CartModal";
 const NAV_ITEMS = [
     { href: "/products", label: "商品一覧" },
     { href: "/experience", label: "体験・予約" },
-    { href: "/about", label: "私たちについて" },
-    { href: "/business", label: "業務用・卸" },
-    { href: "/news", label: "お知らせ" },
     { href: "/supporter", label: "サポーター募集", highlight: true },
+    { href: "/business", label: "業務用・卸" },
+    { href: "/about", label: "私たちについて" },
 ];
 
 export function Header() {
