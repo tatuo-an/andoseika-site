@@ -329,7 +329,28 @@ export default function OrderDetailPage() {
 
   if (loading) return (
     <div className="min-h-screen flex flex-col bg-stone-50"><Header />
-      <main className="flex-1 flex items-center justify-center"><p className="text-stone-400">読み込み中...</p></main>
+      <main className="flex-1 py-8">
+        <div className="container mx-auto px-4 max-w-2xl space-y-4">
+          <div className="h-6 w-32 bg-stone-200 rounded animate-pulse" />
+          <div className="bg-white rounded-2xl shadow-sm p-6 space-y-4">
+            <div className="h-5 w-24 bg-stone-200 rounded animate-pulse" />
+            <div className="grid grid-cols-2 gap-4">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="space-y-1">
+                  <div className="h-3 w-16 bg-stone-100 rounded animate-pulse" />
+                  <div className="h-4 w-28 bg-stone-200 rounded animate-pulse" />
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="bg-white rounded-2xl shadow-sm p-6 space-y-3">
+            <div className="h-5 w-24 bg-stone-200 rounded animate-pulse" />
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className={`h-10 rounded-xl bg-stone-100 animate-pulse ${i % 2 === 0 ? "ml-auto w-2/3" : "w-2/3"}`} />
+            ))}
+          </div>
+        </div>
+      </main>
     <Footer /></div>
   );
 
