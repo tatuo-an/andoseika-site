@@ -251,8 +251,6 @@ export default function OrderDetailPage() {
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  const isFirstLoad = useRef(true);
-
   useEffect(() => {
     fetch(`/api/my/orders/${orderNumber}`)
       .then((r) => r.json())
@@ -260,10 +258,9 @@ export default function OrderDetailPage() {
       .finally(() => setLoading(false));
   }, [orderNumber]);
 
-  useEffect(() => {
-    if (isFirstLoad.current) { isFirstLoad.current = false; return; }
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  function scrollToBottom() {
+    setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
+  }
 
   async function sendMessage() {
     if (!msgText.trim()) return;
@@ -278,6 +275,7 @@ export default function OrderDetailPage() {
       if (data.ok) {
         setMessages((prev) => [...prev, { senderType: "user", senderName: "お客様", message: msgText.trim(), sentAt: data.sentAt }]);
         setMsgText("");
+        scrollToBottom();
       }
     } finally { setSending(false); }
   }
