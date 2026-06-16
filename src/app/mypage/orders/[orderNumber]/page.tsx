@@ -76,7 +76,7 @@ function UserCancelModal({ onConfirm, onCancel, loading, orderStatus }: {
         const res = await fetch("/api/my/upload-image", { method: "POST", body: fd });
         const data = await res.json();
         if (!res.ok || !data.url) {
-          setUploadError(data.error ?? "画像のアップロードに失敗しました。もう一度お試しください。");
+          setUploadError((data.error ?? "画像のアップロードに失敗しました") + (data.detail ? `\n${data.detail}` : ""));
           return;
         }
         onConfirm(reason.label, data.url);
@@ -129,7 +129,7 @@ function UserCancelModal({ onConfirm, onCancel, loading, orderStatus }: {
         )}
 
         {uploadError && (
-          <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2 mb-3">{uploadError}</p>
+          <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2 mb-3 whitespace-pre-wrap break-all">{uploadError}</p>
         )}
         <div className="flex gap-2">
           <button onClick={onCancel} className="flex-1 py-2.5 border border-stone-200 rounded-xl text-sm text-stone-600 hover:bg-stone-50 transition-colors">戻る</button>
