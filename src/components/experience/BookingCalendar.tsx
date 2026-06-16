@@ -69,7 +69,7 @@ export function BookingCalendar({
         setName("");
         setErrorMsg("");
 
-        fetch(`/api/bookings?experienceName=${encodeURIComponent(experienceName)}`)
+        fetch(`/api/bookings`)
             .then(r => r.json())
             .then(d => setBookings(d.bookings ?? []))
             .catch(() => setBookings([]));

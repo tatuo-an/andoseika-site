@@ -120,14 +120,14 @@ export async function POST(req: NextRequest) {
         const sheets = getSheets();
         await ensureSheet(sheets);
 
-        // 重複チェック: 同じ体験・同じ日付・同じ開始時刻でconfirmedな予約があれば拒否
+        // 重複チェック: 同じ日付・同じ開始時刻でconfirmedな予約があれば体験名に関わらず拒否
         const res = await sheets.spreadsheets.values.get({
             spreadsheetId: SPREADSHEET_ID,
             range: `${SHEET_NAME}!A:K`,
         });
         const rows = res.data.values ?? [];
         const existing = rows.slice(1).find(r =>
-            r[4] === experienceName && r[5] === date && r[6] === startTime && r[9] === "confirmed"
+            r[5] === date && r[6] === startTime && r[9] === "confirmed"
         );
         if (existing) {
             return NextResponse.json({ error: "この時間帯は既に予約されています" }, { status: 409 });
