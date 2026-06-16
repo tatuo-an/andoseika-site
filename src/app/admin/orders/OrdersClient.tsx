@@ -30,6 +30,47 @@ function filterOrders(orders: Order[], tab: Tab): Order[] {
   return orders;
 }
 
+// 追跡番号入力モーダル
+function ShippingModal({ onConfirm, onCancel, loading }: {
+  onConfirm: (trackingNumber: string) => void;
+  onCancel: () => void;
+  loading: boolean;
+}) {
+  const [trackingNumber, setTrackingNumber] = useState("");
+  return (
+    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm">
+        <h3 className="font-bold text-stone-900 mb-1">発送済みにする</h3>
+        <p className="text-sm text-stone-500 mb-4">追跡番号を入力してください。お客様へ自動でメッセージが送信されます。</p>
+        <input
+          type="text"
+          value={trackingNumber}
+          onChange={(e) => setTrackingNumber(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter" && trackingNumber.trim()) onConfirm(trackingNumber.trim()); }}
+          placeholder="例：1234-5678-9012"
+          autoFocus
+          className="w-full border border-stone-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 mb-4"
+        />
+        <div className="flex gap-2">
+          <button
+            onClick={onCancel}
+            className="flex-1 py-2.5 border border-stone-200 rounded-xl text-sm text-stone-600 hover:bg-stone-50 transition-colors"
+          >
+            キャンセル
+          </button>
+          <button
+            onClick={() => { if (trackingNumber.trim()) onConfirm(trackingNumber.trim()); }}
+            disabled={!trackingNumber.trim() || loading}
+            className="flex-1 py-2.5 bg-primary text-white rounded-xl text-sm font-bold hover:bg-primary/90 transition-colors disabled:opacity-50"
+          >
+            {loading ? "処理中..." : "発送する"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
   const [orders, setOrders] = useState<Order[]>(initialOrders);
   const [tab, setTab] = useState<Tab>("all");
@@ -40,9 +81,9 @@ export function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
   const [msgLoading, setMsgLoading] = useState<string | null>(null);
   const [msgText, setMsgText] = useState<Record<string, string>>({});
   const [sending, setSending] = useState<string | null>(null);
+  const [shippingModal, setShippingModal] = useState<string | null>(null); // orderNumber
 
   const filtered = filterOrders(orders, tab);
-
   const countOf = (t: Tab) => filterOrders(orders, t).length;
 
   async function updateStatus(orderNumber: string, status: string) {
@@ -56,6 +97,37 @@ export function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
       setOrders((prev) => prev.map((o) => o.orderNumber === orderNumber ? { ...o, status } : o));
     } finally {
       setUpdating(null);
+    }
+  }
+
+  async function handleShipConfirm(orderNumber: string, trackingNumber: string) {
+    setUpdating(orderNumber);
+    try {
+      // ステータス更新
+      await fetch(`/api/admin/orders/${encodeURIComponent(orderNumber)}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "shipping" }),
+      });
+      setOrders((prev) => prev.map((o) => o.orderNumber === orderNumber ? { ...o, status: "shipping" } : o));
+
+      // 自動メッセージ送信
+      const autoMsg = `商品を発送しました。\n追跡番号：${trackingNumber}\n\nお届けまでしばらくお待ちください。`;
+      const res = await fetch(`/api/admin/orders/${encodeURIComponent(orderNumber)}/message`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: autoMsg }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setMessages((prev) => ({
+          ...prev,
+          [orderNumber]: [...(prev[orderNumber] ?? []), { senderType: "admin", senderName: "安藤青果", message: autoMsg, sentAt: data.sentAt }],
+        }));
+      }
+    } finally {
+      setUpdating(null);
+      setShippingModal(null);
     }
   }
 
@@ -108,6 +180,15 @@ export function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
 
   return (
     <div>
+      {/* 追跡番号モーダル */}
+      {shippingModal && (
+        <ShippingModal
+          loading={updating === shippingModal}
+          onConfirm={(trackingNumber) => handleShipConfirm(shippingModal, trackingNumber)}
+          onCancel={() => setShippingModal(null)}
+        />
+      )}
+
       {/* Tabs */}
       <div className="flex items-center gap-1 mb-4 border-b border-stone-200 pb-0">
         {TABS.map((t) => (
@@ -226,7 +307,7 @@ export function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
                             </div>
                             <div className={`max-w-[70%] flex flex-col gap-0.5 ${m.senderType === "admin" ? "items-end" : "items-start"}`}>
                               <span className="text-[10px] text-stone-400">{m.senderName} · {m.sentAt}</span>
-                              <div className={`rounded-xl px-3 py-1.5 text-xs ${m.senderType === "admin" ? "bg-primary text-white rounded-tr-none" : "bg-white border border-stone-200 text-stone-700 rounded-tl-none"}`}>
+                              <div className={`rounded-xl px-3 py-1.5 text-xs whitespace-pre-wrap ${m.senderType === "admin" ? "bg-primary text-white rounded-tr-none" : "bg-white border border-stone-200 text-stone-700 rounded-tl-none"}`}>
                                 {m.message}
                               </div>
                             </div>
@@ -258,7 +339,7 @@ export function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
                     <p className="text-xs text-stone-500 w-full">ステータス変更：</p>
                     {order.status === "paid" && (
                       <button
-                        onClick={() => updateStatus(order.orderNumber, "shipping")}
+                        onClick={() => setShippingModal(order.orderNumber)}
                         disabled={isUpdating}
                         className="flex items-center gap-1.5 px-4 py-2 bg-primary text-white text-sm font-bold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
                       >
@@ -291,7 +372,7 @@ export function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
                     {order.status === "paid" && (
                       <p className="w-full text-xs text-amber-600 flex items-center gap-1">
                         <Package className="w-3.5 h-3.5" />
-                        発送後、「発送済みにする」を押してください
+                        発送後、「発送済みにする」を押して追跡番号を入力してください
                       </p>
                     )}
                   </div>
