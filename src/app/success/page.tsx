@@ -5,10 +5,13 @@ import { Footer } from "@/components/layout/Footer";
 import { CheckCircle } from "lucide-react";
 import Link from "next/link";
 import { useEffect } from "react";
+import { useShoppingCart } from "use-shopping-cart";
 
 export default function SuccessPage() {
+    const { clearCart } = useShoppingCart();
+
     useEffect(() => {
-        sessionStorage.removeItem("cart");
+        clearCart();
     }, []);
 
     return (
