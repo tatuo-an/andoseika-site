@@ -21,6 +21,10 @@ const REASONS_BEFORE_SHIP = [
   { value: "other",       label: "その他",             desc: "担当者へメッセージにてお伝えします",       requireImage: false },
 ] as const;
 
+const REASONS_SHIPPING = [
+  { value: "late", label: "商品が届かない", desc: "お届け予定日を過ぎても商品が届いていないため", requireImage: false },
+] as const;
+
 const REASONS_AFTER_RECEIVE = [
   { value: "defect",  label: "商品の不具合", desc: "破損・品質不良など（写真の添付が必要です）", requireImage: true  },
   { value: "other",   label: "その他",       desc: "担当者へメッセージにてお伝えします",         requireImage: false },
@@ -35,7 +39,8 @@ function UserCancelModal({ onConfirm, onCancel, loading, orderStatus }: {
   orderStatus: string;
 }) {
   const isAfterReceive = orderStatus === "delivered";
-  const reasons: readonly Reason[] = isAfterReceive ? REASONS_AFTER_RECEIVE : REASONS_BEFORE_SHIP;
+  const isShipping = orderStatus === "shipping";
+  const reasons: readonly Reason[] = isAfterReceive ? REASONS_AFTER_RECEIVE : isShipping ? REASONS_SHIPPING : REASONS_BEFORE_SHIP;
 
   const [selected, setSelected] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -80,8 +85,12 @@ function UserCancelModal({ onConfirm, onCancel, loading, orderStatus }: {
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm max-h-[90vh] overflow-y-auto">
-        <h3 className="font-bold text-stone-900 mb-1">{isAfterReceive ? "問題を報告する" : "注文をキャンセルする"}</h3>
-        <p className="text-sm text-stone-500 mb-4">{isAfterReceive ? "問題の内容を選択してください。" : "キャンセル理由を選択してください。"}</p>
+        <h3 className="font-bold text-stone-900 mb-1">
+          {isAfterReceive ? "問題を報告する" : isShipping ? "配送について問い合わせる" : "注文をキャンセルする"}
+        </h3>
+        <p className="text-sm text-stone-500 mb-4">
+          {isAfterReceive ? "問題の内容を選択してください。" : isShipping ? "お問い合わせ内容を選択してください。" : "キャンセル理由を選択してください。"}
+        </p>
         <div className="space-y-2 mb-4">
           {reasons.map((r) => (
             <label key={r.value} className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${selected === r.value ? "border-red-400 bg-red-50" : "border-stone-200 hover:border-stone-300"}`}>
@@ -118,7 +127,7 @@ function UserCancelModal({ onConfirm, onCancel, loading, orderStatus }: {
             disabled={!canSubmit}
             className="flex-1 py-2.5 bg-red-500 text-white rounded-xl text-sm font-bold hover:bg-red-600 transition-colors disabled:opacity-50"
           >
-            {uploading ? "アップロード中..." : loading ? "処理中..." : isAfterReceive ? "報告する" : "キャンセルする"}
+            {uploading ? "アップロード中..." : loading ? "処理中..." : isAfterReceive ? "報告する" : isShipping ? "問い合わせる" : "キャンセルする"}
           </button>
         </div>
       </div>
@@ -174,12 +183,14 @@ export default function OrderDetailPage() {
   async function cancelOrder(reasonLabel: string, imageUrl?: string) {
     setCancelling(true);
     const isAfterReceive = order?.status === "delivered";
+    const isShipping = order?.status === "shipping";
     try {
-      if (isAfterReceive) {
+      if (isAfterReceive || isShipping) {
         // 受取後は問題報告メッセージのみ送信（ステータス変更なし）
+        const prefix = isShipping ? "【配送問い合わせ】" : "【問題報告】";
         const msgBody = imageUrl
-          ? `【問題報告】${reasonLabel}\n【写真】${imageUrl}`
-          : `【問題報告】${reasonLabel}`;
+          ? `${prefix}${reasonLabel}\n【写真】${imageUrl}`
+          : `${prefix}${reasonLabel}`;
         const res = await fetch(`/api/my/orders/${orderNumber}/message`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -386,6 +397,17 @@ export default function OrderDetailPage() {
                 >
                   <XCircle className="w-4 h-4" />
                   注文をキャンセルする
+                </button>
+              )}
+
+              {/* 遅延問い合わせボタン（発送済み） */}
+              {order.status === "shipping" && (
+                <button
+                  onClick={() => setShowCancelModal(true)}
+                  className="w-full flex items-center justify-center gap-2 py-3 border border-stone-200 text-stone-600 rounded-xl hover:bg-stone-50 transition-colors text-sm font-medium"
+                >
+                  <XCircle className="w-4 h-4" />
+                  配送について問い合わせる
                 </button>
               )}
 
