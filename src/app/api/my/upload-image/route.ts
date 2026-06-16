@@ -21,7 +21,10 @@ export async function POST(req: NextRequest) {
     const ext = file.name.split(".").pop() ?? "jpg";
     const filename = `complaints/${Date.now()}.${ext}`;
 
-    const blob = await put(filename, file, { access: "public" });
+    const blob = await put(filename, file, {
+      access: "public",
+      token: process.env.COMPLAINT_READ_WRITE_TOKEN,
+    });
 
     // シート記録（失敗しても URL は返す）
     try {

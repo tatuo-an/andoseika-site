@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
     const uploadedMs = new Date(uploadedAt).getTime();
     if (isNaN(uploadedMs)) continue;
     if (now - uploadedMs > ONE_MONTH) {
-      await del(blobUrl).catch(() => null);
+      await del(blobUrl, { token: process.env.COMPLAINT_READ_WRITE_TOKEN }).catch(() => null);
       toDelete.push(i);
     }
   }
