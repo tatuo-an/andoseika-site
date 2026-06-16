@@ -137,11 +137,6 @@ export default function OrderDetailPage() {
                     const retracted = m.message === "__retracted__";
                     return (
                       <div key={i} className={`flex gap-3 group ${m.senderType === "user" ? "flex-row-reverse" : ""}`}>
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
-                          m.senderType === "admin" ? "bg-green-100 text-green-800" : "bg-primary/10 text-primary"
-                        }`}>
-                          {m.senderType === "admin" ? "店" : "客"}
-                        </div>
                         <div className={`max-w-[75%] ${m.senderType === "user" ? "items-end" : "items-start"} flex flex-col gap-1`}>
                           <div className="flex items-baseline gap-2">
                             <span className="text-xs text-stone-500 font-medium">{m.senderName}</span>

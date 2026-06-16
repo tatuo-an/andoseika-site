@@ -333,9 +333,6 @@ export function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
                           const retracted = m.message === "__retracted__";
                           return (
                             <div key={i} className={`flex gap-2 group ${m.senderType === "admin" ? "flex-row-reverse" : ""}`}>
-                              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${m.senderType === "admin" ? "bg-green-100 text-green-800" : "bg-stone-200 text-stone-600"}`}>
-                                {m.senderType === "admin" ? "店" : "客"}
-                              </div>
                               <div className={`max-w-[70%] flex flex-col gap-0.5 ${m.senderType === "admin" ? "items-end" : "items-start"}`}>
                                 <div className="flex items-baseline gap-1.5">
                                   <span className="text-[10px] text-stone-400">{m.senderName} · {m.sentAt}</span>
