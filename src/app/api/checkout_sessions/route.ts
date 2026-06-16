@@ -169,6 +169,8 @@ export async function POST(req: NextRequest) {
                 legalDisclosureUrl,
                 source: "ando-seika-store",
                 shippingLabel: shippingAddress?.label ?? "",
+                shipMode: shipMode ?? "",
+                shipValue: shipValue ?? "",
             },
             payment_intent_data: {
                 metadata: {

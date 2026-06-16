@@ -131,8 +131,8 @@ export async function POST(req: NextRequest) {
     const desiredDate = piMeta.desiredDeliveryDate ?? meta.desiredDeliveryDate ?? "";
     const desiredTime = piMeta.desiredDeliveryTime ?? meta.desiredDeliveryTime ?? "";
     const shippingName = piMeta.shippingName ?? name;
-    const shipMode = piMeta.shipMode ?? "";
-    const shipValue = piMeta.shipValue ?? "";
+    const shipMode = piMeta.shipMode ?? meta.shipMode ?? "";
+    const shipValue = piMeta.shipValue ?? meta.shipValue ?? "";
 
     // お届け予定日: 配達希望日があればそちら優先、なければshipMode/shipValueから計算
     const estimatedDate = desiredDate || calcEstimatedDate(shipMode, shipValue);
