@@ -16,6 +16,7 @@ import {
 import { SupporterPlanButton } from "@/components/supporter/SupporterPlanButton";
 import { HeroSlideshow } from "@/components/supporter/HeroSlideshow";
 import { getSupporterFirstViewVariant } from "@/config/supporter-variants";
+import { Header } from "@/components/layout/Header";
 
 export const metadata = {
     title: "農家サポーター制度「住民票」| &YOU 安藤青果",
@@ -42,7 +43,9 @@ export default async function SupporterPage({
     const heroVariant = getSupporterFirstViewVariant(fv);
 
     return (
-        <main className="bg-[#FAFAF9]">
+        <div className="bg-[#FAFAF9]">
+        <Header />
+        <main>
             {/* ───────── 1. HERO (SLIDESHOW) ───────── */}
             <HeroSlideshow variant={heroVariant} />
 
@@ -516,6 +519,7 @@ export default async function SupporterPage({
                 </div>
             </section>
         </main>
+        </div>
     );
 }
 
