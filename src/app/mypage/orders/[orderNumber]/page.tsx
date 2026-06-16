@@ -89,7 +89,7 @@ export default function OrderDetailPage() {
           </Link>
 
           <div className="flex flex-col md:flex-row gap-6">
-            {/* 左カラム */}
+            {/* 左カラム：発送状況＋注文情報 */}
             <div className="flex-1 space-y-4">
               {/* 発送状況 */}
               <div className="bg-white rounded-2xl shadow-sm p-6">
@@ -101,7 +101,6 @@ export default function OrderDetailPage() {
                   </div>
                 ) : (
                   <div className="relative">
-                    {/* Progress line */}
                     <div className="absolute top-4 left-0 right-0 h-0.5 bg-stone-200 mx-8" />
                     <div
                       className="absolute top-4 left-0 h-0.5 bg-green-500 mx-8 transition-all"
@@ -143,10 +142,60 @@ export default function OrderDetailPage() {
                 )}
               </div>
 
-              {/* 取引メッセージ */}
-              <div className="bg-white rounded-2xl shadow-sm p-6">
+              {/* 注文情報 */}
+              <div className="bg-white rounded-2xl shadow-sm p-5 text-sm">
+                <table className="w-full">
+                  <tbody>
+                    <tr className="border-b border-stone-100">
+                      <td className="py-2 text-stone-500">注文日</td>
+                      <td className="py-2 text-right text-primary font-medium">{order.createdAt.slice(0, 10)}</td>
+                    </tr>
+                    <tr>
+                      <td className="py-2 text-stone-500">注文番号</td>
+                      <td className="py-2 text-right font-mono text-xs text-stone-700 break-all">{order.orderNumber}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* 注文内容 */}
+              <div className="bg-white rounded-2xl shadow-sm p-5">
+                <h3 className="font-bold text-stone-900 mb-3 text-sm">注文内容</h3>
+                <p className="text-sm text-stone-700 mb-3">{order.productNames}</p>
+                <div className="border-t border-stone-100 pt-3 space-y-1 text-sm">
+                  <div className="flex justify-between font-bold text-stone-900">
+                    <span>合計</span>
+                    <span>¥{order.amount.toLocaleString()}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 配送情報 */}
+              <div className="bg-white rounded-2xl shadow-sm p-5 text-sm space-y-1">
+                <h3 className="font-bold text-stone-900 mb-2">配送情報</h3>
+                <p className="text-stone-600">{order.address}</p>
+                {order.desiredDate && <p className="text-stone-500">希望日: {order.desiredDate}</p>}
+                {order.desiredTime && order.desiredTime !== "指定なし" && <p className="text-stone-500">時間帯: {order.desiredTime}</p>}
+              </div>
+
+              {/* キャンセルボタン */}
+              {order.status === "paid" && (
+                <button
+                  onClick={cancelOrder}
+                  disabled={cancelling}
+                  className="w-full flex items-center justify-center gap-2 py-3 border border-red-200 text-red-600 rounded-xl hover:bg-red-50 transition-colors text-sm font-medium disabled:opacity-50"
+                >
+                  <XCircle className="w-4 h-4" />
+                  {cancelling ? "処理中..." : "注文をキャンセルする"}
+                </button>
+              )}
+            </div>
+
+            {/* 右カラム：取引メッセージ */}
+            <div className="md:w-96 space-y-4">
+              <div className="bg-white rounded-2xl shadow-sm p-6 flex flex-col">
                 <h2 className="font-bold text-stone-900 mb-4">取引メッセージ</h2>
-                <div className="space-y-3 mb-4 min-h-[80px]">
+                <div className="space-y-3 mb-4 min-h-[80px] flex-1">
                   {messages.length === 0 && (
                     <p className="text-sm text-stone-400">メッセージはありません</p>
                   )}
@@ -198,7 +247,7 @@ export default function OrderDetailPage() {
                     <textarea
                       value={msgText}
                       onChange={(e) => setMsgText(e.target.value)}
-                      placeholder="メッセージを入力（Enterで送信）"
+                      placeholder="メッセージを入力"
                       rows={2}
                       className="flex-1 border border-stone-200 rounded-xl px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/30"
                     />
@@ -212,57 +261,6 @@ export default function OrderDetailPage() {
                   </div>
                 )}
               </div>
-            </div>
-
-            {/* 右カラム */}
-            <div className="md:w-72 space-y-4">
-              {/* 注文情報 */}
-              <div className="bg-white rounded-2xl shadow-sm p-5 text-sm">
-                <table className="w-full">
-                  <tbody>
-                    <tr className="border-b border-stone-100">
-                      <td className="py-2 text-stone-500">注文日</td>
-                      <td className="py-2 text-right text-primary font-medium">{order.createdAt.slice(0, 10)}</td>
-                    </tr>
-                    <tr>
-                      <td className="py-2 text-stone-500">注文番号</td>
-                      <td className="py-2 text-right font-mono text-xs text-stone-700 break-all">{order.orderNumber}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-
-              {/* 注文内容 */}
-              <div className="bg-white rounded-2xl shadow-sm p-5">
-                <h3 className="font-bold text-stone-900 mb-3 text-sm">注文内容</h3>
-                <p className="text-sm text-stone-700 mb-3">{order.productNames}</p>
-                <div className="border-t border-stone-100 pt-3 space-y-1 text-sm">
-                  <div className="flex justify-between font-bold text-stone-900">
-                    <span>合計</span>
-                    <span>¥{order.amount.toLocaleString()}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* 配送情報 */}
-              <div className="bg-white rounded-2xl shadow-sm p-5 text-sm space-y-1">
-                <h3 className="font-bold text-stone-900 mb-2">配送情報</h3>
-                <p className="text-stone-600">{order.address}</p>
-                {order.desiredDate && <p className="text-stone-500">希望日: {order.desiredDate}</p>}
-                {order.desiredTime && order.desiredTime !== "指定なし" && <p className="text-stone-500">時間帯: {order.desiredTime}</p>}
-              </div>
-
-              {/* キャンセルボタン */}
-              {order.status === "paid" && (
-                <button
-                  onClick={cancelOrder}
-                  disabled={cancelling}
-                  className="w-full flex items-center justify-center gap-2 py-3 border border-red-200 text-red-600 rounded-xl hover:bg-red-50 transition-colors text-sm font-medium disabled:opacity-50"
-                >
-                  <XCircle className="w-4 h-4" />
-                  {cancelling ? "処理中..." : "注文をキャンセルする"}
-                </button>
-              )}
             </div>
           </div>
         </div>
