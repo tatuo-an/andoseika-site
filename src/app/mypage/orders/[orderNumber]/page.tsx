@@ -362,6 +362,15 @@ export default function OrderDetailPage() {
                     {completing ? "処理中..." : "受取完了"}
                   </button>
                 )}
+                {order.status === "delivered" && (
+                  <button
+                    onClick={() => setShowCancelModal(true)}
+                    className="mt-5 w-full flex items-center justify-center gap-2 py-3 border border-red-200 text-red-600 rounded-xl hover:bg-red-50 transition-colors text-sm font-medium"
+                  >
+                    <XCircle className="w-4 h-4" />
+                    問題を報告する
+                  </button>
+                )}
               </div>
 
               {/* 注文情報 */}
@@ -422,16 +431,6 @@ export default function OrderDetailPage() {
                 </button>
               )}
 
-              {/* 問題報告ボタン（受取後） */}
-              {order.status === "delivered" && (
-                <button
-                  onClick={() => setShowCancelModal(true)}
-                  className="w-full flex items-center justify-center gap-2 py-3 border border-red-200 text-red-600 rounded-xl hover:bg-red-50 transition-colors text-sm font-medium"
-                >
-                  <XCircle className="w-4 h-4" />
-                  問題を報告する
-                </button>
-              )}
             </div>
 
             {/* 右カラム：取引メッセージ */}
