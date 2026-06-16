@@ -137,7 +137,7 @@ export default async function Home() {
                     <Image src={cat.image} alt={cat.label} fill className="object-cover group-hover:scale-110 transition-transform duration-300" />
                   </div>
                   <div className="text-center">
-                    <p className="text-sm font-bold text-stone-800">{cat.label}</p>
+                    <p className="text-xs font-bold text-stone-800 whitespace-nowrap">{cat.label}</p>
                     <p className="text-xs text-stone-400 mt-0.5 hidden md:block">{cat.desc}</p>
                   </div>
                 </Link>
