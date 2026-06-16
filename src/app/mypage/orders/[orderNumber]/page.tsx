@@ -157,7 +157,7 @@ export default function OrderDetailPage() {
                                   });
                                   if (res.ok) setMessages((prev) => prev.map((msg, j) => j === i ? { ...msg, message: "__retracted__" } : msg));
                                 }}
-                                className="text-[10px] text-stone-300 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                                className="text-[10px] text-stone-400 hover:text-red-400 transition-colors"
                               >
                                 取り消し
                               </button>
