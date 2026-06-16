@@ -26,11 +26,16 @@ export async function POST(_: Request, { params }: { params: Promise<{ orderNumb
   if (row[3] !== session.user.email) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   if (row[8] !== "shipping") return NextResponse.json({ error: "Cannot complete" }, { status: 400 });
 
-  await sheets.spreadsheets.values.update({
+  const deliveredAt = new Date().toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" });
+  await sheets.spreadsheets.values.batchUpdate({
     spreadsheetId: id,
-    range: `注文管理!I${rowIndex + 1}`,
-    valueInputOption: "RAW",
-    requestBody: { values: [["delivered"]] },
+    requestBody: {
+      valueInputOption: "RAW",
+      data: [
+        { range: `注文管理!I${rowIndex + 1}`, values: [["delivered"]] },
+        { range: `注文管理!N${rowIndex + 1}`, values: [[deliveredAt]] },
+      ],
+    },
   });
 
   return NextResponse.json({ ok: true });

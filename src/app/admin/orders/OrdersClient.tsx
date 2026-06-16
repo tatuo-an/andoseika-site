@@ -12,6 +12,7 @@ const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   delivered:        { label: "受取完了",       color: "bg-green-100 text-green-800 border-green-200" },
   cancelled:        { label: "キャンセル",     color: "bg-stone-100 text-stone-500 border-stone-200" },
   cancel_requested: { label: "キャンセル申請中", color: "bg-red-100 text-red-700 border-red-200" },
+  completed:        { label: "取引完了",       color: "bg-teal-100 text-teal-700 border-teal-200" },
 };
 
 const TABS = [

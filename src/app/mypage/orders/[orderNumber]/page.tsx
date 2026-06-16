@@ -233,7 +233,7 @@ function UserCancelModal({ onConfirm, onCancel, loading, orderStatus }: {
 }
 
 const STEPS = ["注文", "支払い", "発送準備", "発送済み", "受取完了"];
-const STATUS_STEP: Record<string, number> = { paid: 2, shipping: 3, delivered: 4, cancelled: -1, cancel_requested: 2 };
+const STATUS_STEP: Record<string, number> = { paid: 2, shipping: 3, delivered: 4, completed: 4, cancelled: -1, cancel_requested: 2 };
 
 export default function OrderDetailPage() {
   const { orderNumber } = useParams<{ orderNumber: string }>();
