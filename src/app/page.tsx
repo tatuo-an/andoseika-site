@@ -186,7 +186,7 @@ export default async function Home() {
             <div className="grid md:grid-cols-2 gap-4">
               {/* サポーター */}
               <Link href="/supporter" className="group relative overflow-hidden rounded-2xl aspect-[16/7] bg-stone-800 block shadow hover:shadow-lg transition-shadow">
-                <Image src="/images/hero/hero_nagaimo_field.jpg" alt="サポーター" fill className="object-cover opacity-60 group-hover:scale-105 transition-transform duration-500" />
+                <Image src="/supporter/hero/hero-v1.jpg" alt="サポーター" fill className="object-cover opacity-60 group-hover:scale-105 transition-transform duration-500" />
                 <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent" />
                 <div className="absolute inset-0 flex flex-col justify-center px-8">
                   <p className="text-white/70 text-xs font-bold tracking-widest uppercase mb-1">Supporter</p>
@@ -220,7 +220,7 @@ export default async function Home() {
           <div className="container mx-auto px-4 md:px-6">
             <div className="flex flex-col md:flex-row items-center gap-8">
               <div className="relative w-full md:w-64 aspect-video md:aspect-square rounded-2xl overflow-hidden flex-shrink-0">
-                <Image src="/images/about/founders.jpg" alt="安藤青果" fill className="object-cover" />
+                <Image src="/images/about/founders.jpg" alt="安藤青果" fill className="object-cover object-top" />
               </div>
               <div className="flex-1 space-y-3">
                 <p className="text-primary text-xs font-bold tracking-widest uppercase">About &YOU</p>
