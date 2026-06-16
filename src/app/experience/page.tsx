@@ -64,9 +64,14 @@ export default function ExperiencePage() {
                             </div>
 
                             <div className="bg-stone-50 p-6 rounded-xl space-y-2">
-                                <p className="font-bold text-stone-900">料金目安</p>
-                                <p className="text-2xl font-bold text-primary">¥3,500 <span className="text-sm text-stone-500 font-normal">/ 1名様</span></p>
-                                <p className="text-xs text-stone-500">※小学生以下 ¥1,500、未就学児無料</p>
+                                <p className="font-bold text-stone-900">料金（税込）</p>
+                                <p className="text-2xl font-bold text-primary">¥7,000 <span className="text-sm text-stone-500 font-normal">/ 1組（2名まで）</span></p>
+                                <ul className="text-sm text-stone-600 mt-2 space-y-1">
+                                    <li>追加大人：¥3,500 / 人</li>
+                                    <li>追加小学生：¥2,000 / 人</li>
+                                    <li>未就学児：無料</li>
+                                </ul>
+                                <p className="text-xs text-stone-500 mt-2">防護服レンタル・蜂蜜試食込 / 1回最大4名程度</p>
                             </div>
 
                             <BookingButton experienceName="養蜂体験" durationMin={60} />
@@ -98,9 +103,14 @@ export default function ExperiencePage() {
                             </div>
 
                             <div className="bg-stone-50 p-6 rounded-xl space-y-2">
-                                <p className="font-bold text-stone-900">料金目安</p>
-                                <p className="text-2xl font-bold text-primary">¥1,500 <span className="text-sm text-stone-500 font-normal">/ 1区画</span></p>
-                                <p className="text-xs text-stone-500">※お持ち帰りは別途量り売り</p>
+                                <p className="font-bold text-stone-900">料金（税込）</p>
+                                <p className="text-2xl font-bold text-primary">¥3,000 <span className="text-sm text-stone-500 font-normal">/ 1区画</span></p>
+                                <ul className="text-sm text-stone-600 mt-2 space-y-1">
+                                    <li>1区画4名まで</li>
+                                    <li>収穫物1kg込み</li>
+                                    <li>超過分は量り売り</li>
+                                </ul>
+                                <p className="text-xs text-stone-500 mt-2">道具レンタル込み</p>
                             </div>
 
                             <BookingButton experienceName="芋掘り体験" durationMin={90} />
