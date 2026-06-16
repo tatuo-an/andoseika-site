@@ -14,7 +14,7 @@ type Order = {
 type Message = { senderType: string; senderName: string; message: string; sentAt: string };
 
 const STEPS = ["注文", "支払い", "発送準備", "発送済み", "受取完了"];
-const STATUS_STEP: Record<string, number> = { paid: 2, shipping: 3, delivered: 4, cancelled: -1 };
+const STATUS_STEP: Record<string, number> = { paid: 2, shipping: 3, delivered: 4, cancelled: -1, cancel_requested: 2 };
 
 export default function OrderDetailPage() {
   const { orderNumber } = useParams<{ orderNumber: string }>();
@@ -26,6 +26,7 @@ export default function OrderDetailPage() {
   const [sending, setSending] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [completing, setCompleting] = useState(false);
+  const [responding, setResponding] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -120,6 +121,50 @@ export default function OrderDetailPage() {
                           <span className={`text-xs whitespace-nowrap ${i <= step ? "text-stone-800 font-medium" : "text-stone-400"}`}>{s}</span>
                         </div>
                       ))}
+                    </div>
+                  </div>
+                )}
+                {order.status === "cancel_requested" && (
+                  <div className="mt-5 border border-red-200 bg-red-50 rounded-xl p-4">
+                    <p className="text-sm font-bold text-red-700 mb-1">キャンセル申請が届いています</p>
+                    <p className="text-xs text-red-600 mb-4">店舗よりキャンセルのご依頼があります。取引メッセージをご確認の上、同意または拒否してください。</p>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={async () => {
+                          if (!confirm("キャンセルに同意しますか？")) return;
+                          setResponding(true);
+                          try {
+                            const res = await fetch(`/api/my/orders/${orderNumber}/cancel-response`, {
+                              method: "POST", headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({ action: "approve" }),
+                            });
+                            if (res.ok) setOrder((prev) => prev ? { ...prev, status: "cancelled" } : prev);
+                          } finally { setResponding(false); }
+                        }}
+                        disabled={responding}
+                        className="flex-1 py-2 bg-red-500 text-white rounded-lg text-sm font-bold hover:bg-red-600 transition-colors disabled:opacity-50"
+                      >
+                        同意する
+                      </button>
+                      <button
+                        onClick={async () => {
+                          setResponding(true);
+                          try {
+                            const res = await fetch(`/api/my/orders/${orderNumber}/cancel-response`, {
+                              method: "POST", headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({ action: "reject" }),
+                            });
+                            if (res.ok) {
+                              setOrder((prev) => prev ? { ...prev, status: "paid" } : prev);
+                              setMessages((prev) => [...prev, { senderType: "user", senderName: "お客様", message: "キャンセルを拒否しました。引き続きよろしくお願いします。", sentAt: new Date().toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" }) }]);
+                            }
+                          } finally { setResponding(false); }
+                        }}
+                        disabled={responding}
+                        className="flex-1 py-2 bg-white border border-stone-300 text-stone-700 rounded-lg text-sm font-medium hover:bg-stone-50 transition-colors disabled:opacity-50"
+                      >
+                        拒否する
+                      </button>
                     </div>
                   </div>
                 )}

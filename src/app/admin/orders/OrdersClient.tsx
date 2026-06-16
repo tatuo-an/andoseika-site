@@ -7,10 +7,11 @@ import type { Order } from "@/app/api/admin/orders/route";
 type Message = { senderType: string; senderName: string; message: string; sentAt: string };
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
-  paid:      { label: "発送準備中", color: "bg-yellow-100 text-yellow-800 border-yellow-200" },
-  shipping:  { label: "発送済み",   color: "bg-blue-100 text-blue-800 border-blue-200" },
-  delivered: { label: "受取完了",   color: "bg-green-100 text-green-800 border-green-200" },
-  cancelled: { label: "キャンセル", color: "bg-stone-100 text-stone-500 border-stone-200" },
+  paid:             { label: "発送準備中",     color: "bg-yellow-100 text-yellow-800 border-yellow-200" },
+  shipping:         { label: "発送済み",       color: "bg-blue-100 text-blue-800 border-blue-200" },
+  delivered:        { label: "受取完了",       color: "bg-green-100 text-green-800 border-green-200" },
+  cancelled:        { label: "キャンセル",     color: "bg-stone-100 text-stone-500 border-stone-200" },
+  cancel_requested: { label: "キャンセル申請中", color: "bg-red-100 text-red-700 border-red-200" },
 };
 
 const TABS = [
@@ -24,10 +25,62 @@ type Tab = typeof TABS[number]["key"];
 
 function filterOrders(orders: Order[], tab: Tab): Order[] {
   if (tab === "all")       return orders;
-  if (tab === "active")    return orders.filter((o) => o.status === "paid" || o.status === "shipping");
+  if (tab === "active")    return orders.filter((o) => o.status === "paid" || o.status === "shipping" || o.status === "cancel_requested");
   if (tab === "delivered") return orders.filter((o) => o.status === "delivered");
   if (tab === "cancelled") return orders.filter((o) => o.status === "cancelled");
   return orders;
+}
+
+const CANCEL_REASONS = [
+  { value: "out_of_stock",    label: "商品準備不可",       desc: "在庫切れ・品質基準を満たさないため" },
+  { value: "shipping_delay",  label: "発送遅延",           desc: "配送業者の都合・天候等による遅延" },
+  { value: "weather",         label: "天候・災害の影響",   desc: "台風・大雪等により配送不可" },
+  { value: "area",            label: "配送エリア外",       desc: "ご住所への配送が対応できないため" },
+  { value: "order_error",     label: "注文内容の不備",     desc: "注文情報に不明点があるため" },
+  { value: "other",           label: "その他",             desc: "担当者よりご連絡いたします" },
+] as const;
+
+// キャンセル理由モーダル
+function CancelModal({ onConfirm, onCancel, loading }: {
+  onConfirm: (reason: string, reasonLabel: string) => void;
+  onCancel: () => void;
+  loading: boolean;
+}) {
+  const [selected, setSelected] = useState<string>("");
+  return (
+    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm">
+        <h3 className="font-bold text-stone-900 mb-1">注文をキャンセルする</h3>
+        <p className="text-sm text-stone-500 mb-4">キャンセル理由を選択してください。お客様へ自動でメッセージが送信されます。</p>
+        <div className="space-y-2 mb-5">
+          {CANCEL_REASONS.map((r) => (
+            <label key={r.value} className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${selected === r.value ? "border-red-400 bg-red-50" : "border-stone-200 hover:border-stone-300"}`}>
+              <input type="radio" name="reason" value={r.value} checked={selected === r.value} onChange={() => setSelected(r.value)} className="mt-0.5 accent-red-500" />
+              <div>
+                <p className="text-sm font-medium text-stone-800">{r.label}</p>
+                <p className="text-xs text-stone-500">{r.desc}</p>
+              </div>
+            </label>
+          ))}
+        </div>
+        <div className="flex gap-2">
+          <button onClick={onCancel} className="flex-1 py-2.5 border border-stone-200 rounded-xl text-sm text-stone-600 hover:bg-stone-50 transition-colors">
+            戻る
+          </button>
+          <button
+            onClick={() => {
+              const r = CANCEL_REASONS.find((r) => r.value === selected);
+              if (r) onConfirm(r.value, r.label);
+            }}
+            disabled={!selected || loading}
+            className="flex-1 py-2.5 bg-red-500 text-white rounded-xl text-sm font-bold hover:bg-red-600 transition-colors disabled:opacity-50"
+          >
+            {loading ? "処理中..." : "キャンセルする"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 // 追跡番号入力モーダル
@@ -81,6 +134,7 @@ export function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
   const [msgText, setMsgText] = useState<Record<string, string>>({});
   const [sending, setSending] = useState<string | null>(null);
   const [shippingModal, setShippingModal] = useState<string | null>(null);
+  const [cancelModal, setCancelModal] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
   const searched = useMemo(() => {
@@ -145,6 +199,35 @@ export function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
     }
   }
 
+  async function handleCancelConfirm(orderNumber: string, _reason: string, reasonLabel: string) {
+    setUpdating(orderNumber);
+    try {
+      await fetch(`/api/admin/orders/${encodeURIComponent(orderNumber)}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "cancel_requested" }),
+      });
+      setOrders((prev) => prev.map((o) => o.orderNumber === orderNumber ? { ...o, status: "cancel_requested" } : o));
+
+      const autoMsg = `誠に申し訳ございません。\n以下の理由によりキャンセルをお願いしたい状況です。\n\n【理由】${reasonLabel}\n\nご同意いただける場合は注文詳細画面の「同意する」を押してください。\nご不明な点はメッセージよりお問い合わせください。`;
+      const res = await fetch(`/api/admin/orders/${encodeURIComponent(orderNumber)}/message`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: autoMsg }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setMessages((prev) => ({
+          ...prev,
+          [orderNumber]: [...(prev[orderNumber] ?? []), { senderType: "admin", senderName: "安藤青果", message: autoMsg, sentAt: data.sentAt }],
+        }));
+      }
+    } finally {
+      setUpdating(null);
+      setCancelModal(null);
+    }
+  }
+
   async function toggleExpand(orderNumber: string) {
     const isExpanded = expandedId === orderNumber;
     setExpandedId(isExpanded ? null : orderNumber);
@@ -194,6 +277,15 @@ export function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
 
   return (
     <div>
+      {/* キャンセル理由モーダル */}
+      {cancelModal && (
+        <CancelModal
+          loading={updating === cancelModal}
+          onConfirm={(reason, reasonLabel) => handleCancelConfirm(cancelModal, reason, reasonLabel)}
+          onCancel={() => setCancelModal(null)}
+        />
+      )}
+
       {/* 追跡番号モーダル */}
       {shippingModal && (
         <ShippingModal
@@ -337,7 +429,7 @@ export function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
                         )}
                         {order.status !== "cancelled" && order.status !== "delivered" && (
                           <button
-                            onClick={() => { if (confirm("キャンセルしますか？")) updateStatus(order.orderNumber, "cancelled"); }}
+                            onClick={() => setCancelModal(order.orderNumber)}
                             disabled={isUpdating}
                             className="flex items-center gap-1.5 px-4 py-2 bg-white border border-stone-300 text-stone-600 text-sm font-medium rounded-lg hover:bg-stone-50 transition-colors disabled:opacity-50"
                           >
