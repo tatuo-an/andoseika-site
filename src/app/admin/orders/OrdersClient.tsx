@@ -179,17 +179,37 @@ export function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
 
   async function handleShipConfirm(orderNumber: string, trackingNumber: string, estimatedDate: string) {
     setUpdating(orderNumber);
+
+    // 発送日ベースの予定日（今日+1〜今日+2日）
+    const now = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" }));
+    const fmt = (d: Date) => `${d.getMonth() + 1}月${d.getDate()}日`;
+    const d1 = new Date(now); d1.setDate(d1.getDate() + 1);
+    const d2 = new Date(now); d2.setDate(d2.getDate() + 2);
+    const shipBasedDate = `${fmt(d1)}〜${fmt(d2)}頃`;
+
+    // 既存の予定日より前倒しになる場合は置き換え
+    const order = orders.find((o) => o.orderNumber === orderNumber);
+    const finalEstimatedDate = (() => {
+      if (!order?.estimatedDate) return estimatedDate || shipBasedDate;
+      // 既存予定日の最初の日付を抽出して比較
+      const existMatch = order.estimatedDate.match(/(\d+)月(\d+)日/);
+      if (!existMatch) return estimatedDate || shipBasedDate;
+      const existDate = new Date(now.getFullYear(), parseInt(existMatch[1]) - 1, parseInt(existMatch[2]));
+      if (d1 < existDate) return shipBasedDate;
+      return estimatedDate || order.estimatedDate;
+    })();
+
     try {
       // ステータス更新
       await fetch(`/api/admin/orders/${encodeURIComponent(orderNumber)}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "shipping", estimatedDate }),
+        body: JSON.stringify({ status: "shipping", estimatedDate: finalEstimatedDate }),
       });
       setOrders((prev) => prev.map((o) => o.orderNumber === orderNumber ? { ...o, status: "shipping" } : o));
 
       // 自動メッセージ送信
-      const dateStr = estimatedDate ? `\nお届け予定日：${estimatedDate}` : "";
+      const dateStr = finalEstimatedDate ? `\nお届け予定日：${finalEstimatedDate}` : "";
       const autoMsg = `商品を発送しました。\n追跡番号：${trackingNumber}${dateStr}\n\nお届けまでしばらくお待ちください。`;
       const res = await fetch(`/api/admin/orders/${encodeURIComponent(orderNumber)}/message`, {
         method: "POST",
