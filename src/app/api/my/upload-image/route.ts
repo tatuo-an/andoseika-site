@@ -5,6 +5,19 @@ import { Readable } from "stream";
 
 export const runtime = "nodejs";
 
+function getAuth() {
+  return new google.auth.GoogleAuth({
+    credentials: {
+      client_email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
+      private_key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+    },
+    scopes: [
+      "https://www.googleapis.com/auth/drive.file",
+      "https://www.googleapis.com/auth/spreadsheets",
+    ],
+  });
+}
+
 export async function POST(req: NextRequest) {
   try {
     const session = await auth();
@@ -23,24 +36,12 @@ export async function POST(req: NextRequest) {
     readable.push(buffer);
     readable.push(null);
 
-    const a = new google.auth.GoogleAuth({
-      credentials: {
-        client_email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
-        private_key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-      },
-      scopes: ["https://www.googleapis.com/auth/drive.file"],
-    });
+    const a = getAuth();
     const drive = google.drive({ version: "v3", auth: a });
 
     const uploaded = await drive.files.create({
-      requestBody: {
-        name: `complaint_${Date.now()}`,
-        mimeType: file.type,
-      },
-      media: {
-        mimeType: file.type,
-        body: readable,
-      },
+      requestBody: { name: `complaint_${Date.now()}`, mimeType: file.type },
+      media: { mimeType: file.type, body: readable },
       fields: "id",
     });
 
@@ -50,6 +51,16 @@ export async function POST(req: NextRequest) {
     await drive.permissions.create({
       fileId,
       requestBody: { role: "reader", type: "anyone" },
+    });
+
+    // シートに記録（自動削除用）
+    const sheets = google.sheets({ version: "v4", auth: a });
+    const uploadedAt = new Date().toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" });
+    await sheets.spreadsheets.values.append({
+      spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
+      range: "アップロード画像!A:C",
+      valueInputOption: "RAW",
+      requestBody: { values: [[fileId, uploadedAt, session.user.email]] },
     });
 
     const url = `https://drive.google.com/file/d/${fileId}/view`;
