@@ -119,24 +119,16 @@ export default async function Home() {
             className="object-cover opacity-80"
             priority
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/65 via-black/30 to-transparent" />
-          <div className="relative h-full container mx-auto px-4 md:px-6 flex flex-col justify-center items-start">
-            <div className="max-w-xl space-y-5">
-              <p className="text-primary-foreground text-sm font-bold tracking-widest uppercase text-white/70">鳥取・安藤青果</p>
+          <div className="absolute inset-0 bg-gradient-to-l from-black/65 via-black/30 to-transparent" />
+          <div className="relative h-full container mx-auto px-4 md:px-6 flex flex-col justify-center items-end">
+            <div className="max-w-xl space-y-5 text-right">
+              <p className="text-sm font-bold tracking-widest uppercase text-white/70">鳥取・安藤青果</p>
               <h1 className="text-3xl md:text-5xl font-bold text-white leading-tight font-heading drop-shadow">
                 鳥取の畑から、<br />まっすぐ届ける。
               </h1>
               <p className="text-stone-200 text-base leading-relaxed">
                 長芋・白ネギ・蜂蜜など、旬の農産物を産地直送でお届けします。
               </p>
-              <div className="flex gap-3 pt-2">
-                <Link href="/products" className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white font-bold rounded-full hover:bg-primary/90 transition-colors shadow">
-                  商品を見る <ArrowRight className="w-4 h-4" />
-                </Link>
-                <Link href="/supporter" className="inline-flex items-center gap-2 px-6 py-3 bg-white/10 text-white font-bold rounded-full border border-white/40 hover:bg-white/20 transition-colors backdrop-blur-sm">
-                  サポーターになる
-                </Link>
-              </div>
             </div>
           </div>
         </section>
