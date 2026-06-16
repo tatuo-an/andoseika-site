@@ -495,7 +495,14 @@ export function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
                                     <p className="text-[10px] text-stone-400 italic px-1">このメッセージは取り消されました</p>
                                   ) : (
                                     <div className={`rounded-xl px-3 py-1.5 text-xs whitespace-pre-wrap ${m.senderType === "admin" ? "bg-primary text-white rounded-tr-none" : "bg-white border border-stone-200 text-stone-700 rounded-tl-none"}`}>
-                                      {m.message}
+                                      {m.message.split("\n").map((line: string, li: number) => {
+                                        const urlMatch = line.match(/https?:\/\/\S+/);
+                                        if (urlMatch && /\.(png|jpg|jpeg|gif|webp)/i.test(urlMatch[0])) {
+                                          const before = line.slice(0, urlMatch.index);
+                                          return <span key={li}>{before && <span>{before}</span>}<img src={urlMatch[0]} alt="添付画像" className="mt-1 rounded-lg max-w-[180px] max-h-40 object-contain block" /></span>;
+                                        }
+                                        return <span key={li}>{line}{li < m.message.split("\n").length - 1 && <br />}</span>;
+                                      })}
                                     </div>
                                   )}
                                 </div>
