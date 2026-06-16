@@ -277,148 +277,150 @@ export function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
 
               {/* Detail panel */}
               {isExpanded && (
-                <div className="border-t border-stone-100 px-4 py-4 bg-stone-50 space-y-4">
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
-                    <div>
-                      <p className="text-xs text-stone-400 mb-0.5">注文番号</p>
-                      <p className="font-mono text-xs text-stone-700">{order.orderNumber}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-stone-400 mb-0.5">注文日時</p>
-                      <p className="text-stone-700">{order.createdAt}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-stone-400 mb-0.5">金額</p>
-                      <p className="font-bold text-stone-900">¥{order.amount.toLocaleString()}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-stone-400 mb-0.5">氏名</p>
-                      <p className="text-stone-700">{order.name}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-stone-400 mb-0.5">電話</p>
-                      <p className="text-stone-700">{order.phone || "—"}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-stone-400 mb-0.5">メール</p>
-                      <p className="text-stone-700 text-xs break-all">{order.email || "—"}</p>
-                    </div>
-                    <div className="col-span-2 md:col-span-3">
-                      <p className="text-xs text-stone-400 mb-0.5">お届け先</p>
-                      <p className="text-stone-700">{order.address || "—"}</p>
-                    </div>
-                    {(order.desiredDate || order.desiredTime) && (
-                      <div className="col-span-2 md:col-span-3">
-                        <p className="text-xs text-stone-400 mb-0.5">配達希望</p>
-                        <p className="text-stone-700">{order.desiredDate} {order.desiredTime}</p>
-                      </div>
-                    )}
-                    <div className="col-span-2 md:col-span-3">
-                      <p className="text-xs text-stone-400 mb-0.5">商品</p>
-                      <p className="text-stone-700">{order.productNames}</p>
-                    </div>
-                  </div>
-
-                  {/* Messages */}
-                  <div className="border-t border-stone-200 pt-3">
-                    <p className="text-xs text-stone-400 mb-2 font-medium">取引メッセージ</p>
-                    {msgLoading === order.orderNumber ? (
-                      <p className="text-xs text-stone-400">読み込み中...</p>
-                    ) : (
-                      <div className="space-y-2 mb-3 max-h-40 overflow-y-auto">
-                        {(messages[order.orderNumber] ?? []).length === 0 && (
-                          <p className="text-xs text-stone-400">メッセージなし</p>
+                <div className="border-t border-stone-100 px-4 py-4 bg-stone-50">
+                  <div className="flex flex-col md:flex-row gap-4">
+                    {/* 左：注文情報＋ステータス */}
+                    <div className="flex-1 space-y-4">
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                        <div>
+                          <p className="text-xs text-stone-400 mb-0.5">注文番号</p>
+                          <p className="font-mono text-xs text-stone-700">{order.orderNumber}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-stone-400 mb-0.5">注文日時</p>
+                          <p className="text-stone-700">{order.createdAt}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-stone-400 mb-0.5">金額</p>
+                          <p className="font-bold text-stone-900">¥{order.amount.toLocaleString()}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-stone-400 mb-0.5">氏名</p>
+                          <p className="text-stone-700">{order.name}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-stone-400 mb-0.5">電話</p>
+                          <p className="text-stone-700">{order.phone || "—"}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-stone-400 mb-0.5">メール</p>
+                          <p className="text-stone-700 text-xs break-all">{order.email || "—"}</p>
+                        </div>
+                        <div className="col-span-2">
+                          <p className="text-xs text-stone-400 mb-0.5">お届け先</p>
+                          <p className="text-stone-700">{order.address || "—"}</p>
+                        </div>
+                        {(order.desiredDate || order.desiredTime) && (
+                          <div className="col-span-2">
+                            <p className="text-xs text-stone-400 mb-0.5">配達希望</p>
+                            <p className="text-stone-700">{order.desiredDate} {order.desiredTime}</p>
+                          </div>
                         )}
-                        {(messages[order.orderNumber] ?? []).map((m, i) => {
-                          const retracted = m.message === "__retracted__";
-                          return (
-                            <div key={i} className={`flex gap-2 group ${m.senderType === "admin" ? "flex-row-reverse" : ""}`}>
-                              <div className={`max-w-[70%] flex flex-col gap-0.5 ${m.senderType === "admin" ? "items-end" : "items-start"}`}>
-                                <div className="flex items-baseline gap-1.5">
-                                  <span className="text-[10px] text-stone-400">{m.senderName} · {m.sentAt}</span>
-                                  {m.senderType === "admin" && !retracted && (
-                                    <button
-                                      onClick={async () => {
-                                        if (!confirm("このメッセージを取り消しますか？")) return;
-                                        const res = await fetch(`/api/admin/orders/${encodeURIComponent(order.orderNumber)}/message`, {
-                                          method: "PATCH",
-                                          headers: { "Content-Type": "application/json" },
-                                          body: JSON.stringify({ sentAt: m.sentAt }),
-                                        });
-                                        if (res.ok) setMessages((prev) => ({
-                                          ...prev,
-                                          [order.orderNumber]: (prev[order.orderNumber] ?? []).map((msg, j) => j === i ? { ...msg, message: "__retracted__" } : msg),
-                                        }));
-                                      }}
-                                      className="text-[9px] text-stone-400 hover:text-red-400 transition-colors"
-                                    >
-                                      取り消し
-                                    </button>
+                        <div className="col-span-2">
+                          <p className="text-xs text-stone-400 mb-0.5">商品</p>
+                          <p className="text-stone-700">{order.productNames}</p>
+                        </div>
+                      </div>
+
+                      {/* Status actions */}
+                      <div className="flex flex-wrap gap-2 pt-2 border-t border-stone-200">
+                        <p className="text-xs text-stone-500 w-full">ステータス変更：</p>
+                        {order.status === "paid" && (
+                          <button
+                            onClick={() => setShippingModal(order.orderNumber)}
+                            disabled={isUpdating}
+                            className="flex items-center gap-1.5 px-4 py-2 bg-primary text-white text-sm font-bold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
+                          >
+                            <Truck className="w-4 h-4" />
+                            {isUpdating ? "処理中…" : "発送済みにする"}
+                          </button>
+                        )}
+                        {order.status !== "cancelled" && order.status !== "delivered" && (
+                          <button
+                            onClick={() => { if (confirm("キャンセルしますか？")) updateStatus(order.orderNumber, "cancelled"); }}
+                            disabled={isUpdating}
+                            className="flex items-center gap-1.5 px-4 py-2 bg-white border border-stone-300 text-stone-600 text-sm font-medium rounded-lg hover:bg-stone-50 transition-colors disabled:opacity-50"
+                          >
+                            <XCircle className="w-4 h-4" />
+                            キャンセル
+                          </button>
+                        )}
+                        {order.status === "paid" && (
+                          <p className="w-full text-xs text-amber-600 flex items-center gap-1">
+                            <Package className="w-3.5 h-3.5" />
+                            発送後、「発送済みにする」を押して追跡番号を入力してください
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* 右：取引メッセージ */}
+                    <div className="md:w-80 border-t md:border-t-0 md:border-l border-stone-200 pt-4 md:pt-0 md:pl-4">
+                      <p className="text-xs text-stone-400 mb-2 font-medium">取引メッセージ</p>
+                      {msgLoading === order.orderNumber ? (
+                        <p className="text-xs text-stone-400">読み込み中...</p>
+                      ) : (
+                        <div className="space-y-2 mb-3 max-h-48 overflow-y-auto">
+                          {(messages[order.orderNumber] ?? []).length === 0 && (
+                            <p className="text-xs text-stone-400">メッセージなし</p>
+                          )}
+                          {(messages[order.orderNumber] ?? []).map((m, i) => {
+                            const retracted = m.message === "__retracted__";
+                            return (
+                              <div key={i} className={`flex gap-2 group ${m.senderType === "admin" ? "flex-row-reverse" : ""}`}>
+                                <div className={`max-w-[75%] flex flex-col gap-0.5 ${m.senderType === "admin" ? "items-end" : "items-start"}`}>
+                                  <div className="flex items-baseline gap-1.5">
+                                    <span className="text-[10px] text-stone-400">{m.senderName} · {m.sentAt}</span>
+                                    {m.senderType === "admin" && !retracted && (
+                                      <button
+                                        onClick={async () => {
+                                          if (!confirm("このメッセージを取り消しますか？")) return;
+                                          const res = await fetch(`/api/admin/orders/${encodeURIComponent(order.orderNumber)}/message`, {
+                                            method: "PATCH",
+                                            headers: { "Content-Type": "application/json" },
+                                            body: JSON.stringify({ sentAt: m.sentAt }),
+                                          });
+                                          if (res.ok) setMessages((prev) => ({
+                                            ...prev,
+                                            [order.orderNumber]: (prev[order.orderNumber] ?? []).map((msg, j) => j === i ? { ...msg, message: "__retracted__" } : msg),
+                                          }));
+                                        }}
+                                        className="text-[9px] text-stone-400 hover:text-red-400 transition-colors"
+                                      >
+                                        取り消し
+                                      </button>
+                                    )}
+                                  </div>
+                                  {retracted ? (
+                                    <p className="text-[10px] text-stone-400 italic px-1">このメッセージは取り消されました</p>
+                                  ) : (
+                                    <div className={`rounded-xl px-3 py-1.5 text-xs whitespace-pre-wrap ${m.senderType === "admin" ? "bg-primary text-white rounded-tr-none" : "bg-white border border-stone-200 text-stone-700 rounded-tl-none"}`}>
+                                      {m.message}
+                                    </div>
                                   )}
                                 </div>
-                                {retracted ? (
-                                  <p className="text-[10px] text-stone-400 italic px-1">このメッセージは取り消されました</p>
-                                ) : (
-                                  <div className={`rounded-xl px-3 py-1.5 text-xs whitespace-pre-wrap ${m.senderType === "admin" ? "bg-primary text-white rounded-tr-none" : "bg-white border border-stone-200 text-stone-700 rounded-tl-none"}`}>
-                                    {m.message}
-                                  </div>
-                                )}
                               </div>
-                            </div>
-                          );
-                        })}
+                            );
+                          })}
+                        </div>
+                      )}
+                      <div className="flex gap-2">
+                        <textarea
+                          rows={2}
+                          value={msgText[order.orderNumber] ?? ""}
+                          onChange={(e) => setMsgText((p) => ({ ...p, [order.orderNumber]: e.target.value }))}
+                          placeholder="お客様へメッセージを送る"
+                          className="flex-1 border border-stone-200 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary/30 bg-white resize-none"
+                        />
+                        <button
+                          onClick={() => sendAdminMessage(order.orderNumber)}
+                          disabled={sending === order.orderNumber || !(msgText[order.orderNumber] ?? "").trim()}
+                          className="px-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-40"
+                        >
+                          <Send className="w-3.5 h-3.5" />
+                        </button>
                       </div>
-                    )}
-                    <div className="flex gap-2">
-                      <textarea
-                        rows={2}
-                        value={msgText[order.orderNumber] ?? ""}
-                        onChange={(e) => setMsgText((p) => ({ ...p, [order.orderNumber]: e.target.value }))}
-                        placeholder="お客様へメッセージを送る"
-                        className="flex-1 border border-stone-200 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary/30 bg-white resize-none"
-                      />
-                      <button
-                        onClick={() => sendAdminMessage(order.orderNumber)}
-                        disabled={sending === order.orderNumber || !(msgText[order.orderNumber] ?? "").trim()}
-                        className="px-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-40"
-                      >
-                        <Send className="w-3.5 h-3.5" />
-                      </button>
                     </div>
-                  </div>
-
-                  {/* Status actions */}
-                  <div className="flex flex-wrap gap-2 pt-2 border-t border-stone-200">
-                    <p className="text-xs text-stone-500 w-full">ステータス変更：</p>
-                    {order.status === "paid" && (
-                      <button
-                        onClick={() => setShippingModal(order.orderNumber)}
-                        disabled={isUpdating}
-                        className="flex items-center gap-1.5 px-4 py-2 bg-primary text-white text-sm font-bold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
-                      >
-                        <Truck className="w-4 h-4" />
-                        {isUpdating ? "処理中…" : "発送済みにする"}
-                      </button>
-                    )}
-
-                    {order.status !== "cancelled" && order.status !== "delivered" && (
-                      <button
-                        onClick={() => {
-                          if (confirm("キャンセルしますか？")) updateStatus(order.orderNumber, "cancelled");
-                        }}
-                        disabled={isUpdating}
-                        className="flex items-center gap-1.5 px-4 py-2 bg-white border border-stone-300 text-stone-600 text-sm font-medium rounded-lg hover:bg-stone-50 transition-colors disabled:opacity-50"
-                      >
-                        <XCircle className="w-4 h-4" />
-                        キャンセル
-                      </button>
-                    )}
-                    {order.status === "paid" && (
-                      <p className="w-full text-xs text-amber-600 flex items-center gap-1">
-                        <Package className="w-3.5 h-3.5" />
-                        発送後、「発送済みにする」を押して追跡番号を入力してください
-                      </p>
-                    )}
                   </div>
                 </div>
               )}
