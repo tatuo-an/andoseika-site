@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { X, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { CANCEL_POLICY, basePrice } from "@/lib/cancelPolicy";
 
 const WEEKDAYS = ["日", "月", "火", "水", "木", "金", "土"];
 const OPEN_HOUR = 9;
@@ -34,7 +35,6 @@ function toTimeStr(min: number) {
 }
 
 type ExistingBooking = { date: string; startTime: string };
-
 type Step = "calendar" | "form" | "success" | "error";
 
 export function BookingCalendar({
@@ -59,6 +59,8 @@ export function BookingCalendar({
     const [errorMsg, setErrorMsg] = useState("");
     const [bookings, setBookings] = useState<ExistingBooking[]>([]);
 
+    const price = basePrice(experienceName);
+
     useEffect(() => {
         if (!isOpen) return;
         setStep("calendar");
@@ -69,7 +71,7 @@ export function BookingCalendar({
         setName("");
         setErrorMsg("");
 
-        fetch(`/api/bookings`)
+        fetch("/api/bookings")
             .then(r => r.json())
             .then(d => setBookings(d.bookings ?? []))
             .catch(() => setBookings([]));
@@ -116,6 +118,7 @@ export function BookingCalendar({
                     headcount,
                     phone,
                     name,
+                    price,
                 }),
             });
             if (res.status === 401) {
@@ -302,6 +305,14 @@ export function BookingCalendar({
                             </div>
                         </div>
 
+                        {price > 0 && (
+                            <div className="bg-stone-50 rounded-xl p-4 text-sm text-stone-600">
+                                <span className="font-medium text-stone-800">基本料金：</span>
+                                ¥{price.toLocaleString()}〜
+                                <span className="text-xs text-stone-400 ml-1">（追加人数・年齢により異なります）</span>
+                            </div>
+                        )}
+
                         <div className="flex gap-3 mt-auto">
                             <button
                                 onClick={() => setStep("calendar")}
@@ -322,17 +333,41 @@ export function BookingCalendar({
                 )}
 
                 {/* 完了 */}
-                {step === "success" && (
-                    <div className="flex-1 flex flex-col items-center justify-center gap-4 p-8 text-center">
-                        <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center text-3xl">✓</div>
-                        <h3 className="text-lg font-bold text-stone-900">予約が完了しました</h3>
-                        <p className="text-sm text-stone-600">
-                            {selectedDate}（{selectedSlot !== null ? toTimeStr(selectedSlot) : ""}〜）にご予約を承りました。<br />
-                            確認のご連絡をお待ちください。
-                        </p>
+                {step === "success" && selectedDate && selectedSlot !== null && (
+                    <div className="flex-1 overflow-auto p-6 flex flex-col gap-5">
+                        <div className="text-center">
+                            <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center text-3xl mx-auto mb-3">✓</div>
+                            <h3 className="text-lg font-bold text-stone-900">予約が確定しました</h3>
+                            <p className="text-sm text-stone-600 mt-1">
+                                ご予約内容とキャンセル規定をご確認ください。
+                            </p>
+                        </div>
+
+                        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-sm text-emerald-800">
+                            <div className="font-bold mb-1">{experienceName}</div>
+                            <div>{selectedDate}（{toTimeStr(selectedSlot)}〜）／ {durationMin}分 ／ {headcount}名</div>
+                            {price > 0 && <div className="mt-1">基本料金 ¥{price.toLocaleString()}〜</div>}
+                            <div className="mt-1 text-xs text-emerald-700">お支払いは現地にて承ります</div>
+                        </div>
+
+                        {/* キャンセル規定 */}
+                        <div className="border border-stone-200 rounded-xl p-4 text-sm">
+                            <p className="font-bold text-stone-800 mb-3">キャンセル規定</p>
+                            {CANCEL_POLICY.map((section, i) => (
+                                <div key={i} className={i > 0 ? "mt-3" : ""}>
+                                    <p className="font-medium text-stone-700 mb-1">【{section.title}】</p>
+                                    <ul className="space-y-0.5">
+                                        {section.items.map((item, j) => (
+                                            <li key={j} className="text-stone-600 text-xs leading-relaxed">・{item}</li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            ))}
+                        </div>
+
                         <button
                             onClick={onClose}
-                            className="mt-2 px-8 py-2.5 bg-primary text-white font-bold rounded-full hover:bg-primary/90 transition-colors"
+                            className="w-full px-8 py-2.5 bg-primary text-white font-bold rounded-full hover:bg-primary/90 transition-colors"
                         >
                             閉じる
                         </button>

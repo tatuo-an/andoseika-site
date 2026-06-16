@@ -2,9 +2,10 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
-import { CalendarDays, ChevronLeft, Clock, Users } from "lucide-react";
+import { CalendarDays, ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { google } from "googleapis";
+import { BookingCard } from "@/components/mypage/BookingCard";
 
 export const dynamic = "force-dynamic";
 
@@ -27,7 +28,7 @@ async function getUserBookings(email: string) {
         const sheets = getSheets();
         const res = await sheets.spreadsheets.values.get({
             spreadsheetId: SPREADSHEET_ID,
-            range: `${SHEET_NAME}!A:K`,
+            range: `${SHEET_NAME}!A:L`,
         });
         const rows = res.data.values ?? [];
         return rows.slice(1)
@@ -39,6 +40,7 @@ async function getUserBookings(email: string) {
                 startTime: r[6] ?? "",
                 durationMin: parseInt(r[7] ?? "0", 10) || 0,
                 headcount: parseInt(r[8] ?? "0", 10) || 0,
+                price: parseInt(r[11] ?? "0", 10) || 0,
             }))
             .sort((a, b) => a.date.localeCompare(b.date));
     } catch {
@@ -83,7 +85,7 @@ export default async function MyBookingsPage() {
                             {upcoming.length > 0 && (
                                 <section>
                                     <h2 className="text-sm font-bold text-stone-500 uppercase tracking-wider mb-3">upcoming</h2>
-                                    <div className="flex flex-col gap-3">
+                                    <div className="flex flex-col gap-4">
                                         {upcoming.map(b => (
                                             <BookingCard key={b.id} booking={b} isPast={false} />
                                         ))}
@@ -93,7 +95,7 @@ export default async function MyBookingsPage() {
                             {past.length > 0 && (
                                 <section>
                                     <h2 className="text-sm font-bold text-stone-500 uppercase tracking-wider mb-3">past</h2>
-                                    <div className="flex flex-col gap-3 opacity-60">
+                                    <div className="flex flex-col gap-4 opacity-60">
                                         {past.map(b => (
                                             <BookingCard key={b.id} booking={b} isPast={true} />
                                         ))}
@@ -105,41 +107,6 @@ export default async function MyBookingsPage() {
                 </div>
             </main>
             <Footer />
-        </div>
-    );
-}
-
-function BookingCard({ booking, isPast }: {
-    booking: { experienceName: string; date: string; startTime: string; durationMin: number; headcount: number };
-    isPast: boolean;
-}) {
-    const [year, month, day] = booking.date.split("-");
-    const dateLabel = `${year}年${parseInt(month)}月${parseInt(day)}日`;
-
-    return (
-        <div className={`bg-white rounded-2xl shadow-sm p-5 border-l-4 ${isPast ? "border-stone-200" : "border-primary"}`}>
-            <div className="flex items-start justify-between gap-4">
-                <div>
-                    <p className="font-bold text-stone-900 text-base mb-2">{booking.experienceName}</p>
-                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-stone-600">
-                        <span className="flex items-center gap-1">
-                            <CalendarDays className="w-4 h-4 text-stone-400" />
-                            {dateLabel}
-                        </span>
-                        <span className="flex items-center gap-1">
-                            <Clock className="w-4 h-4 text-stone-400" />
-                            {booking.startTime}〜（{booking.durationMin}分）
-                        </span>
-                        <span className="flex items-center gap-1">
-                            <Users className="w-4 h-4 text-stone-400" />
-                            {booking.headcount}名
-                        </span>
-                    </div>
-                </div>
-                <span className={`text-xs font-bold px-2.5 py-1 rounded-full whitespace-nowrap ${isPast ? "bg-stone-100 text-stone-400" : "bg-emerald-50 text-emerald-700"}`}>
-                    {isPast ? "終了" : "確定"}
-                </span>
-            </div>
         </div>
     );
 }

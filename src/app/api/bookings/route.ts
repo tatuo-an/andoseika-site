@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 const SPREADSHEET_ID = process.env.GOOGLE_SPREADSHEET_ID!;
 const SHEET_NAME = "体験予約";
-// 列: A=予約ID, B=メール, C=名前, D=電話, E=体験名, F=日付, G=開始時刻, H=所要分, I=人数, J=ステータス, K=作成日時
+// 列: A=予約ID, B=メール, C=名前, D=電話, E=体験名, F=日付, G=開始時刻, H=所要分, I=人数, J=ステータス, K=作成日時, L=料金
 
 function getSheets() {
     const authClient = new google.auth.GoogleAuth({
@@ -30,9 +30,9 @@ async function ensureSheet(sheets: ReturnType<typeof getSheets>) {
             });
             await sheets.spreadsheets.values.update({
                 spreadsheetId: SPREADSHEET_ID,
-                range: `${SHEET_NAME}!A1:K1`,
+                range: `${SHEET_NAME}!A1:L1`,
                 valueInputOption: "RAW",
-                requestBody: { values: [["予約ID", "メール", "名前", "電話番号", "体験名", "日付", "開始時刻", "所要分", "人数", "ステータス", "作成日時"]] },
+                requestBody: { values: [["予約ID", "メール", "名前", "電話番号", "体験名", "日付", "開始時刻", "所要分", "人数", "ステータス", "作成日時", "料金"]] },
             });
         }
     } catch (e) {
@@ -40,16 +40,9 @@ async function ensureSheet(sheets: ReturnType<typeof getSheets>) {
     }
 }
 
-type Booking = {
-    id: string; email: string; name: string; phone: string;
-    experienceName: string; date: string; startTime: string;
-    durationMin: number; headcount: number; status: string; createdAt: string;
-};
-
-// 予約一覧取得（フィルター可: experienceName, from, to）
+// 予約一覧取得（公開情報のみ・カレンダー表示用）
 export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
-    const experienceName = searchParams.get("experienceName") ?? "";
     const from = searchParams.get("from") ?? "";
     const to = searchParams.get("to") ?? "";
 
@@ -58,37 +51,22 @@ export async function GET(req: NextRequest) {
         await ensureSheet(sheets);
         const res = await sheets.spreadsheets.values.get({
             spreadsheetId: SPREADSHEET_ID,
-            range: `${SHEET_NAME}!A:K`,
+            range: `${SHEET_NAME}!A:L`,
         });
         const rows = res.data.values ?? [];
-        const all: Booking[] = rows.slice(1).filter(r => r[0]).map(r => ({
-            id: r[0] ?? "",
-            email: r[1] ?? "",
-            name: r[2] ?? "",
-            phone: r[3] ?? "",
-            experienceName: r[4] ?? "",
-            date: r[5] ?? "",
-            startTime: r[6] ?? "",
-            durationMin: parseInt(r[7] ?? "0", 10) || 0,
-            headcount: parseInt(r[8] ?? "0", 10) || 0,
-            status: r[9] ?? "",
-            createdAt: r[10] ?? "",
-        })).filter(b => b.status === "confirmed");
+        const confirmed = rows.slice(1)
+            .filter(r => r[0] && r[9] === "confirmed")
+            .filter(r => {
+                if (from && r[5] < from) return false;
+                if (to && r[5] > to) return false;
+                return true;
+            });
 
-        const filtered = all.filter(b => {
-            if (experienceName && b.experienceName !== experienceName) return false;
-            if (from && b.date < from) return false;
-            if (to && b.date > to) return false;
-            return true;
-        });
-
-        // 公開情報のみ返す（個人情報は除外）
         return NextResponse.json({
-            bookings: filtered.map(b => ({
-                experienceName: b.experienceName,
-                date: b.date,
-                startTime: b.startTime,
-                durationMin: b.durationMin,
+            bookings: confirmed.map(r => ({
+                date: r[5] ?? "",
+                startTime: r[6] ?? "",
+                durationMin: parseInt(r[7] ?? "0", 10) || 0,
             })),
         });
     } catch (err) {
@@ -107,9 +85,9 @@ export async function POST(req: NextRequest) {
     const userName = session.user.name ?? "";
 
     const body = await req.json();
-    const { experienceName, date, startTime, durationMin, headcount, phone, name } = body as {
+    const { experienceName, date, startTime, durationMin, headcount, phone, name, price } = body as {
         experienceName: string; date: string; startTime: string;
-        durationMin: number; headcount: number; phone?: string; name?: string;
+        durationMin: number; headcount: number; phone?: string; name?: string; price?: number;
     };
 
     if (!experienceName || !date || !startTime || !durationMin || !headcount) {
@@ -120,10 +98,10 @@ export async function POST(req: NextRequest) {
         const sheets = getSheets();
         await ensureSheet(sheets);
 
-        // 重複チェック: 同じ日付・同じ開始時刻でconfirmedな予約があれば体験名に関わらず拒否
+        // 重複チェック: 同じ日付・同じ開始時刻でconfirmedな予約があれば拒否
         const res = await sheets.spreadsheets.values.get({
             spreadsheetId: SPREADSHEET_ID,
-            range: `${SHEET_NAME}!A:K`,
+            range: `${SHEET_NAME}!A:L`,
         });
         const rows = res.data.values ?? [];
         const existing = rows.slice(1).find(r =>
@@ -133,15 +111,14 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "この時間帯は既に予約されています" }, { status: 409 });
         }
 
-        // 追加
         const id = `bk-${Date.now()}`;
         const createdAt = new Date().toISOString();
         await sheets.spreadsheets.values.append({
             spreadsheetId: SPREADSHEET_ID,
-            range: `${SHEET_NAME}!A:K`,
+            range: `${SHEET_NAME}!A:L`,
             valueInputOption: "RAW",
             requestBody: {
-                values: [[id, email, name || userName, phone ?? "", experienceName, date, startTime, durationMin, headcount, "confirmed", createdAt]],
+                values: [[id, email, name || userName, phone ?? "", experienceName, date, startTime, durationMin, headcount, "confirmed", createdAt, price ?? ""]],
             },
         });
 

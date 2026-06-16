@@ -28,19 +28,19 @@ export async function GET() {
         const sheets = getSheets();
         const res = await sheets.spreadsheets.values.get({
             spreadsheetId: SPREADSHEET_ID,
-            range: `${SHEET_NAME}!A:K`,
+            range: `${SHEET_NAME}!A:L`,
         });
         const rows = res.data.values ?? [];
         const bookings = rows.slice(1)
             .filter(r => r[0] && r[1] === session.user!.email && r[9] === "confirmed")
             .map(r => ({
-                id: r[0],
+                id: r[0] as string,
                 experienceName: r[4] ?? "",
                 date: r[5] ?? "",
                 startTime: r[6] ?? "",
                 durationMin: parseInt(r[7] ?? "0", 10) || 0,
                 headcount: parseInt(r[8] ?? "0", 10) || 0,
-                createdAt: r[10] ?? "",
+                price: parseInt(r[11] ?? "0", 10) || 0,
             }))
             .sort((a, b) => a.date.localeCompare(b.date));
 
