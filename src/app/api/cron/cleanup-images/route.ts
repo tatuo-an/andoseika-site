@@ -1,28 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
+import { del } from "@vercel/blob";
 import { google } from "googleapis";
 
 export const runtime = "nodejs";
 
 export async function GET(req: NextRequest) {
-  // Vercel Cron からのみ実行を許可
   const authHeader = req.headers.get("authorization");
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const a = new google.auth.GoogleAuth({
-    credentials: {
-      client_email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
-      private_key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-    },
-    scopes: [
-      "https://www.googleapis.com/auth/drive.file",
-      "https://www.googleapis.com/auth/spreadsheets",
-    ],
+  const a = new google.auth.JWT({
+    email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
+    key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+    scopes: ["https://www.googleapis.com/auth/spreadsheets"],
   });
 
   const sheets = google.sheets({ version: "v4", auth: a });
-  const drive = google.drive({ version: "v3", auth: a });
   const id = process.env.GOOGLE_SPREADSHEET_ID!;
 
   const res = await sheets.spreadsheets.values.get({
@@ -38,20 +32,18 @@ export async function GET(req: NextRequest) {
   const toDelete: number[] = [];
 
   for (let i = 0; i < rows.length; i++) {
-    const [fileId, uploadedAt] = rows[i];
-    if (!fileId || !uploadedAt) continue;
+    const [blobUrl, uploadedAt] = rows[i];
+    if (!blobUrl || !uploadedAt) continue;
     const uploadedMs = new Date(uploadedAt).getTime();
     if (isNaN(uploadedMs)) continue;
     if (now - uploadedMs > ONE_MONTH) {
-      // Drive から削除
-      await drive.files.delete({ fileId }).catch(() => null);
+      await del(blobUrl).catch(() => null);
       toDelete.push(i);
     }
   }
 
   if (toDelete.length === 0) return NextResponse.json({ deleted: 0 });
 
-  // 削除した行をシートから除去（後ろから削除して行ずれを防ぐ）
   const spreadsheet = await sheets.spreadsheets.get({ spreadsheetId: id });
   const sheet = spreadsheet.data.sheets?.find((s) => s.properties?.title === "アップロード画像");
   const sheetId = sheet?.properties?.sheetId;
