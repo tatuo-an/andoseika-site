@@ -447,9 +447,9 @@ export function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
                                 const res = await fetch(`/api/admin/orders/${encodeURIComponent(order.orderNumber)}`, {
                                   method: "PATCH",
                                   headers: { "Content-Type": "application/json" },
-                                  body: JSON.stringify({ status: "paid", clearComplaint: true }),
+                                  body: JSON.stringify({ status: "paid" }),
                                 });
-                                if (res.ok) setOrders((prev) => prev.map((o) => o.orderNumber === order.orderNumber ? { ...o, status: "paid", complaint: "" } : o));
+                                if (res.ok) setOrders((prev) => prev.map((o) => o.orderNumber === order.orderNumber ? { ...o, status: "paid" } : o));
                               } finally { setUpdating(null); }
                             }}
                             disabled={isUpdating}
