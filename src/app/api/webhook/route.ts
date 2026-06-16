@@ -134,8 +134,8 @@ export async function POST(req: NextRequest) {
     const shipMode = piMeta.shipMode ?? "";
     const shipValue = piMeta.shipValue ?? "";
 
-    // お届け予定日を計算
-    const estimatedDate = calcEstimatedDate(shipMode, shipValue);
+    // お届け予定日: 配達希望日があればそちら優先、なければshipMode/shipValueから計算
+    const estimatedDate = desiredDate || calcEstimatedDate(shipMode, shipValue);
 
     const lineItems = await stripe.checkout.sessions.listLineItems(sessionId, { limit: 10 });
     const productNames = lineItems.data.map((item) => item.description).join(", ");
