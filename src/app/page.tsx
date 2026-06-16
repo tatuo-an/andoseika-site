@@ -130,7 +130,7 @@ export default async function Home() {
         {/* ── Category Shortcuts ── */}
         <section className="bg-white border-b border-stone-200">
           <div className="container mx-auto px-4 md:px-6">
-            <div className="grid grid-cols-4 divide-x divide-stone-100">
+            <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-y md:divide-y-0 divide-stone-100">
               {CATEGORIES.map((cat) => (
                 <Link key={cat.href} href={cat.href} className="flex flex-col items-center gap-3 py-5 px-3 hover:bg-stone-50 transition-colors group">
                   <div className="relative w-14 h-14 rounded-full overflow-hidden bg-stone-100 shadow-sm">
