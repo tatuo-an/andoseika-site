@@ -365,7 +365,7 @@ export default function OrderDetailPage() {
                 {order.status === "delivered" && (
                   <button
                     onClick={() => setShowCancelModal(true)}
-                    className="mt-5 w-full flex items-center justify-center gap-2 py-3 border border-red-200 text-red-600 rounded-xl hover:bg-red-50 transition-colors text-sm font-medium"
+                    className="mt-5 w-full flex items-center justify-center gap-2 py-3 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-colors text-sm font-bold"
                   >
                     <XCircle className="w-4 h-4" />
                     問題を報告する
