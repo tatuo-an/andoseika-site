@@ -2,11 +2,12 @@ import { auth, signOut } from "@/auth";
 import { redirect } from "next/navigation";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
-import { User, Package, MapPin, LogOut, Settings, Heart, CalendarDays } from "lucide-react";
+import { User, MapPin, LogOut, Settings, Heart, CalendarDays } from "lucide-react";
 import Link from "next/link";
 import { isAdmin } from "@/lib/admin";
 import { OnlineCounter } from "@/components/admin/OnlineCounter";
 import { SkipModeToggle } from "@/components/admin/SkipModeToggle";
+import { MyOrders } from "@/components/mypage/MyOrders";
 
 export default async function MyPage() {
   const session = await auth();
@@ -35,14 +36,7 @@ export default async function MyPage() {
 
           {/* メニュー */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-            <div className="bg-white rounded-2xl shadow-sm p-6">
-              <div className="flex items-center gap-3 mb-3">
-                <Package className="w-5 h-5 text-primary" />
-                <h2 className="font-bold text-stone-900">注文・発送状況</h2>
-              </div>
-              <p className="text-sm text-stone-500">過去の注文履歴と発送状況を確認できます</p>
-              <p className="text-xs text-stone-400 mt-3">※ 近日公開予定</p>
-            </div>
+            <MyOrders />
 
             <Link href="/mypage/favorites" className="bg-white rounded-2xl shadow-sm p-6 hover:shadow-md transition-shadow block">
               <div className="flex items-center gap-3 mb-3">
