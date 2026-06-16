@@ -170,8 +170,11 @@ function UserCancelModal({ onConfirm, onCancel, loading, orderStatus }: {
               <p className="text-xs text-amber-700">商品の不具合（破損・変色・異物など）がわかるよう、現在の状態を撮影した写真を添付してください。写真がない場合は対応できかねる場合があります。</p>
             </div>
             <div className="p-3 border border-stone-200 rounded-xl">
-              <p className="text-xs text-stone-500 mb-2">写真を選択（必須・5MB以下、超えた場合は自動圧縮）</p>
-              <input type="file" accept="image/*" onChange={handleFile} className="text-xs text-stone-600 w-full" />
+              <p className="text-xs text-stone-500 mb-2">写真を添付（必須・5MB以下、超えた場合は自動圧縮）</p>
+              <input type="file" accept="image/*" onChange={handleFile} className="hidden" id="complaint-image-input" />
+              <label htmlFor="complaint-image-input" className="inline-flex items-center gap-2 px-4 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 text-sm font-medium rounded-xl cursor-pointer transition-colors">
+                📷 写真を選択
+              </label>
               {compressing && (
                 <p className="text-xs mt-1 text-amber-600 font-medium">圧縮中...</p>
               )}
@@ -533,7 +536,16 @@ export default function OrderDetailPage() {
                                 ? "bg-primary text-white rounded-tr-sm"
                                 : "bg-stone-100 text-stone-800 rounded-tl-sm"
                             }`}>
-                              {m.message}
+                              {m.message.split("\n").map((line, li) => {
+                                const isUrl = line.startsWith("https://") && /\.(png|jpg|jpeg|gif|webp)(\?|$)/i.test(line);
+                                if (isUrl) return <img key={li} src={line} alt="添付画像" className="mt-1 rounded-lg max-w-[200px] max-h-48 object-contain" />;
+                                const urlMatch = line.match(/https?:\/\/\S+/);
+                                if (urlMatch && /\.(png|jpg|jpeg|gif|webp)/i.test(urlMatch[0])) {
+                                  const before = line.slice(0, urlMatch.index);
+                                  return <span key={li}>{before && <span>{before}</span>}<img src={urlMatch[0]} alt="添付画像" className="mt-1 rounded-lg max-w-[200px] max-h-48 object-contain block" /></span>;
+                                }
+                                return <span key={li}>{line}{li < m.message.split("\n").length - 1 && <br />}</span>;
+                              })}
                             </div>
                           )}
                         </div>
