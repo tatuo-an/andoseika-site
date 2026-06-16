@@ -7,6 +7,7 @@ const HEADERS: Record<string, string[]> = {
   "注文管理": ["注文番号","作成日時","顧客名","メール","電話","住所","商品名","金額","ステータス","セッションID","希望配達日","希望時間帯"],
   "商品在庫": ["商品ID","バリアント名","在庫数","価格","配送タイプ","非表示","削除済み","次回入荷日","バッジ","ファミリー","画像URL","ファミリー画像","原価","利益率","クール便対応","説明文","クリックポスト最大数","オプション","セール割引率(%)","セール開始日","セール終了日","配送モード","配送設定値","コンパクト最大数","カテゴリー"],
   "体験予約": ["予約ID","メール","名前","電話","体験名","日付","開始時刻","所要分","人数","ステータス","作成日時","料金"],
+  "アップロード画像": ["ファイルID","アップロード日時","メール"],
 };
 
 async function getSheets() {
@@ -20,7 +21,19 @@ async function getSheets() {
   return google.sheets({ version: "v4", auth: a });
 }
 
+async function ensureSheetExists(sheets: ReturnType<typeof google.sheets>, id: string, sheetName: string) {
+  const meta = await sheets.spreadsheets.get({ spreadsheetId: id });
+  const exists = meta.data.sheets?.some((s) => s.properties?.title === sheetName);
+  if (!exists) {
+    await sheets.spreadsheets.batchUpdate({
+      spreadsheetId: id,
+      requestBody: { requests: [{ addSheet: { properties: { title: sheetName } } }] },
+    });
+  }
+}
+
 async function ensureHeader(sheets: ReturnType<typeof google.sheets>, id: string, sheetName: string, header: string[]) {
+  await ensureSheetExists(sheets, id, sheetName);
   const res = await sheets.spreadsheets.values.get({ spreadsheetId: id, range: `${sheetName}!A1` });
   const firstCell = res.data.values?.[0]?.[0] ?? "";
 

@@ -1,21 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { google } from "googleapis";
 import { auth } from "@/auth";
-import { Readable } from "stream";
 
 export const runtime = "nodejs";
 
-function getAuth() {
-  return new google.auth.GoogleAuth({
+async function getAccessToken(): Promise<string> {
+  const a = new google.auth.GoogleAuth({
     credentials: {
       client_email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
       private_key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
     },
     scopes: [
-      "https://www.googleapis.com/auth/drive.file",
+      "https://www.googleapis.com/auth/drive",
       "https://www.googleapis.com/auth/spreadsheets",
     ],
   });
+  const client = await a.getClient();
+  const tokenRes = await (client as any).getAccessToken();
+  return tokenRes.token as string;
 }
 
 export async function POST(req: NextRequest) {
@@ -32,39 +34,73 @@ export async function POST(req: NextRequest) {
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    const readable = new Readable();
-    readable.push(buffer);
-    readable.push(null);
+    const token = await getAccessToken();
 
-    const a = getAuth();
-    const drive = google.drive({ version: "v3", auth: a });
+    // multipart upload via fetch (googleapis クライアントの stream 問題を回避)
+    const boundary = "ando_boundary_" + Date.now();
+    const metadata = JSON.stringify({ name: `complaint_${Date.now()}`, mimeType: file.type });
+    const bodyParts = Buffer.concat([
+      Buffer.from(`--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${metadata}\r\n--${boundary}\r\nContent-Type: ${file.type}\r\n\r\n`),
+      buffer,
+      Buffer.from(`\r\n--${boundary}--`),
+    ]);
 
-    const uploaded = await drive.files.create({
-      requestBody: { name: `complaint_${Date.now()}`, mimeType: file.type },
-      media: { mimeType: file.type, body: readable },
-      fields: "id",
-    });
+    const uploadRes = await fetch(
+      "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": `multipart/related; boundary=${boundary}`,
+          "Content-Length": String(bodyParts.length),
+        },
+        body: bodyParts,
+      }
+    );
 
-    const fileId = uploaded.data.id;
-    if (!fileId) throw new Error("No file ID returned");
+    if (!uploadRes.ok) {
+      const errText = await uploadRes.text();
+      throw new Error(`Drive upload failed: ${errText}`);
+    }
 
-    await drive.permissions.create({
-      fileId,
-      requestBody: { role: "reader", type: "anyone" },
-    });
+    const { id: fileId } = (await uploadRes.json()) as { id: string };
 
-    // シートに記録（自動削除用）
-    const sheets = google.sheets({ version: "v4", auth: a });
-    const uploadedAt = new Date().toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" });
-    await sheets.spreadsheets.values.append({
-      spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-      range: "アップロード画像!A:C",
-      valueInputOption: "RAW",
-      requestBody: { values: [[fileId, uploadedAt, session.user.email]] },
-    });
+    // 公開設定
+    const permRes = await fetch(
+      `https://www.googleapis.com/drive/v3/files/${fileId}/permissions`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ role: "reader", type: "anyone" }),
+      }
+    );
+    if (!permRes.ok) throw new Error(`Permission failed: ${await permRes.text()}`);
 
-    const url = `https://drive.google.com/file/d/${fileId}/view`;
-    return NextResponse.json({ ok: true, url });
+    // アップロード画像シートに記録（失敗しても URL は返す）
+    try {
+      const sheetsAuth = new google.auth.GoogleAuth({
+        credentials: {
+          client_email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
+          private_key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+        },
+        scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+      });
+      const sheets = google.sheets({ version: "v4", auth: sheetsAuth });
+      const uploadedAt = new Date().toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" });
+      await sheets.spreadsheets.values.append({
+        spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
+        range: "アップロード画像!A:C",
+        valueInputOption: "RAW",
+        requestBody: { values: [[fileId, uploadedAt, session.user.email]] },
+      });
+    } catch (sheetErr) {
+      console.error("sheet logging failed (non-fatal):", sheetErr);
+    }
+
+    return NextResponse.json({ ok: true, url: `https://drive.google.com/file/d/${fileId}/view` });
   } catch (e) {
     console.error("upload-image error:", e);
     return NextResponse.json({ error: "アップロードに失敗しました", detail: String(e) }, { status: 500 });
