@@ -248,6 +248,7 @@ export default function OrderDetailPage() {
   const [cancelling, setCancelling] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [completing, setCompleting] = useState(false);
+  const [showThanksModal, setShowThanksModal] = useState(false);
   const [responding, setResponding] = useState(false);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -366,6 +367,27 @@ export default function OrderDetailPage() {
       {lightboxUrl && (
         <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4" onClick={() => setLightboxUrl(null)}>
           <img src={lightboxUrl} alt="拡大画像" className="max-w-full max-h-full rounded-xl object-contain" />
+        </div>
+      )}
+      {showThanksModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm text-center">
+            <div className="text-4xl mb-3">🎉</div>
+            <h3 className="font-bold text-lg text-stone-900 mb-2">ご購入ありがとうございました！</h3>
+            <p className="text-sm text-stone-600 mb-5">よろしければご感想や料理を<br />みなさんに共有しませんか？</p>
+            <a
+              href="/community"
+              className="block w-full py-3 bg-primary text-white font-bold rounded-xl hover:bg-primary/90 transition-colors text-sm mb-3"
+            >
+              みんなの料理へ投稿する
+            </a>
+            <button
+              onClick={() => setShowThanksModal(false)}
+              className="text-sm text-stone-400 hover:text-stone-600 transition-colors"
+            >
+              あとで
+            </button>
+          </div>
         </div>
       )}
       {showCancelModal && (
@@ -510,7 +532,10 @@ export default function OrderDetailPage() {
                       setCompleting(true);
                       try {
                         const res = await fetch(`/api/my/orders/${orderNumber}/delivered`, { method: "POST" });
-                        if (res.ok) setOrder((prev) => prev ? { ...prev, status: "delivered" } : prev);
+                        if (res.ok) {
+                          setOrder((prev) => prev ? { ...prev, status: "delivered" } : prev);
+                          setShowThanksModal(true);
+                        }
                       } finally { setCompleting(false); }
                     }}
                     disabled={completing}
