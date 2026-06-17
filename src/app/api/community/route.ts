@@ -4,7 +4,7 @@ import { auth } from "@/auth";
 
 export const dynamic = "force-dynamic";
 
-// 料理投稿シート: A=投稿ID, B=メール, C=表示名, D=商品名, E=投稿画像URL, F=本文, G=投稿日時, H=いいねメールリスト(カンマ区切り)
+// 料理投稿シート: A=投稿ID, B=メール, C=表示名, D=商品名, E=投稿画像URL, F=本文, G=投稿日時, H=いいねメールリスト, I=保存メールリスト
 
 function getSheets() {
   const a = new google.auth.GoogleAuth({
@@ -22,6 +22,7 @@ const SHEET = "料理投稿";
 
 function rowToPost(r: string[], myEmail: string) {
   const likeEmails = r[7] ? r[7].split(",").filter(Boolean) : [];
+  const bookmarkEmails = r[8] ? r[8].split(",").filter(Boolean) : [];
   return {
     id: r[0] ?? "",
     email: r[1] ?? "",
@@ -32,6 +33,7 @@ function rowToPost(r: string[], myEmail: string) {
     createdAt: r[6] ?? "",
     likeCount: likeEmails.length,
     liked: likeEmails.includes(myEmail),
+    saved: bookmarkEmails.includes(myEmail),
     isOwner: r[1] === myEmail,
   };
 }
@@ -42,7 +44,7 @@ export async function GET() {
   const myEmail = session?.user?.email ?? "";
 
   const sheets = getSheets();
-  const res = await sheets.spreadsheets.values.get({ spreadsheetId: ID, range: `${SHEET}!A:H` });
+  const res = await sheets.spreadsheets.values.get({ spreadsheetId: ID, range: `${SHEET}!A:I` });
   const rows = (res.data.values ?? []).filter((r) => r[0]);
   const posts = rows.map((r) => rowToPost(r, myEmail)).reverse();
   return NextResponse.json({ posts });

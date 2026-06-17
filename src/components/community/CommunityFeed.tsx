@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { Heart, Pencil, Trash2, Check, X, Camera, ChevronDown } from "lucide-react";
+import { Heart, Bookmark, Pencil, Trash2, Check, X, Camera, ChevronDown } from "lucide-react";
 
 type Post = {
   id: string;
@@ -13,13 +13,15 @@ type Post = {
   createdAt: string;
   likeCount: number;
   liked: boolean;
+  saved: boolean;
   isOwner: boolean;
 };
 
-function PostCard({ post, myEmail, onLike, onEdit, onDelete }: {
+function PostCard({ post, myEmail, onLike, onSave, onEdit, onDelete }: {
   post: Post;
   myEmail: string;
   onLike: (id: string) => void;
+  onSave: (id: string) => void;
   onEdit: (id: string, caption: string) => void;
   onDelete: (id: string) => void;
 }) {
@@ -80,14 +82,24 @@ function PostCard({ post, myEmail, onLike, onEdit, onDelete }: {
         )}
 
         <div className="flex items-center justify-between">
-          <button
-            onClick={() => onLike(post.id)}
-            disabled={!myEmail}
-            className={`flex items-center gap-1.5 text-sm transition-colors ${post.liked ? "text-red-500" : "text-stone-400 hover:text-red-400"} disabled:opacity-40 disabled:cursor-not-allowed`}
-          >
-            <Heart className={`w-5 h-5 ${post.liked ? "fill-red-500" : ""}`} />
-            <span className="text-xs font-medium">{post.likeCount}</span>
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => onLike(post.id)}
+              disabled={!myEmail}
+              className={`flex items-center gap-1.5 text-sm transition-colors ${post.liked ? "text-red-500" : "text-stone-400 hover:text-red-400"} disabled:opacity-40 disabled:cursor-not-allowed`}
+            >
+              <Heart className={`w-5 h-5 ${post.liked ? "fill-red-500" : ""}`} />
+              <span className="text-xs font-medium">{post.likeCount}</span>
+            </button>
+            <button
+              onClick={() => onSave(post.id)}
+              disabled={!myEmail}
+              title={post.saved ? "保存済み" : "記録する"}
+              className={`transition-colors ${post.saved ? "text-primary" : "text-stone-400 hover:text-primary"} disabled:opacity-40 disabled:cursor-not-allowed`}
+            >
+              <Bookmark className={`w-5 h-5 ${post.saved ? "fill-primary" : ""}`} />
+            </button>
+          </div>
 
           <div className="flex items-center gap-2">
             <div className="text-right">
@@ -159,7 +171,7 @@ function PostForm({ myEmail, myName, onPosted }: { myEmail: string; myName: stri
       const data = await res.json();
       if (data.ok) {
         const now = new Date().toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" });
-        onPosted({ id: data.postId, email: myEmail, displayName, productName: selectedProduct, imageUrl: url, caption, createdAt: now, likeCount: 0, liked: false, isOwner: true });
+        onPosted({ id: data.postId, email: myEmail, displayName, productName: selectedProduct, imageUrl: url, caption, createdAt: now, likeCount: 0, liked: false, saved: false, isOwner: true });
         setOpen(false);
         setImageFile(null);
         setImagePreview("");
@@ -269,6 +281,13 @@ export function CommunityFeed({ myEmail, myName }: { myEmail: string; myName: st
     if (data.ok) setPosts((prev) => prev.map((p) => p.id === id ? { ...p, liked: data.liked, likeCount: data.likeCount } : p));
   }
 
+  async function handleSave(id: string) {
+    if (!myEmail) return;
+    const res = await fetch(`/api/community/${id}/bookmark`, { method: "POST" });
+    const data = await res.json();
+    if (data.ok) setPosts((prev) => prev.map((p) => p.id === id ? { ...p, saved: data.saved } : p));
+  }
+
   return (
     <div>
       <PostForm myEmail={myEmail} myName={myName} onPosted={(post) => setPosts((prev) => [post, ...prev])} />
@@ -301,6 +320,7 @@ export function CommunityFeed({ myEmail, myName }: { myEmail: string; myName: st
             post={post}
             myEmail={myEmail}
             onLike={handleLike}
+            onSave={handleSave}
             onEdit={(id, caption) => setPosts((prev) => prev.map((p) => p.id === id ? { ...p, caption } : p))}
             onDelete={(id) => setPosts((prev) => prev.filter((p) => p.id !== id))}
           />
