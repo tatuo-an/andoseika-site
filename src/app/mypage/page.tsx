@@ -8,6 +8,7 @@ import { isAdmin } from "@/lib/admin";
 import { OnlineCounter } from "@/components/admin/OnlineCounter";
 import { SkipModeToggle } from "@/components/admin/SkipModeToggle";
 import { MyOrders } from "@/components/mypage/MyOrders";
+import { ProfileCard } from "@/components/mypage/ProfileCard";
 
 export default async function MyPage() {
   const session = await auth();
@@ -23,16 +24,11 @@ export default async function MyPage() {
           <h1 className="text-3xl font-bold text-stone-900 mb-8">マイページ</h1>
 
           {/* プロフィール */}
-          <div className="bg-white rounded-2xl shadow-sm p-6 mb-6 flex items-center gap-4">
-            {user.image && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={user.image} alt={user.name ?? ""} className="w-16 h-16 rounded-full" />
-            )}
-            <div>
-              <p className="font-bold text-lg text-stone-900">{user.name}</p>
-              <p className="text-stone-500 text-sm">{user.email}</p>
-            </div>
-          </div>
+          <ProfileCard
+            fallbackName={user.name ?? ""}
+            email={user.email ?? ""}
+            image={user.image ?? undefined}
+          />
 
           {/* メニュー */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
