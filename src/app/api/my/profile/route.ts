@@ -4,7 +4,8 @@ import { auth } from "@/auth";
 
 export const dynamic = "force-dynamic";
 
-// 顧客マスタ: A=メール, B=ラベル, C=名前, D=郵便番号, E=都道府県, F=市区町村, G=番地, H=建物名, I=電話番号, J=表示名
+// 顧客マスタ: A=メール, B=ラベル(__profile__), C=表示名
+// B列が "__profile__" の行がプロフィール行。住所行とは分離して管理。
 const SHEET = "顧客マスタ";
 
 function getSheets() {
@@ -24,10 +25,10 @@ export async function GET() {
 
   const sheets = getSheets();
   const id = process.env.GOOGLE_SPREADSHEET_ID!;
-  const res = await sheets.spreadsheets.values.get({ spreadsheetId: id, range: `${SHEET}!A:J` });
+  const res = await sheets.spreadsheets.values.get({ spreadsheetId: id, range: `${SHEET}!A:C` });
   const rows = res.data.values ?? [];
-  const row = rows.find((r) => r[0] === session.user!.email);
-  return NextResponse.json({ displayName: row?.[9] ?? "" });
+  const row = rows.find((r) => r[0] === session.user!.email && r[1] === "__profile__");
+  return NextResponse.json({ displayName: row?.[2] ?? "" });
 }
 
 export async function PATCH(req: NextRequest) {
@@ -39,32 +40,23 @@ export async function PATCH(req: NextRequest) {
 
   const sheets = getSheets();
   const id = process.env.GOOGLE_SPREADSHEET_ID!;
-  const res = await sheets.spreadsheets.values.get({ spreadsheetId: id, range: `${SHEET}!A:J` });
+  const res = await sheets.spreadsheets.values.get({ spreadsheetId: id, range: `${SHEET}!A:C` });
   const rows = res.data.values ?? [];
+  const rowIndex = rows.findIndex((r) => r[0] === session.user!.email && r[1] === "__profile__");
 
-  // 同メールの全行のJ列を更新（住所が複数あっても全部更新）
-  const updates = rows
-    .map((r, i) => ({ r, i }))
-    .filter(({ r }) => r[0] === session.user!.email);
-
-  if (updates.length === 0) {
-    // 顧客マスタに行がない場合は新規追加
+  if (rowIndex === -1) {
     await sheets.spreadsheets.values.append({
       spreadsheetId: id,
-      range: `${SHEET}!A:J`,
+      range: `${SHEET}!A:C`,
       valueInputOption: "RAW",
-      requestBody: { values: [[session.user.email, "", "", "", "", "", "", "", "", name]] },
+      requestBody: { values: [[session.user.email, "__profile__", name]] },
     });
   } else {
-    await sheets.spreadsheets.values.batchUpdate({
+    await sheets.spreadsheets.values.update({
       spreadsheetId: id,
-      requestBody: {
-        valueInputOption: "RAW",
-        data: updates.map(({ i }) => ({
-          range: `${SHEET}!J${i + 1}`,
-          values: [[name]],
-        })),
-      },
+      range: `${SHEET}!C${rowIndex + 1}`,
+      valueInputOption: "RAW",
+      requestBody: { values: [[name]] },
     });
   }
 

@@ -85,7 +85,7 @@ export async function GET() {
             range: `${SHEET_NAME}!A:I`,
         });
         const rows = res.data.values ?? [];
-        const userRows = rows.slice(1).filter(r => r[0] === email);
+        const userRows = rows.slice(1).filter(r => r[0] === email && r[1] !== "__profile__");
 
         const addresses = userRows.map(r => {
             // 旧形式: C列が郵便番号形式なら旧形式とみなす
@@ -135,7 +135,7 @@ export async function POST(req: NextRequest) {
         // 既存行を探す: 同じメール + 同じラベル
         // 旧形式の行（ラベルなし）は「デフォルト」を編集する時に当たる
         const rowIndex = rows.findIndex((r, i) => {
-            if (i === 0 || r[0] !== email) return false;
+            if (i === 0 || r[0] !== email || r[1] === "__profile__") return false;
             const c = r[2] ?? "";
             const isLegacy = /^\d{3}-?\d{4}$/.test(c);
             const rowLabel = isLegacy ? "デフォルト" : (r[1] ?? "");
@@ -188,7 +188,7 @@ export async function DELETE(req: NextRequest) {
         });
         const rows = res.data.values ?? [];
         const rowIndex = rows.findIndex((r, i) => {
-            if (i === 0 || r[0] !== email) return false;
+            if (i === 0 || r[0] !== email || r[1] === "__profile__") return false;
             const c = r[2] ?? "";
             const isLegacy = /^\d{3}-?\d{4}$/.test(c);
             const rowLabel = isLegacy ? "デフォルト" : (r[1] ?? "");
