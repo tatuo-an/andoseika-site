@@ -2,7 +2,7 @@ import { auth, signOut } from "@/auth";
 import { redirect } from "next/navigation";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
-import { User, MapPin, LogOut, Settings, Heart, CalendarDays } from "lucide-react";
+import { User, MapPin, LogOut, Settings, Heart, CalendarDays, Bookmark } from "lucide-react";
 import Link from "next/link";
 import { isAdmin } from "@/lib/admin";
 import { OnlineCounter } from "@/components/admin/OnlineCounter";
@@ -33,6 +33,15 @@ export default async function MyPage() {
           {/* メニュー */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
             <MyOrders />
+
+            <Link href="/mypage/saved-posts" className="bg-white rounded-2xl shadow-sm p-6 hover:shadow-md transition-shadow block">
+              <div className="flex items-center gap-3 mb-3">
+                <Bookmark className="w-5 h-5 text-primary" />
+                <h2 className="font-bold text-stone-900">記録した料理</h2>
+              </div>
+              <p className="text-sm text-stone-500">保存したみんなの料理を見られます</p>
+              <p className="text-xs text-primary mt-3 font-medium">確認する →</p>
+            </Link>
 
             <Link href="/mypage/favorites" className="bg-white rounded-2xl shadow-sm p-6 hover:shadow-md transition-shadow block">
               <div className="flex items-center gap-3 mb-3">
