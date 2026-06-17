@@ -13,6 +13,7 @@ const NAV_ITEMS = [
     { href: "/experience", label: "体験・予約" },
     { href: "/supporter", label: "サポーター募集", highlight: true },
     { href: "/business", label: "業務用・卸" },
+    { href: "/community", label: "みんなの料理" },
     { href: "/about", label: "私たちについて" },
 ];
 
