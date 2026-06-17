@@ -111,7 +111,7 @@ export default async function Home() {
 
       <main className="flex-1">
         {/* ── Hero Banner ── */}
-        <section className="relative h-[15vh] w-full overflow-hidden bg-stone-900">
+        <section className="relative h-[28vh] w-full overflow-hidden bg-stone-900">
           <Image
             src="/images/hero/hero_sand_dunes.jpg"
             alt="鳥取の砂丘長芋畑"
@@ -121,9 +121,16 @@ export default async function Home() {
           />
           <div className="absolute inset-0 bg-black/40" />
           <div className="relative h-full container mx-auto px-4 md:px-6 flex items-center">
-            <h1 className="text-xl md:text-4xl font-bold text-white leading-tight font-heading drop-shadow whitespace-nowrap">
-              鳥取の畑から、まっすぐ届ける。
-            </h1>
+            <div>
+              <h1 className="text-xl md:text-4xl font-bold text-white leading-tight font-heading drop-shadow">
+                まじめにふざける、おいしい毎日。
+              </h1>
+              <p className="mt-2 text-xs md:text-sm text-white/80 drop-shadow leading-relaxed">
+                鳥取の畑から、あなたへ。<br />
+                私たちは、ただ野菜を作るだけの農家ではありません。<br />
+                「おいしい」のその先にある、みんなの笑顔をつくるために。
+              </p>
+            </div>
           </div>
         </section>
 
