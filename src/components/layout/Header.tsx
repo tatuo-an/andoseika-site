@@ -10,10 +10,10 @@ import { OnlineTracker } from "@/components/layout/OnlineTracker";
 const NAV_ITEMS = [
     { href: "/", label: "TOP" },
     { href: "/products", label: "商品一覧" },
+    { href: "/community", label: "みんなの料理" },
     { href: "/experience", label: "体験・予約" },
     { href: "/supporter", label: "サポーター募集", highlight: true },
     { href: "/business", label: "業務用・卸" },
-    { href: "/community", label: "みんなの料理" },
     { href: "/about", label: "私たちについて" },
 ];
 

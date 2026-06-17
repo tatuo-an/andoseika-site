@@ -3,6 +3,7 @@ import { Footer } from "@/components/layout/Footer";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, ChevronRight, ShoppingBasket, Leaf, Heart, Building2 } from "lucide-react";
+import { CommunityScroller } from "@/components/community/CommunityScroller";
 import { client } from "@/lib/microcms";
 import { Product } from "@/types/microcms";
 import { google } from "googleapis";
@@ -149,6 +150,9 @@ export default async function Home() {
             </div>
           </div>
         </section>
+
+        {/* ── Community Scroller ── */}
+        <CommunityScroller />
 
         {/* ── Featured Products ── */}
         {products.length > 0 && (
