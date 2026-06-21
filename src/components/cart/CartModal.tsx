@@ -126,8 +126,9 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
     const [inventory, setInventory] = useState<InvItem[]>([]);
     const [addressLoaded, setAddressLoaded] = useState(false);
     const [coolRequested, setCoolRequested] = useState(false);
-    // 選択中のファミリーオプション: { "family名:ラベル": true }
     const [selectedOptions, setSelectedOptions] = useState<Set<string>>(new Set());
+    const [tierDiscountRate, setTierDiscountRate] = useState(0);
+    const [tierName, setTierName] = useState("");
 
     useEffect(() => {
         if (!isOpen || addressLoaded) return;
@@ -135,12 +136,20 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
             fetch("/api/address").then(r => r.json()).catch(() => ({ addresses: [] })),
             fetch("/api/shipping").then(r => r.json()).catch(() => ({ shipping: [] })),
             fetch("/api/inventory-public").then(r => r.json()).catch(() => ({ inventory: [] })),
-        ]).then(([addrData, shipData, invData]) => {
+            fetch("/api/my/tier").then(r => r.json()).catch(() => ({ tier: "free" })),
+        ]).then(([addrData, shipData, invData, tierData]) => {
             setAddresses(addrData.addresses ?? []);
             setSelectedAddressIdx(0);
             setShippingRows(shipData.shipping?.length ? shipData.shipping : DEFAULT_SHIPPING);
             setInventory(invData.inventory ?? []);
             setAddressLoaded(true);
+            const TIER_DISCOUNTS: Record<string, { rate: number; name: string }> = {
+                mebuking: { rate: 0.03, name: "芽吹きサポーター" },
+                minori:   { rate: 0.05, name: "実りサポーター" },
+                partner:  { rate: 0.08, name: "農園パートナー" },
+            };
+            const t = TIER_DISCOUNTS[tierData.tier ?? ""];
+            if (t) { setTierDiscountRate(t.rate); setTierName(t.name); }
         });
     }, [isOpen, addressLoaded]);
 
@@ -295,8 +304,14 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
     const optionsAdjustmentTaxed = Math.round(optionsAdjustment * 1.08);
     // セール割引（税込）
     const saleDiscountTaxed = saleDiscountTaxedTotal;
+    const tierDiscountBase = cartItems.reduce((sum, item) => {
+        const pct = (item as { salePercent?: number }).salePercent ?? 0;
+        if (pct > 0) return sum;
+        return sum + itemTaxedUnit(item as { price: number; cost?: number | null }) * item.quantity;
+    }, 0);
+    const tierDiscountAmount = tierDiscountRate > 0 ? Math.floor(tierDiscountBase * tierDiscountRate) : 0;
 
-    const grandTotal = itemsBodyShown + shipFeeShown + profitShown + surchargeTaxed + coolFeeTaxed + optionsAdjustmentTaxed - saleDiscountTaxed;
+    const grandTotal = itemsBodyShown + shipFeeShown + profitShown + surchargeTaxed + coolFeeTaxed + optionsAdjustmentTaxed - saleDiscountTaxed - tierDiscountAmount;
 
     if (!isOpen) return null;
 
@@ -454,6 +469,12 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                                         )}
                                     </div>
 
+                                    {tierDiscountAmount > 0 && (
+                                        <div className="flex justify-between text-emerald-600 font-medium">
+                                            <span>🌿 {tierName}割引（{Math.round(tierDiscountRate * 100)}%OFF）</span>
+                                            <span>−¥{tierDiscountAmount.toLocaleString()}</span>
+                                        </div>
+                                    )}
                                     {saleDiscountTaxed > 0 && (
                                         <div className="flex justify-between text-red-500 font-medium">
                                             <span>セール割引</span>
