@@ -8,9 +8,11 @@ type PlanKey = "mebuking" | "minori" | "partner";
 export function SupporterPlanButton({
     plan,
     popular,
+    soldOut = false,
 }: {
     plan: PlanKey;
     popular: boolean;
+    soldOut?: boolean;
 }) {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -36,6 +38,14 @@ export function SupporterPlanButton({
             setLoading(false);
         }
     };
+
+    if (soldOut) {
+        return (
+            <div className="w-full py-3.5 rounded-full font-bold text-sm text-center bg-stone-100 text-stone-400 cursor-not-allowed">
+                定員に達しました
+            </div>
+        );
+    }
 
     return (
         <div>

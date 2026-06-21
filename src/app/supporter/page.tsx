@@ -17,6 +17,40 @@ import { SupporterPlanButton } from "@/components/supporter/SupporterPlanButton"
 import { HeroSlideshow } from "@/components/supporter/HeroSlideshow";
 import { getSupporterFirstViewVariant } from "@/config/supporter-variants";
 import { Header } from "@/components/layout/Header";
+import { google } from "googleapis";
+
+const PLAN_LIMITS: Record<string, number> = { minori: 10, partner: 5 };
+
+async function getActiveCounts(): Promise<Record<string, number>> {
+    try {
+        const authClient = new google.auth.GoogleAuth({
+            credentials: {
+                client_email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
+                private_key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+            },
+            scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+        });
+        const sheets = google.sheets({ version: "v4", auth: authClient });
+        const res = await sheets.spreadsheets.values.get({
+            spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
+            range: "顧客マスタ!A:F",
+        });
+        const today = new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Tokyo" });
+        const rows = (res.data.values ?? []).slice(1);
+        const counts: Record<string, number> = {};
+        for (const r of rows) {
+            if (r[1] !== "__profile__") continue;
+            const tier = r[4] ?? "";
+            const expiry = r[5] ?? "";
+            if (tier && expiry >= today) {
+                counts[tier] = (counts[tier] ?? 0) + 1;
+            }
+        }
+        return counts;
+    } catch {
+        return {};
+    }
+}
 
 export const metadata = {
     title: "農家サポーター制度「住民票」| &YOU 安藤青果",
@@ -41,6 +75,7 @@ export default async function SupporterPage({
 }) {
     const { fv } = await searchParams;
     const heroVariant = getSupporterFirstViewVariant(fv);
+    const counts = await getActiveCounts();
 
     return (
         <div className="bg-[#FAFAF9]">
@@ -310,6 +345,8 @@ export default async function SupporterPage({
                             loginPt={3}
                             birthdayPt={1500}
                             popular={true}
+                            limit={PLAN_LIMITS.minori}
+                            currentCount={counts.minori ?? 0}
                         />
 
                         {/* ── 農園パートナー ── */}
@@ -322,6 +359,8 @@ export default async function SupporterPage({
                             birthdayPt={3000}
                             popular={false}
                             giftDelivery={true}
+                            limit={PLAN_LIMITS.partner}
+                            currentCount={counts.partner ?? 0}
                         />
                     </div>
 
@@ -562,6 +601,8 @@ function PlanCard({
     birthdayPt,
     popular,
     giftDelivery = false,
+    limit,
+    currentCount = 0,
 }: {
     tier: "mebuking" | "minori" | "partner";
     badge: string;
@@ -571,7 +612,12 @@ function PlanCard({
     birthdayPt: number;
     popular: boolean;
     giftDelivery?: boolean;
+    limit?: number;
+    currentCount?: number;
 }) {
+    const remaining = limit !== undefined ? limit - currentCount : undefined;
+    const isFull = remaining !== undefined && remaining <= 0;
+
     return (
         <div
             className={`relative rounded-2xl overflow-hidden transition-all flex flex-col h-full ${
@@ -588,9 +634,22 @@ function PlanCard({
                 </div>
             )}
             <div className={`bg-white flex-1 ${popular ? "p-8 md:p-10" : "p-6 md:p-8"}`}>
-                <p className={`font-bold mb-4 ${popular ? "text-xl" : "text-lg"}`}>
-                    {badge}
-                </p>
+                <div className="flex items-start justify-between gap-2 mb-4">
+                    <p className={`font-bold ${popular ? "text-xl" : "text-lg"}`}>
+                        {badge}
+                    </p>
+                    {remaining !== undefined && (
+                        <span className={`text-xs font-bold px-2 py-1 rounded-full whitespace-nowrap flex-shrink-0 ${
+                            isFull
+                                ? "bg-stone-100 text-stone-400"
+                                : remaining <= 3
+                                    ? "bg-red-50 text-red-500 border border-red-200"
+                                    : "bg-emerald-50 text-emerald-600 border border-emerald-200"
+                        }`}>
+                            {isFull ? "満員" : `残り${remaining}人`}
+                        </span>
+                    )}
+                </div>
 
                 <div className="mb-6">
                     <span className={`font-bold text-stone-900 ${popular ? "text-5xl" : "text-4xl"}`}>
@@ -638,7 +697,7 @@ function PlanCard({
                     )}
                 </div>
 
-                <SupporterPlanButton plan={tier} popular={popular} />
+                <SupporterPlanButton plan={tier} popular={popular} soldOut={isFull} />
             </div>
         </div>
     );
