@@ -57,20 +57,28 @@ export function AddressForm() {
         setEditing({ ...editing, [e.target.name]: e.target.value });
     };
 
-    const handleBirthday = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (!editing) return;
-        const val = e.target.value; // "2000-MM-DD"
-        if (!val) { setEditing({ ...editing, birthday: "" }); return; }
-        const [, m, d] = val.split("-");
-        setEditing({ ...editing, birthday: `${m}/${d}` });
+    const normalizeBirthday = (raw: string): string => {
+        // 全角→半角
+        let s = raw.replace(/[０-９]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xFEE0));
+        // 「月」「日」「年」を区切り文字に置換
+        s = s.replace(/[月年]/g, "/").replace(/日/g, "").trim();
+        // 区切り文字（/ . - ・ 空白）を統一
+        s = s.replace(/[/.\-・\s]+/g, "/");
+        const parts = s.split("/").filter(Boolean);
+        let m = "", d = "";
+        if (parts.length === 2) {
+            m = parts[0]; d = parts[1];
+        } else if (parts.length === 1 && /^\d{3,4}$/.test(parts[0])) {
+            // 0613 or 613
+            const digits = parts[0].padStart(4, "0");
+            m = digits.slice(0, 2); d = digits.slice(2);
+        } else {
+            return raw;
+        }
+        const mn = parseInt(m, 10), dn = parseInt(d, 10);
+        if (mn < 1 || mn > 12 || dn < 1 || dn > 31) return raw;
+        return `${String(mn).padStart(2, "0")}/${String(dn).padStart(2, "0")}`;
     };
-
-    // "MM/DD" → "2000-MM-DD" for date input value
-    const birthdayInputValue = (() => {
-        if (!editing?.birthday) return "";
-        const match = editing.birthday.match(/^(\d{2})\/(\d{2})$/);
-        return match ? `2000-${match[1]}-${match[2]}` : "";
-    })();
 
     const handlePostalCode = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!editing) return;
@@ -207,8 +215,17 @@ export function AddressForm() {
 
                 <div>
                     <label className="block text-sm font-medium text-stone-700 mb-1">誕生日（任意）</label>
-                    <input type="date" value={birthdayInputValue} onChange={handleBirthday}
-                        className="border border-stone-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                    <input
+                        name="birthday"
+                        value={editing.birthday}
+                        onChange={handleChange}
+                        onBlur={(e) => {
+                            if (!editing || !e.target.value.trim()) return;
+                            setEditing({ ...editing, birthday: normalizeBirthday(e.target.value.trim()) });
+                        }}
+                        placeholder="例: 8/13　6月13日　0613"
+                        className="w-48 border border-stone-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    />
                     <p className="text-xs text-stone-400 mt-1">ご家族やお友達への贈り物用に設定してください。誕生日2週間前にお知らせします</p>
                 </div>
 
