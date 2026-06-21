@@ -95,8 +95,7 @@ export default async function CustomersPage() {
                         <MapPin className="w-3.5 h-3.5 text-stone-300 mt-0.5 shrink-0" />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-0.5">
-                            <span className="text-xs font-medium text-stone-500 bg-stone-100 px-2 py-0.5 rounded-full">{a.label || "—"}</span>
-                            {a.name && <span className="text-xs text-stone-600">{a.name}</span>}
+                            {a.name && <span className="text-xs font-medium text-stone-700">{a.name}</span>}
                             {a.phone && <span className="text-xs text-stone-400">{a.phone}</span>}
                           </div>
                           <p className="text-sm text-stone-700">
