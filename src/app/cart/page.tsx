@@ -127,6 +127,8 @@ export default function CartPage() {
     const [skipMode, setSkipMode] = useState(false);
     const [pointsBalance, setPointsBalance] = useState(0);
     const [pointsToUse, setPointsToUse] = useState(0);
+    const [tierDiscountRate, setTierDiscountRate] = useState(0);
+    const [tierName, setTierName] = useState("");
 
     useEffect(() => {
         fetch("/api/admin/settings")
@@ -136,6 +138,17 @@ export default function CartPage() {
         fetch("/api/my/points")
             .then((r) => r.json())
             .then((d) => { if (d.balance !== undefined) setPointsBalance(d.balance); })
+            .catch(() => {});
+        fetch("/api/my/tier")
+            .then((r) => r.json())
+            .then((d) => {
+                const RATES: Record<string, number> = { mebuking: 0.03, minori: 0.05, partner: 0.08 };
+                const NAMES: Record<string, string> = { mebuking: "芽吹きサポーター", minori: "実りサポーター", partner: "農園パートナー" };
+                if (d.tier && d.tier !== "free") {
+                    setTierDiscountRate(RATES[d.tier] ?? 0);
+                    setTierName(NAMES[d.tier] ?? "");
+                }
+            })
             .catch(() => {});
     }, []);
 
@@ -277,8 +290,10 @@ export default function CartPage() {
     const coolFeeTaxed = Math.round(coolFee * 1.10);
     const optionsAdjustmentTaxed = Math.round(optionsAdjustment * 1.08);
     const saleDiscountTaxed = saleDiscountTaxedTotal;
+    // サポーター割引は通常商品代のみ（送料・セール・体験除く）
+    const tierDiscountAmount = tierDiscountRate > 0 ? Math.floor(itemsBodyShown * tierDiscountRate) : 0;
 
-    const grandTotalBeforePoints = itemsBodyShown + shipFeeShown + profitShown + surchargeTaxed + coolFeeTaxed + optionsAdjustmentTaxed - saleDiscountTaxed;
+    const grandTotalBeforePoints = itemsBodyShown + shipFeeShown + profitShown + surchargeTaxed + coolFeeTaxed + optionsAdjustmentTaxed - saleDiscountTaxed - tierDiscountAmount;
     const maxPointsUsable = Math.min(pointsBalance, Math.max(0, grandTotalBeforePoints - 1));
     const grandTotal = grandTotalBeforePoints - pointsToUse;
 
@@ -356,6 +371,7 @@ export default function CartPage() {
                     shipMode: cartShipMode,
                     shipValue: cartShipValue,
                     pointsUsed: pointsToUse,
+                    tierDiscount: tierDiscountAmount,
                     quote: {
                         matchedVariantId: matchedVariant?.id ?? null,
                         matchedVariantName: matchedVariant?.name ?? null,
@@ -644,6 +660,7 @@ export default function CartPage() {
                             {shipFeeShown > 0 && <div className="flex justify-between text-stone-600"><span>送料({shipTypeLabel(effectiveShipType)})</span><span>¥{shipFeeShown.toLocaleString()}</span></div>}
                             {profitShown > 0 && <div className="flex justify-between text-stone-600"><span>サービス料</span><span>¥{profitShown.toLocaleString()}</span></div>}
                         </div>
+                        {tierDiscountAmount > 0 && <div className="flex justify-between text-emerald-600 font-medium"><span>🌿 {tierName}割引（{Math.round(tierDiscountRate * 100)}%OFF）</span><span>−¥{tierDiscountAmount.toLocaleString()}</span></div>}
                         {saleDiscountTaxed > 0 && <div className="flex justify-between text-red-500 font-medium"><span>セール割引</span><span>−¥{saleDiscountTaxed.toLocaleString()}</span></div>}
                         {pointsToUse > 0 && <div className="flex justify-between text-yellow-600 font-medium"><span>⭐ ポイント割引</span><span>−¥{pointsToUse.toLocaleString()}</span></div>}
                         {optionsAdjustmentTaxed !== 0 && <div className={`flex justify-between ${optionsAdjustmentTaxed < 0 ? "text-emerald-600" : "text-orange-600"} font-medium`}><span>オプション調整</span><span>{optionsAdjustmentTaxed > 0 ? "+" : "−"}¥{Math.abs(optionsAdjustmentTaxed).toLocaleString()}</span></div>}

@@ -10,6 +10,8 @@ import { google } from "googleapis";
 import { BADGE_COLORS, DEFAULT_BADGE_COLOR } from "@/lib/badges";
 import { FavoriteButton } from "@/components/products/FavoriteButton";
 import { isSaleActive, calcSalePrice } from "@/lib/sale";
+import { auth } from "@/auth";
+import { getTier } from "@/lib/tiers";
 
 export const metadata: Metadata = {
   title: "商品一覧",
@@ -21,7 +23,7 @@ export const revalidate = 60;
 type InventoryData = {
   stock: number; variantName: string; hidden: boolean;
   nextShipment: string; badges: string[]; family: string; price: number | null; imageUrl: string; cost: number | null; description: string; familyImages: string[];
-  salePercent: number; saleStart: string; saleEnd: string; category: string;
+  salePercent: number; saleStart: string; saleEnd: string; category: string; limitedOnly: boolean;
 };
 
 /** 販売価格を税込みに変換: 本体(原価)8%, 送料+サービス料(残り)10% */
@@ -44,7 +46,7 @@ async function getInventoryMap(): Promise<InventoryResult> {
     const sheets = google.sheets({ version: "v4", auth: authClient });
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-      range: "商品在庫!A:Y",
+      range: "商品在庫!A:Z",
     });
     const rows = res.data.values ?? [];
     const map: Record<string, InventoryData> = {};
@@ -68,6 +70,7 @@ async function getInventoryMap(): Promise<InventoryResult> {
           saleStart: r[19] ?? "",
           saleEnd: r[20] ?? "",
           category: r[24] ?? "",
+          limitedOnly: r[25] === "1",
         };
       }
     });
@@ -90,9 +93,38 @@ async function getProducts(): Promise<Product[]> {
 // 表示用カード（単品 or ファミリー代表）
 type CardItem =
   | { type: "single"; product: Product; inv: InventoryData }
-  | { type: "family"; familyName: string; repProduct: Product | null; repInv: InventoryData; repId: string; minPrice: number; allSoldOut: boolean; category: string };
+  | { type: "family"; familyName: string; repProduct: Product | null; repInv: InventoryData; repId: string; minPrice: number; allSoldOut: boolean; category: string; limitedOnly: boolean };
 
 export default async function ProductsPage() {
+  const session = await auth();
+  const userEmail = session?.user?.email ?? null;
+
+  // Fetch tier for logged-in users
+  let userTier = "free";
+  if (userEmail) {
+    try {
+      const authClient = new google.auth.GoogleAuth({
+        credentials: {
+          client_email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
+          private_key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+        },
+        scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+      });
+      const sheets = google.sheets({ version: "v4", auth: authClient });
+      const res = await sheets.spreadsheets.values.get({
+        spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
+        range: "顧客マスタ!A:F",
+      });
+      const rows = res.data.values ?? [];
+      const row = rows.find((r) => r[0] === userEmail && r[1] === "__profile__");
+      const tier = row?.[4] ?? "";
+      const tierExpiry = row?.[5] ?? "";
+      const today = new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Tokyo" });
+      userTier = (tier && tierExpiry && tierExpiry >= today) ? getTier(tier) : "free";
+    } catch { /* ignore */ }
+  }
+  const isSupporter = userTier !== "free";
+
   const [products, { map: inventoryMap, order: inventoryOrder }] = await Promise.all([getProducts(), getInventoryMap()]);
 
   const productMap = Object.fromEntries(products.map((p) => [p.id, p]));
@@ -130,6 +162,7 @@ export default async function ProductsPage() {
       // 代表productを探す（先頭で持っているもの、いなければファミリー内で最初に見つかるもの）
       const repProduct: Product | null = rep?.product ?? familyInvs.find(x => x.product)?.product ?? null;
 
+      const familyLimited = familyInvs.some(x => x.inv.limitedOnly);
       cards.push({
         type: "family",
         familyName: inv.family,
@@ -139,6 +172,7 @@ export default async function ProductsPage() {
         minPrice,
         allSoldOut,
         category: inv.category || repProduct?.category || "other",
+        limitedOnly: familyLimited,
       });
     } else {
       if (!product) continue;
@@ -155,6 +189,9 @@ export default async function ProductsPage() {
   const otherCards = cards.filter(c => !["root", "leaf", "allium", "fruit", "honey"].includes(getCategory(c)));
 
   const renderCard = (card: CardItem) => {
+    const isLimited = card.type === "single" ? card.inv.limitedOnly : card.limitedOnly;
+    const isLocked = isLimited && !isSupporter;
+
     if (card.type === "single") {
       const { product, inv } = card;
       const isSoldOut = inv.stock !== -1 && inv.stock === 0;
@@ -163,16 +200,23 @@ export default async function ProductsPage() {
       const onSale = isSaleActive(inv.salePercent, inv.saleStart, inv.saleEnd);
       const originalTaxed = toTaxIncluded(inv.price ?? product.price, inv.cost);
       const displayTaxed = onSale ? calcSalePrice(originalTaxed, inv.salePercent) : originalTaxed;
+      const href = isLocked ? "/supporter#plans" : `/products/${product.id}`;
       return (
-        <Link href={`/products/${product.id}`} key={product.id} className={`group ${isSoldOut ? "pointer-events-none" : ""}`}>
-          <div className={`bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 ${isSoldOut ? "opacity-70" : ""}`}>
+        <Link href={href} key={product.id} className={`group ${isSoldOut && !isLocked ? "pointer-events-none" : ""}`}>
+          <div className={`bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 ${isSoldOut && !isLocked ? "opacity-70" : ""}`}>
             <div className="relative aspect-square bg-stone-100 overflow-hidden">
               {imgSrc ? (
-                <Image src={imgSrc} alt={displayName} fill className="object-contain group-hover:scale-105 transition-transform duration-500" />
+                <Image src={imgSrc} alt={displayName} fill className={`object-contain group-hover:scale-105 transition-transform duration-500 ${isLocked ? "blur-sm" : ""}`} />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-stone-400">No Image</div>
               )}
-              {isSoldOut && (
+              {isLocked && (
+                <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center gap-2">
+                  <span className="text-2xl">🔒</span>
+                  <span className="bg-white text-stone-900 text-xs font-bold px-3 py-1.5 rounded-full">サポーター限定</span>
+                </div>
+              )}
+              {!isLocked && isSoldOut && (
                 <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center gap-2">
                   <span className="bg-white text-stone-900 text-sm font-bold px-4 py-2 rounded-full">売り切れ</span>
                   {inv.nextShipment && (
@@ -180,20 +224,25 @@ export default async function ProductsPage() {
                   )}
                 </div>
               )}
-              {!isSoldOut && product.isRecommended && (
+              {!isSoldOut && !isLocked && product.isRecommended && (
                 <span className="absolute top-4 right-4 bg-primary text-white text-xs font-bold px-3 py-1 rounded-full shadow-md">おすすめ</span>
               )}
-              {onSale && (
+              {onSale && !isLocked && (
                 <span className="absolute top-3 right-3 bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-md z-10">
                   {inv.salePercent}% OFF
                 </span>
               )}
-              <div className="absolute top-3 left-3 pointer-events-auto z-20">
-                <FavoriteButton productId={product.id} size="sm" />
-              </div>
+              {isLimited && (
+                <span className="absolute top-3 right-3 bg-emerald-600 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-md z-10">限定</span>
+              )}
+              {!isLocked && (
+                <div className="absolute top-3 left-3 pointer-events-auto z-20">
+                  <FavoriteButton productId={product.id} size="sm" />
+                </div>
+              )}
             </div>
             <div className="p-4 space-y-2">
-              {inv.badges.length > 0 && (
+              {inv.badges.length > 0 && !isLocked && (
                 <div className="flex flex-wrap gap-1.5">
                   {inv.badges.map((badge) => (
                     <span key={badge} className={`text-sm px-2.5 py-1 rounded-full border font-medium ${BADGE_COLORS[badge] ?? DEFAULT_BADGE_COLOR}`}>{badge}</span>
@@ -202,10 +251,14 @@ export default async function ProductsPage() {
               )}
               <h2 className="font-bold text-stone-900 text-xl line-clamp-2 group-hover:text-primary transition-colors">{displayName}</h2>
               <div className="flex justify-end items-baseline gap-2">
-                {onSale && (
+                {!isLocked && onSale && (
                   <span className="text-base text-stone-400 line-through">¥{originalTaxed.toLocaleString()}</span>
                 )}
-                <span className={`font-bold text-2xl ${onSale ? "text-red-500" : "text-stone-900"}`}>¥{displayTaxed.toLocaleString()}</span>
+                {isLocked ? (
+                  <span className="text-sm text-emerald-700 font-bold">サポーターになって購入 →</span>
+                ) : (
+                  <span className={`font-bold text-2xl ${onSale ? "text-red-500" : "text-stone-900"}`}>¥{displayTaxed.toLocaleString()}</span>
+                )}
               </div>
             </div>
           </div>
@@ -215,16 +268,23 @@ export default async function ProductsPage() {
       const { familyName, repProduct, repInv, repId, minPrice, allSoldOut } = card;
       const familyImgSrc = repInv.familyImages[0] || repInv.imageUrl || repProduct?.image?.url;
       const familyOnSale = isSaleActive(repInv.salePercent, repInv.saleStart, repInv.saleEnd);
+      const href = isLocked ? "/supporter#plans" : `/products/${repId}`;
       return (
-        <Link href={`/products/${repId}`} key={`family-${familyName}`} className={`group ${allSoldOut ? "pointer-events-none" : ""}`}>
-          <div className={`bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 ${allSoldOut ? "opacity-70" : ""}`}>
+        <Link href={href} key={`family-${familyName}`} className={`group ${allSoldOut && !isLocked ? "pointer-events-none" : ""}`}>
+          <div className={`bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 ${allSoldOut && !isLocked ? "opacity-70" : ""}`}>
             <div className="relative aspect-square bg-stone-100 overflow-hidden">
               {familyImgSrc ? (
-                <Image src={familyImgSrc} alt={familyName} fill className="object-contain group-hover:scale-105 transition-transform duration-500" />
+                <Image src={familyImgSrc} alt={familyName} fill className={`object-contain group-hover:scale-105 transition-transform duration-500 ${isLocked ? "blur-sm" : ""}`} />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-stone-400">No Image</div>
               )}
-              {allSoldOut && (
+              {isLocked && (
+                <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center gap-2">
+                  <span className="text-2xl">🔒</span>
+                  <span className="bg-white text-stone-900 text-xs font-bold px-3 py-1.5 rounded-full">サポーター限定</span>
+                </div>
+              )}
+              {!isLocked && allSoldOut && (
                 <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center gap-2">
                   <span className="bg-white text-stone-900 text-sm font-bold px-4 py-2 rounded-full">売り切れ</span>
                   {repInv.nextShipment && (
@@ -232,20 +292,25 @@ export default async function ProductsPage() {
                   )}
                 </div>
               )}
-              {!allSoldOut && repProduct?.isRecommended && (
+              {!allSoldOut && !isLocked && repProduct?.isRecommended && (
                 <span className="absolute top-4 right-4 bg-primary text-white text-xs font-bold px-3 py-1 rounded-full shadow-md">おすすめ</span>
               )}
-              {familyOnSale && (
+              {familyOnSale && !isLocked && (
                 <span className="absolute top-3 right-3 bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-md z-10">
                   {repInv.salePercent}% OFF
                 </span>
               )}
-              <div className="absolute top-3 left-3 pointer-events-auto z-20">
-                <FavoriteButton productId={`family:${familyName}`} size="sm" />
-              </div>
+              {isLimited && (
+                <span className="absolute top-3 right-3 bg-emerald-600 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-md z-10">限定</span>
+              )}
+              {!isLocked && (
+                <div className="absolute top-3 left-3 pointer-events-auto z-20">
+                  <FavoriteButton productId={`family:${familyName}`} size="sm" />
+                </div>
+              )}
             </div>
             <div className="p-4 space-y-2">
-              {repInv.badges.length > 0 && (
+              {repInv.badges.length > 0 && !isLocked && (
                 <div className="flex flex-wrap gap-1.5">
                   {repInv.badges.map((badge) => (
                     <span key={badge} className={`text-sm px-2.5 py-1 rounded-full border font-medium ${BADGE_COLORS[badge] ?? DEFAULT_BADGE_COLOR}`}>{badge}</span>
@@ -254,7 +319,11 @@ export default async function ProductsPage() {
               )}
               <h2 className="font-bold text-stone-900 text-xl line-clamp-2 group-hover:text-primary transition-colors">{familyName}</h2>
               <div className="flex justify-end">
-                <span className="font-bold text-2xl text-stone-900">¥{minPrice.toLocaleString()}〜</span>
+                {isLocked ? (
+                  <span className="text-sm text-emerald-700 font-bold">サポーターになって購入 →</span>
+                ) : (
+                  <span className="font-bold text-2xl text-stone-900">¥{minPrice.toLocaleString()}〜</span>
+                )}
               </div>
             </div>
           </div>

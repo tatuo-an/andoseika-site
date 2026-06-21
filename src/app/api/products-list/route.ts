@@ -29,7 +29,7 @@ export async function GET() {
         const sheets = getSheets();
         const res = await sheets.spreadsheets.values.get({
             spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-            range: "商品在庫!A:U",
+            range: "商品在庫!A:Z",
         });
         const rows = res.data.values ?? [];
         const inventory = rows.slice(1).filter(r => r[0]).map(r => ({
@@ -45,6 +45,7 @@ export async function GET() {
             salePercent: r[18] !== undefined && r[18] !== "" ? parseInt(r[18], 10) : 0,
             saleStart: r[19] ?? "",
             saleEnd: r[20] ?? "",
+            limitedOnly: r[25] === "1",
         }));
 
         // MicroCMS取得
@@ -59,7 +60,7 @@ export async function GET() {
         type Card = {
             id: string; href: string; name: string; image: string;
             displayPrice: number; salePercent: number; isSoldOut: boolean;
-            family: string;
+            family: string; limitedOnly: boolean;
         };
         const cards: Card[] = [];
         const seenFamilies = new Set<string>();
@@ -81,6 +82,7 @@ export async function GET() {
                 const rep = familyInvs.find(x => !(x.stock !== -1 && x.stock === 0)) ?? familyInvs[0];
                 const allSoldOut = familyInvs.every(x => x.stock !== -1 && x.stock === 0);
                 const repOnSale = isSaleActive(rep.salePercent, rep.saleStart, rep.saleEnd);
+                const familyLimited = familyInvs.some(x => x.limitedOnly);
                 cards.push({
                     id: `family:${inv.family}`,
                     href: `/products/${rep.id}`,
@@ -90,6 +92,7 @@ export async function GET() {
                     salePercent: repOnSale ? rep.salePercent : 0,
                     isSoldOut: allSoldOut,
                     family: inv.family,
+                    limitedOnly: familyLimited,
                 });
             } else {
                 if (!product) continue;
@@ -106,6 +109,7 @@ export async function GET() {
                     salePercent: active ? inv.salePercent : 0,
                     isSoldOut: inv.stock !== -1 && inv.stock === 0,
                     family: "",
+                    limitedOnly: inv.limitedOnly,
                 });
             }
         }

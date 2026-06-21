@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { google } from "googleapis";
+import { getTier } from "@/lib/tiers";
 
 export const dynamic = "force-dynamic";
 
@@ -169,6 +170,49 @@ export async function POST(req: NextRequest) {
       }
     } catch (err) {
       console.error("[webhook] failed to write to sheet", err);
+    }
+
+    // サポーター決済の場合: tier を顧客マスタに書き込む
+    if (meta.source === "ando-seika-supporter") {
+      const tierKey = getTier(meta.plan ?? piMeta.plan);
+      const userEmail = meta.userEmail ?? piMeta.userEmail ?? session.customer_details?.email ?? "";
+      if (userEmail && tierKey !== "free") {
+        try {
+          const sheets = await getSheets();
+          const SHEET = "顧客マスタ";
+          const res = await sheets.spreadsheets.values.get({
+            spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID,
+            range: `${SHEET}!A:F`,
+          });
+          const rows = res.data.values ?? [];
+          const rowIndex = rows.findIndex((r) => r[0] === userEmail && r[1] === "__profile__");
+
+          // Expiry = 1 year from now (JST)
+          const expDate = new Date();
+          expDate.setFullYear(expDate.getFullYear() + 1);
+          const tierExpiry = expDate.toLocaleDateString("sv-SE", { timeZone: "Asia/Tokyo" });
+
+          if (rowIndex === -1) {
+            await sheets.spreadsheets.values.append({
+              spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID,
+              range: `${SHEET}!A:F`,
+              valueInputOption: "RAW",
+              requestBody: { values: [[userEmail, "__profile__", "", "", tierKey, tierExpiry]] },
+            });
+          } else {
+            const existing = rows[rowIndex];
+            await sheets.spreadsheets.values.update({
+              spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID,
+              range: `${SHEET}!A${rowIndex + 1}:F${rowIndex + 1}`,
+              valueInputOption: "RAW",
+              requestBody: { values: [[userEmail, "__profile__", existing[2] ?? "", existing[3] ?? "", tierKey, tierExpiry]] },
+            });
+          }
+          console.log("[webhook] tier updated:", userEmail, tierKey, tierExpiry);
+        } catch (err) {
+          console.error("[webhook] failed to update tier", err);
+        }
+      }
     }
   }
 

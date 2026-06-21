@@ -6,12 +6,15 @@ import { Footer } from "@/components/layout/Footer";
 import { google } from "googleapis";
 import Link from "next/link";
 import { ArrowLeft, User, MapPin } from "lucide-react";
+import { CopyButton } from "@/components/admin/CopyButton";
 
 export const dynamic = "force-dynamic";
 
 type Customer = {
   email: string;
   displayName: string;
+  tier: string;
+  tierExpiry: string;
   addresses: { label: string; name: string; postalCode: string; prefecture: string; city: string; street: string; building: string; phone: string; relation: string }[];
 };
 
@@ -33,11 +36,13 @@ async function getCustomers(): Promise<Customer[]> {
   const map = new Map<string, Customer>();
   for (const r of rows) {
     const email = r[0] as string;
-    if (!map.has(email)) map.set(email, { email, displayName: "", addresses: [] });
+    if (!map.has(email)) map.set(email, { email, displayName: "", tier: "", tierExpiry: "", addresses: [] });
     const customer = map.get(email)!;
 
     if (r[1] === "__profile__") {
       customer.displayName = r[2] ?? "";
+      customer.tier = r[4] ?? "";
+      customer.tierExpiry = r[5] ?? "";
     } else {
       const c = r[2] ?? "";
       const isLegacy = /^\d{3}-?\d{4}$/.test(c);
@@ -56,6 +61,7 @@ export default async function CustomersPage() {
   if (!session?.user || !isAdmin(session.user.email)) redirect("/");
 
   const customers = await getCustomers();
+  const today = new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Tokyo" });
 
   return (
     <div className="min-h-screen flex flex-col bg-stone-50">
@@ -79,8 +85,21 @@ export default async function CustomersPage() {
                     <User className="w-4 h-4 text-primary" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-bold text-stone-900">{c.displayName || <span className="text-stone-400 font-normal">（未設定）</span>}</p>
-                    <p className="text-xs text-stone-400 truncate">{c.email}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-bold text-stone-900">{c.displayName || <span className="text-stone-400 font-normal">（未設定）</span>}</p>
+                      {c.tier && c.tierExpiry && c.tierExpiry >= today && (
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
+                          c.tier === "partner" ? "bg-amber-100 text-amber-700 border border-amber-300" :
+                          c.tier === "minori" ? "bg-purple-100 text-purple-700 border border-purple-300" :
+                          "bg-emerald-100 text-emerald-700 border border-emerald-300"
+                        }`}>
+                          {c.tier === "partner" ? "農園パートナー" : c.tier === "minori" ? "実りサポーター" : "芽吹きサポーター"}
+                        </span>
+                      )}
+                    </div>
+                    <div className="group flex items-center gap-1">
+                      <CopyButton text={c.email} />
+                    </div>
                   </div>
                   <span className="text-xs text-stone-400 shrink-0">{c.addresses.length}件の住所</span>
                 </div>
@@ -99,6 +118,11 @@ export default async function CustomersPage() {
                             {a.relation === "自分" && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 border border-blue-300">本人</span>}
                             {a.relation === "家族" && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-green-100 text-green-700 border border-green-300">家族</span>}
                             {a.relation === "友達" && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-orange-100 text-orange-700 border border-orange-300">友達</span>}
+                            {a.label && (
+                              <div className="group">
+                                <CopyButton text={a.label} className="bg-stone-100 px-1.5 py-0.5 rounded text-[10px]" />
+                              </div>
+                            )}
                             {a.phone && <span className="text-xs text-stone-400">{a.phone}</span>}
                           </div>
                           <p className="text-sm text-stone-700">

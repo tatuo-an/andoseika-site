@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import { google } from "googleapis";
 import { auth } from "@/auth";
+import { getTier, TIERS } from "@/lib/tiers";
 
 export const dynamic = "force-dynamic";
 
 const POINTS_SHEET = "ポイント履歴";
 const PROFILE_SHEET = "顧客マスタ";
-const BIRTHDAY_POINTS = 500;
 
 function getSheets() {
   const a = new google.auth.GoogleAuth({
@@ -33,6 +33,10 @@ function todayMMDD(): string {
   return `${m}/${day}`;
 }
 
+function todayJST(): string {
+  return new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Tokyo" });
+}
+
 function thisYear(): string {
   return new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Tokyo" }).slice(0, 4);
 }
@@ -46,16 +50,24 @@ export async function POST() {
   const id = process.env.GOOGLE_SPREADSHEET_ID!;
 
   try {
-    // Get profile birthday from 顧客マスタ __profile__ row (column D)
-    const profileRes = await sheets.spreadsheets.values.get({ spreadsheetId: id, range: `${PROFILE_SHEET}!A:D` });
+    // Get profile: birthday (D) and tier (E, F)
+    const profileRes = await sheets.spreadsheets.values.get({ spreadsheetId: id, range: `${PROFILE_SHEET}!A:F` });
     const profileRows = profileRes.data.values ?? [];
     const profileRow = profileRows.find((r) => r[0] === email && r[1] === "__profile__");
     const birthday = profileRow?.[3] ?? "";
+    const tier = profileRow?.[4] ?? "";
+    const tierExpiry = profileRow?.[5] ?? "";
 
     if (!birthday) return NextResponse.json({ earned: false, reason: "no_birthday" });
 
     const today = todayMMDD();
     if (birthday !== today) return NextResponse.json({ earned: false, reason: "not_today" });
+
+    const todayStr = todayJST();
+    const activeTier = (tier && tierExpiry && tierExpiry >= todayStr) ? getTier(tier) : "free";
+    const birthdayPt = TIERS[activeTier].birthdayPt;
+
+    if (birthdayPt === 0) return NextResponse.json({ earned: false, reason: "no_birthday_bonus_for_tier" });
 
     // Check if already earned this year
     const pointsRes = await sheets.spreadsheets.values.get({ spreadsheetId: id, range: `${POINTS_SHEET}!A:E` });
@@ -70,10 +82,10 @@ export async function POST() {
       spreadsheetId: id,
       range: `${POINTS_SHEET}!A:E`,
       valueInputOption: "RAW",
-      requestBody: { values: [[email, nowJST(), "birthday", BIRTHDAY_POINTS, `誕生日ボーナス ${year}`]] },
+      requestBody: { values: [[email, nowJST(), "birthday", birthdayPt, `誕生日ボーナス ${year}`]] },
     });
 
-    return NextResponse.json({ earned: true, points: BIRTHDAY_POINTS });
+    return NextResponse.json({ earned: true, points: birthdayPt });
   } catch {
     return NextResponse.json({ earned: false });
   }

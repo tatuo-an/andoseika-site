@@ -288,13 +288,14 @@ export default async function SupporterPage({
 
                     {/* Desktop: 3 columns, center one larger */}
                     <div className="grid md:grid-cols-[1fr_1.3fr_1fr] gap-6 md:gap-5 items-stretch">
-                        {/* ── ライト（梅） ── */}
+                        {/* ── 芽吹きサポーター ── */}
                         <PlanCard
-                            tier="light"
-                            badge="🌱 ライト"
-                            rank="梅"
+                            tier="mebuking"
+                            badge="🌱 芽吹きサポーター"
                             price={3000}
-                            discount="5%"
+                            discount="3%"
+                            loginPt={2}
+                            birthdayPt={500}
                             spring="干し芋＋はちみつスティック"
                             springMethod="クリックポスト"
                             fall="甘酢らっきょう 180g"
@@ -302,13 +303,14 @@ export default async function SupporterPage({
                             popular={false}
                         />
 
-                        {/* ── スタンダード（竹）── */}
+                        {/* ── 実りサポーター ── */}
                         <PlanCard
-                            tier="standard"
-                            badge="🎋 スタンダード"
-                            rank="竹"
+                            tier="minori"
+                            badge="🌾 実りサポーター"
                             price={5000}
-                            discount="10%"
+                            discount="5%"
+                            loginPt={3}
+                            birthdayPt={1500}
                             spring="干し芋＋はちみつスティック"
                             springMethod="クリックポスト"
                             fall="甘酢らっきょう 180g ＋ 訳あり梨 2個"
@@ -316,19 +318,20 @@ export default async function SupporterPage({
                             popular={true}
                         />
 
-                        {/* ── プレミアム（松） ── */}
+                        {/* ── 農園パートナー ── */}
                         <PlanCard
-                            tier="premium"
-                            badge="👑 プレミアム"
-                            rank="松"
+                            tier="partner"
+                            badge="👑 農園パートナー"
                             price={10000}
-                            discount="15%"
+                            discount="8%"
+                            loginPt={5}
+                            birthdayPt={3000}
                             spring="干し芋＋はちみつスティック"
                             springMethod="クリックポスト"
                             fall="甘酢らっきょう 180g ＋ 梨 3kg箱"
                             fallMethod="宅急便"
                             popular={false}
-                            extra="優先予約権付き"
+                            extra="限定商品アクセス＋誕生日3,000pt"
                         />
                     </div>
 
@@ -527,9 +530,10 @@ export default async function SupporterPage({
 function PlanCard({
     tier,
     badge,
-    rank,
     price,
     discount,
+    loginPt,
+    birthdayPt,
     spring,
     springMethod,
     fall,
@@ -537,11 +541,12 @@ function PlanCard({
     popular,
     extra,
 }: {
-    tier: "light" | "standard" | "premium";
+    tier: "mebuking" | "minori" | "partner";
     badge: string;
-    rank: string;
     price: number;
     discount: string;
+    loginPt: number;
+    birthdayPt: number;
     spring: string;
     springMethod: string;
     fall: string;
@@ -565,10 +570,9 @@ function PlanCard({
                 </div>
             )}
             <div className={`bg-white flex-1 ${popular ? "p-8 md:p-10" : "p-6 md:p-8"}`}>
-                <p className={`font-bold mb-1 ${popular ? "text-xl" : "text-lg"}`}>
+                <p className={`font-bold mb-4 ${popular ? "text-xl" : "text-lg"}`}>
                     {badge}
                 </p>
-                <p className="text-xs text-stone-400 mb-4">（{rank}）</p>
 
                 <div className="mb-6">
                     <span
@@ -597,6 +601,20 @@ function PlanCard({
                             </strong>
                         </span>
                     </div>
+                    <div className="flex items-start gap-2">
+                        <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                        <span className="text-stone-700 text-sm">
+                            ログインボーナス <strong className="text-primary">{loginPt}pt</strong>/日
+                        </span>
+                    </div>
+                    {birthdayPt > 0 && (
+                        <div className="flex items-start gap-2">
+                            <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                            <span className="text-stone-700 text-sm">
+                                誕生日ボーナス <strong className="text-primary">{birthdayPt.toLocaleString()}pt</strong>
+                            </span>
+                        </div>
+                    )}
                     <div className="flex items-start gap-2">
                         <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
                         <span className="text-stone-700 text-sm">

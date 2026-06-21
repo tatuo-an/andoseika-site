@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 
-type PlanKey = "light" | "standard" | "premium";
+type PlanKey = "mebuking" | "minori" | "partner";
 
 export function SupporterPlanButton({
     plan,

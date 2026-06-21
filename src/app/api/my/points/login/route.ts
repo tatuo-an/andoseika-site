@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import { google } from "googleapis";
 import { auth } from "@/auth";
+import { getTier, TIERS } from "@/lib/tiers";
 
 export const dynamic = "force-dynamic";
 
-const SHEET = "ポイント履歴";
-const LOGIN_POINTS = 10;
+const POINTS_SHEET = "ポイント履歴";
+const PROFILE_SHEET = "顧客マスタ";
 
 function getSheets() {
   const a = new google.auth.GoogleAuth({
@@ -19,7 +20,7 @@ function getSheets() {
 }
 
 function todayJST(): string {
-  return new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Tokyo" }); // "2025-06-21"
+  return new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Tokyo" });
 }
 
 function nowJST(): string {
@@ -38,10 +39,19 @@ export async function POST() {
   const id = process.env.GOOGLE_SPREADSHEET_ID!;
 
   try {
-    const res = await sheets.spreadsheets.values.get({ spreadsheetId: id, range: `${SHEET}!A:E` });
-    const rows = res.data.values ?? [];
+    // Fetch tier
+    const profileRes = await sheets.spreadsheets.values.get({ spreadsheetId: id, range: `${PROFILE_SHEET}!A:F` });
+    const profileRows = profileRes.data.values ?? [];
+    const profileRow = profileRows.find((r) => r[0] === email && r[1] === "__profile__");
+    const tier = profileRow?.[4] ?? "";
+    const tierExpiry = profileRow?.[5] ?? "";
     const today = todayJST();
+    const activeTier = (tier && tierExpiry && tierExpiry >= today) ? getTier(tier) : "free";
+    const loginPt = TIERS[activeTier].loginPt;
 
+    // Check if already earned today
+    const res = await sheets.spreadsheets.values.get({ spreadsheetId: id, range: `${POINTS_SHEET}!A:E` });
+    const rows = res.data.values ?? [];
     const alreadyToday = rows.some(
       (r) => r[0] === email && r[2] === "login" && (r[1] ?? "").startsWith(today)
     );
@@ -49,12 +59,12 @@ export async function POST() {
 
     await sheets.spreadsheets.values.append({
       spreadsheetId: id,
-      range: `${SHEET}!A:E`,
+      range: `${POINTS_SHEET}!A:E`,
       valueInputOption: "RAW",
-      requestBody: { values: [[email, nowJST(), "login", LOGIN_POINTS, "ログインボーナス"]] },
+      requestBody: { values: [[email, nowJST(), "login", loginPt, "ログインボーナス"]] },
     });
 
-    return NextResponse.json({ earned: true, points: LOGIN_POINTS });
+    return NextResponse.json({ earned: true, points: loginPt });
   } catch {
     return NextResponse.json({ earned: false });
   }

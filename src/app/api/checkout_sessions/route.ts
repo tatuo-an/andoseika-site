@@ -29,8 +29,9 @@ export async function POST(req: NextRequest) {
         }
 
         const body = await req.json();
-        const { cartDetails, quote, shippingAddress, desiredDeliveryDate, desiredDeliveryTime, shipMode, shipValue, pointsUsed } = body as {
+        const { cartDetails, quote, shippingAddress, desiredDeliveryDate, desiredDeliveryTime, shipMode, shipValue, pointsUsed, tierDiscount } = body as {
             pointsUsed?: number;
+            tierDiscount?: number;
             cartDetails?: Record<string, CartItem & { cost?: number | null }>;
             shipMode?: string;
             shipValue?: string;
@@ -152,6 +153,12 @@ export async function POST(req: NextRequest) {
                     quantity: item.quantity,
                 });
             }
+        }
+
+        // サポーター割引（商品本体行 = 最初の行から差し引く）
+        if (tierDiscount && tierDiscount > 0 && line_items[0]) {
+            const deduct = Math.min(tierDiscount, Math.max(0, line_items[0].price_data.unit_amount - 1));
+            line_items[0].price_data.unit_amount -= deduct;
         }
 
         // ポイント割引（全ラインアイテム合計から差し引く）
