@@ -286,8 +286,10 @@ export default async function SupporterPage({
                         </p>
                     </div>
 
-                    {/* Desktop: 3 columns, center one larger */}
-                    <div className="grid md:grid-cols-[1fr_1.3fr_1fr] gap-6 md:gap-5 items-stretch">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 md:gap-5 items-stretch">
+                        {/* ── 一般会員 ── */}
+                        <FreePlanCard />
+
                         {/* ── 芽吹きサポーター ── */}
                         <PlanCard
                             tier="mebuking"
@@ -319,7 +321,6 @@ export default async function SupporterPage({
                             loginPt={5}
                             birthdayPt={3000}
                             popular={false}
-                            extra="限定商品アクセス＋誕生日3,000pt"
                         />
                     </div>
 
@@ -516,6 +517,41 @@ export default async function SupporterPage({
 }
 
 /* ══════════════════════ PLAN CARD COMPONENT ══════════════════════ */
+/* 一般会員（無料）カード */
+function FreePlanCard() {
+    return (
+        <div className="relative rounded-2xl overflow-hidden border border-stone-200 shadow-sm flex flex-col h-full">
+            <div className="bg-white flex-1 p-6 md:p-8">
+                <p className="font-bold text-lg mb-4 text-stone-500">👤 一般会員</p>
+                <div className="mb-6">
+                    <span className="font-bold text-stone-900 text-4xl">無料</span>
+                </div>
+                <div className="space-y-3 mb-6 text-stone-400">
+                    <div className="flex items-start gap-2">
+                        <Check className="h-5 w-5 flex-shrink-0 mt-0.5" />
+                        <span className="text-sm">割引なし</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                        <Check className="h-5 w-5 flex-shrink-0 mt-0.5" />
+                        <span className="text-sm">ログインボーナス 1pt/日</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                        <Check className="h-5 w-5 flex-shrink-0 mt-0.5" />
+                        <span className="text-sm">誕生日ボーナスなし</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                        <Check className="h-5 w-5 flex-shrink-0 mt-0.5" />
+                        <span className="text-sm">限定商品購入不可</span>
+                    </div>
+                </div>
+                <div className="w-full py-3.5 rounded-full text-sm text-center font-bold bg-stone-100 text-stone-400 cursor-default">
+                    登録不要
+                </div>
+            </div>
+        </div>
+    );
+}
+
 function PlanCard({
     tier,
     badge,
@@ -524,7 +560,6 @@ function PlanCard({
     loginPt,
     birthdayPt,
     popular,
-    extra,
 }: {
     tier: "mebuking" | "minori" | "partner";
     badge: string;
@@ -533,7 +568,6 @@ function PlanCard({
     loginPt: number;
     birthdayPt: number;
     popular: boolean;
-    extra?: string;
 }) {
     return (
         <div
@@ -556,11 +590,7 @@ function PlanCard({
                 </p>
 
                 <div className="mb-6">
-                    <span
-                        className={`font-bold text-stone-900 ${
-                            popular ? "text-5xl" : "text-4xl"
-                        }`}
-                    >
+                    <span className={`font-bold text-stone-900 ${popular ? "text-5xl" : "text-4xl"}`}>
                         ¥{price.toLocaleString()}
                     </span>
                     <span className="text-stone-500 text-sm ml-1">/ 年</span>
@@ -576,10 +606,7 @@ function PlanCard({
                     <div className="flex items-start gap-2">
                         <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
                         <span className="text-stone-700 text-sm">
-                            通常のお買い物が
-                            <strong className="text-primary">
-                                {discount} OFF
-                            </strong>
+                            通常のお買い物が <strong className="text-primary">{discount} OFF</strong>
                         </span>
                     </div>
                     <div className="flex items-start gap-2">
@@ -588,22 +615,16 @@ function PlanCard({
                             ログインボーナス <strong className="text-primary">{loginPt}pt</strong>/日
                         </span>
                     </div>
-                    {birthdayPt > 0 && (
-                        <div className="flex items-start gap-2">
-                            <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                            <span className="text-stone-700 text-sm">
-                                誕生日ボーナス <strong className="text-primary">{birthdayPt.toLocaleString()}pt</strong>
-                            </span>
-                        </div>
-                    )}
-                    {extra && (
-                        <div className="flex items-start gap-2">
-                            <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                            <span className="text-stone-700 text-sm font-bold">
-                                {extra}
-                            </span>
-                        </div>
-                    )}
+                    <div className="flex items-start gap-2">
+                        <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                        <span className="text-stone-700 text-sm">
+                            誕生日ボーナス <strong className="text-primary">{birthdayPt.toLocaleString()}pt</strong>
+                        </span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                        <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                        <span className="text-stone-700 text-sm">限定商品を購入可能</span>
+                    </div>
                 </div>
 
                 <SupporterPlanButton plan={tier} popular={popular} />
