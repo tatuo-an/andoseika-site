@@ -50,7 +50,9 @@ export function SupporterPlanButton({
                 body: JSON.stringify({ plan }),
             });
             const data = await res.json();
-            if (data.url) {
+            if (res.status === 409) {
+                setError("定員に達しました。申し込みを受け付けられません。");
+            } else if (data.url) {
                 window.location.href = data.url;
             } else {
                 setError("決済画面を開けませんでした。しばらくしてお試しください。");

@@ -346,6 +346,7 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                         optionsAdjustment: optionsAdjustmentTaxed,
                         optionLabels: Array.from(selectedOptions),
                         saleDiscount: saleDiscountTaxed,
+                        tierDiscount: tierDiscountAmount,
                     },
                 }),
             });

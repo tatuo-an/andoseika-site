@@ -6,6 +6,8 @@ import { google } from "googleapis";
 
 export const dynamic = "force-dynamic";
 
+const PLAN_LIMITS: Record<string, number> = { minori: 10, partner: 5 };
+
 function getSheets() {
     const authClient = new google.auth.GoogleAuth({
         credentials: {
@@ -27,6 +29,29 @@ export async function POST(req: NextRequest) {
     const tierKey: TierKey = getTier(plan);
     if (tierKey === "free") {
         return NextResponse.json({ error: "Invalid plan" }, { status: 400 });
+    }
+
+    // 人数制限チェック
+    if (PLAN_LIMITS[tierKey] !== undefined) {
+        const authClient2 = new google.auth.GoogleAuth({
+            credentials: {
+                client_email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
+                private_key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+            },
+            scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+        });
+        const sheets2 = google.sheets({ version: "v4", auth: authClient2 });
+        const countRes = await sheets2.spreadsheets.values.get({
+            spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
+            range: "顧客マスタ!A:F",
+        });
+        const today = new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Tokyo" });
+        const count = (countRes.data.values ?? []).slice(1).filter(
+            (r) => r[1] === "__profile__" && r[4] === tierKey && (r[5] ?? "") >= today
+        ).length;
+        if (count >= PLAN_LIMITS[tierKey]) {
+            return NextResponse.json({ error: "定員に達しています" }, { status: 409 });
+        }
     }
 
     const userEmail = session!.user!.email!;
