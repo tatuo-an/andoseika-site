@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-export function CancelSupporterButton({ tierName }: { tierName: string }) {
+export function CancelSupporterButton({ tierName, redirectTo }: { tierName: string; redirectTo?: string }) {
   const [confirm, setConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -13,6 +13,7 @@ export function CancelSupporterButton({ tierName }: { tierName: string }) {
     try {
       const res = await fetch("/api/my/cancel-tier", { method: "POST" });
       if (res.ok) {
+        if (redirectTo) router.push(redirectTo);
         router.refresh();
       }
     } finally {
@@ -23,24 +24,20 @@ export function CancelSupporterButton({ tierName }: { tierName: string }) {
 
   if (confirm) {
     return (
-      <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-xl text-sm w-full">
-        <p className="text-red-700 font-medium mb-2">{tierName}を解約しますか？</p>
-        <p className="text-red-500 text-xs mb-3">解約すると即時に一般会員へ変更されます。</p>
-        <div className="flex gap-2">
-          <button
-            onClick={handleCancel}
-            disabled={loading}
-            className="flex-1 py-1.5 rounded-full bg-red-500 text-white text-xs font-bold hover:bg-red-600 disabled:opacity-50"
-          >
-            {loading ? "処理中..." : "解約する"}
-          </button>
-          <button
-            onClick={() => setConfirm(false)}
-            className="flex-1 py-1.5 rounded-full bg-stone-100 text-stone-600 text-xs font-bold hover:bg-stone-200"
-          >
-            キャンセル
-          </button>
-        </div>
+      <div className="flex gap-2">
+        <button
+          onClick={handleCancel}
+          disabled={loading}
+          className="flex-1 py-2.5 rounded-xl bg-red-500 text-white text-sm font-bold hover:bg-red-600 disabled:opacity-50 transition-colors"
+        >
+          {loading ? "処理中..." : "解約する"}
+        </button>
+        <button
+          onClick={() => setConfirm(false)}
+          className="flex-1 py-2.5 rounded-xl bg-stone-100 text-stone-600 text-sm font-bold hover:bg-stone-200 transition-colors"
+        >
+          戻る
+        </button>
       </div>
     );
   }
@@ -48,7 +45,7 @@ export function CancelSupporterButton({ tierName }: { tierName: string }) {
   return (
     <button
       onClick={() => setConfirm(true)}
-      className="text-xs text-stone-400 hover:text-red-500 transition-colors underline underline-offset-2"
+      className="w-full py-2.5 rounded-xl border border-red-200 text-red-500 text-sm font-bold hover:bg-red-50 transition-colors"
     >
       解約する
     </button>
