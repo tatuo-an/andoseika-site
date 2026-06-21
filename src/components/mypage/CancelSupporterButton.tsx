@@ -23,7 +23,7 @@ export function CancelSupporterButton({ tierName }: { tierName: string }) {
 
   if (confirm) {
     return (
-      <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-xl text-sm">
+      <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-xl text-sm w-full">
         <p className="text-red-700 font-medium mb-2">{tierName}を解約しますか？</p>
         <p className="text-red-500 text-xs mb-3">解約すると即時に一般会員へ変更されます。</p>
         <div className="flex gap-2">
@@ -48,9 +48,9 @@ export function CancelSupporterButton({ tierName }: { tierName: string }) {
   return (
     <button
       onClick={() => setConfirm(true)}
-      className="mt-3 text-xs text-stone-400 hover:text-red-500 transition-colors underline underline-offset-2"
+      className="text-xs text-stone-400 hover:text-red-500 transition-colors underline underline-offset-2"
     >
-      プランを解約する
+      解約する
     </button>
   );
 }

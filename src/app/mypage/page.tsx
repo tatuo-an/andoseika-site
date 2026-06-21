@@ -106,35 +106,34 @@ export default async function MyPage() {
               <p className="text-xs text-primary mt-3 font-medium">確認する →</p>
             </Link>
 
-            <Link href="/supporter" className="bg-white rounded-2xl shadow-sm p-6 hover:shadow-md transition-shadow block">
-              <div className="flex items-center gap-3 mb-3">
-                <User className="w-5 h-5 text-primary" />
-                <h2 className="font-bold text-stone-900">サポーター会員</h2>
+            {tier === "free" ? (
+              <Link href="/supporter" className="bg-white rounded-2xl shadow-sm p-6 hover:shadow-md transition-shadow block">
+                <div className="flex items-center gap-3 mb-3">
+                  <User className="w-5 h-5 text-primary" />
+                  <h2 className="font-bold text-stone-900">サポーター会員</h2>
+                </div>
+                <p className="text-sm text-stone-500">現在のプラン：<span className="text-stone-700 font-medium">一般会員（無料）</span></p>
+                <p className="text-xs text-primary mt-3 font-medium">プランを見る →</p>
+              </Link>
+            ) : (
+              <div className="bg-white rounded-2xl shadow-sm p-6">
+                <div className="flex items-center gap-3 mb-3">
+                  <User className="w-5 h-5 text-primary" />
+                  <h2 className="font-bold text-stone-900">サポーター会員</h2>
+                </div>
+                <p className="text-sm text-stone-500">現在のプラン</p>
+                <p className="font-bold text-stone-900 mt-1">{tierInfo.name}</p>
+                {tierExpiry && (
+                  <p className="text-xs text-stone-400 mt-1">有効期限：{tierExpiry}</p>
+                )}
+                <div className="mt-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Link href="/supporter" className="text-xs text-primary font-medium">プランを変更する →</Link>
+                    <CancelSupporterButton tierName={tierInfo.name} />
+                  </div>
+                </div>
               </div>
-              {tier === "free" ? (
-                <>
-                  <p className="text-sm text-stone-500">現在のプラン：<span className="text-stone-700 font-medium">一般会員（無料）</span></p>
-                  <p className="text-xs text-primary mt-3 font-medium">プランを見る →</p>
-                </>
-              ) : (
-                <>
-                  <p className="text-sm text-stone-500">現在のプラン</p>
-                  <p className="font-bold text-stone-900 mt-1">{tierInfo.name}</p>
-                  {tierExpiry && (
-                    <p className="text-xs text-stone-400 mt-1">有効期限：{tierExpiry}</p>
-                  )}
-                  <p className="text-xs text-primary mt-3 font-medium">プランを変更する →</p>
-                </>
-              )}
-            </Link>
-          </div>
-
-          {/* サポーター解約 */}
-          {tier !== "free" && (
-            <div className="mb-8 px-1">
-              <CancelSupporterButton tierName={tierInfo.name} />
-            </div>
-          )}
+            )}
 
           {/* 管理者エリア */}
           {isAdmin(user.email) && (
