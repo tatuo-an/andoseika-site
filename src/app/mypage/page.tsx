@@ -75,14 +75,14 @@ export default async function MyPage() {
               <p className="text-xs text-primary mt-3 font-medium">確認する →</p>
             </Link>
 
-            <div className="bg-white rounded-2xl shadow-sm p-6">
+            <Link href="/supporter" className="bg-white rounded-2xl shadow-sm p-6 hover:shadow-md transition-shadow block">
               <div className="flex items-center gap-3 mb-3">
                 <User className="w-5 h-5 text-primary" />
                 <h2 className="font-bold text-stone-900">サポーター会員</h2>
               </div>
-              <p className="text-sm text-stone-500">サポータープランの加入状況を確認できます</p>
-              <p className="text-xs text-stone-400 mt-3">※ 近日公開予定</p>
-            </div>
+              <p className="text-sm text-stone-500">現在のプランを確認・変更できます</p>
+              <p className="text-xs text-primary mt-3 font-medium">確認する →</p>
+            </Link>
           </div>
 
           {/* 管理者エリア */}
