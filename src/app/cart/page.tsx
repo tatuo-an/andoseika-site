@@ -425,7 +425,25 @@ export default function CartPage() {
                         <ChevronLeft className="w-4 h-4" />
                         買い物を続ける
                     </Link>
-                    <h1 className="text-2xl font-bold text-stone-900 mb-6">カート</h1>
+                    <h1 className="text-2xl font-bold text-stone-900 mb-4">カート</h1>
+
+                    {/* サポーター割引バナー */}
+                    {tierDiscountRate > 0 && (
+                        <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3 mb-6">
+                            <span className="text-lg">🌿</span>
+                            <div className="flex-1">
+                                <p className="text-sm font-bold text-emerald-800">
+                                    {tierName}会員割引が適用されます
+                                </p>
+                                <p className="text-xs text-emerald-600">
+                                    通常商品に {Math.round(tierDiscountRate * 100)}% OFF（セール品・送料除く）
+                                </p>
+                            </div>
+                            <span className="text-emerald-700 font-bold text-sm">
+                                −¥{tierDiscountAmount.toLocaleString()}
+                            </span>
+                        </div>
+                    )}
 
                     {/* 商品一覧 */}
                     <div className="bg-white rounded-2xl shadow-sm p-6 mb-6 space-y-4">
