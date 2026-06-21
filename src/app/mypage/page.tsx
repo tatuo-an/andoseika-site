@@ -134,6 +134,7 @@ export default async function MyPage() {
                 </div>
               </div>
             )}
+          </div>
 
           {/* 管理者エリア */}
           {isAdmin(user.email) && (
