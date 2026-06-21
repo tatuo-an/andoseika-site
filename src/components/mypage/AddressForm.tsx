@@ -57,6 +57,21 @@ export function AddressForm() {
         setEditing({ ...editing, [e.target.name]: e.target.value });
     };
 
+    const handleBirthday = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!editing) return;
+        const val = e.target.value; // "2000-MM-DD"
+        if (!val) { setEditing({ ...editing, birthday: "" }); return; }
+        const [, m, d] = val.split("-");
+        setEditing({ ...editing, birthday: `${m}/${d}` });
+    };
+
+    // "MM/DD" → "2000-MM-DD" for date input value
+    const birthdayInputValue = (() => {
+        if (!editing?.birthday) return "";
+        const match = editing.birthday.match(/^(\d{2})\/(\d{2})$/);
+        return match ? `2000-${match[1]}-${match[2]}` : "";
+    })();
+
     const handlePostalCode = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!editing) return;
         const value = e.target.value;
@@ -192,10 +207,9 @@ export function AddressForm() {
 
                 <div>
                     <label className="block text-sm font-medium text-stone-700 mb-1">誕生日（任意）</label>
-                    <input name="birthday" value={editing.birthday} onChange={handleChange} placeholder="例: 08/15"
-                        maxLength={5}
-                        className="w-32 border border-stone-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
-                    <p className="text-xs text-stone-400 mt-1">ご家族やお友達への贈り物用に設定してください（例: 08/15）。誕生日2週間前にお知らせします</p>
+                    <input type="date" value={birthdayInputValue} onChange={handleBirthday}
+                        className="border border-stone-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                    <p className="text-xs text-stone-400 mt-1">ご家族やお友達への贈り物用に設定してください。誕生日2週間前にお知らせします</p>
                 </div>
 
                 <div className="flex items-center gap-3 pt-2">
