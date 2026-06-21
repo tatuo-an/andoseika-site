@@ -321,6 +321,7 @@ export default async function SupporterPage({
                             loginPt={5}
                             birthdayPt={3000}
                             popular={false}
+                            giftDelivery={true}
                         />
                     </div>
 
@@ -560,6 +561,7 @@ function PlanCard({
     loginPt,
     birthdayPt,
     popular,
+    giftDelivery = false,
 }: {
     tier: "mebuking" | "minori" | "partner";
     badge: string;
@@ -568,6 +570,7 @@ function PlanCard({
     loginPt: number;
     birthdayPt: number;
     popular: boolean;
+    giftDelivery?: boolean;
 }) {
     return (
         <div
@@ -625,6 +628,14 @@ function PlanCard({
                         <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
                         <span className="text-stone-700 text-sm">限定商品を購入可能</span>
                     </div>
+                    {giftDelivery && (
+                        <div className="flex items-start gap-2">
+                            <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                            <span className="text-stone-700 text-sm">
+                                年2回、<strong className="text-primary">詰め合わせセット</strong>をお届け
+                            </span>
+                        </div>
+                    )}
                 </div>
 
                 <SupporterPlanButton plan={tier} popular={popular} />
