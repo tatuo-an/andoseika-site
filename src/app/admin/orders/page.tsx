@@ -3,6 +3,8 @@ import { auth } from "@/auth";
 import { isAdmin } from "@/lib/admin";
 import { Header } from "@/components/layout/Header";
 import { google } from "googleapis";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import { OrdersClient } from "./OrdersClient";
 import type { Order } from "@/app/api/admin/orders/route";
 
@@ -71,7 +73,12 @@ export default async function AdminOrdersPage() {
     <div className="min-h-screen bg-stone-50 flex flex-col">
       <Header />
       <main className="flex-1 container mx-auto px-4 md:px-6 py-8 max-w-4xl">
-        <h1 className="text-2xl font-bold text-stone-900 mb-6">注文管理</h1>
+        <div className="flex items-center gap-3 mb-6">
+          <Link href="/admin" className="text-stone-400 hover:text-stone-600 transition-colors">
+            <ArrowLeft className="w-5 h-5" />
+          </Link>
+          <h1 className="text-2xl font-bold text-stone-900">注文管理</h1>
+        </div>
 
         {/* Summary cards */}
         <div className="grid grid-cols-5 gap-3 mb-6">
