@@ -290,8 +290,13 @@ export default function CartPage() {
     const coolFeeTaxed = Math.round(coolFee * 1.10);
     const optionsAdjustmentTaxed = Math.round(optionsAdjustment * 1.08);
     const saleDiscountTaxed = saleDiscountTaxedTotal;
-    // サポーター割引は通常商品代のみ（送料・セール・体験除く）
-    const tierDiscountAmount = tierDiscountRate > 0 ? Math.floor(itemsBodyShown * tierDiscountRate) : 0;
+    // サポーター割引はセール品を除いた通常商品代のみ
+    const tierDiscountBase = cartItems.reduce((sum, item) => {
+        const pct = (item as { salePercent?: number }).salePercent ?? 0;
+        if (pct > 0) return sum;
+        return sum + itemTaxedUnit(item as { price: number; cost?: number | null }) * item.quantity;
+    }, 0);
+    const tierDiscountAmount = tierDiscountRate > 0 ? Math.floor(tierDiscountBase * tierDiscountRate) : 0;
 
     const grandTotalBeforePoints = itemsBodyShown + shipFeeShown + profitShown + surchargeTaxed + coolFeeTaxed + optionsAdjustmentTaxed - saleDiscountTaxed - tierDiscountAmount;
     const maxPointsUsable = Math.min(pointsBalance, Math.max(0, grandTotalBeforePoints - 1));
