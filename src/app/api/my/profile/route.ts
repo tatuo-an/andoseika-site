@@ -4,8 +4,7 @@ import { auth } from "@/auth";
 
 export const dynamic = "force-dynamic";
 
-// 顧客マスタ: A=メール, B=ラベル(__profile__), C=表示名
-// B列が "__profile__" の行がプロフィール行。住所行とは分離して管理。
+// 顧客マスタ: A=メール, B=ラベル(__profile__), C=表示名, D=誕生日(MM/DD)
 const SHEET = "顧客マスタ";
 
 function getSheets() {
@@ -25,40 +24,42 @@ export async function GET() {
 
   const sheets = getSheets();
   const id = process.env.GOOGLE_SPREADSHEET_ID!;
-  const res = await sheets.spreadsheets.values.get({ spreadsheetId: id, range: `${SHEET}!A:C` });
+  const res = await sheets.spreadsheets.values.get({ spreadsheetId: id, range: `${SHEET}!A:D` });
   const rows = res.data.values ?? [];
   const row = rows.find((r) => r[0] === session.user!.email && r[1] === "__profile__");
-  return NextResponse.json({ displayName: row?.[2] ?? "" });
+  return NextResponse.json({ displayName: row?.[2] ?? "", birthday: row?.[3] ?? "" });
 }
 
 export async function PATCH(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.email) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { displayName } = await req.json() as { displayName: string };
-  const name = (displayName ?? "").trim().slice(0, 50);
-
+  const body = await req.json() as { displayName?: string; birthday?: string };
   const sheets = getSheets();
   const id = process.env.GOOGLE_SPREADSHEET_ID!;
-  const res = await sheets.spreadsheets.values.get({ spreadsheetId: id, range: `${SHEET}!A:C` });
+  const res = await sheets.spreadsheets.values.get({ spreadsheetId: id, range: `${SHEET}!A:D` });
   const rows = res.data.values ?? [];
   const rowIndex = rows.findIndex((r) => r[0] === session.user!.email && r[1] === "__profile__");
+
+  const existing = rowIndex !== -1 ? rows[rowIndex] : [];
+  const newName = "displayName" in body ? (body.displayName ?? "").trim().slice(0, 50) : (existing[2] ?? "");
+  const newBirthday = "birthday" in body ? (body.birthday ?? "").trim() : (existing[3] ?? "");
 
   if (rowIndex === -1) {
     await sheets.spreadsheets.values.append({
       spreadsheetId: id,
-      range: `${SHEET}!A:C`,
+      range: `${SHEET}!A:D`,
       valueInputOption: "RAW",
-      requestBody: { values: [[session.user.email, "__profile__", name]] },
+      requestBody: { values: [[session.user.email, "__profile__", newName, newBirthday]] },
     });
   } else {
     await sheets.spreadsheets.values.update({
       spreadsheetId: id,
-      range: `${SHEET}!C${rowIndex + 1}`,
+      range: `${SHEET}!A${rowIndex + 1}:D${rowIndex + 1}`,
       valueInputOption: "RAW",
-      requestBody: { values: [[name]] },
+      requestBody: { values: [[session.user.email, "__profile__", newName, newBirthday]] },
     });
   }
 
-  return NextResponse.json({ ok: true, displayName: name });
+  return NextResponse.json({ ok: true, displayName: newName, birthday: newBirthday });
 }

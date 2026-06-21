@@ -29,7 +29,8 @@ export async function POST(req: NextRequest) {
         }
 
         const body = await req.json();
-        const { cartDetails, quote, shippingAddress, desiredDeliveryDate, desiredDeliveryTime, shipMode, shipValue } = body as {
+        const { cartDetails, quote, shippingAddress, desiredDeliveryDate, desiredDeliveryTime, shipMode, shipValue, pointsUsed } = body as {
+            pointsUsed?: number;
             cartDetails?: Record<string, CartItem & { cost?: number | null }>;
             shipMode?: string;
             shipValue?: string;
@@ -153,6 +154,17 @@ export async function POST(req: NextRequest) {
             }
         }
 
+        // ポイント割引（全ラインアイテム合計から差し引く）
+        if (pointsUsed && pointsUsed > 0) {
+            let remaining = pointsUsed;
+            for (const li of line_items) {
+                if (remaining <= 0) break;
+                const deduct = Math.min(remaining, Math.max(0, li.price_data.unit_amount - 1));
+                li.price_data.unit_amount -= deduct;
+                remaining -= deduct;
+            }
+        }
+
         // 配送先住所が事前指定されている場合は Stripe 側で再入力させない
         const sessionParams: Stripe.Checkout.SessionCreateParams = {
             payment_method_types: ["card"],
@@ -188,6 +200,7 @@ export async function POST(req: NextRequest) {
                     desiredDeliveryTime: desiredDeliveryTime ?? "",
                     shipMode: shipMode ?? "",
                     shipValue: shipValue ?? "",
+                    pointsUsed: (pointsUsed ?? 0).toString(),
                 },
             },
         };

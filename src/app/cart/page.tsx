@@ -3,7 +3,7 @@
 import { useShoppingCart } from "use-shopping-cart";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ChevronLeft, Plus, Minus, Trash2, Calendar, MapPin } from "lucide-react";
+import { ChevronLeft, Plus, Minus, Trash2, Calendar, MapPin, Star } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { earliestDeliveryDate } from "@/lib/shipSchedule";
@@ -125,11 +125,17 @@ export default function CartPage() {
     const [desiredDate, setDesiredDate] = useState("");
     const [desiredTime, setDesiredTime] = useState("指定なし");
     const [skipMode, setSkipMode] = useState(false);
+    const [pointsBalance, setPointsBalance] = useState(0);
+    const [pointsToUse, setPointsToUse] = useState(0);
 
     useEffect(() => {
         fetch("/api/admin/settings")
             .then((r) => r.json())
             .then((d) => setSkipMode(d.skip_payment === "true"))
+            .catch(() => {});
+        fetch("/api/my/points")
+            .then((r) => r.json())
+            .then((d) => { if (d.balance !== undefined) setPointsBalance(d.balance); })
             .catch(() => {});
     }, []);
 
@@ -272,7 +278,9 @@ export default function CartPage() {
     const optionsAdjustmentTaxed = Math.round(optionsAdjustment * 1.08);
     const saleDiscountTaxed = saleDiscountTaxedTotal;
 
-    const grandTotal = itemsBodyShown + shipFeeShown + profitShown + surchargeTaxed + coolFeeTaxed + optionsAdjustmentTaxed - saleDiscountTaxed;
+    const grandTotalBeforePoints = itemsBodyShown + shipFeeShown + profitShown + surchargeTaxed + coolFeeTaxed + optionsAdjustmentTaxed - saleDiscountTaxed;
+    const maxPointsUsable = Math.min(pointsBalance, Math.max(0, grandTotalBeforePoints - 1));
+    const grandTotal = grandTotalBeforePoints - pointsToUse;
 
     // カート内全商品の中で最も遅い「お届け開始日」を計算
     const cartEarliestDelivery = (() => {
@@ -347,6 +355,7 @@ export default function CartPage() {
                     desiredDeliveryTime: desiredTime,
                     shipMode: cartShipMode,
                     shipValue: cartShipValue,
+                    pointsUsed: pointsToUse,
                     quote: {
                         matchedVariantId: matchedVariant?.id ?? null,
                         matchedVariantName: matchedVariant?.name ?? null,
@@ -593,6 +602,40 @@ export default function CartPage() {
                         </label>
                     )}
 
+                    {/* ポイント利用 */}
+                    {pointsBalance > 0 && (
+                        <div className="bg-white rounded-2xl shadow-sm p-6 mb-6">
+                            <div className="flex items-center gap-2 mb-3">
+                                <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
+                                <h2 className="font-bold text-stone-900">ポイントを使う</h2>
+                                <span className="text-xs text-stone-400 ml-auto">残高 {pointsBalance.toLocaleString()}pt</span>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <input
+                                    type="number"
+                                    min={0}
+                                    max={maxPointsUsable}
+                                    step={1}
+                                    value={pointsToUse}
+                                    onChange={(e) => {
+                                        const v = Math.max(0, Math.min(maxPointsUsable, parseInt(e.target.value) || 0));
+                                        setPointsToUse(v);
+                                    }}
+                                    className="w-32 border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                />
+                                <span className="text-sm text-stone-500">pt（最大 {maxPointsUsable.toLocaleString()}pt = ¥{maxPointsUsable.toLocaleString()}）</span>
+                                {maxPointsUsable > 0 && (
+                                    <button
+                                        onClick={() => setPointsToUse(maxPointsUsable)}
+                                        className="text-xs text-primary hover:underline font-medium"
+                                    >
+                                        全て使う
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
                     {/* 合計 */}
                     <div className="bg-white rounded-2xl shadow-sm p-6 mb-6 space-y-2 text-sm">
                         <div className="bg-stone-100/60 rounded-lg p-3 space-y-1">
@@ -602,6 +645,7 @@ export default function CartPage() {
                             {profitShown > 0 && <div className="flex justify-between text-stone-600"><span>サービス料</span><span>¥{profitShown.toLocaleString()}</span></div>}
                         </div>
                         {saleDiscountTaxed > 0 && <div className="flex justify-between text-red-500 font-medium"><span>セール割引</span><span>−¥{saleDiscountTaxed.toLocaleString()}</span></div>}
+                        {pointsToUse > 0 && <div className="flex justify-between text-yellow-600 font-medium"><span>⭐ ポイント割引</span><span>−¥{pointsToUse.toLocaleString()}</span></div>}
                         {optionsAdjustmentTaxed !== 0 && <div className={`flex justify-between ${optionsAdjustmentTaxed < 0 ? "text-emerald-600" : "text-orange-600"} font-medium`}><span>オプション調整</span><span>{optionsAdjustmentTaxed > 0 ? "+" : "−"}¥{Math.abs(optionsAdjustmentTaxed).toLocaleString()}</span></div>}
                         {isExtraRegion && surchargeTaxed > 0 && <div className="flex justify-between text-orange-600"><span>追加送料({regionRow!.region})</span><span>+¥{surchargeTaxed.toLocaleString()}</span></div>}
                         {coolFeeTaxed > 0 && <div className="flex justify-between text-blue-600"><span>❄ クール便</span><span>+¥{coolFeeTaxed.toLocaleString()}</span></div>}

@@ -153,6 +153,20 @@ export async function POST(req: NextRequest) {
       // 旧シートにも書き込み（後方互換）
       await appendToLegacySheet([[now, name, email, phone, address, productNames, amount, sessionId]]);
       console.log("[webhook] order recorded:", orderNumber, sessionId);
+
+      // ポイント消費記録
+      const pointsUsed = parseInt(piMeta.pointsUsed ?? "0", 10);
+      if (pointsUsed > 0 && email) {
+        const sheets = await getSheets();
+        const nowJST = new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Tokyo" }) + " " +
+          new Date().toLocaleTimeString("ja-JP", { timeZone: "Asia/Tokyo", hour: "2-digit", minute: "2-digit" });
+        await sheets.spreadsheets.values.append({
+          spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID,
+          range: "ポイント履歴!A:E",
+          valueInputOption: "RAW",
+          requestBody: { values: [[email, nowJST, "use", -pointsUsed, `注文${orderNumber}でのポイント利用`]] },
+        });
+      }
     } catch (err) {
       console.error("[webhook] failed to write to sheet", err);
     }
