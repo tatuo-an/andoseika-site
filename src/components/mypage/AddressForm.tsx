@@ -13,12 +13,29 @@ type Address = {
     building: string;
     phone: string;
     birthday: string;
+    relation: string;
 };
 
 const EMPTY: Address = {
     label: "", name: "", postalCode: "", prefecture: "",
-    city: "", street: "", building: "", phone: "", birthday: "",
+    city: "", street: "", building: "", phone: "", birthday: "", relation: "",
 };
+
+const RELATIONS = [
+    { value: "自分", color: "bg-blue-100 text-blue-700 border-blue-300" },
+    { value: "家族", color: "bg-green-100 text-green-700 border-green-300" },
+    { value: "友達", color: "bg-orange-100 text-orange-700 border-orange-300" },
+];
+
+function RelationBadge({ value }: { value: string }) {
+    const rel = RELATIONS.find(r => r.value === value);
+    if (!rel) return null;
+    return (
+        <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${rel.color}`}>
+            {rel.value}
+        </span>
+    );
+}
 
 export function AddressForm() {
     const [addresses, setAddresses] = useState<Address[]>([]);
@@ -26,6 +43,7 @@ export function AddressForm() {
     const [editing, setEditing] = useState<Address | null>(null);
     const [originalLabel, setOriginalLabel] = useState<string | null>(null);
     const [saving, setSaving] = useState(false);
+    const [savingRelation, setSavingRelation] = useState<string | null>(null);
 
     const load = () => {
         setLoading(true);
@@ -37,20 +55,9 @@ export function AddressForm() {
 
     useEffect(() => { load(); }, []);
 
-    const startNew = () => {
-        setEditing({ ...EMPTY });
-        setOriginalLabel(null);
-    };
-
-    const startEdit = (addr: Address) => {
-        setEditing({ ...addr });
-        setOriginalLabel(addr.label);
-    };
-
-    const cancelEdit = () => {
-        setEditing(null);
-        setOriginalLabel(null);
-    };
+    const startNew = () => { setEditing({ ...EMPTY }); setOriginalLabel(null); };
+    const startEdit = (addr: Address) => { setEditing({ ...addr }); setOriginalLabel(addr.label); };
+    const cancelEdit = () => { setEditing(null); setOriginalLabel(null); };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!editing) return;
@@ -58,23 +65,16 @@ export function AddressForm() {
     };
 
     const normalizeBirthday = (raw: string): string => {
-        // 全角→半角
         let s = raw.replace(/[０-９]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xFEE0));
-        // 「月」「日」「年」を区切り文字に置換
         s = s.replace(/[月年]/g, "/").replace(/日/g, "").trim();
-        // 区切り文字（/ . - ・ 空白）を統一
         s = s.replace(/[/.\-・\s]+/g, "/");
         const parts = s.split("/").filter(Boolean);
         let m = "", d = "";
-        if (parts.length === 2) {
-            m = parts[0]; d = parts[1];
-        } else if (parts.length === 1 && /^\d{3,4}$/.test(parts[0])) {
-            // 0613 or 613
+        if (parts.length === 2) { m = parts[0]; d = parts[1]; }
+        else if (parts.length === 1 && /^\d{3,4}$/.test(parts[0])) {
             const digits = parts[0].padStart(4, "0");
             m = digits.slice(0, 2); d = digits.slice(2);
-        } else {
-            return raw;
-        }
+        } else return raw;
         const mn = parseInt(m, 10), dn = parseInt(d, 10);
         if (mn < 1 || mn > 12 || dn < 1 || dn > 31) return raw;
         return `${String(mn).padStart(2, "0")}/${String(dn).padStart(2, "0")}`;
@@ -100,16 +100,10 @@ export function AddressForm() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!editing) return;
-        if (!editing.label.trim()) {
-            alert("配送先名（ラベル）を入力してください。例: 自宅、母、友人");
-            return;
-        }
-        // 同じラベルの重複チェック（編集時は除外）
+        if (!editing.label.trim()) { alert("配送先名（ラベル）を入力してください。例: 自宅、母、友人"); return; }
         if (addresses.some(a => a.label === editing.label && a.label !== originalLabel)) {
-            alert(`「${editing.label}」というラベルは既に使われています`);
-            return;
+            alert(`「${editing.label}」というラベルは既に使われています`); return;
         }
-
         setSaving(true);
         try {
             const res = await fetch("/api/address", {
@@ -117,31 +111,30 @@ export function AddressForm() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ ...editing, originalLabel }),
             });
-            if (!res.ok) {
-                const body = await res.json().catch(() => ({}));
-                alert(`保存失敗: ${body.error ?? res.status}`);
-                return;
-            }
-            setEditing(null);
-            setOriginalLabel(null);
-            load();
-        } finally {
-            setSaving(false);
-        }
+            if (!res.ok) { const body = await res.json().catch(() => ({})); alert(`保存失敗: ${body.error ?? res.status}`); return; }
+            setEditing(null); setOriginalLabel(null); load();
+        } finally { setSaving(false); }
     };
 
     const handleDelete = async (label: string) => {
         if (!confirm(`配送先「${label}」を削除しますか？`)) return;
-        const res = await fetch("/api/address", {
-            method: "DELETE",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ label }),
-        });
-        if (!res.ok) {
-            alert("削除に失敗しました");
-            return;
-        }
+        const res = await fetch("/api/address", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ label }) });
+        if (!res.ok) { alert("削除に失敗しました"); return; }
         load();
+    };
+
+    const handleRelation = async (label: string, relation: string) => {
+        // 同じ値をタップしたら解除
+        const current = addresses.find(a => a.label === label)?.relation ?? "";
+        const next = current === relation ? "" : relation;
+        setSavingRelation(label);
+        setAddresses(prev => prev.map(a => a.label === label ? { ...a, relation: next } : a));
+        await fetch("/api/address", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ label, relation: next }),
+        }).catch(() => {});
+        setSavingRelation(null);
     };
 
     if (loading) {
@@ -257,36 +250,52 @@ export function AddressForm() {
                     {addresses.map((addr) => (
                         <div key={addr.label} className="border border-stone-200 rounded-xl p-4 hover:border-primary/40 transition-colors">
                             <div className="flex items-start justify-between gap-3">
-                                <div className="flex-1">
-                                    <div className="flex items-center gap-2 mb-2">
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 mb-2 flex-wrap">
                                         <span className="bg-primary/10 text-primary text-xs font-bold px-2.5 py-1 rounded-full">
                                             {addr.label || "（ラベルなし）"}
                                         </span>
                                         <span className="font-medium text-stone-900">{addr.name}</span>
+                                        {addr.relation && <RelationBadge value={addr.relation} />}
                                     </div>
                                     <p className="text-sm text-stone-600 leading-relaxed">
                                         〒{addr.postalCode}<br />
                                         {addr.prefecture}{addr.city}{addr.street}
                                         {addr.building && <><br />{addr.building}</>}
                                     </p>
-                                    {addr.phone && (
-                                        <p className="text-xs text-stone-400 mt-1">TEL: {addr.phone}</p>
-                                    )}
+                                    {addr.phone && <p className="text-xs text-stone-400 mt-1">TEL: {addr.phone}</p>}
                                     {addr.birthday && (
                                         <p className="text-xs text-stone-400 mt-1 flex items-center gap-1">
                                             <Cake className="w-3 h-3" />{addr.birthday}
                                         </p>
                                     )}
+
+                                    {/* 続柄ボタン */}
+                                    <div className="flex items-center gap-1.5 mt-3">
+                                        <span className="text-[11px] text-stone-400 mr-0.5">続柄:</span>
+                                        {RELATIONS.map(rel => (
+                                            <button
+                                                key={rel.value}
+                                                onClick={() => handleRelation(addr.label, rel.value)}
+                                                disabled={savingRelation === addr.label}
+                                                className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border transition-all ${
+                                                    addr.relation === rel.value
+                                                        ? rel.color
+                                                        : "bg-stone-50 text-stone-400 border-stone-200 hover:border-stone-300"
+                                                }`}
+                                            >
+                                                {rel.value}
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
                                 <div className="flex flex-col gap-1 flex-shrink-0">
                                     <button onClick={() => startEdit(addr)}
-                                        className="p-2 text-stone-400 hover:text-primary rounded-lg hover:bg-stone-50 transition-colors"
-                                        title="編集">
+                                        className="p-2 text-stone-400 hover:text-primary rounded-lg hover:bg-stone-50 transition-colors" title="編集">
                                         <Edit className="w-4 h-4" />
                                     </button>
                                     <button onClick={() => handleDelete(addr.label)}
-                                        className="p-2 text-stone-400 hover:text-red-500 rounded-lg hover:bg-red-50 transition-colors"
-                                        title="削除">
+                                        className="p-2 text-stone-400 hover:text-red-500 rounded-lg hover:bg-red-50 transition-colors" title="削除">
                                         <Trash2 className="w-4 h-4" />
                                     </button>
                                 </div>

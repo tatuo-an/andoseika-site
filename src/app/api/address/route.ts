@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 const SPREADSHEET_ID = process.env.GOOGLE_SPREADSHEET_ID!;
 const SHEET_NAME = "顧客マスタ";
-// 列: A=メール, B=ラベル, C=名前, D=郵便番号, E=都道府県, F=市区町村, G=番地, H=建物名, I=電話番号, J=誕生日(MM/DD)
+// 列: A=メール, B=ラベル, C=名前, D=郵便番号, E=都道府県, F=市区町村, G=番地, H=建物名, I=電話番号, J=誕生日(MM/DD), K=続柄
 // 旧形式 (A=メール, B=名前, C=郵便番号...) のデータは読み取り時に自動判別
 
 function getSheets() {
@@ -30,14 +30,8 @@ type Address = {
     building: string;
     phone: string;
     birthday: string;
+    relation: string;
 };
-
-// 旧形式判定: B列が郵便番号らしい場合は旧形式
-function isLegacyRow(r: string[]): boolean {
-    const b = r[1] ?? "";
-    // 郵便番号は数字とハイフンのみで構成される
-    return /^\d{3}-?\d{4}$/.test(b);
-}
 
 function rowToAddress(r: string[]): Address {
     return {
@@ -50,10 +44,10 @@ function rowToAddress(r: string[]): Address {
         building: r[7] ?? "",
         phone: r[8] ?? "",
         birthday: r[9] ?? "",
+        relation: r[10] ?? "",
     };
 }
 
-// 旧形式 (A=メール, B=名前, C=郵便番号, D=都道府県, E=市区町村, F=番地, G=建物名, H=電話番号) を新形式に変換
 function legacyRowToAddress(r: string[]): Address {
     return {
         label: "デフォルト",
@@ -65,37 +59,34 @@ function legacyRowToAddress(r: string[]): Address {
         building: r[6] ?? "",
         phone: r[7] ?? "",
         birthday: "",
+        relation: "",
     };
+}
+
+function findRowIndex(rows: string[][], email: string, targetLabel: string): number {
+    return rows.findIndex((r, i) => {
+        if (i === 0 || r[0] !== email || r[1] === "__profile__") return false;
+        const isLegacy = /^\d{3}-?\d{4}$/.test(r[2] ?? "");
+        return (isLegacy ? "デフォルト" : (r[1] ?? "")) === targetLabel;
+    });
 }
 
 // 住所一覧取得
 export async function GET() {
     const session = await auth();
-    if (!session?.user?.email) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    if (!session?.user?.email) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     const email = session.user.email;
 
     try {
         const sheets = getSheets();
-        const res = await sheets.spreadsheets.values.get({
-            spreadsheetId: SPREADSHEET_ID,
-            range: `${SHEET_NAME}!A:J`,
-        });
+        const res = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: `${SHEET_NAME}!A:K` });
         const rows = res.data.values ?? [];
         const userRows = rows.slice(1).filter(r => r[0] === email && r[1] !== "__profile__");
-
         const addresses = userRows.map(r => {
-            // 旧形式: C列が郵便番号形式なら旧形式とみなす
-            const c = r[2] ?? "";
-            const isLegacy = /^\d{3}-?\d{4}$/.test(c);
+            const isLegacy = /^\d{3}-?\d{4}$/.test(r[2] ?? "");
             return isLegacy ? legacyRowToAddress(r) : rowToAddress(r);
         });
-
-        return NextResponse.json({
-            address: addresses[0] ?? null,
-            addresses,
-        });
+        return NextResponse.json({ address: addresses[0] ?? null, addresses });
     } catch (err) {
         console.error("[address GET]", err);
         return NextResponse.json({ error: "Failed" }, { status: 500 });
@@ -105,60 +96,36 @@ export async function GET() {
 // 住所保存（追加・更新）
 export async function POST(req: NextRequest) {
     const session = await auth();
-    if (!session?.user?.email) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    if (!session?.user?.email) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     const email = session.user.email;
     const body = await req.json();
-    const { originalLabel, label, name, postalCode, prefecture, city, street, building, phone, birthday } = body as {
+    const { originalLabel, label, name, postalCode, prefecture, city, street, building, phone, birthday, relation } = body as {
         originalLabel?: string;
-        label: string;
-        name: string; postalCode: string; prefecture: string;
+        label: string; name: string; postalCode: string; prefecture: string;
         city: string; street: string; building: string; phone: string;
-        birthday?: string;
+        birthday?: string; relation?: string;
     };
 
-    if (!label?.trim()) {
-        return NextResponse.json({ error: "ラベルが必要です" }, { status: 400 });
-    }
+    if (!label?.trim()) return NextResponse.json({ error: "ラベルが必要です" }, { status: 400 });
 
     try {
         const sheets = getSheets();
-        const res = await sheets.spreadsheets.values.get({
-            spreadsheetId: SPREADSHEET_ID,
-            range: `${SHEET_NAME}!A:J`,
-        });
+        const res = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: `${SHEET_NAME}!A:K` });
         const rows = res.data.values ?? [];
-        const targetLabel = originalLabel ?? label;
-
-        // 既存行を探す: 同じメール + 同じラベル
-        // 旧形式の行（ラベルなし）は「デフォルト」を編集する時に当たる
-        const rowIndex = rows.findIndex((r, i) => {
-            if (i === 0 || r[0] !== email || r[1] === "__profile__") return false;
-            const c = r[2] ?? "";
-            const isLegacy = /^\d{3}-?\d{4}$/.test(c);
-            const rowLabel = isLegacy ? "デフォルト" : (r[1] ?? "");
-            return rowLabel === targetLabel;
-        });
-        const values = [[email, label, name, postalCode, prefecture, city, street, building, phone, birthday ?? ""]];
+        const rowIndex = findRowIndex(rows, email, originalLabel ?? label);
+        const values = [[email, label, name, postalCode, prefecture, city, street, building, phone, birthday ?? "", relation ?? ""]];
 
         if (rowIndex === -1) {
             await sheets.spreadsheets.values.append({
-                spreadsheetId: SPREADSHEET_ID,
-                range: `${SHEET_NAME}!A:J`,
-                valueInputOption: "RAW",
-                requestBody: { values },
+                spreadsheetId: SPREADSHEET_ID, range: `${SHEET_NAME}!A:K`,
+                valueInputOption: "RAW", requestBody: { values },
             });
         } else {
-            const sheetRow = rowIndex + 1;
             await sheets.spreadsheets.values.update({
-                spreadsheetId: SPREADSHEET_ID,
-                range: `${SHEET_NAME}!A${sheetRow}:J${sheetRow}`,
-                valueInputOption: "RAW",
-                requestBody: { values },
+                spreadsheetId: SPREADSHEET_ID, range: `${SHEET_NAME}!A${rowIndex + 1}:K${rowIndex + 1}`,
+                valueInputOption: "RAW", requestBody: { values },
             });
         }
-
         return NextResponse.json({ success: true });
     } catch (err) {
         console.error("[address POST]", err);
@@ -166,12 +133,35 @@ export async function POST(req: NextRequest) {
     }
 }
 
+// 続柄のみ更新
+export async function PATCH(req: NextRequest) {
+    const session = await auth();
+    if (!session?.user?.email) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const email = session.user.email;
+    const { label, relation } = await req.json() as { label: string; relation: string };
+
+    try {
+        const sheets = getSheets();
+        const res = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: `${SHEET_NAME}!A:K` });
+        const rows = res.data.values ?? [];
+        const rowIndex = findRowIndex(rows, email, label);
+        if (rowIndex === -1) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+        await sheets.spreadsheets.values.update({
+            spreadsheetId: SPREADSHEET_ID, range: `${SHEET_NAME}!K${rowIndex + 1}`,
+            valueInputOption: "RAW", requestBody: { values: [[relation]] },
+        });
+        return NextResponse.json({ success: true });
+    } catch (err) {
+        console.error("[address PATCH]", err);
+        return NextResponse.json({ error: "Failed" }, { status: 500 });
+    }
+}
+
 // 住所削除
 export async function DELETE(req: NextRequest) {
     const session = await auth();
-    if (!session?.user?.email) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    if (!session?.user?.email) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     const email = session.user.email;
     const { label } = await req.json() as { label: string };
 
@@ -181,29 +171,14 @@ export async function DELETE(req: NextRequest) {
         const sheetId = meta.data.sheets?.find(s => s.properties?.title === SHEET_NAME)?.properties?.sheetId;
         if (sheetId === undefined) return NextResponse.json({ error: "Sheet not found" }, { status: 500 });
 
-        const res = await sheets.spreadsheets.values.get({
-            spreadsheetId: SPREADSHEET_ID,
-            range: `${SHEET_NAME}!A:J`,
-        });
+        const res = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: `${SHEET_NAME}!A:K` });
         const rows = res.data.values ?? [];
-        const rowIndex = rows.findIndex((r, i) => {
-            if (i === 0 || r[0] !== email || r[1] === "__profile__") return false;
-            const c = r[2] ?? "";
-            const isLegacy = /^\d{3}-?\d{4}$/.test(c);
-            const rowLabel = isLegacy ? "デフォルト" : (r[1] ?? "");
-            return rowLabel === label;
-        });
+        const rowIndex = findRowIndex(rows, email, label);
         if (rowIndex === -1) return NextResponse.json({ success: true });
 
         await sheets.spreadsheets.batchUpdate({
             spreadsheetId: SPREADSHEET_ID,
-            requestBody: {
-                requests: [{
-                    deleteDimension: {
-                        range: { sheetId, dimension: "ROWS", startIndex: rowIndex, endIndex: rowIndex + 1 },
-                    },
-                }],
-            },
+            requestBody: { requests: [{ deleteDimension: { range: { sheetId, dimension: "ROWS", startIndex: rowIndex, endIndex: rowIndex + 1 } } }] },
         });
         return NextResponse.json({ success: true });
     } catch (err) {
