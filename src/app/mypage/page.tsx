@@ -124,11 +124,17 @@ export default async function MyPage() {
                     <p className="text-xs text-stone-400 mt-1">有効期限：{tierExpiry}</p>
                   )}
                   <p className="text-xs text-primary mt-3 font-medium">プランを変更する →</p>
-                  <CancelSupporterButton tierName={tierInfo.name} />
                 </>
               )}
             </Link>
           </div>
+
+          {/* サポーター解約 */}
+          {tier !== "free" && (
+            <div className="mb-8 px-1">
+              <CancelSupporterButton tierName={tierInfo.name} />
+            </div>
+          )}
 
           {/* 管理者エリア */}
           {isAdmin(user.email) && (

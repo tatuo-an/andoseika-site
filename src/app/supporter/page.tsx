@@ -18,6 +18,8 @@ import { HeroSlideshow } from "@/components/supporter/HeroSlideshow";
 import { getSupporterFirstViewVariant } from "@/config/supporter-variants";
 import { Header } from "@/components/layout/Header";
 import { google } from "googleapis";
+import { auth } from "@/auth";
+import { getTier } from "@/lib/tiers";
 
 const PLAN_LIMITS: Record<string, number> = { minori: 10, partner: 5 };
 
@@ -52,6 +54,31 @@ async function getActiveCounts(): Promise<Record<string, number>> {
     }
 }
 
+async function getUserActiveTier(email: string): Promise<string> {
+    try {
+        const authClient = new google.auth.GoogleAuth({
+            credentials: {
+                client_email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
+                private_key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+            },
+            scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+        });
+        const sheets = google.sheets({ version: "v4", auth: authClient });
+        const res = await sheets.spreadsheets.values.get({
+            spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
+            range: "顧客マスタ!A:F",
+        });
+        const rows = res.data.values ?? [];
+        const row = rows.find((r) => r[0] === email && r[1] === "__profile__");
+        const tier = row?.[4] ?? "";
+        const expiry = row?.[5] ?? "";
+        const today = new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Tokyo" });
+        return tier && expiry >= today ? getTier(tier) : "free";
+    } catch {
+        return "free";
+    }
+}
+
 export const metadata = {
     title: "農家サポーター制度「住民票」| &YOU 安藤青果",
     description:
@@ -75,7 +102,9 @@ export default async function SupporterPage({
 }) {
     const { fv } = await searchParams;
     const heroVariant = getSupporterFirstViewVariant(fv);
-    const counts = await getActiveCounts();
+    const [counts, session] = await Promise.all([getActiveCounts(), auth()]);
+    const userEmail = session?.user?.email ?? "";
+    const userTier = userEmail ? await getUserActiveTier(userEmail) : "free";
 
     return (
         <div className="bg-[#FAFAF9]">
@@ -334,6 +363,7 @@ export default async function SupporterPage({
                             loginPt={2}
                             birthdayPt={500}
                             popular={false}
+                            isCurrent={userTier === "mebuking"}
                         />
 
                         {/* ── 実りサポーター ── */}
@@ -347,6 +377,7 @@ export default async function SupporterPage({
                             popular={true}
                             limit={PLAN_LIMITS.minori}
                             currentCount={counts.minori ?? 0}
+                            isCurrent={userTier === "minori"}
                         />
 
                         {/* ── 農園パートナー ── */}
@@ -361,6 +392,7 @@ export default async function SupporterPage({
                             giftDelivery={true}
                             limit={PLAN_LIMITS.partner}
                             currentCount={counts.partner ?? 0}
+                            isCurrent={userTier === "partner"}
                         />
                     </div>
 
@@ -603,6 +635,7 @@ function PlanCard({
     giftDelivery = false,
     limit,
     currentCount = 0,
+    isCurrent = false,
 }: {
     tier: "mebuking" | "minori" | "partner";
     badge: string;
@@ -614,6 +647,7 @@ function PlanCard({
     giftDelivery?: boolean;
     limit?: number;
     currentCount?: number;
+    isCurrent?: boolean;
 }) {
     const remaining = limit !== undefined ? limit - currentCount : undefined;
     const isFull = remaining !== undefined && remaining <= 0;
@@ -698,7 +732,13 @@ function PlanCard({
                     )}
                 </div>
 
-                <SupporterPlanButton plan={tier} popular={popular} soldOut={isFull} />
+                {isCurrent ? (
+                    <div className="w-full py-3.5 rounded-full text-sm text-center font-bold bg-primary/10 text-primary cursor-default">
+                        ✓ 現在のプラン
+                    </div>
+                ) : (
+                    <SupporterPlanButton plan={tier} popular={popular} soldOut={isFull} />
+                )}
             </div>
         </div>
     );
