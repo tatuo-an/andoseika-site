@@ -39,6 +39,7 @@ export type InventoryItem = {
     cost: number | null;        // 原価
     profitRate: number | null;  // 利益率(%)
     coolAvailable: boolean;     // クール便対応(ファミリー単位)
+    limitedOnly: boolean;       // 会員限定商品(ファミリー単位)
     description: string;        // 商品説明（ファミリー単位）
     clickpostMax: number;       // クリックポスト最大同梱数(0=不可)
     options: string;            // ファミリー単位の割引/追加オプション (ラベル:金額|...)
@@ -118,6 +119,7 @@ export function AdminPanel({
             cost: inv.cost ?? null,
             profitRate: inv.profitRate ?? null,
             coolAvailable: inv.coolAvailable ?? false,
+            limitedOnly: inv.limitedOnly ?? false,
             description: inv.description ?? "",
             clickpostMax: inv.clickpostMax ?? 0,
             options: inv.options ?? "",
@@ -246,6 +248,15 @@ export function AdminPanel({
         setSavedInventory(false);
     };
 
+    // ファミリー全体の会員限定フラグを一括切替
+    const toggleFamilyLimited = (family: string) => {
+        setItems((prev) => {
+            const current = prev.find(i => i.family?.trim() === family)?.limitedOnly ?? false;
+            return prev.map((item) => item.family?.trim() === family ? { ...item, limitedOnly: !current } : item);
+        });
+        setSavedInventory(false);
+    };
+
 
     // ファミリー全体の在庫を一括0にする
     const zeroFamilyStock = (family: string) => {
@@ -276,8 +287,9 @@ export function AdminPanel({
             const familyMember = prev.find(i => i.family?.trim() === family);
             const familyImages = familyMember?.familyImages ?? [];
             const coolAvailable = familyMember?.coolAvailable ?? false;
+            const limitedOnly = familyMember?.limitedOnly ?? false;
             const description = familyMember?.description ?? "";
-            next.splice(lastIdx + 1, 0, { id: newId, name: "バリエーション名", stock: -1, price: null, shipType: "", hidden: false, deleted: false, nextShipment: "", badges: [], family, imageUrl: "", familyImages: [...familyImages], cost: null, profitRate: null, coolAvailable, description, clickpostMax: 0, options: familyMember?.options ?? "", salePercent: familyMember?.salePercent ?? 0, saleStart: familyMember?.saleStart ?? "", saleEnd: familyMember?.saleEnd ?? "", shipMode: familyMember?.shipMode ?? "", shipValue: familyMember?.shipValue ?? "", compactMax: 0, category: familyMember?.category ?? "" });
+            next.splice(lastIdx + 1, 0, { id: newId, name: "バリエーション名", stock: -1, price: null, shipType: "", hidden: false, deleted: false, nextShipment: "", badges: [], family, imageUrl: "", familyImages: [...familyImages], cost: null, profitRate: null, coolAvailable, limitedOnly, description, clickpostMax: 0, options: familyMember?.options ?? "", salePercent: familyMember?.salePercent ?? 0, saleStart: familyMember?.saleStart ?? "", saleEnd: familyMember?.saleEnd ?? "", shipMode: familyMember?.shipMode ?? "", shipValue: familyMember?.shipValue ?? "", compactMax: 0, category: familyMember?.category ?? "" });
             return next;
         });
         setSavedInventory(false);
@@ -416,6 +428,7 @@ export function AdminPanel({
             cost: null,
             profitRate: null,
             coolAvailable: false,
+            limitedOnly: false,
             description: "",
             clickpostMax: 0,
             options: "",
@@ -448,6 +461,7 @@ export function AdminPanel({
             cost: null,
             profitRate: null,
             coolAvailable: false,
+            limitedOnly: false,
             description: "",
             clickpostMax: 0,
             options: "",
@@ -603,6 +617,17 @@ export function AdminPanel({
                                                                     }`}
                                                                 >
                                                                     ❄ クール便
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => toggleFamilyLimited(fam)}
+                                                                    title={familyItems[0]?.limitedOnly ? "限定解除" : "会員限定にする"}
+                                                                    className={`px-2.5 py-1 rounded-full text-[11px] font-bold transition-colors border whitespace-nowrap flex-shrink-0 ${
+                                                                        familyItems[0]?.limitedOnly
+                                                                            ? "bg-emerald-500 text-white border-emerald-600"
+                                                                            : "bg-stone-50 text-stone-400 border-stone-200 hover:bg-stone-100"
+                                                                    }`}
+                                                                >
+                                                                    🔒 会員限定
                                                                 </button>
                                                                 <button
                                                                     onClick={() => toggleFamilyHidden(fam)}
