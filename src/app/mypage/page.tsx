@@ -11,12 +11,42 @@ import { MyOrders } from "@/components/mypage/MyOrders";
 import { ProfileCard } from "@/components/mypage/ProfileCard";
 import { BirthdayBanner } from "@/components/mypage/BirthdayBanner";
 import { PointsCard } from "@/components/mypage/PointsCard";
+import { google } from "googleapis";
+import { getTier, TIERS, type TierKey } from "@/lib/tiers";
+
+async function getUserTier(email: string): Promise<{ tier: TierKey; tierExpiry: string }> {
+  try {
+    const authClient = new google.auth.GoogleAuth({
+      credentials: {
+        client_email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
+        private_key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+      },
+      scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+    });
+    const sheets = google.sheets({ version: "v4", auth: authClient });
+    const res = await sheets.spreadsheets.values.get({
+      spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
+      range: "顧客マスタ!A:F",
+    });
+    const rows = res.data.values ?? [];
+    const row = rows.find((r) => r[0] === email && r[1] === "__profile__");
+    const tier = row?.[4] ?? "";
+    const tierExpiry = row?.[5] ?? "";
+    const today = new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Tokyo" });
+    const activeTier: TierKey = (tier && tierExpiry && tierExpiry >= today) ? getTier(tier) : "free";
+    return { tier: activeTier, tierExpiry };
+  } catch {
+    return { tier: "free", tierExpiry: "" };
+  }
+}
 
 export default async function MyPage() {
   const session = await auth();
   if (!session?.user) redirect("/login");
 
   const { user } = session;
+  const { tier, tierExpiry } = await getUserTier(user.email ?? "");
+  const tierInfo = TIERS[tier];
 
   return (
     <div className="min-h-screen flex flex-col bg-stone-50">
@@ -80,8 +110,21 @@ export default async function MyPage() {
                 <User className="w-5 h-5 text-primary" />
                 <h2 className="font-bold text-stone-900">サポーター会員</h2>
               </div>
-              <p className="text-sm text-stone-500">現在のプランを確認・変更できます</p>
-              <p className="text-xs text-primary mt-3 font-medium">確認する →</p>
+              {tier === "free" ? (
+                <>
+                  <p className="text-sm text-stone-500">現在のプラン：<span className="text-stone-700 font-medium">一般会員（無料）</span></p>
+                  <p className="text-xs text-primary mt-3 font-medium">プランを見る →</p>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm text-stone-500">現在のプラン</p>
+                  <p className="font-bold text-stone-900 mt-1">{tierInfo.name}</p>
+                  {tierExpiry && (
+                    <p className="text-xs text-stone-400 mt-1">有効期限：{tierExpiry}</p>
+                  )}
+                  <p className="text-xs text-primary mt-3 font-medium">プランを変更する →</p>
+                </>
+              )}
             </Link>
           </div>
 
