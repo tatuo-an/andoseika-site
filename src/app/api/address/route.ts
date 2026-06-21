@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 const SPREADSHEET_ID = process.env.GOOGLE_SPREADSHEET_ID!;
 const SHEET_NAME = "顧客マスタ";
-// 列: A=メール, B=ラベル, C=名前, D=郵便番号, E=都道府県, F=市区町村, G=番地, H=建物名, I=電話番号
+// 列: A=メール, B=ラベル, C=名前, D=郵便番号, E=都道府県, F=市区町村, G=番地, H=建物名, I=電話番号, J=誕生日(MM/DD)
 // 旧形式 (A=メール, B=名前, C=郵便番号...) のデータは読み取り時に自動判別
 
 function getSheets() {
@@ -29,6 +29,7 @@ type Address = {
     street: string;
     building: string;
     phone: string;
+    birthday: string;
 };
 
 // 旧形式判定: B列が郵便番号らしい場合は旧形式
@@ -39,11 +40,6 @@ function isLegacyRow(r: string[]): boolean {
 }
 
 function rowToAddress(r: string[]): Address {
-    if (isLegacyRow(r)) {
-        // 旧: A=メール, B=名前, C=郵便番号, D=都道府県, E=市区町村, F=番地, G=建物名, H=電話番号
-        // ↑ 実は旧形式は B=名前 のはず。ただ判定用に郵便番号位置がずれるケースもある
-        // 安全のため、列の中身で都道府県を見つける
-    }
     return {
         label: r[1] ?? "",
         name: r[2] ?? "",
@@ -53,6 +49,7 @@ function rowToAddress(r: string[]): Address {
         street: r[6] ?? "",
         building: r[7] ?? "",
         phone: r[8] ?? "",
+        birthday: r[9] ?? "",
     };
 }
 
@@ -67,6 +64,7 @@ function legacyRowToAddress(r: string[]): Address {
         street: r[5] ?? "",
         building: r[6] ?? "",
         phone: r[7] ?? "",
+        birthday: "",
     };
 }
 
@@ -82,7 +80,7 @@ export async function GET() {
         const sheets = getSheets();
         const res = await sheets.spreadsheets.values.get({
             spreadsheetId: SPREADSHEET_ID,
-            range: `${SHEET_NAME}!A:I`,
+            range: `${SHEET_NAME}!A:J`,
         });
         const rows = res.data.values ?? [];
         const userRows = rows.slice(1).filter(r => r[0] === email && r[1] !== "__profile__");
@@ -112,11 +110,12 @@ export async function POST(req: NextRequest) {
     }
     const email = session.user.email;
     const body = await req.json();
-    const { originalLabel, label, name, postalCode, prefecture, city, street, building, phone } = body as {
+    const { originalLabel, label, name, postalCode, prefecture, city, street, building, phone, birthday } = body as {
         originalLabel?: string;
         label: string;
         name: string; postalCode: string; prefecture: string;
         city: string; street: string; building: string; phone: string;
+        birthday?: string;
     };
 
     if (!label?.trim()) {
@@ -127,7 +126,7 @@ export async function POST(req: NextRequest) {
         const sheets = getSheets();
         const res = await sheets.spreadsheets.values.get({
             spreadsheetId: SPREADSHEET_ID,
-            range: `${SHEET_NAME}!A:I`,
+            range: `${SHEET_NAME}!A:J`,
         });
         const rows = res.data.values ?? [];
         const targetLabel = originalLabel ?? label;
@@ -141,12 +140,12 @@ export async function POST(req: NextRequest) {
             const rowLabel = isLegacy ? "デフォルト" : (r[1] ?? "");
             return rowLabel === targetLabel;
         });
-        const values = [[email, label, name, postalCode, prefecture, city, street, building, phone]];
+        const values = [[email, label, name, postalCode, prefecture, city, street, building, phone, birthday ?? ""]];
 
         if (rowIndex === -1) {
             await sheets.spreadsheets.values.append({
                 spreadsheetId: SPREADSHEET_ID,
-                range: `${SHEET_NAME}!A:I`,
+                range: `${SHEET_NAME}!A:J`,
                 valueInputOption: "RAW",
                 requestBody: { values },
             });
@@ -154,7 +153,7 @@ export async function POST(req: NextRequest) {
             const sheetRow = rowIndex + 1;
             await sheets.spreadsheets.values.update({
                 spreadsheetId: SPREADSHEET_ID,
-                range: `${SHEET_NAME}!A${sheetRow}:I${sheetRow}`,
+                range: `${SHEET_NAME}!A${sheetRow}:J${sheetRow}`,
                 valueInputOption: "RAW",
                 requestBody: { values },
             });
@@ -184,7 +183,7 @@ export async function DELETE(req: NextRequest) {
 
         const res = await sheets.spreadsheets.values.get({
             spreadsheetId: SPREADSHEET_ID,
-            range: `${SHEET_NAME}!A:I`,
+            range: `${SHEET_NAME}!A:J`,
         });
         const rows = res.data.values ?? [];
         const rowIndex = rows.findIndex((r, i) => {

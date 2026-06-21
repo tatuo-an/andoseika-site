@@ -9,6 +9,7 @@ import { OnlineCounter } from "@/components/admin/OnlineCounter";
 import { SkipModeToggle } from "@/components/admin/SkipModeToggle";
 import { MyOrders } from "@/components/mypage/MyOrders";
 import { ProfileCard } from "@/components/mypage/ProfileCard";
+import { BirthdayBanner } from "@/components/mypage/BirthdayBanner";
 
 export default async function MyPage() {
   const session = await auth();
@@ -29,6 +30,8 @@ export default async function MyPage() {
             email={user.email ?? ""}
             image={user.image ?? undefined}
           />
+
+          <BirthdayBanner />
 
           {/* メニュー */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">

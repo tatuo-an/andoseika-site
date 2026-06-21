@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Check, Loader2, Plus, Trash2, Edit, X, MapPin } from "lucide-react";
+import { Check, Loader2, Plus, Trash2, Edit, X, MapPin, Cake } from "lucide-react";
 
 type Address = {
     label: string;
@@ -12,11 +12,12 @@ type Address = {
     street: string;
     building: string;
     phone: string;
+    birthday: string;
 };
 
 const EMPTY: Address = {
     label: "", name: "", postalCode: "", prefecture: "",
-    city: "", street: "", building: "", phone: "",
+    city: "", street: "", building: "", phone: "", birthday: "",
 };
 
 export function AddressForm() {
@@ -189,6 +190,14 @@ export function AddressForm() {
                         className="w-full border border-stone-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
                 </div>
 
+                <div>
+                    <label className="block text-sm font-medium text-stone-700 mb-1">誕生日（任意）</label>
+                    <input name="birthday" value={editing.birthday} onChange={handleChange} placeholder="例: 08/15"
+                        maxLength={5}
+                        className="w-32 border border-stone-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                    <p className="text-xs text-stone-400 mt-1">月/日の形式で入力（例: 08/15）。誕生日2週間前にお知らせします</p>
+                </div>
+
                 <div className="flex items-center gap-3 pt-2">
                     <button type="submit" disabled={saving}
                         className="flex items-center gap-2 bg-stone-900 text-white px-8 py-3 rounded-full font-bold hover:bg-primary transition-colors disabled:opacity-50">
@@ -231,6 +240,11 @@ export function AddressForm() {
                                     </p>
                                     {addr.phone && (
                                         <p className="text-xs text-stone-400 mt-1">TEL: {addr.phone}</p>
+                                    )}
+                                    {addr.birthday && (
+                                        <p className="text-xs text-stone-400 mt-1 flex items-center gap-1">
+                                            <Cake className="w-3 h-3" />{addr.birthday}
+                                        </p>
                                     )}
                                 </div>
                                 <div className="flex flex-col gap-1 flex-shrink-0">
