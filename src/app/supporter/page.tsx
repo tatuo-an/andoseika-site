@@ -296,10 +296,6 @@ export default async function SupporterPage({
                             discount="3%"
                             loginPt={2}
                             birthdayPt={500}
-                            spring="干し芋＋はちみつスティック"
-                            springMethod="クリックポスト"
-                            fall="甘酢らっきょう 180g"
-                            fallMethod="クリックポスト"
                             popular={false}
                         />
 
@@ -311,10 +307,6 @@ export default async function SupporterPage({
                             discount="5%"
                             loginPt={3}
                             birthdayPt={1500}
-                            spring="干し芋＋はちみつスティック"
-                            springMethod="クリックポスト"
-                            fall="甘酢らっきょう 180g ＋ 訳あり梨 2個"
-                            fallMethod="コンパクト便"
                             popular={true}
                         />
 
@@ -326,10 +318,6 @@ export default async function SupporterPage({
                             discount="8%"
                             loginPt={5}
                             birthdayPt={3000}
-                            spring="干し芋＋はちみつスティック"
-                            springMethod="クリックポスト"
-                            fall="甘酢らっきょう 180g ＋ 梨 3kg箱"
-                            fallMethod="宅急便"
                             popular={false}
                             extra="限定商品アクセス＋誕生日3,000pt"
                         />
@@ -535,10 +523,6 @@ function PlanCard({
     discount,
     loginPt,
     birthdayPt,
-    spring,
-    springMethod,
-    fall,
-    fallMethod,
     popular,
     extra,
 }: {
@@ -548,10 +532,6 @@ function PlanCard({
     discount: string;
     loginPt: number;
     birthdayPt: number;
-    spring: string;
-    springMethod: string;
-    fall: string;
-    fallMethod: string;
     popular: boolean;
     extra?: string;
 }) {
@@ -616,26 +596,6 @@ function PlanCard({
                             </span>
                         </div>
                     )}
-                    <div className="flex items-start gap-2">
-                        <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                        <span className="text-stone-700 text-sm">
-                            🌸 春：{spring}
-                            <br />
-                            <span className="text-stone-400 text-xs">
-                                （{springMethod}）
-                            </span>
-                        </span>
-                    </div>
-                    <div className="flex items-start gap-2">
-                        <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                        <span className="text-stone-700 text-sm">
-                            🍂 秋：{fall}
-                            <br />
-                            <span className="text-stone-400 text-xs">
-                                （{fallMethod}）
-                            </span>
-                        </span>
-                    </div>
                     {extra && (
                         <div className="flex items-start gap-2">
                             <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
