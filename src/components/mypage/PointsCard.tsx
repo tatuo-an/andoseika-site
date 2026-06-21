@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Star, TrendingUp, ShoppingBag, Cake, LogIn } from "lucide-react";
+import { Star, TrendingUp, ShoppingBag, Cake, LogIn, Camera } from "lucide-react";
 
 type HistoryItem = {
   date: string;
@@ -11,9 +11,10 @@ type HistoryItem = {
 };
 
 const TYPE_LABEL: Record<string, { label: string; icon: React.ElementType; color: string }> = {
-  login:    { label: "ログインボーナス", icon: LogIn,      color: "text-blue-500" },
-  birthday: { label: "誕生日ボーナス",   icon: Cake,       color: "text-pink-500" },
-  use:      { label: "ポイント利用",      icon: ShoppingBag, color: "text-orange-500" },
+  login:    { label: "ログインボーナス", icon: LogIn,       color: "text-blue-500" },
+  birthday: { label: "誕生日ボーナス",   icon: Cake,        color: "text-pink-500" },
+  post:     { label: "料理投稿ボーナス", icon: Camera,      color: "text-green-500" },
+  use:      { label: "ポイント利用",     icon: ShoppingBag, color: "text-orange-500" },
 };
 
 export function PointsCard() {

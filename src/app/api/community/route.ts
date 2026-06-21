@@ -19,6 +19,9 @@ function getSheets() {
 
 const ID = process.env.GOOGLE_SPREADSHEET_ID!;
 const SHEET = "料理投稿";
+const POINTS_SHEET = "ポイント履歴";
+const POST_POINTS = 100;
+const POST_POINTS_INTERVAL_DAYS = 7;
 
 function rowToPost(r: string[], myEmail: string) {
   const likeEmails = r[7] ? r[7].split(",").filter(Boolean) : [];
@@ -79,5 +82,30 @@ export async function POST(req: NextRequest) {
     requestBody: { values: [[postId, session.user.email, name, productName, imageUrl, caption ?? "", createdAt, ""]] },
   });
 
-  return NextResponse.json({ ok: true, postId });
+  // 投稿ポイント付与（7日に1回）
+  let pointsEarned = 0;
+  try {
+    const pointsRes = await sheets.spreadsheets.values.get({ spreadsheetId: ID, range: `${POINTS_SHEET}!A:E` });
+    const pointsRows = pointsRes.data.values ?? [];
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - POST_POINTS_INTERVAL_DAYS);
+    const alreadyRecent = pointsRows.some((r) => {
+      if (r[0] !== session.user!.email || r[2] !== "post") return false;
+      const rowDate = new Date(r[1] ?? "");
+      return rowDate >= sevenDaysAgo;
+    });
+    if (!alreadyRecent) {
+      const nowJST = new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Tokyo" }) + " " +
+        new Date().toLocaleTimeString("ja-JP", { timeZone: "Asia/Tokyo", hour: "2-digit", minute: "2-digit" });
+      await sheets.spreadsheets.values.append({
+        spreadsheetId: ID,
+        range: `${POINTS_SHEET}!A:E`,
+        valueInputOption: "RAW",
+        requestBody: { values: [[session.user.email, nowJST, "post", POST_POINTS, "料理投稿ボーナス"]] },
+      });
+      pointsEarned = POST_POINTS;
+    }
+  } catch { /* ポイント付与失敗は投稿自体には影響させない */ }
+
+  return NextResponse.json({ ok: true, postId, pointsEarned });
 }

@@ -123,7 +123,7 @@ function PostCard({ post, myEmail, onLike, onSave, onEdit, onDelete }: {
   );
 }
 
-function PostForm({ myEmail, myName, onPosted }: { myEmail: string; myName: string; onPosted: (post: Post) => void }) {
+function PostForm({ myEmail, myName, onPosted }: { myEmail: string; myName: string; onPosted: (post: Post, pointsEarned: number) => void }) {
   const [products, setProducts] = useState<string[]>([]);
   const [canPost, setCanPost] = useState<boolean | null>(null);
   const [open, setOpen] = useState(false);
@@ -171,7 +171,7 @@ function PostForm({ myEmail, myName, onPosted }: { myEmail: string; myName: stri
       const data = await res.json();
       if (data.ok) {
         const now = new Date().toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" });
-        onPosted({ id: data.postId, email: myEmail, displayName, productName: selectedProduct, imageUrl: url, caption, createdAt: now, likeCount: 0, liked: false, saved: false, isOwner: true });
+        onPosted({ id: data.postId, email: myEmail, displayName, productName: selectedProduct, imageUrl: url, caption, createdAt: now, likeCount: 0, liked: false, saved: false, isOwner: true }, data.pointsEarned ?? 0);
         setOpen(false);
         setImageFile(null);
         setImagePreview("");
@@ -266,6 +266,7 @@ function PostForm({ myEmail, myName, onPosted }: { myEmail: string; myName: stri
 export function CommunityFeed({ myEmail, myName }: { myEmail: string; myName: string }) {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
+  const [toast, setToast] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/community")
@@ -273,6 +274,11 @@ export function CommunityFeed({ myEmail, myName }: { myEmail: string; myName: st
       .then((d) => setPosts(d.posts ?? []))
       .finally(() => setLoading(false));
   }, []);
+
+  function showToast(msg: string) {
+    setToast(msg);
+    setTimeout(() => setToast(null), 4000);
+  }
 
   async function handleLike(id: string) {
     if (!myEmail) return;
@@ -289,8 +295,16 @@ export function CommunityFeed({ myEmail, myName }: { myEmail: string; myName: st
   }
 
   return (
-    <div>
-      <PostForm myEmail={myEmail} myName={myName} onPosted={(post) => setPosts((prev) => [post, ...prev])} />
+    <div className="relative">
+      {toast && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-primary text-white text-sm font-bold px-5 py-2.5 rounded-full shadow-lg">
+          {toast}
+        </div>
+      )}
+      <PostForm myEmail={myEmail} myName={myName} onPosted={(post, pointsEarned) => {
+        setPosts((prev) => [post, ...prev]);
+        if (pointsEarned > 0) showToast(`⭐ 投稿ボーナス +${pointsEarned}pt 獲得！`);
+      }} />
 
       {loading && (
         <div className="space-y-4">
