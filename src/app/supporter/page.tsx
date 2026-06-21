@@ -366,7 +366,7 @@ export default async function SupporterPage({
 
                     <div className="mt-10 text-center text-sm text-stone-400 space-y-1">
                         <p>※ 年会費は1年間有効です。届け物の時期は収穫状況により前後する場合があります。</p>
-                        <p>※ 割引は通常商品代のみ対象（送料・セール品・農業体験は対象外）。誕生日ボーナスは年1回。ログインボーナスは1日1回。</p>
+                        <p>※ 割引は通常商品代のみ対象（送料・セール品・農業体験は対象外。セール品には適用されません）。誕生日ボーナスは年1回。ログインボーナスは1日1回。</p>
                     </div>
                 </div>
             </section>
@@ -480,7 +480,7 @@ export default async function SupporterPage({
                             },
                             {
                                 q: "割引はどうやって使えますか？",
-                                a: "サポーター登録後、カートで自動的に割引が適用されます（通常商品代のみ対象。送料・セール品・農業体験は対象外）。",
+                                a: "サポーター登録後、カートで自動的に割引が適用されます（通常商品代のみ対象。セール中の商品・送料・農業体験は対象外）。",
                             },
                             {
                                 q: "限定商品とは何ですか？",
@@ -668,7 +668,8 @@ function PlanCard({
                     <div className="flex items-start gap-2">
                         <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
                         <span className="text-stone-700 text-sm">
-                            通常のお買い物が <strong className="text-primary">{discount} OFF</strong>
+                            通常商品が <strong className="text-primary">{discount} OFF</strong>
+                            <span className="text-stone-400 text-xs">（セール品除く）</span>
                         </span>
                     </div>
                     <div className="flex items-start gap-2">

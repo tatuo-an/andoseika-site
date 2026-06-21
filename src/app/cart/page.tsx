@@ -665,7 +665,7 @@ export default function CartPage() {
                             {shipFeeShown > 0 && <div className="flex justify-between text-stone-600"><span>送料({shipTypeLabel(effectiveShipType)})</span><span>¥{shipFeeShown.toLocaleString()}</span></div>}
                             {profitShown > 0 && <div className="flex justify-between text-stone-600"><span>サービス料</span><span>¥{profitShown.toLocaleString()}</span></div>}
                         </div>
-                        {tierDiscountAmount > 0 && <div className="flex justify-between text-emerald-600 font-medium"><span>🌿 {tierName}割引（{Math.round(tierDiscountRate * 100)}%OFF）</span><span>−¥{tierDiscountAmount.toLocaleString()}</span></div>}
+                        {tierDiscountAmount > 0 && <div className="flex justify-between text-emerald-600 font-medium"><span>🌿 {tierName}割引（{Math.round(tierDiscountRate * 100)}%OFF・セール品除く）</span><span>−¥{tierDiscountAmount.toLocaleString()}</span></div>}
                         {saleDiscountTaxed > 0 && <div className="flex justify-between text-red-500 font-medium"><span>セール割引</span><span>−¥{saleDiscountTaxed.toLocaleString()}</span></div>}
                         {pointsToUse > 0 && <div className="flex justify-between text-yellow-600 font-medium"><span>⭐ ポイント割引</span><span>−¥{pointsToUse.toLocaleString()}</span></div>}
                         {optionsAdjustmentTaxed !== 0 && <div className={`flex justify-between ${optionsAdjustmentTaxed < 0 ? "text-emerald-600" : "text-orange-600"} font-medium`}><span>オプション調整</span><span>{optionsAdjustmentTaxed > 0 ? "+" : "−"}¥{Math.abs(optionsAdjustmentTaxed).toLocaleString()}</span></div>}
