@@ -253,9 +253,6 @@ export function AddressForm() {
                             <div className="flex items-start justify-between gap-3">
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2 mb-2 flex-wrap">
-                                        <span className="bg-primary/10 text-primary text-xs font-bold px-2.5 py-1 rounded-full">
-                                            {addr.label || "（ラベルなし）"}
-                                        </span>
                                         <span className="font-medium text-stone-900">{addr.name}</span>
                                         {addr.relation && <RelationBadge value={addr.relation} />}
                                     </div>
