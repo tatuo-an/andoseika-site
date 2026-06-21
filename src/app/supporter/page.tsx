@@ -54,6 +54,35 @@ async function getActiveCounts(): Promise<Record<string, number>> {
     }
 }
 
+type DeliveryEntry = { emoji: string; title: string; month: string; items: string; description: string };
+type DeliverySchedule = { spring: DeliveryEntry; autumn: DeliveryEntry };
+
+const DEFAULT_SCHEDULE: DeliverySchedule = {
+    spring: { emoji: "🌸", title: "春のお届け", month: "3月ごろ", items: "干し芋＋はちみつスティック", description: "冬の恵みをギュッと凝縮した、自然の甘さ。" },
+    autumn: { emoji: "🍂", title: "秋のお届け", month: "9月ごろ", items: "甘酢らっきょう＋旬の果物", description: "プランに応じて梨が届きます。秋の味覚をお楽しみに。" },
+};
+
+async function getDeliverySchedule(): Promise<DeliverySchedule> {
+    try {
+        const authClient = new google.auth.GoogleAuth({
+            credentials: {
+                client_email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
+                private_key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+            },
+            scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+        });
+        const sheets = google.sheets({ version: "v4", auth: authClient });
+        const res = await sheets.spreadsheets.values.get({
+            spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
+            range: "設定!A:B",
+        });
+        const rows = res.data.values ?? [];
+        const row = rows.find((r) => r[0] === "delivery_schedule");
+        if (row?.[1]) return JSON.parse(row[1]) as DeliverySchedule;
+    } catch { /* use default */ }
+    return DEFAULT_SCHEDULE;
+}
+
 async function getUserActiveTier(email: string): Promise<string> {
     try {
         const authClient = new google.auth.GoogleAuth({
@@ -102,7 +131,7 @@ export default async function SupporterPage({
 }) {
     const { fv } = await searchParams;
     const heroVariant = getSupporterFirstViewVariant(fv);
-    const [counts, session] = await Promise.all([getActiveCounts(), auth()]);
+    const [counts, session, schedule] = await Promise.all([getActiveCounts(), auth(), getDeliverySchedule()]);
     const userEmail = session?.user?.email ?? "";
     const userTier = userEmail ? await getUserActiveTier(userEmail) : "free";
 
@@ -414,47 +443,25 @@ export default async function SupporterPage({
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="bg-white p-6 md:p-8 rounded-2xl border border-stone-100">
-                            <div className="flex items-center gap-3 mb-4">
-                                <span className="text-3xl">🌸</span>
-                                <div>
-                                    <p className="font-bold text-stone-900 text-lg">
-                                        春のお届け
-                                    </p>
-                                    <p className="text-sm text-stone-500">
-                                        3月ごろ
-                                    </p>
-                                </div>
-                            </div>
-                            <p className="text-stone-600 leading-relaxed">
-                                干し芋＋はちみつスティック
-                                <br />
-                                <span className="text-sm text-stone-400">
-                                    冬の恵みをギュッと凝縮した、自然の甘さ。
-                                </span>
-                            </p>
-                        </div>
-
-                        <div className="bg-white p-6 md:p-8 rounded-2xl border border-stone-100">
-                            <div className="flex items-center gap-3 mb-4">
-                                <span className="text-3xl">🍂</span>
-                                <div>
-                                    <p className="font-bold text-stone-900 text-lg">
-                                        秋のお届け
-                                    </p>
-                                    <p className="text-sm text-stone-500">
-                                        9月ごろ
+                        {(["spring", "autumn"] as const).map((season) => {
+                            const entry = schedule[season];
+                            return (
+                                <div key={season} className="bg-white p-6 md:p-8 rounded-2xl border border-stone-100">
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <span className="text-3xl">{entry.emoji}</span>
+                                        <div>
+                                            <p className="font-bold text-stone-900 text-lg">{entry.title}</p>
+                                            <p className="text-sm text-stone-500">{entry.month}</p>
+                                        </div>
+                                    </div>
+                                    <p className="text-stone-600 leading-relaxed">
+                                        {entry.items}
+                                        <br />
+                                        <span className="text-sm text-stone-400">{entry.description}</span>
                                     </p>
                                 </div>
-                            </div>
-                            <p className="text-stone-600 leading-relaxed">
-                                甘酢らっきょう＋旬の果物
-                                <br />
-                                <span className="text-sm text-stone-400">
-                                    プランに応じて梨が届きます。秋の味覚をお楽しみに。
-                                </span>
-                            </p>
-                        </div>
+                            );
+                        })}
                     </div>
                 </div>
             </section>
