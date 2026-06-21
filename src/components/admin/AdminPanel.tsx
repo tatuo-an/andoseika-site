@@ -247,6 +247,15 @@ export function AdminPanel({
     };
 
 
+    // ファミリー全体の在庫を一括0にする
+    const zeroFamilyStock = (family: string) => {
+        if (!confirm(`「${family}」の全バリエーションの在庫を0にしますか？`)) return;
+        setItems((prev) => prev.map((item) =>
+            item.family?.trim() === family ? { ...item, stock: 0 } : item
+        ));
+        setSavedInventory(false);
+    };
+
     // ファミリー全体を一括非表示/表示切り替え
     const toggleFamilyHidden = (family: string) => {
         const familyItems = items.filter((i) => i.family?.trim() === family);
@@ -577,6 +586,13 @@ export function AdminPanel({
                                                                     <option value="processed">加工品・その他</option>
                                                                 </select>
                                                                 <span className="text-xs text-stone-400 whitespace-nowrap">{familyItems.length}バリエーション</span>
+                                                                <button
+                                                                    onClick={() => zeroFamilyStock(fam)}
+                                                                    title="全バリエーションの在庫を0にする"
+                                                                    className="px-2.5 py-1 rounded-full text-[11px] font-bold transition-colors border whitespace-nowrap flex-shrink-0 bg-stone-50 text-stone-400 border-stone-200 hover:bg-red-50 hover:text-red-500 hover:border-red-200"
+                                                                >
+                                                                    在庫0
+                                                                </button>
                                                                 <button
                                                                     onClick={() => toggleFamilyCool(fam)}
                                                                     title={familyItems[0]?.coolAvailable ? "クール便OFFにする" : "クール便ONにする"}
