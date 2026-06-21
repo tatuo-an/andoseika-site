@@ -13,6 +13,7 @@ import { BirthdayBanner } from "@/components/mypage/BirthdayBanner";
 import { PointsCard } from "@/components/mypage/PointsCard";
 import { google } from "googleapis";
 import { getTier, TIERS, type TierKey } from "@/lib/tiers";
+import { CancelSupporterButton } from "@/components/mypage/CancelSupporterButton";
 
 async function getUserTier(email: string): Promise<{ tier: TierKey; tierExpiry: string }> {
   try {
@@ -123,6 +124,7 @@ export default async function MyPage() {
                     <p className="text-xs text-stone-400 mt-1">有効期限：{tierExpiry}</p>
                   )}
                   <p className="text-xs text-primary mt-3 font-medium">プランを変更する →</p>
+                  <CancelSupporterButton tierName={tierInfo.name} />
                 </>
               )}
             </Link>
