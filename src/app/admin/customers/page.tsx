@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 type Customer = {
   email: string;
   displayName: string;
-  addresses: { label: string; name: string; postalCode: string; prefecture: string; city: string; street: string; building: string; phone: string }[];
+  addresses: { label: string; name: string; postalCode: string; prefecture: string; city: string; street: string; building: string; phone: string; relation: string }[];
 };
 
 async function getCustomers(): Promise<Customer[]> {
@@ -26,7 +26,7 @@ async function getCustomers(): Promise<Customer[]> {
   const sheets = google.sheets({ version: "v4", auth: authClient });
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-    range: "顧客マスタ!A:I",
+    range: "顧客マスタ!A:K",
   });
   const rows = (res.data.values ?? []).slice(1).filter((r) => r[0]);
 
@@ -42,9 +42,9 @@ async function getCustomers(): Promise<Customer[]> {
       const c = r[2] ?? "";
       const isLegacy = /^\d{3}-?\d{4}$/.test(c);
       if (isLegacy) {
-        customer.addresses.push({ label: "デフォルト", name: r[1] ?? "", postalCode: r[2] ?? "", prefecture: r[3] ?? "", city: r[4] ?? "", street: r[5] ?? "", building: r[6] ?? "", phone: r[7] ?? "" });
+        customer.addresses.push({ label: "デフォルト", name: r[1] ?? "", postalCode: r[2] ?? "", prefecture: r[3] ?? "", city: r[4] ?? "", street: r[5] ?? "", building: r[6] ?? "", phone: r[7] ?? "", relation: "" });
       } else {
-        customer.addresses.push({ label: r[1] ?? "", name: r[2] ?? "", postalCode: r[3] ?? "", prefecture: r[4] ?? "", city: r[5] ?? "", street: r[6] ?? "", building: r[7] ?? "", phone: r[8] ?? "" });
+        customer.addresses.push({ label: r[1] ?? "", name: r[2] ?? "", postalCode: r[3] ?? "", prefecture: r[4] ?? "", city: r[5] ?? "", street: r[6] ?? "", building: r[7] ?? "", phone: r[8] ?? "", relation: r[10] ?? "" });
       }
     }
   }
@@ -96,6 +96,9 @@ export default async function CustomersPage() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-0.5">
                             {a.name && <span className="text-xs font-medium text-stone-700">{a.name}</span>}
+                            {a.relation === "自分" && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 border border-blue-300">本人</span>}
+                            {a.relation === "家族" && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-green-100 text-green-700 border border-green-300">家族</span>}
+                            {a.relation === "友達" && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-orange-100 text-orange-700 border border-orange-300">友達</span>}
                             {a.phone && <span className="text-xs text-stone-400">{a.phone}</span>}
                           </div>
                           <p className="text-sm text-stone-700">
