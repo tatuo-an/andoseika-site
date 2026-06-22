@@ -124,19 +124,19 @@ function toTaxIncluded(price: number, cost: number | null): number {
     return Math.round(cost * 1.08 + others * 1.10);
 }
 
-/** kg/g 単位から100g単価を計算 */
-function pricePerUnit(label: string, price: number): string | null {
-    const kg = label.match(/(\d+(?:\.\d+)?)\s*kg/i);
-    if (kg) {
-        const g = parseFloat(kg[1]) * 1000;
-        return `¥${Math.round(price / g)} / g`;
-    }
-    const g = label.match(/(\d+)\s*g/i);
-    if (g) {
-        const grams = parseInt(g[1]);
-        return `¥${Math.round(price / grams)} / g`;
-    }
-    return null;
+/** ラベルから「単量×本数」を読み取り、合計内容量の表示文字列を返す */
+function totalContent(label: string): string | null {
+    const m = label.match(/(\d+(?:\.\d+)?)\s*(kg|g)\s*[×x✕]\s*(\d+)\s*本/i);
+    if (!m) return null;
+    const unitValue = parseFloat(m[1]);
+    const unit = m[2].toLowerCase();
+    const count = parseInt(m[3], 10);
+    if (!isFinite(unitValue) || !isFinite(count) || count <= 0) return null;
+    const totalInGrams = (unit === "kg" ? unitValue * 1000 : unitValue) * count;
+    const display = unit === "kg" && totalInGrams >= 1000
+        ? `${(totalInGrams / 1000).toString()}kg`
+        : `${totalInGrams}g`;
+    return `合計${display}`;
 }
 
 async function buildVariations(familyRows: SheetRow[]): Promise<VariationInfo[]> {
@@ -399,7 +399,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                                             const isSelected = v.id === id;
                                             const vOnSale = isSaleActive(v.salePercent, v.saleStart, v.saleEnd);
                                             const vDisplayPrice = vOnSale ? calcSalePrice(v.priceTaxed, v.salePercent) : v.priceTaxed;
-                                            const perUnit = pricePerUnit(v.label, vDisplayPrice);
+                                            const totalLabel = totalContent(v.label);
                                             return (
                                                 <Link
                                                     key={v.id}
@@ -415,8 +415,8 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                                                 >
                                                     <span className="font-bold">{v.label}</span>
                                                     <span className={`text-xs mt-0.5 ${vOnSale && !v.isSoldOut ? "text-red-500 font-bold" : ""}`}>{v.isSoldOut ? "売り切れ" : `¥${vDisplayPrice.toLocaleString()}`}</span>
-                                                    {perUnit && !v.isSoldOut && (
-                                                        <span className="text-[10px] text-stone-400 mt-0.5">({perUnit})</span>
+                                                    {totalLabel && !v.isSoldOut && (
+                                                        <span className="text-[10px] text-stone-400 mt-0.5">({totalLabel})</span>
                                                     )}
                                                 </Link>
                                             );
