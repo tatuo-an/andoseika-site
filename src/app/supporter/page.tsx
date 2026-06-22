@@ -416,7 +416,7 @@ export default async function SupporterPage({
                             price={10000}
                             discount="8%"
                             loginPt={5}
-                            birthdayPt={3000}
+                            birthdayPt={2000}
                             popular={false}
                             giftDelivery={true}
                             limit={PLAN_LIMITS.partner}
@@ -608,7 +608,7 @@ function FreePlanCard() {
                 <div className="space-y-3 mb-6 text-stone-400">
                     <div className="flex items-start gap-2">
                         <Check className="h-5 w-5 flex-shrink-0 mt-0.5" />
-                        <span className="text-sm">割引なし</span>
+                        <span className="text-sm">通常価格で購入可能</span>
                     </div>
                     <div className="flex items-start gap-2">
                         <Check className="h-5 w-5 flex-shrink-0 mt-0.5" />
@@ -616,11 +616,7 @@ function FreePlanCard() {
                     </div>
                     <div className="flex items-start gap-2">
                         <Check className="h-5 w-5 flex-shrink-0 mt-0.5" />
-                        <span className="text-sm">誕生日ボーナスなし</span>
-                    </div>
-                    <div className="flex items-start gap-2">
-                        <Check className="h-5 w-5 flex-shrink-0 mt-0.5" />
-                        <span className="text-sm">限定商品購入不可</span>
+                        <span className="text-sm">通常商品を自由に購入できます</span>
                     </div>
                 </div>
                 <div className="w-full py-3.5 rounded-full text-sm text-center font-bold bg-stone-100 text-stone-400 cursor-default">
