@@ -77,15 +77,6 @@ function calcEstimatedDate(shipMode: string, shipValue: string): string {
   return "";
 }
 
-async function appendToLegacySheet(values: string[][]) {
-  const sheets = await getSheets();
-  await sheets.spreadsheets.values.append({
-    spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID,
-    range: "シート1!A:F",
-    valueInputOption: "USER_ENTERED",
-    requestBody: { values },
-  });
-}
 
 export async function POST(req: NextRequest) {
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
@@ -151,8 +142,6 @@ export async function POST(req: NextRequest) {
         productNames, amount, "paid", sessionId, desiredDate, desiredTime,
         "", "", estimatedDate,
       ]]);
-      // 旧シートにも書き込み（後方互換）
-      await appendToLegacySheet([[now, name, email, phone, address, productNames, amount, sessionId]]);
       console.log("[webhook] order recorded:", orderNumber, sessionId);
 
       // ポイント消費記録
