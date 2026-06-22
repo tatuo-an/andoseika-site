@@ -20,8 +20,17 @@ function getSheets() {
 const ID = process.env.GOOGLE_SPREADSHEET_ID!;
 const SHEET = "料理投稿";
 const POINTS_SHEET = "ポイント履歴";
-const POST_POINTS = 100;
-const POST_POINTS_INTERVAL_DAYS = 7;
+const POST_POINTS_FIRST = 100;
+const POST_POINTS_REPEAT = 50;
+
+function currentMonthJST(): string {
+  // YYYY-MM in Asia/Tokyo
+  return new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Tokyo" }).slice(0, 7);
+}
+
+function bonusKey(email: string, yyyymm: string): string {
+  return `cooking_post_bonus:${email}:${yyyymm}`;
+}
 
 function rowToPost(r: string[], myEmail: string) {
   const likeEmails = r[7] ? r[7].split(",").filter(Boolean) : [];
@@ -82,28 +91,39 @@ export async function POST(req: NextRequest) {
     requestBody: { values: [[postId, session.user.email, name, productName, imageUrl, caption ?? "", createdAt, ""]] },
   });
 
-  // 投稿ポイント付与（7日に1回）
+  // 投稿ポイント付与（暦月1回／初回100pt・以降50pt）
   let pointsEarned = 0;
   try {
+    const email = session.user.email;
+    const yyyymm = currentMonthJST();
+    const thisMonthKey = bonusKey(email, yyyymm);
+
     const pointsRes = await sheets.spreadsheets.values.get({ spreadsheetId: ID, range: `${POINTS_SHEET}!A:E` });
     const pointsRows = pointsRes.data.values ?? [];
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - POST_POINTS_INTERVAL_DAYS);
-    const alreadyRecent = pointsRows.some((r) => {
-      if (r[0] !== session.user!.email || r[2] !== "post") return false;
-      const rowDate = new Date(r[1] ?? "");
-      return rowDate >= sevenDaysAgo;
+
+    // 過去の料理投稿ポイント付与履歴
+    const postBonusRows = pointsRows.filter((r) => r[0] === email && r[2] === "post");
+    // 今月分は既に付与済みか（memo列の一意キーで判定。旧形式も日付プレフィックスで救済）
+    const alreadyThisMonth = postBonusRows.some((r) => {
+      const memo = String(r[4] ?? "");
+      if (memo.includes(thisMonthKey)) return true;
+      const ts = String(r[1] ?? "");
+      return ts.startsWith(yyyymm);
     });
-    if (!alreadyRecent) {
+    if (!alreadyThisMonth) {
+      // 過去に1度でも料理投稿ボーナスを受け取っていれば50pt、初回は100pt
+      const isFirstEver = postBonusRows.length === 0;
+      const award = isFirstEver ? POST_POINTS_FIRST : POST_POINTS_REPEAT;
       const nowJST = new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Tokyo" }) + " " +
         new Date().toLocaleTimeString("ja-JP", { timeZone: "Asia/Tokyo", hour: "2-digit", minute: "2-digit" });
+      const memo = `料理投稿ボーナス (${thisMonthKey})`;
       await sheets.spreadsheets.values.append({
         spreadsheetId: ID,
         range: `${POINTS_SHEET}!A:E`,
         valueInputOption: "RAW",
-        requestBody: { values: [[session.user.email, nowJST, "post", POST_POINTS, "料理投稿ボーナス"]] },
+        requestBody: { values: [[email, nowJST, "post", award, memo]] },
       });
-      pointsEarned = POST_POINTS;
+      pointsEarned = award;
     }
   } catch { /* ポイント付与失敗は投稿自体には影響させない */ }
 

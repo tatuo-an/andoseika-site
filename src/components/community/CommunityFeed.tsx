@@ -212,6 +212,10 @@ function PostForm({ myEmail, myName, onPosted }: { myEmail: string; myName: stri
 
       {open && (
         <div className="border-t border-stone-100 p-5 space-y-4">
+          <div className="bg-amber-50/70 border border-amber-100 rounded-xl p-3 text-xs text-stone-600 leading-relaxed">
+            <p>初めての料理投稿で100pt、次回以降は月1回まで50ptをプレゼントします。</p>
+            <p className="text-stone-500 mt-1">※料理投稿ポイントの付与は、1アカウントにつき月1回までです。重複投稿や、料理と関係のない投稿などはポイント付与の対象外です。</p>
+          </div>
           <div
             onClick={() => fileRef.current?.click()}
             className="aspect-video w-full bg-stone-50 border-2 border-dashed border-stone-200 rounded-xl flex items-center justify-center cursor-pointer hover:border-primary/40 transition-colors overflow-hidden"
