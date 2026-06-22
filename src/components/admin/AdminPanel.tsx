@@ -20,6 +20,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { BADGE_COLORS, DEFAULT_BADGE_COLOR } from "@/lib/badges";
+import { AiDraftButton } from "@/components/admin/AiDraftButton";
 
 export { BADGE_COLORS, DEFAULT_BADGE_COLOR };
 
@@ -656,6 +657,10 @@ export function AdminPanel({
                                                         />
                                                         <FamilyDescription
                                                             description={familyItems[0]?.description ?? ""}
+                                                            family={fam}
+                                                            variations={familyItems.map((fi) => fi.name).filter(Boolean)}
+                                                            category={familyItems[0]?.category ?? ""}
+                                                            badges={familyItems[0]?.badges ?? []}
                                                             onCommit={(desc) => updateFamilyDescription(fam, desc)}
                                                         />
                                                         <FamilyOptions
@@ -1253,8 +1258,12 @@ function FamilySale({ salePercent, saleStart, saleEnd, onUpdate }: {
 }
 
 // ── ファミリーの商品説明テキストエリア ─────────────────────────
-function FamilyDescription({ description, onCommit }: {
+function FamilyDescription({ description, family, variations, category, badges, onCommit }: {
     description: string;
+    family?: string;
+    variations?: string[];
+    category?: string;
+    badges?: string[];
     onCommit: (description: string) => void;
 }) {
     const [local, setLocal] = useState(description);
@@ -1271,6 +1280,16 @@ function FamilyDescription({ description, onCommit }: {
                     placeholder="商品の特徴・産地・食べ方などを入力（詳細ページに表示されます）"
                     rows={2}
                     className="flex-1 border border-stone-200 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-primary/30 resize-y"
+                />
+            </div>
+            <div className="flex justify-end mt-1">
+                <AiDraftButton
+                    family={family ?? ""}
+                    variations={variations}
+                    category={category}
+                    badges={badges}
+                    current={local}
+                    onApply={(text) => { setLocal(text); onCommit(text); }}
                 />
             </div>
         </div>
