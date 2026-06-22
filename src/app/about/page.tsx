@@ -268,8 +268,7 @@ export default function AboutPage() {
                                 <div className="grid md:grid-cols-3 gap-4 border-b border-stone-100 pb-6">
                                     <dt className="font-bold text-stone-900">所在地</dt>
                                     <dd className="md:col-span-2 text-stone-600">
-                                        〒682-0000<br />
-                                        鳥取県倉吉市・北栄町エリア
+                                        鳥取県倉吉市・北栄町を中心に活動
                                     </dd>
                                 </div>
                                 <div className="grid md:grid-cols-3 gap-4">
