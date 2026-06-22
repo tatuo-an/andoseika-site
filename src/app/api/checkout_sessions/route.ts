@@ -161,10 +161,16 @@ export async function POST(req: NextRequest) {
             line_items[0].price_data.unit_amount -= deduct;
         }
 
-        // ポイント割引（通常商品の商品本体行のみから差し引く。送料・サービス料には適用しない）
-        if (pointsUsed && pointsUsed > 0 && line_items[0]) {
-            const deduct = Math.min(pointsUsed, line_items[0].price_data.unit_amount);
-            line_items[0].price_data.unit_amount -= deduct;
+        // ポイント割引（通常商品本体・送料・サービス料に利用可。先頭行から順に控除。
+        // セール商品分は上限算出時にカート側で除外済）
+        if (pointsUsed && pointsUsed > 0) {
+            let remaining = pointsUsed;
+            for (const li of line_items) {
+                if (remaining <= 0) break;
+                const deduct = Math.min(remaining, li.price_data.unit_amount);
+                li.price_data.unit_amount -= deduct;
+                remaining -= deduct;
+            }
         }
 
         // 配送先住所が事前指定されている場合は Stripe 側で再入力させない

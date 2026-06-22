@@ -299,8 +299,15 @@ export default function CartPage() {
     const tierDiscountAmount = tierDiscountRate > 0 ? Math.floor(tierDiscountBase * tierDiscountRate) : 0;
 
     const grandTotalBeforePoints = itemsBodyShown + shipFeeShown + profitShown + surchargeTaxed + coolFeeTaxed + optionsAdjustmentTaxed - saleDiscountTaxed - tierDiscountAmount;
-    // ポイントは通常商品（非セール）の商品代金にのみ利用可。送料・サービス料・セール商品は対象外。
-    const pointEligibleAmount = Math.max(0, tierDiscountBase - tierDiscountAmount);
+    // ポイントは通常商品代金（割引後）・送料・サービス料に利用可。セール商品分のみ対象外。
+    const saleItemsTaxedTotal = cartItems.reduce((sum, item) => {
+        const pct = (item as { salePercent?: number }).salePercent ?? 0;
+        if (pct <= 0) return sum;
+        const original = itemTaxedUnit(item as { price: number; cost?: number | null });
+        const after = Math.ceil(original * (1 - pct / 100));
+        return sum + after * item.quantity;
+    }, 0);
+    const pointEligibleAmount = Math.max(0, grandTotalBeforePoints - saleItemsTaxedTotal);
     const maxPointsUsable = Math.min(pointsBalance, pointEligibleAmount);
     const effectivePointsToUse = Math.min(pointsToUse, maxPointsUsable);
     const grandTotal = Math.max(0, grandTotalBeforePoints - effectivePointsToUse);
@@ -685,7 +692,7 @@ export default function CartPage() {
                                 </p>
                             )}
                             <p className="text-[11px] text-stone-400 mt-2 leading-relaxed">
-                                ポイントは通常商品の商品代金にのみご利用いただけます。セール商品・送料・サービス料・年会費・農業体験は対象外です。詳細は
+                                ポイントは通常商品の商品代金・送料・サービス料にご利用いただけます。セール商品・年会費・農業体験は対象外です。詳細は
                                 <Link href="/point-terms" className="text-primary hover:underline">ポイント利用条件</Link>
                                 をご覧ください。
                             </p>
