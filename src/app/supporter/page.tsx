@@ -324,7 +324,7 @@ export default async function SupporterPage({
                             {
                                 icon: BookOpen,
                                 title: "農家厳選の届け物",
-                                desc: "年2回、たっちゃんが選んだ旬の味覚をお届け。秋には人気の梨も届きます。農家だから分かる、一番おいしいタイミングで。",
+                                desc: "農園パートナー限定で年2回、たっちゃんが選んだ旬の味覚を送料込みでお届け。農家だから分かる、一番おいしいタイミングで。",
                                 // 新甘泉の梨・クローズアップ（テキストなし）
                                 driveId: "12uK6xxFXHD0XWcLOCh-CKErXWmslUzaU",
                             },
@@ -374,8 +374,7 @@ export default async function SupporterPage({
                             あなたに合ったプランを選べます
                         </h2>
                         <p className="text-stone-500 max-w-xl mx-auto">
-                            毎日のログインボーナス・誕生日ボーナス・お買い物割引。
-                            さらに年2回の届け物と、限定商品へのアクセス特典付き。
+                            会員割引、ログインボーナス、サポーター限定商品をご用意。農園パートナーには、さらに年2回、旬の詰め合わせを送料込みでお届けします。
                         </p>
                     </div>
 
@@ -526,8 +525,8 @@ export default async function SupporterPage({
                                 a: "芽吹きサポーター以上の方だけが購入できる特別な商品です。数量限定の人気商品や旬の特選品が対象になります。",
                             },
                             {
-                                q: "届け物の内容は毎年同じですか？",
-                                a: "基本的な構成は同じですが、収穫状況に応じて品種やサイズが変わることがあります。その年の一番おいしいものをお届けします。",
+                                q: "詰め合わせが届くのは、どのプランですか？",
+                                a: "年2回の旬の詰め合わせは、農園パートナー限定の特典です。送料込みのため、発送時に追加料金はかかりません。芽吹きサポーター、実りサポーターには詰め合わせの発送はありません。内容と発送時期は、収穫状況に応じて事前にご案内します。",
                             },
                             {
                                 q: "途中で解約はできますか？",
@@ -729,7 +728,8 @@ function PlanCard({
                         <div className="flex items-start gap-2">
                             <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
                             <span className="text-stone-700 text-sm">
-                                年2回、<strong className="text-primary">詰め合わせセット</strong>をお届け
+                                年2回、旬の詰め合わせをお届け<br />
+                                <span className="text-stone-400 text-xs">送料込み・追加料金なし</span>
                             </span>
                         </div>
                     )}

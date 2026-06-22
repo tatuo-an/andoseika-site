@@ -2,6 +2,9 @@ import Link from "next/link";
 import { Check, Heart } from "lucide-react";
 
 const PLAN_LABELS: Record<string, string> = {
+    mebuking: "芽吹きサポーター",
+    minori: "実りサポーター",
+    partner: "農園パートナー",
     light: "ライト（梅）",
     standard: "スタンダード（竹）",
     premium: "プレミアム（松）",
@@ -35,13 +38,15 @@ export default function SupporterSuccessPage({
                 </p>
 
                 <div className="bg-white border border-stone-100 rounded-2xl p-6 md:p-8 mb-8 text-left space-y-3">
-                    <div className="flex items-start gap-3">
-                        <Heart className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                        <p className="text-stone-700 text-sm">
-                            年2回の届け物は<strong>春（3月頃）</strong>と
-                            <strong>秋（9月頃）</strong>にお届けします
-                        </p>
-                    </div>
+                    {plan === "partner" && (
+                        <div className="flex items-start gap-3">
+                            <Heart className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                            <p className="text-stone-700 text-sm">
+                                年2回の旬の詰め合わせは<strong>春（3月頃）</strong>と
+                                <strong>秋（9月頃）</strong>に送料込みでお届けします
+                            </p>
+                        </div>
+                    )}
                     <div className="flex items-start gap-3">
                         <Heart className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
                         <p className="text-stone-700 text-sm">
