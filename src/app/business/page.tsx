@@ -133,7 +133,7 @@ export default function BusinessPage() {
                                     <span className="bg-green-100 text-green-800 text-xs font-bold px-2 py-1 rounded">通年</span>
                                 </div>
                                 <p className="text-stone-600 text-sm mb-4">
-                                    シャキシャキとした食感がたまらない、鳥取砂丘らっきょうの甘酢漬け。
+                                    シャキシャキとした食感がたまらない、鳥取県北栄町産らっきょうの甘酢漬け。
                                 </p>
                                 <div className="text-xs text-stone-500 bg-white p-3 rounded border border-stone-200">
                                     <p><span className="font-bold">出荷形態:</span> パック / 業務用袋 等</p>
@@ -161,7 +161,7 @@ export default function BusinessPage() {
                                 <div>
                                     <h3 className="text-xl font-bold text-stone-900 mb-2">地域ならではの品質</h3>
                                     <p className="text-stone-600 leading-relaxed">
-                                        鳥取砂丘の特有な砂地で育つ長芋やらっきょうは、きめ細やかで粘りが強く、他にはない味わいです。
+                                        鳥取県北栄町の砂地で育つ長芋やらっきょうは、きめ細やかで粘りが強く、他にはない味わいです。
                                     </p>
                                 </div>
                             </div>
