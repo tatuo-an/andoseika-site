@@ -196,21 +196,64 @@ async function getProduct(id: string): Promise<Product | null> {
     return null;
 }
 
-export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
-    const { id } = await params;
-    let product = await getProduct(id);
-    if (!product) {
-        // family fallback for metadata
-        const inv = await getInventoryData(id);
+/** 本文と同じフォールバック順で商品を解決する（メタデータと表示の判定を一致させる） */
+async function resolveProductForDisplay(id: string): Promise<{ product: Product | null; hidden: boolean; deleted: boolean }> {
+    const [direct, inv] = await Promise.all([getProduct(id), getInventoryData(id)]);
+    let product = direct;
+
+    // ファミリーの兄弟商品から MicroCMS データを流用
+    if (!product && inv.familyRows.length > 0) {
         for (const row of inv.familyRows) {
-            if (row.id !== id) { product = await getProduct(row.id); if (product) break; }
+            if (row.id !== id) {
+                const rep = await getProduct(row.id);
+                if (rep) { product = rep; break; }
+            }
         }
     }
-    if (!product) return { title: "商品が見つかりません" };
+
+    // ファミリー全員が MicroCMS 未登録 → 在庫シートから擬似 Product を構築
+    if (!product && inv.family) {
+        const now = new Date().toISOString();
+        product = {
+            id,
+            name: inv.family,
+            category: "processed",
+            price: inv.price ?? 0,
+            description: inv.description || "",
+            image: { url: inv.imageUrl || inv.familyImages[0] || "", width: 800, height: 800 },
+            createdAt: now,
+            updatedAt: now,
+            publishedAt: now,
+            revisedAt: now,
+        } as Product;
+    }
+
+    return { product, hidden: inv.hidden, deleted: inv.deleted };
+}
+
+const FALLBACK_DESCRIPTION = "鳥取県の安藤青果がお届けする商品です。商品の内容や発送情報をご確認いただけます。";
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+    const { id } = await params;
+    const { product, hidden, deleted } = await resolveProductForDisplay(id);
+    if (!product || hidden || deleted) return { title: "商品が見つかりません" };
+
+    const description = (product.description ?? "").trim() || FALLBACK_DESCRIPTION;
+    const imageUrl = product.image?.url || "";
     return {
         title: product.name,
-        description: product.description,
-        openGraph: { title: product.name, description: product.description, images: [product.image?.url || ""] },
+        description,
+        openGraph: {
+            title: product.name,
+            description,
+            images: imageUrl ? [imageUrl] : undefined,
+        },
+        twitter: {
+            card: "summary_large_image",
+            title: product.name,
+            description,
+            images: imageUrl ? [imageUrl] : undefined,
+        },
     };
 }
 
