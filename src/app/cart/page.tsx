@@ -299,8 +299,11 @@ export default function CartPage() {
     const tierDiscountAmount = tierDiscountRate > 0 ? Math.floor(tierDiscountBase * tierDiscountRate) : 0;
 
     const grandTotalBeforePoints = itemsBodyShown + shipFeeShown + profitShown + surchargeTaxed + coolFeeTaxed + optionsAdjustmentTaxed - saleDiscountTaxed - tierDiscountAmount;
-    const maxPointsUsable = Math.min(pointsBalance, Math.max(0, grandTotalBeforePoints - 1));
-    const grandTotal = grandTotalBeforePoints - pointsToUse;
+    // ポイントは通常商品（非セール）の商品代金にのみ利用可。送料・サービス料・セール商品は対象外。
+    const pointEligibleAmount = Math.max(0, tierDiscountBase - tierDiscountAmount);
+    const maxPointsUsable = Math.min(pointsBalance, pointEligibleAmount);
+    const effectivePointsToUse = Math.min(pointsToUse, maxPointsUsable);
+    const grandTotal = Math.max(0, grandTotalBeforePoints - effectivePointsToUse);
 
     // カート内全商品の中で最も遅い「お届け開始日」を計算
     const cartEarliestDelivery = (() => {
@@ -375,7 +378,7 @@ export default function CartPage() {
                     desiredDeliveryTime: desiredTime,
                     shipMode: cartShipMode,
                     shipValue: cartShipValue,
-                    pointsUsed: pointsToUse,
+                    pointsUsed: effectivePointsToUse,
                     tierDiscount: tierDiscountAmount,
                     quote: {
                         matchedVariantId: matchedVariant?.id ?? null,
@@ -649,29 +652,43 @@ export default function CartPage() {
                                 <h2 className="font-bold text-stone-900">ポイントを使う</h2>
                                 <span className="text-xs text-stone-400 ml-auto">残高 {pointsBalance.toLocaleString()}pt</span>
                             </div>
-                            <div className="flex items-center gap-3">
-                                <input
-                                    type="number"
-                                    min={0}
-                                    max={maxPointsUsable}
-                                    step={1}
-                                    value={pointsToUse}
-                                    onChange={(e) => {
-                                        const v = Math.max(0, Math.min(maxPointsUsable, parseInt(e.target.value) || 0));
-                                        setPointsToUse(v);
-                                    }}
-                                    className="w-32 border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
-                                />
-                                <span className="text-sm text-stone-500">pt（最大 {maxPointsUsable.toLocaleString()}pt = ¥{maxPointsUsable.toLocaleString()}）</span>
-                                {maxPointsUsable > 0 && (
-                                    <button
-                                        onClick={() => setPointsToUse(maxPointsUsable)}
-                                        className="text-xs text-primary hover:underline font-medium"
-                                    >
-                                        全て使う
-                                    </button>
-                                )}
-                            </div>
+                            {maxPointsUsable > 0 ? (
+                                <>
+                                    <div className="flex items-center gap-3">
+                                        <input
+                                            type="number"
+                                            min={0}
+                                            max={maxPointsUsable}
+                                            step={1}
+                                            value={pointsToUse}
+                                            onChange={(e) => {
+                                                const v = Math.max(0, Math.min(maxPointsUsable, parseInt(e.target.value) || 0));
+                                                setPointsToUse(v);
+                                            }}
+                                            className="w-32 border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                        />
+                                        <span className="text-sm text-stone-500">pt</span>
+                                        <button
+                                            onClick={() => setPointsToUse(maxPointsUsable)}
+                                            className="text-xs text-primary hover:underline font-medium"
+                                        >
+                                            全て使う
+                                        </button>
+                                    </div>
+                                    <p className="text-xs text-stone-500 mt-2">
+                                        この注文では最大 {maxPointsUsable.toLocaleString()}pt（= ¥{maxPointsUsable.toLocaleString()}）まで利用できます。
+                                    </p>
+                                </>
+                            ) : (
+                                <p className="text-sm text-stone-500">
+                                    この注文ではポイントを利用できません。
+                                </p>
+                            )}
+                            <p className="text-[11px] text-stone-400 mt-2 leading-relaxed">
+                                ポイントは通常商品の商品代金にのみご利用いただけます。セール商品・送料・サービス料・年会費・農業体験は対象外です。詳細は
+                                <Link href="/point-terms" className="text-primary hover:underline">ポイント利用条件</Link>
+                                をご覧ください。
+                            </p>
                         </div>
                     )}
 
@@ -685,7 +702,7 @@ export default function CartPage() {
                         </div>
                         {tierDiscountAmount > 0 && <div className="flex justify-between text-emerald-600 font-medium"><span>🌿 {tierName}割引（{Math.round(tierDiscountRate * 100)}%OFF・セール品除く）</span><span>−¥{tierDiscountAmount.toLocaleString()}</span></div>}
                         {saleDiscountTaxed > 0 && <div className="flex justify-between text-red-500 font-medium"><span>セール割引</span><span>−¥{saleDiscountTaxed.toLocaleString()}</span></div>}
-                        {pointsToUse > 0 && <div className="flex justify-between text-yellow-600 font-medium"><span>⭐ ポイント割引</span><span>−¥{pointsToUse.toLocaleString()}</span></div>}
+                        {effectivePointsToUse > 0 && <div className="flex justify-between text-yellow-600 font-medium"><span>⭐ ポイント割引</span><span>−¥{effectivePointsToUse.toLocaleString()}</span></div>}
                         {optionsAdjustmentTaxed !== 0 && <div className={`flex justify-between ${optionsAdjustmentTaxed < 0 ? "text-emerald-600" : "text-orange-600"} font-medium`}><span>オプション調整</span><span>{optionsAdjustmentTaxed > 0 ? "+" : "−"}¥{Math.abs(optionsAdjustmentTaxed).toLocaleString()}</span></div>}
                         {isExtraRegion && surchargeTaxed > 0 && <div className="flex justify-between text-orange-600"><span>追加送料({regionRow!.region})</span><span>+¥{surchargeTaxed.toLocaleString()}</span></div>}
                         {coolFeeTaxed > 0 && <div className="flex justify-between text-blue-600"><span>❄ クール便</span><span>+¥{coolFeeTaxed.toLocaleString()}</span></div>}

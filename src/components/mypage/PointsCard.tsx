@@ -86,7 +86,11 @@ export function PointsCard() {
       <p className="text-3xl font-bold text-stone-900">
         {balance.toLocaleString()}<span className="text-sm font-normal text-stone-500 ml-1">pt</span>
       </p>
-      <p className="text-xs text-stone-400 mt-1">1pt = 1円としてお買い物に使えます</p>
+      <p className="text-xs text-stone-400 mt-1">
+        1pt = 1円として通常商品の商品代金にご利用いただけます（
+        <a href="/point-terms" className="text-primary hover:underline">利用条件</a>
+        ）
+      </p>
 
       {showHistory && history.length > 0 && (
         <div className="mt-4 space-y-2 border-t border-stone-100 pt-3">
