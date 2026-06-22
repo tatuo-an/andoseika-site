@@ -380,7 +380,10 @@ export default async function SupporterPage({
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 md:gap-5 items-stretch">
                         {/* ── 一般会員 ── */}
-                        <FreePlanCard />
+                        <FreePlanCard
+                            isLoggedIn={!!userEmail}
+                            isCurrent={!!userEmail && userTier === "free"}
+                        />
 
                         {/* ── 芽吹きサポーター ── */}
                         <PlanCard
@@ -514,7 +517,7 @@ export default async function SupporterPage({
                         {[
                             {
                                 q: "ポイントはどうやって貯まりますか？",
-                                a: "毎日のログインでボーナスポイントが付与されます（一般会員1pt、芽吹き2pt、実り3pt、農園パートナー5pt）。また、誕生日にはプランに応じたボーナスポイントが年1回付与されます。料理投稿でも100ptが7日に1回もらえます。",
+                                a: "無料会員登録後、毎日のログインでボーナスポイントが付与されます（一般会員1pt、芽吹き2pt、実り3pt、農園パートナー5pt）。未登録・未ログイン状態ではポイントは付与されません。また、誕生日にはプランに応じたボーナスポイントが年1回付与されます。料理投稿でも100ptが7日に1回もらえます。",
                             },
                             {
                                 q: "割引はどうやって使えますか？",
@@ -596,10 +599,16 @@ export default async function SupporterPage({
 
 /* ══════════════════════ PLAN CARD COMPONENT ══════════════════════ */
 /* 一般会員（無料）カード */
-function FreePlanCard() {
+function FreePlanCard({
+    isLoggedIn,
+    isCurrent,
+}: {
+    isLoggedIn: boolean;
+    isCurrent: boolean;
+}) {
     return (
         <div className="relative rounded-2xl overflow-hidden border border-stone-200 shadow-sm flex flex-col h-full">
-            <div className="bg-white flex-1 p-6 md:p-8">
+            <div className="bg-white flex-1 p-6 md:p-8 flex flex-col">
                 <p className="font-bold text-lg mb-4 text-stone-500">👤 一般会員</p>
                 <div className="mb-6">
                     <span className="font-bold text-stone-900 text-4xl">無料</span>
@@ -611,15 +620,29 @@ function FreePlanCard() {
                     </div>
                     <div className="flex items-start gap-2">
                         <Check className="h-5 w-5 flex-shrink-0 mt-0.5" />
-                        <span className="text-sm">ログインボーナス 1pt/日</span>
+                        <span className="text-sm">無料会員登録で、1日1ptのログインボーナス</span>
                     </div>
                     <div className="flex items-start gap-2">
                         <Check className="h-5 w-5 flex-shrink-0 mt-0.5" />
                         <span className="text-sm">通常商品を自由に購入できます</span>
                     </div>
                 </div>
-                <div className="w-full py-3.5 rounded-full text-sm text-center font-bold bg-stone-100 text-stone-400 cursor-default">
-                    登録不要
+                <div className="mt-auto">
+                    {!isLoggedIn ? (
+                        <Link
+                            href="/login"
+                            className="block w-full py-3.5 rounded-full text-sm text-center font-bold bg-primary text-white hover:bg-primary/90 transition-colors"
+                        >
+                            無料で会員登録
+                        </Link>
+                    ) : isCurrent ? (
+                        <div
+                            aria-disabled="true"
+                            className="w-full py-3.5 rounded-full text-sm text-center font-bold bg-stone-100 text-stone-500 cursor-default border border-stone-200"
+                        >
+                            現在のプラン
+                        </div>
+                    ) : null}
                 </div>
             </div>
         </div>

@@ -44,7 +44,7 @@ export default async function MyPageSupporterPage() {
   const tierInfo = TIERS[tier];
 
   const TIER_BENEFITS: Record<TierKey, string[]> = {
-    free:     ["ログインボーナス 1pt/日", "通常価格で購入可能", "通常商品を自由に購入できます"],
+    free:     ["無料会員登録で、1日1ptのログインボーナス", "通常価格で購入可能", "通常商品を自由に購入できます"],
     mebuking: ["通常商品 3% OFF（セール品除く）", "ログインボーナス 2pt/日", "誕生日ボーナス 500pt", "限定商品を購入可能"],
     minori:   ["通常商品 5% OFF（セール品除く）", "ログインボーナス 3pt/日", "誕生日ボーナス 1,500pt", "限定商品を購入可能"],
     partner:  ["通常商品 8% OFF（セール品除く）", "ログインボーナス 5pt/日", "誕生日ボーナス 2,000pt", "限定商品を購入可能", "年2回 詰め合わせセットをお届け"],
