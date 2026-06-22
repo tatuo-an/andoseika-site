@@ -89,7 +89,8 @@ export async function sendOrderConfirmationEmail(params: OrderEmailParams) {
   `.trim();
 
   await resend.emails.send({
-    from: "安藤青果 <info@andoseika.jp>",
+    from: "安藤青果 <onboarding@resend.dev>",
+    replyTo: "imamura0510@gmail.com",
     to,
     subject: `【安藤青果】ご注文ありがとうございます（${orderNumber}）`,
     html,
