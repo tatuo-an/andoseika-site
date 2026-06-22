@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { X, Send, Loader2 } from "lucide-react";
 import Image from "next/image";
+import { useSession } from "next-auth/react";
 
 type Message = {
   role: "user" | "assistant";
@@ -10,13 +11,27 @@ type Message = {
 };
 
 export function ChatWidget() {
+  const { status } = useSession();
+  const isLoggedIn = status === "authenticated";
   const [open, setOpen] = useState(false);
   const [showBanner, setShowBanner] = useState(true);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  // ログイン済みなら履歴を読み込む
+  useEffect(() => {
+    if (!isLoggedIn || historyLoaded) return;
+    fetch("/api/chat/history")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.messages?.length > 0) setMessages(d.messages);
+      })
+      .finally(() => setHistoryLoaded(true));
+  }, [isLoggedIn, historyLoaded]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -57,6 +72,20 @@ export function ChatWidget() {
         if (done) break;
         accumulated += decoder.decode(value, { stream: true });
         setMessages([...nextMessages, { role: "assistant", content: accumulated }]);
+      }
+
+      // ログイン済みなら履歴を保存
+      if (isLoggedIn && accumulated) {
+        await fetch("/api/chat/history", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ role: "user", content: text }),
+        });
+        await fetch("/api/chat/history", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ role: "assistant", content: accumulated }),
+        });
       }
     } catch {
       setMessages([
