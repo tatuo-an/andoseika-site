@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { google } from "googleapis";
 import { getTier } from "@/lib/tiers";
+import { sendOrderConfirmationEmail } from "@/lib/sendOrderEmail";
 
 export const dynamic = "force-dynamic";
 
@@ -143,6 +144,23 @@ export async function POST(req: NextRequest) {
         "", "", estimatedDate,
       ]]);
       console.log("[webhook] order recorded:", orderNumber, sessionId);
+
+      // 注文確認メール送信
+      if (email) {
+        try {
+          await sendOrderConfirmationEmail({
+            to: email,
+            customerName: shippingName || name || "お客様",
+            orderNumber,
+            productNames,
+            amount,
+            estimatedDate,
+            address,
+          });
+        } catch (mailErr) {
+          console.error("[webhook] failed to send order email", mailErr);
+        }
+      }
 
       // ポイント消費記録
       const pointsUsed = parseInt(piMeta.pointsUsed ?? "0", 10);
