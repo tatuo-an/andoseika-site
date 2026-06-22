@@ -47,7 +47,7 @@ export default function AboutPage() {
                                 <div className="relative aspect-[3/4] w-full max-w-sm mx-auto rounded-2xl overflow-hidden shadow-xl">
                                     <Image
                                         src="/images/about/founders.jpg"
-                                        alt="会長 安藤達夫と代表 安藤匡志"
+                                        alt="代表 安藤達夫と運営責任者 安藤匡志"
                                         fill
                                         className="object-cover"
                                     />
@@ -55,8 +55,8 @@ export default function AboutPage() {
                                 <div className="space-y-8">
                                     <div className="space-y-4">
                                         <div className="border-l-4 border-primary pl-4">
-                                            <p className="text-sm text-stone-500 font-bold mb-1">Chairman</p>
-                                            <h3 className="text-2xl font-bold text-stone-900">会長：安藤 達夫</h3>
+                                            <p className="text-sm text-stone-500 font-bold mb-1">Owner</p>
+                                            <h3 className="text-2xl font-bold text-stone-900">代表（事業主）：安藤 達夫</h3>
                                         </div>
                                         <p className="text-stone-600 leading-relaxed">
                                             長年の経験と勘で、鳥取の土と向き合い続けてきました。<br />
@@ -66,8 +66,8 @@ export default function AboutPage() {
                                     </div>
                                     <div className="space-y-4">
                                         <div className="border-l-4 border-primary pl-4">
-                                            <p className="text-sm text-stone-500 font-bold mb-1">Representative</p>
-                                            <h3 className="text-2xl font-bold text-stone-900">代表：安藤 匡志</h3>
+                                            <p className="text-sm text-stone-500 font-bold mb-1">Operations</p>
+                                            <h3 className="text-2xl font-bold text-stone-900">運営責任者：安藤 匡志</h3>
                                         </div>
                                         <p className="text-stone-600 leading-relaxed">
                                             父の背中を追いかけながら、新しい農業の形を模索しています。<br />
@@ -258,11 +258,11 @@ export default function AboutPage() {
                                     <dd className="md:col-span-2 text-stone-600">&YOU 安藤青果（アンドユー アンドウセイカ）</dd>
                                 </div>
                                 <div className="grid md:grid-cols-3 gap-4 border-b border-stone-100 pb-6">
-                                    <dt className="font-bold text-stone-900">会長</dt>
+                                    <dt className="font-bold text-stone-900">代表（事業主）</dt>
                                     <dd className="md:col-span-2 text-stone-600">安藤 達夫</dd>
                                 </div>
                                 <div className="grid md:grid-cols-3 gap-4 border-b border-stone-100 pb-6">
-                                    <dt className="font-bold text-stone-900">代表</dt>
+                                    <dt className="font-bold text-stone-900">運営責任者</dt>
                                     <dd className="md:col-span-2 text-stone-600">安藤 匡志</dd>
                                 </div>
                                 <div className="grid md:grid-cols-3 gap-4 border-b border-stone-100 pb-6">
