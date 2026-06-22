@@ -58,8 +58,8 @@ type DeliveryEntry = { emoji: string; title: string; month: string; items: strin
 type DeliverySchedule = { spring: DeliveryEntry; autumn: DeliveryEntry };
 
 const DEFAULT_SCHEDULE: DeliverySchedule = {
-    spring: { emoji: "🌸", title: "春のお届け", month: "3月ごろ", items: "干し芋＋はちみつスティック", description: "冬の恵みをギュッと凝縮した、自然の甘さ。" },
-    autumn: { emoji: "🍂", title: "秋のお届け", month: "9月ごろ", items: "甘酢らっきょう＋旬の果物", description: "プランに応じて梨が届きます。秋の味覚をお楽しみに。" },
+    spring: { emoji: "🌸", title: "春のお届け", month: "3月ごろ", items: "", description: "旬の農産物・規格外農産物・安藤青果がおすすめする商品から選ぶおまかせセット。" },
+    autumn: { emoji: "🍂", title: "秋のお届け", month: "9月ごろ", items: "", description: "旬の農産物・規格外農産物・安藤青果がおすすめする商品から選ぶおまかせセット。" },
 };
 
 async function getDeliverySchedule(): Promise<DeliverySchedule> {
@@ -429,6 +429,7 @@ export default async function SupporterPage({
 
                     <div className="mt-10 text-center text-sm text-stone-400 space-y-1">
                         <p>※ 年会費は1年間有効です。届け物の時期は収穫状況により前後する場合があります。</p>
+                        <p>※ 詰め合わせの内容はお選びいただけません。天候、収穫量、在庫状況などにより、内容や発送時期を変更する場合があります。</p>
                         <p>※ 割引は通常商品代のみ対象（送料・セール品・農業体験は対象外。セール品には適用されません）。誕生日ボーナスは年1回。ログインボーナスは1日1回。</p>
                     </div>
                 </div>
@@ -444,6 +445,9 @@ export default async function SupporterPage({
                         </h2>
                     </div>
 
+                    <p className="text-center text-sm text-stone-500 leading-relaxed mb-8">
+                        農園パートナーには、1年間の契約期間中に2回、旬の詰め合わせを送料込みでお届けします。内容は、旬の農産物や安藤青果がおすすめする商品から選ぶおまかせセットです。発送時期は、収穫状況に応じて事前にご案内します。
+                    </p>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {(["spring", "autumn"] as const).map((season) => {
                             const entry = schedule[season];
@@ -456,10 +460,8 @@ export default async function SupporterPage({
                                             <p className="text-sm text-stone-500">{entry.month}</p>
                                         </div>
                                     </div>
-                                    <p className="text-stone-600 leading-relaxed">
-                                        {entry.items}
-                                        <br />
-                                        <span className="text-sm text-stone-400">{entry.description}</span>
+                                    <p className="text-stone-600 leading-relaxed text-sm">
+                                        {entry.description}
                                     </p>
                                 </div>
                             );
@@ -530,6 +532,10 @@ export default async function SupporterPage({
                             {
                                 q: "詰め合わせが届くのは、どのプランですか？",
                                 a: "年2回の旬の詰め合わせは、農園パートナー限定の特典です。送料込みのため、発送時に追加料金はかかりません。芽吹きサポーター、実りサポーターには詰め合わせの発送はありません。内容と発送時期は、収穫状況に応じて事前にご案内します。",
+                            },
+                            {
+                                q: "詰め合わせの商品は選べますか？",
+                                a: "詰め合わせは、発送時期に合わせて安藤青果が選ぶおまかせセットです。商品の種類、品種、内容量、組み合わせはお選びいただけません。収穫状況や在庫状況により内容を決定します。",
                             },
                             {
                                 q: "契約期間と自動更新はどうなりますか？",
