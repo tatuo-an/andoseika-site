@@ -56,6 +56,14 @@ export default function SupporterSuccessPage({
                     <div className="flex items-start gap-3">
                         <Heart className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
                         <p className="text-stone-700 text-sm">
+                            契約期間は本日から1年間で、終了後は1年ごとに自動更新されます。次回更新日と次回請求額は
+                            <a href="/mypage/supporter" className="text-primary hover:underline">マイページ</a>
+                            からご確認いただけます。
+                        </p>
+                    </div>
+                    <div className="flex items-start gap-3">
+                        <Heart className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                        <p className="text-stone-700 text-sm">
                             ご不明な点はお気軽にお問い合わせください
                         </p>
                     </div>

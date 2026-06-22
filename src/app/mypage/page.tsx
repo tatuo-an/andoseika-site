@@ -116,7 +116,7 @@ export default async function MyPage() {
               ) : (
                 <>
                   <p className="text-sm text-stone-500">現在のプラン：<span className="text-stone-900 font-bold">{tierInfo.name}</span></p>
-                  {tierExpiry && <p className="text-xs text-stone-400 mt-0.5">有効期限：{tierExpiry}</p>}
+                  {tierExpiry && <p className="text-xs text-stone-400 mt-0.5">次回更新日：{tierExpiry}</p>}
                 </>
               )}
               <p className="text-xs text-primary mt-3 font-medium">確認する →</p>

@@ -10,7 +10,7 @@ import { CancelSupporterButton } from "@/components/mypage/CancelSupporterButton
 
 export const dynamic = "force-dynamic";
 
-async function getUserTier(email: string): Promise<{ tier: TierKey; tierExpiry: string }> {
+async function getUserTier(email: string): Promise<{ tier: TierKey; tierExpiry: string; cancelRequestedAt: string }> {
   try {
     const authClient = new google.auth.GoogleAuth({
       credentials: {
@@ -22,17 +22,18 @@ async function getUserTier(email: string): Promise<{ tier: TierKey; tierExpiry: 
     const sheets = google.sheets({ version: "v4", auth: authClient });
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-      range: "顧客マスタ!A:F",
+      range: "顧客マスタ!A:G",
     });
     const rows = res.data.values ?? [];
     const row = rows.find((r) => r[0] === email && r[1] === "__profile__");
     const tier = row?.[4] ?? "";
     const tierExpiry = row?.[5] ?? "";
+    const cancelRequestedAt = row?.[6] ?? "";
     const today = new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Tokyo" });
     const activeTier: TierKey = tier && tierExpiry && tierExpiry >= today ? getTier(tier) : "free";
-    return { tier: activeTier, tierExpiry };
+    return { tier: activeTier, tierExpiry, cancelRequestedAt };
   } catch {
-    return { tier: "free", tierExpiry: "" };
+    return { tier: "free", tierExpiry: "", cancelRequestedAt: "" };
   }
 }
 
@@ -40,8 +41,10 @@ export default async function MyPageSupporterPage() {
   const session = await auth();
   if (!session?.user) redirect("/login");
 
-  const { tier, tierExpiry } = await getUserTier(session.user.email ?? "");
+  const { tier, tierExpiry, cancelRequestedAt } = await getUserTier(session.user.email ?? "");
   const tierInfo = TIERS[tier];
+  const isCancelled = !!cancelRequestedAt && tier !== "free";
+  const nextRenewalDate = tierExpiry; // 契約期間終了日 = 次回更新日
 
   const TIER_BENEFITS: Record<TierKey, string[]> = {
     free:     ["無料会員登録で、1日1ptのログインボーナス", "通常価格で購入可能", "通常商品を自由に購入できます"],
@@ -68,10 +71,28 @@ export default async function MyPageSupporterPage() {
             <div className="flex items-center gap-3 mb-4">
               {tier !== "free" && <Star className="w-5 h-5 text-primary fill-primary" />}
               <p className="text-xl font-bold text-stone-900">{tierInfo.name}</p>
-              {tier !== "free" && tierExpiry && (
-                <span className="text-xs text-stone-400 ml-auto">〜 {tierExpiry}</span>
-              )}
             </div>
+
+            {tier !== "free" && nextRenewalDate && (
+              <div className="border border-stone-100 rounded-xl p-4 mb-4 text-sm space-y-1.5">
+                {isCancelled ? (
+                  <>
+                    <p className="text-stone-800 font-medium">解約受付済み</p>
+                    <p className="text-stone-600">特典最終日：<span className="font-medium">{nextRenewalDate}</span></p>
+                    <p className="text-stone-600">次回の請求はありません。</p>
+                    <p className="text-stone-500 text-xs mt-2">契約終了後は一般会員へ変更されます（アカウント・保有ポイントは維持されます）。</p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-stone-600">契約期間：<span className="font-medium text-stone-800">〜 {nextRenewalDate}</span></p>
+                    <p className="text-stone-600">次回更新日：<span className="font-medium text-stone-800">{nextRenewalDate}</span></p>
+                    <p className="text-stone-600">次回請求額：<span className="font-medium text-stone-800">¥{tierInfo.price.toLocaleString()}（年会費・1年ごとに自動更新）</span></p>
+                    <p className="text-stone-500 text-xs mt-2">次回更新日の前日までに自動更新を停止すると、次年度の年会費は請求されません。</p>
+                  </>
+                )}
+              </div>
+            )}
+
             <ul className="space-y-2">
               {TIER_BENEFITS[tier].map((b) => (
                 <li key={b} className="flex items-center gap-2 text-sm text-stone-600">
@@ -91,11 +112,18 @@ export default async function MyPageSupporterPage() {
               {tier === "free" ? "サポータープランを見る" : "プランを変更する"}
             </Link>
 
-            {tier !== "free" && (
+            {tier !== "free" && !isCancelled && (
               <div className="bg-white rounded-2xl shadow-sm p-5">
-                <p className="text-sm font-bold text-stone-700 mb-1">プランを解約する</p>
-                <p className="text-xs text-stone-400 mb-3">解約すると即時に一般会員へ変更されます。</p>
+                <p className="text-sm font-bold text-stone-700 mb-1">次回の自動更新を停止する</p>
+                <p className="text-xs text-stone-500 mb-3 leading-relaxed">
+                  自動更新を停止しても、現在の契約期間終了（{nextRenewalDate || "—"}）までサポーター特典をご利用いただけます。次回更新日以降の年会費は請求されません。
+                </p>
                 <CancelSupporterButton tierName={tierInfo.name} redirectTo="/mypage/supporter" />
+                <p className="text-[11px] text-stone-400 mt-3">
+                  マイページから停止できない場合は、
+                  <Link href="/contact/personal" className="text-primary hover:underline">お問い合わせフォーム</Link>
+                  からも受け付けます。
+                </p>
               </div>
             )}
           </div>

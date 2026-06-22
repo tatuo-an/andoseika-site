@@ -5,6 +5,17 @@ import { Loader2 } from "lucide-react";
 
 type PlanKey = "mebuking" | "minori" | "partner";
 
+const PLAN_NAMES: Record<PlanKey, string> = {
+    mebuking: "芽吹きサポーター",
+    minori: "実りサポーター",
+    partner: "農園パートナー",
+};
+const PLAN_PRICES: Record<PlanKey, number> = {
+    mebuking: 3000,
+    minori: 5000,
+    partner: 10000,
+};
+
 export function SupporterPlanButton({
     plan,
     popular,
@@ -74,6 +85,20 @@ export function SupporterPlanButton({
 
     return (
         <div>
+            <details className="mb-2 bg-stone-50 border border-stone-200 rounded-lg text-xs text-stone-600">
+                <summary className="cursor-pointer px-3 py-2 font-medium text-stone-700">
+                    重要事項を確認する
+                </summary>
+                <ul className="px-3 pb-3 space-y-1 leading-relaxed list-disc list-inside text-stone-600">
+                    <li>プラン：{PLAN_NAMES[plan]}</li>
+                    <li>年会費：¥{PLAN_PRICES[plan].toLocaleString()}（税込）</li>
+                    <li>契約期間：決済完了日から1年間</li>
+                    <li>1年ごとに同じプランへ自動更新（次回更新日に同額を請求）</li>
+                    <li>解約方法：マイページから「次回の自動更新を停止する」</li>
+                    <li>解約期限：次回更新日の前日まで（以降は次年度分を請求）</li>
+                    <li>年会費お支払い後の利用者都合による途中解約・日割り返金はありません</li>
+                </ul>
+            </details>
             {skipMode && (
                 <div className="mb-2 flex items-center gap-1.5 bg-amber-50 border border-amber-300 rounded-lg px-3 py-2 text-xs text-amber-800">
                     <span>🧪</span>
