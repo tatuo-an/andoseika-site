@@ -47,6 +47,14 @@ export default function SupporterSuccessPage({
                             </p>
                         </div>
                     )}
+                    {plan === "minori" && (
+                        <div className="flex items-start gap-3">
+                            <Heart className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                            <p className="text-stone-700 text-sm">
+                                年1回の旬の小さなお届けを送料込みでお届けします。<a href="/mypage/supporter" className="text-primary hover:underline">マイページ</a>で<strong>春便り</strong>または<strong>秋便り</strong>をお選びください。
+                            </p>
+                        </div>
+                    )}
                     <div className="flex items-start gap-3">
                         <Heart className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
                         <p className="text-stone-700 text-sm">

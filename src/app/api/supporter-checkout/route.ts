@@ -36,7 +36,7 @@ const PLANS: Record<Exclude<TierKey, "free">, { name: string; description: strin
     },
     minori: {
         name: "実りサポーター 年会費",
-        description: "通常商品5%OFF／ログインボーナス3pt／誕生日ボーナス1,500pt／限定商品アクセス",
+        description: "通常商品5%OFF／ログインボーナス3pt／誕生日ボーナス1,000pt／限定商品アクセス／年1回お届け（送料込み）",
     },
     partner: {
         name: "農園パートナー 年会費",

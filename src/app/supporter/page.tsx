@@ -324,7 +324,7 @@ export default async function SupporterPage({
                             {
                                 icon: BookOpen,
                                 title: "農家厳選の届け物",
-                                desc: "農園パートナー限定で年2回、たっちゃんが選んだ旬の味覚を送料込みでお届け。農家だから分かる、一番おいしいタイミングで。",
+                                desc: "実りサポーターには年1回、農園パートナーには年2回、たっちゃんが選んだ旬の味覚を送料込みでお届け。農家だから分かる、一番おいしいタイミングで。",
                                 // 新甘泉の梨・クローズアップ（テキストなし）
                                 driveId: "12uK6xxFXHD0XWcLOCh-CKErXWmslUzaU",
                             },
@@ -374,7 +374,7 @@ export default async function SupporterPage({
                             あなたに合ったプランを選べます
                         </h2>
                         <p className="text-stone-500 max-w-xl mx-auto">
-                            会員割引、ログインボーナス、サポーター限定商品をご用意。農園パートナーには、さらに年2回、旬の詰め合わせを送料込みでお届けします。
+                            会員割引、ログインボーナス、サポーター限定商品をご用意。実りサポーターには年1回、農園パートナーには年2回、旬の詰め合わせを送料込みでお届けします。
                         </p>
                     </div>
 
@@ -404,8 +404,9 @@ export default async function SupporterPage({
                             price={5000}
                             discount="5%"
                             loginPt={3}
-                            birthdayPt={1500}
+                            birthdayPt={1000}
                             popular={true}
+                            giftDelivery="annual"
                             limit={PLAN_LIMITS.minori}
                             currentCount={counts.minori ?? 0}
                             isCurrent={userTier === "minori"}
@@ -420,7 +421,7 @@ export default async function SupporterPage({
                             loginPt={5}
                             birthdayPt={2000}
                             popular={false}
-                            giftDelivery={true}
+                            giftDelivery="biannual"
                             limit={PLAN_LIMITS.partner}
                             currentCount={counts.partner ?? 0}
                             isCurrent={userTier === "partner"}
@@ -446,7 +447,7 @@ export default async function SupporterPage({
                     </div>
 
                     <p className="text-center text-sm text-stone-500 leading-relaxed mb-8">
-                        農園パートナーには、1年間の契約期間中に2回、旬の詰め合わせを送料込みでお届けします。内容は、旬の農産物や安藤青果がおすすめする商品から選ぶおまかせセットです。発送時期は、収穫状況に応じて事前にご案内します。
+                        実りサポーターには年1回、農園パートナーには年2回、旬の詰め合わせを送料込みでお届けします。内容は、旬の農産物や安藤青果がおすすめする商品から選ぶおまかせセットです。実りサポーターは加入時に春便り・秋便りのどちらかをお選びいただけます。発送時期は、収穫状況に応じて事前にご案内します。
                     </p>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {(["spring", "autumn"] as const).map((season) => {
@@ -531,11 +532,11 @@ export default async function SupporterPage({
                             },
                             {
                                 q: "詰め合わせが届くのは、どのプランですか？",
-                                a: "年2回の旬の詰め合わせは、農園パートナー限定の特典です。送料込みのため、発送時に追加料金はかかりません。芽吹きサポーター、実りサポーターには詰め合わせの発送はありません。内容と発送時期は、収穫状況に応じて事前にご案内します。",
+                                a: "実りサポーターは年1回（春または秋からお選びいただけます）、農園パートナーは年2回（春・秋）、旬の詰め合わせをお届けします。いずれも送料込みのため、発送時に追加料金はかかりません。芽吹きサポーターには詰め合わせの発送はありません。発送時期は、収穫状況に応じて事前にご案内します。",
                             },
                             {
                                 q: "詰め合わせの商品は選べますか？",
-                                a: "詰め合わせは、発送時期に合わせて安藤青果が選ぶおまかせセットです。商品の種類、品種、内容量、組み合わせはお選びいただけません。収穫状況や在庫状況により内容を決定します。",
+                                a: "詰め合わせは、発送時期に合わせて安藤青果が選ぶおまかせセットです。商品の種類、品種、内容量、組み合わせはお選びいただけません。収穫状況や在庫状況により内容を決定します。なお、実りサポーターは加入時に春便り・秋便りのどちらでお届けするかをお選びいただけます（マイページから変更可能）。",
                             },
                             {
                                 q: "契約期間と自動更新はどうなりますか？",
@@ -667,7 +668,7 @@ function PlanCard({
     loginPt,
     birthdayPt,
     popular,
-    giftDelivery = false,
+    giftDelivery = "none",
     limit,
     currentCount = 0,
     isCurrent = false,
@@ -679,7 +680,7 @@ function PlanCard({
     loginPt: number;
     birthdayPt: number;
     popular: boolean;
-    giftDelivery?: boolean;
+    giftDelivery?: "none" | "annual" | "biannual";
     limit?: number;
     currentCount?: number;
     isCurrent?: boolean;
@@ -757,7 +758,16 @@ function PlanCard({
                         <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
                         <span className="text-stone-700 text-sm">限定商品を購入可能</span>
                     </div>
-                    {giftDelivery && (
+                    {giftDelivery === "annual" && (
+                        <div className="flex items-start gap-2">
+                            <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                            <span className="text-stone-700 text-sm">
+                                年1回、旬の小さなお届け<br />
+                                <span className="text-stone-400 text-xs">送料込み・追加料金なし</span>
+                            </span>
+                        </div>
+                    )}
+                    {giftDelivery === "biannual" && (
                         <div className="flex items-start gap-2">
                             <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
                             <span className="text-stone-700 text-sm">

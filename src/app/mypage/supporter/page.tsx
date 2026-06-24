@@ -7,6 +7,7 @@ import Link from "next/link";
 import { google } from "googleapis";
 import { getTier, TIERS, type TierKey } from "@/lib/tiers";
 import { CancelSupporterButton } from "@/components/mypage/CancelSupporterButton";
+import { DeliverySeasonSelector } from "@/components/mypage/DeliverySeasonSelector";
 
 export const dynamic = "force-dynamic";
 
@@ -49,7 +50,7 @@ export default async function MyPageSupporterPage() {
   const TIER_BENEFITS: Record<TierKey, string[]> = {
     free:     ["無料会員登録で、1日1ptのログインボーナス", "通常価格で購入可能", "通常商品を自由に購入できます"],
     mebuking: ["通常商品 3% OFF（セール品除く）", "ログインボーナス 2pt/日", "誕生日ボーナス 500pt", "限定商品を購入可能"],
-    minori:   ["通常商品 5% OFF（セール品除く）", "ログインボーナス 3pt/日", "誕生日ボーナス 1,500pt", "限定商品を購入可能"],
+    minori:   ["通常商品 5% OFF（セール品除く）", "ログインボーナス 3pt/日", "誕生日ボーナス 1,000pt", "限定商品を購入可能", "年1回 旬の小さなお届け（送料込み）"],
     partner:  ["通常商品 8% OFF（セール品除く）", "ログインボーナス 5pt/日", "誕生日ボーナス 2,000pt", "限定商品を購入可能", "年2回 詰め合わせセットをお届け"],
   };
 
@@ -102,6 +103,14 @@ export default async function MyPageSupporterPage() {
               ))}
             </ul>
           </div>
+
+          {/* 実りサポーター：春便り／秋便り選択 */}
+          {tier === "minori" && (
+            <div className="bg-white rounded-2xl shadow-sm p-6 mb-4">
+              <p className="text-xs font-bold text-stone-400 uppercase tracking-widest mb-3">詰め合わせのお届け時期</p>
+              <DeliverySeasonSelector />
+            </div>
+          )}
 
           {/* アクション */}
           <div className="space-y-3">
