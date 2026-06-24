@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
+import { auth } from "@/auth";
 
 const stripe = process.env.STRIPE_SECRET_KEY
     ? new Stripe(process.env.STRIPE_SECRET_KEY, {
@@ -60,6 +61,10 @@ export async function POST(req: NextRequest) {
         if (!cartDetails) {
             return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
         }
+
+        // 通知先（LINE/メール）特定のため、ログイン中のメールを取得
+        const nextAuthSession = await auth();
+        const userEmail = nextAuthSession?.user?.email ?? "";
         console.log("[checkout] shipMode:", shipMode, "shipValue:", shipValue);
 
         const baseUrl = getBaseUrl(req);
@@ -209,6 +214,7 @@ export async function POST(req: NextRequest) {
                     shipMode: shipMode ?? "",
                     shipValue: shipValue ?? "",
                     pointsUsed: (pointsUsed ?? 0).toString(),
+                    userEmail,
                 },
             },
         };

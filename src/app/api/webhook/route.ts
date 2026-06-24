@@ -3,6 +3,7 @@ import Stripe from "stripe";
 import { google } from "googleapis";
 import { getTier } from "@/lib/tiers";
 import { sendOrderConfirmationEmail } from "@/lib/sendOrderEmail";
+import { sendOrderLineNotification } from "@/lib/sendOrderLine";
 
 export const dynamic = "force-dynamic";
 
@@ -145,12 +146,55 @@ export async function POST(req: NextRequest) {
       ]]);
       console.log("[webhook] order recorded:", orderNumber, sessionId);
 
-      // 注文確認メール送信
-      if (email) {
+      // 注文確認通知（LINE優先、失敗時または未登録時はメールへフォールバック）
+      const notifyName = shippingName || name || "お客様";
+      const userEmailFromMeta = piMeta.userEmail ?? meta.userEmail ?? "";
+      let sentViaLine = false;
+
+      // 1) LINE userId を顧客マスタから探索（NextAuthのemail優先、なければStripeのemail）
+      const lookupEmail = userEmailFromMeta || email;
+      let lineUserId = "";
+      if (lookupEmail) {
+        try {
+          const sheets = await getSheets();
+          const res = await sheets.spreadsheets.values.get({
+            spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID,
+            range: "顧客マスタ!A:H",
+          });
+          const rows = res.data.values ?? [];
+          const row = rows.find((r) => r[0] === lookupEmail && r[1] === "__profile__");
+          lineUserId = row?.[7] ?? "";
+        } catch (lookupErr) {
+          console.error("[webhook] line userId lookup failed", lookupErr);
+        }
+      }
+
+      // 2) LINE push を試みる
+      if (lineUserId) {
+        try {
+          const baseUrl = process.env.NEXT_PUBLIC_URL || "https://andoseika.jp";
+          await sendOrderLineNotification({
+            lineUserId,
+            customerName: notifyName,
+            orderNumber,
+            productNames,
+            amount,
+            estimatedDate,
+            baseUrl,
+          });
+          sentViaLine = true;
+          console.log("[webhook] LINE notification sent:", orderNumber, lineUserId);
+        } catch (lineErr) {
+          console.error("[webhook] LINE push failed, falling back to email", lineErr);
+        }
+      }
+
+      // 3) LINE 未送信ならメール
+      if (!sentViaLine && email) {
         try {
           await sendOrderConfirmationEmail({
             to: email,
-            customerName: shippingName || name || "お客様",
+            customerName: notifyName,
             orderNumber,
             productNames,
             amount,
