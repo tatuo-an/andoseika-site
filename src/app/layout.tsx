@@ -45,6 +45,7 @@ import { FavoritesProvider } from "@/components/providers/FavoritesProvider";
 import { SessionProvider } from "@/components/providers/SessionProvider";
 import { ChatWidget } from "@/components/ChatWidget";
 import { GuestBanner } from "@/components/GuestBanner";
+import { LineFriendBanner } from "@/components/LineFriendBanner";
 
 export default function RootLayout({
   children,
@@ -58,6 +59,7 @@ export default function RootLayout({
       >
         <SessionProvider>
           <GuestBanner />
+          <LineFriendBanner />
           <CartProvider>
             <FavoritesProvider>{children}</FavoritesProvider>
           </CartProvider>
