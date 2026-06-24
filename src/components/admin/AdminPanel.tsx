@@ -21,6 +21,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { BADGE_COLORS, DEFAULT_BADGE_COLOR } from "@/lib/badges";
 import { AiDraftButton } from "@/components/admin/AiDraftButton";
+import { EXTRA_FIELDS, type ExtraFieldKey, type ExtraDescriptions, parseExtra, serializeExtra } from "@/lib/extraDescriptions";
 
 export { BADGE_COLORS, DEFAULT_BADGE_COLOR };
 
@@ -51,6 +52,7 @@ export type InventoryItem = {
     shipValue: string;          // days: "3-5", weekdays: "月,木"
     compactMax: number;         // コンパクト最大同梱数(0=未設定/制限なし、N=同梱可能数)
     category: string;           // カテゴリ (root/leaf/honey/processed/other)
+    extraDescriptions: string;  // 詳細情報 JSON文字列 (特徴/保存方法/おすすめ/注意 等)
 };
 
 const PRESET_BADGES = ["新物", "訳あり", "秀品", "贈答用", "栽培期間中農薬不使用", "慣行栽培"];
@@ -131,6 +133,7 @@ export function AdminPanel({
             shipValue: inv.shipValue ?? "",
             compactMax: inv.compactMax ?? 0,
             category: inv.category ?? "",
+            extraDescriptions: inv.extraDescriptions ?? "",
         }))
     );
 
@@ -240,6 +243,14 @@ export function AdminPanel({
         setSavedInventory(false);
     };
 
+    // ファミリーの詳細情報（特徴・保存方法等）を一括更新（JSON文字列）
+    const updateFamilyExtra = (family: string, extraDescriptions: string) => {
+        setItems((prev) => prev.map((item) =>
+            item.family?.trim() === family ? { ...item, extraDescriptions } : item
+        ));
+        setSavedInventory(false);
+    };
+
     // ファミリー全体のクール便フラグを一括切替
     const toggleFamilyCool = (family: string) => {
         setItems((prev) => {
@@ -290,7 +301,7 @@ export function AdminPanel({
             const coolAvailable = familyMember?.coolAvailable ?? false;
             const limitedOnly = familyMember?.limitedOnly ?? false;
             const description = familyMember?.description ?? "";
-            next.splice(lastIdx + 1, 0, { id: newId, name: "バリエーション名", stock: -1, price: null, shipType: "", hidden: false, deleted: false, nextShipment: "", badges: [], family, imageUrl: "", familyImages: [...familyImages], cost: null, profitRate: null, coolAvailable, limitedOnly, description, clickpostMax: 0, options: familyMember?.options ?? "", salePercent: familyMember?.salePercent ?? 0, saleStart: familyMember?.saleStart ?? "", saleEnd: familyMember?.saleEnd ?? "", shipMode: familyMember?.shipMode ?? "", shipValue: familyMember?.shipValue ?? "", compactMax: 0, category: familyMember?.category ?? "" });
+            next.splice(lastIdx + 1, 0, { id: newId, name: "バリエーション名", stock: -1, price: null, shipType: "", hidden: false, deleted: false, nextShipment: "", badges: [], family, imageUrl: "", familyImages: [...familyImages], cost: null, profitRate: null, coolAvailable, limitedOnly, description, clickpostMax: 0, options: familyMember?.options ?? "", salePercent: familyMember?.salePercent ?? 0, saleStart: familyMember?.saleStart ?? "", saleEnd: familyMember?.saleEnd ?? "", shipMode: familyMember?.shipMode ?? "", shipValue: familyMember?.shipValue ?? "", compactMax: 0, category: familyMember?.category ?? "", extraDescriptions: familyMember?.extraDescriptions ?? "" });
             return next;
         });
         setSavedInventory(false);
@@ -440,6 +451,7 @@ export function AdminPanel({
             shipValue: "",
             compactMax: 0,
             category: "",
+            extraDescriptions: "",
         }]);
         setSavedInventory(false);
     };
@@ -473,6 +485,7 @@ export function AdminPanel({
             shipValue: "",
             compactMax: 0,
             category: "",
+            extraDescriptions: "",
         }]);
         setSavedInventory(false);
     };
@@ -662,6 +675,15 @@ export function AdminPanel({
                                                             category={familyItems[0]?.category ?? ""}
                                                             badges={familyItems[0]?.badges ?? []}
                                                             onCommit={(desc) => updateFamilyDescription(fam, desc)}
+                                                        />
+                                                        <FamilyExtras
+                                                            raw={familyItems[0]?.extraDescriptions ?? ""}
+                                                            family={fam}
+                                                            variations={familyItems.map((fi) => fi.name).filter(Boolean)}
+                                                            category={familyItems[0]?.category ?? ""}
+                                                            badges={familyItems[0]?.badges ?? []}
+                                                            description={familyItems[0]?.description ?? ""}
+                                                            onCommit={(raw) => updateFamilyExtra(fam, raw)}
                                                         />
                                                         <FamilyOptions
                                                             options={familyItems[0]?.options ?? ""}
@@ -1253,6 +1275,73 @@ function FamilySale({ salePercent, saleStart, saleEnd, onUpdate }: {
                     className="border border-stone-200 rounded-lg px-1 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-primary/30"
                 />
             </div>
+        </div>
+    );
+}
+
+// ── ファミリーの詳細情報（特徴・保存方法・おすすめ・注意 等）─────────
+function FamilyExtras({ raw, family, variations, category, badges, description, onCommit }: {
+    raw: string;
+    family: string;
+    variations: string[];
+    category: string;
+    badges: string[];
+    description: string;
+    onCommit: (raw: string) => void;
+}) {
+    const [open, setOpen] = useState(false);
+    const [extra, setExtra] = useState<ExtraDescriptions>(() => parseExtra(raw));
+    const prev = useRef(raw);
+    if (prev.current !== raw) { prev.current = raw; setExtra(parseExtra(raw)); }
+
+    const update = (key: ExtraFieldKey, value: string) => {
+        const next = { ...extra, [key]: value };
+        setExtra(next);
+        onCommit(serializeExtra(next));
+    };
+
+    const filledCount = EXTRA_FIELDS.filter((f) => (extra[f.key] ?? "").trim()).length;
+
+    return (
+        <div className="px-4 py-2 border-b border-stone-100 bg-stone-50/40">
+            <button
+                type="button"
+                onClick={() => setOpen((o) => !o)}
+                className="text-xs text-stone-500 hover:text-stone-700 flex items-center gap-1.5"
+            >
+                <span className={`inline-block transition-transform ${open ? "rotate-90" : ""}`}>▶</span>
+                詳細情報（特徴・保存方法・おすすめ・注意 等）
+                {filledCount > 0 && <span className="text-primary font-medium">{filledCount}/{EXTRA_FIELDS.length}件入力済</span>}
+            </button>
+            {open && (
+                <div className="mt-2 space-y-2">
+                    {EXTRA_FIELDS.map(({ key, label }) => (
+                        <div key={key}>
+                            <div className="flex items-center justify-between mb-0.5">
+                                <span className="text-[11px] text-stone-500">{label}</span>
+                                <AiDraftButton
+                                    family={family}
+                                    variations={variations}
+                                    category={category}
+                                    badges={badges}
+                                    current={extra[key] ?? ""}
+                                    field={key}
+                                    fieldLabel={label}
+                                    contextDescription={description}
+                                    onApply={(text) => update(key, text)}
+                                />
+                            </div>
+                            <textarea
+                                value={extra[key] ?? ""}
+                                onChange={(e) => update(key, e.target.value)}
+                                rows={2}
+                                placeholder={`${label}を入力（任意）`}
+                                className="w-full border border-stone-200 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-primary/30 resize-y"
+                            />
+                        </div>
+                    ))}
+                </div>
+            )}
         </div>
     );
 }

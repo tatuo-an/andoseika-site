@@ -9,6 +9,12 @@ type Props = {
   category?: string;
   badges?: string[];
   current: string;
+  /** 対象フィールドのキー。省略時は "description"（メイン商品説明） */
+  field?: string;
+  /** 表示用ラベル。省略時は「商品説明」 */
+  fieldLabel?: string;
+  /** 詳細サブフィールド生成時の文脈として渡す商品説明本文 */
+  contextDescription?: string;
   onApply: (text: string) => void;
 };
 
@@ -19,7 +25,17 @@ type DraftState =
   | { status: "insufficient"; missing: string[] }
   | { status: "error"; message: string };
 
-export function AiDraftButton({ family, variations, category, badges, current, onApply }: Props) {
+export function AiDraftButton({
+  family,
+  variations,
+  category,
+  badges,
+  current,
+  field = "description",
+  fieldLabel = "商品説明",
+  contextDescription,
+  onApply,
+}: Props) {
   const [open, setOpen] = useState(false);
   const [state, setState] = useState<DraftState>({ status: "idle" });
 
@@ -29,7 +45,16 @@ export function AiDraftButton({ family, variations, category, badges, current, o
       const res = await fetch("/api/admin/ai-draft-description", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ family, variations, category, badges, current }),
+        body: JSON.stringify({
+          family,
+          variations,
+          category,
+          badges,
+          current,
+          field,
+          fieldLabel,
+          contextDescription,
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -60,7 +85,7 @@ export function AiDraftButton({ family, variations, category, badges, current, o
     if (state.status !== "ready") return;
     const text = state.edited.trim();
     if (!text) return;
-    if (current.trim() && !confirm("現在の商品説明をAI生成文で置き換えます。よろしいですか？")) return;
+    if (current.trim() && !confirm(`現在の${fieldLabel}をAI生成文で置き換えます。よろしいですか？`)) return;
     onApply(text);
     close();
   }
@@ -70,11 +95,11 @@ export function AiDraftButton({ family, variations, category, badges, current, o
       <button
         type="button"
         onClick={openModal}
-        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-700 text-xs font-medium whitespace-nowrap transition-colors"
-        title="AIで商品説明の下書きを作成"
+        className={`inline-flex items-center gap-1 ${field === "description" ? "px-2.5 py-1 text-xs gap-1.5" : "px-2 py-0.5 text-[10px]"} rounded bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-700 font-medium whitespace-nowrap transition-colors`}
+        title={`AIで${fieldLabel}の下書きを作成`}
       >
-        <Sparkles className="w-3 h-3" />
-        AIで下書きを作成
+        <Sparkles className={field === "description" ? "w-3 h-3" : "w-2.5 h-2.5"} />
+        {field === "description" ? "AIで下書きを作成" : "AI生成"}
       </button>
 
       {open && (
@@ -86,7 +111,7 @@ export function AiDraftButton({ family, variations, category, badges, current, o
             <div className="flex items-center justify-between px-5 py-4 border-b border-stone-100">
               <div className="flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-amber-500" />
-                <h2 className="font-bold text-stone-900">AIで商品説明の下書きを作成</h2>
+                <h2 className="font-bold text-stone-900">AIで「{fieldLabel}」の下書きを作成</h2>
               </div>
               <button onClick={close} className="text-stone-400 hover:text-stone-600">
                 <X className="w-5 h-5" />
@@ -97,12 +122,12 @@ export function AiDraftButton({ family, variations, category, badges, current, o
               <div className="text-xs text-stone-500 bg-stone-50 border border-stone-100 rounded-lg p-3 leading-relaxed">
                 対象商品：<span className="font-medium text-stone-700">{family || "(無名)"}</span>
                 <br />
-                AIは商品名・バリエーション・カテゴリー・既存説明文だけを参照します。価格・在庫・産地・栽培方法など事実情報は推測しません。生成結果は反映前に必ずご確認ください。
+                AIは商品名・バリエーション・カテゴリー・既存テキストだけを参照します。価格・在庫・産地・栽培方法など事実情報は推測しません。生成結果は反映前に必ずご確認ください。
               </div>
 
               {current.trim() && (
                 <div>
-                  <p className="text-xs font-bold text-stone-500 mb-1">現在の商品説明</p>
+                  <p className="text-xs font-bold text-stone-500 mb-1">現在の{fieldLabel}</p>
                   <div className="bg-stone-50 border border-stone-200 rounded-lg p-3 text-sm text-stone-700 whitespace-pre-wrap">
                     {current}
                   </div>

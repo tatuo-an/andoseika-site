@@ -15,10 +15,11 @@ import { google } from "googleapis";
 import { BADGE_COLORS, DEFAULT_BADGE_COLOR } from "@/lib/badges";
 import { isSaleActive, calcSalePrice } from "@/lib/sale";
 import { computeShipSchedule } from "@/lib/shipSchedule";
+import { EXTRA_FIELDS, parseExtra } from "@/lib/extraDescriptions";
 
 export const revalidate = 60;
 
-type SheetRow = { id: string; name: string; stock: number; price: number | null; shipType: string; hidden: boolean; deleted: boolean; nextShipment: string; badges: string[]; family: string; imageUrl: string; familyImages: string[]; cost: number | null; profitRate: number | null; coolAvailable: boolean; description: string; clickpostMax: number; options: string; salePercent: number; saleStart: string; saleEnd: string; shipMode: string; shipValue: string };
+type SheetRow = { id: string; name: string; stock: number; price: number | null; shipType: string; hidden: boolean; deleted: boolean; nextShipment: string; badges: string[]; family: string; imageUrl: string; familyImages: string[]; cost: number | null; profitRate: number | null; coolAvailable: boolean; description: string; clickpostMax: number; options: string; salePercent: number; saleStart: string; saleEnd: string; shipMode: string; shipValue: string; extraDescriptions: string };
 type VariationInfo = { id: string; label: string; price: number; priceTaxed: number; salePercent: number; saleStart: string; saleEnd: string; isSoldOut: boolean };
 
 function getSheets() {
@@ -33,14 +34,14 @@ function getSheets() {
 }
 
 async function getInventoryData(id: string): Promise<{
-    stock: number; price: number | null; name: string; shipType: string; hidden: boolean; deleted: boolean; nextShipment: string; badges: string[]; family: string; imageUrl: string; familyImages: string[]; cost: number | null; profitRate: number | null; coolAvailable: boolean; description: string; clickpostMax: number; options: string; salePercent: number; saleStart: string; saleEnd: string; shipMode: string; shipValue: string;
+    stock: number; price: number | null; name: string; shipType: string; hidden: boolean; deleted: boolean; nextShipment: string; badges: string[]; family: string; imageUrl: string; familyImages: string[]; cost: number | null; profitRate: number | null; coolAvailable: boolean; description: string; clickpostMax: number; options: string; salePercent: number; saleStart: string; saleEnd: string; shipMode: string; shipValue: string; extraDescriptions: string;
     familyRows: SheetRow[];
 }> {
     try {
         const sheets = getSheets();
         const res = await sheets.spreadsheets.values.get({
             spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-            range: "商品在庫!A:W",
+            range: "商品在庫!A:AA",
         });
         const rows = res.data.values ?? [];
         const allRows: SheetRow[] = rows.slice(1).filter(r => r[0]).map(r => ({
@@ -67,10 +68,11 @@ async function getInventoryData(id: string): Promise<{
             saleEnd: r[20] ?? "",
             shipMode: r[21] ?? "",
             shipValue: r[22] ?? "",
+            extraDescriptions: r[26] ?? "",
         }));
 
         const row = allRows.find(r => r.id === id);
-        if (!row) return { stock: -1, price: null, name: "", shipType: "", hidden: false, deleted: false, nextShipment: "", badges: [], family: "", imageUrl: "", familyImages: [], cost: null, profitRate: null, coolAvailable: false, description: "", clickpostMax: 0, options: "", salePercent: 0, saleStart: "", saleEnd: "", shipMode: "", shipValue: "", familyRows: [] };
+        if (!row) return { stock: -1, price: null, name: "", shipType: "", hidden: false, deleted: false, nextShipment: "", badges: [], family: "", imageUrl: "", familyImages: [], cost: null, profitRate: null, coolAvailable: false, description: "", clickpostMax: 0, options: "", salePercent: 0, saleStart: "", saleEnd: "", shipMode: "", shipValue: "", extraDescriptions: "", familyRows: [] };
 
         const familyRows = row.family
             ? allRows.filter(r => r.family === row.family && !r.hidden)
@@ -99,10 +101,11 @@ async function getInventoryData(id: string): Promise<{
             saleEnd: row.saleEnd,
             shipMode: row.shipMode,
             shipValue: row.shipValue,
+            extraDescriptions: row.extraDescriptions,
             familyRows,
         };
     } catch {
-        return { stock: -1, price: null, name: "", shipType: "", hidden: false, deleted: false, nextShipment: "", badges: [], family: "", imageUrl: "", familyImages: [], cost: null, profitRate: null, coolAvailable: false, description: "", clickpostMax: 0, options: "", salePercent: 0, saleStart: "", saleEnd: "", shipMode: "", shipValue: "", familyRows: [] };
+        return { stock: -1, price: null, name: "", shipType: "", hidden: false, deleted: false, nextShipment: "", badges: [], family: "", imageUrl: "", familyImages: [], cost: null, profitRate: null, coolAvailable: false, description: "", clickpostMax: 0, options: "", salePercent: 0, saleStart: "", saleEnd: "", shipMode: "", shipValue: "", extraDescriptions: "", familyRows: [] };
     }
 }
 
@@ -428,6 +431,22 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                             <div className="prose prose-stone mb-8">
                                 <p className="text-stone-600 leading-relaxed whitespace-pre-wrap">{invData.description || product.description}</p>
                             </div>
+
+                            {(() => {
+                                const extra = parseExtra(invData.extraDescriptions);
+                                const filled = EXTRA_FIELDS.filter((f) => (extra[f.key] ?? "").trim());
+                                if (filled.length === 0) return null;
+                                return (
+                                    <div className="mb-8 space-y-4 border-t border-stone-100 pt-6">
+                                        {filled.map(({ key, label }) => (
+                                            <div key={key}>
+                                                <h3 className="text-sm font-bold text-stone-900 mb-1.5">{label}</h3>
+                                                <p className="text-sm text-stone-600 leading-relaxed whitespace-pre-wrap">{extra[key]}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                );
+                            })()}
 
                             <div className="space-y-6 border-t border-stone-100 pt-8">
                                 {(() => {
