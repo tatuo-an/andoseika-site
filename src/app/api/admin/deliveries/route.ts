@@ -31,6 +31,38 @@ function getSheets() {
   return google.sheets({ version: "v4", auth: authClient });
 }
 
+/** 発送履歴シートが無ければ作成し、ヘッダー行も初期化する */
+async function ensureHistorySheet(): Promise<void> {
+  const sheets = getSheets();
+  const id = process.env.GOOGLE_SPREADSHEET_ID!;
+  // シート一覧を取得
+  const meta = await sheets.spreadsheets.get({ spreadsheetId: id });
+  const exists = meta.data.sheets?.some((s) => s.properties?.title === HISTORY_SHEET);
+  if (!exists) {
+    await sheets.spreadsheets.batchUpdate({
+      spreadsheetId: id,
+      requestBody: {
+        requests: [{ addSheet: { properties: { title: HISTORY_SHEET } } }],
+      },
+    });
+  }
+  // ヘッダー有無を確認、無ければ作る
+  const head = await sheets.spreadsheets.values.get({
+    spreadsheetId: id,
+    range: `${HISTORY_SHEET}!A1:H1`,
+  }).catch(() => ({ data: { values: [] as string[][] } }));
+  if (!head.data.values || head.data.values.length === 0) {
+    await sheets.spreadsheets.values.update({
+      spreadsheetId: id,
+      range: `${HISTORY_SHEET}!A1:H1`,
+      valueInputOption: "RAW",
+      requestBody: {
+        values: [["メール", "配送回", "発送日時", "追跡番号", "ステータス", "プラン", "送付先住所", "メモ"]],
+      },
+    });
+  }
+}
+
 type Profile = {
   email: string;
   displayName: string;
@@ -244,6 +276,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid parameters" }, { status: 400 });
   }
 
+  try {
+    await ensureHistorySheet();
+  } catch (err) {
+    console.error("[deliveries] ensureHistorySheet failed", err);
+    return NextResponse.json({ error: "シート初期化に失敗しました", detail: String(err) }, { status: 500 });
+  }
+
   const [profilesAndAddrs, history] = await Promise.all([
     loadProfilesAndAddresses(),
     loadHistory(),
@@ -260,46 +299,36 @@ export async function POST(req: NextRequest) {
     " " +
     new Date().toLocaleTimeString("ja-JP", { timeZone: "Asia/Tokyo", hour: "2-digit", minute: "2-digit" });
 
-  // 既存履歴があれば update、なければ append
+  // 既存履歴があれば update、なければ次の行に append（列ずれ防止のため update を使用）
   const sheets = getSheets();
   const existingIndex = history.findIndex((h) => h.email === email && h.cycle === cycle);
   const row = [email, cycle, nowJST, trackingNumber, "shipped", profile.tier, addressSnapshot, memo];
 
-  if (existingIndex !== -1) {
-    // ヘッダー+0始まりなので +2 が実際のスプレッドシート行
-    const sheetRow = existingIndex + 2;
-    await sheets.spreadsheets.values.update({
-      spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-      range: `${HISTORY_SHEET}!A${sheetRow}:H${sheetRow}`,
-      valueInputOption: "RAW",
-      requestBody: { values: [row] },
-    });
-  } else {
-    // ヘッダーが無ければ作る
-    const a = await sheets.spreadsheets.values.get({
-      spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-      range: `${HISTORY_SHEET}!A1:H1`,
-    });
-    if (!a.data.values || a.data.values.length === 0) {
+  try {
+    if (existingIndex !== -1) {
+      const sheetRow = existingIndex + 2;
       await sheets.spreadsheets.values.update({
         spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-        range: `${HISTORY_SHEET}!A1:H1`,
+        range: `${HISTORY_SHEET}!A${sheetRow}:H${sheetRow}`,
         valueInputOption: "RAW",
-        requestBody: { values: [["メール", "配送回", "発送日時", "追跡番号", "ステータス", "プラン", "送付先住所", "メモ"]] },
+        requestBody: { values: [row] },
+      });
+    } else {
+      const colA = await sheets.spreadsheets.values.get({
+        spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
+        range: `${HISTORY_SHEET}!A:A`,
+      });
+      const nextRow = (colA.data.values?.length ?? 0) + 1;
+      await sheets.spreadsheets.values.update({
+        spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
+        range: `${HISTORY_SHEET}!A${nextRow}:H${nextRow}`,
+        valueInputOption: "RAW",
+        requestBody: { values: [row] },
       });
     }
-    // A列の最終行を取って明示的にupdateで列ずれを防ぐ
-    const colA = await sheets.spreadsheets.values.get({
-      spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-      range: `${HISTORY_SHEET}!A:A`,
-    });
-    const nextRow = (colA.data.values?.length ?? 0) + 1;
-    await sheets.spreadsheets.values.update({
-      spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-      range: `${HISTORY_SHEET}!A${nextRow}:H${nextRow}`,
-      valueInputOption: "RAW",
-      requestBody: { values: [row] },
-    });
+  } catch (err) {
+    console.error("[deliveries] write failed", err);
+    return NextResponse.json({ error: "履歴の書き込みに失敗しました", detail: String(err) }, { status: 500 });
   }
 
   // 通知送信

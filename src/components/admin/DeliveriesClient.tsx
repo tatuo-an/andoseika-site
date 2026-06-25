@@ -89,13 +89,13 @@ export function DeliveriesClient({ cycles, initialCycle }: { cycles: CycleId[]; 
         }),
       });
       if (res.ok) {
-        // reload
         const r = await fetch(`/api/admin/deliveries?cycle=${cycle}`);
         const d = await r.json();
         setItems(Array.isArray(d.items) ? d.items : []);
         setEditing(null);
       } else {
-        alert("発送記録に失敗しました");
+        const d = await res.json().catch(() => ({}));
+        alert(`発送記録に失敗しました\n${d.error ?? ""}\n${d.detail ?? ""}`);
       }
     } finally {
       setSaving(false);
