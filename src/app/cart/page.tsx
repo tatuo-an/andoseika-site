@@ -497,19 +497,18 @@ export default function CartPage() {
 
                     {/* 配送先 */}
                     <div className="bg-white rounded-2xl shadow-sm p-6 mb-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <h2 className="font-bold text-stone-900 flex items-center gap-2">
-                                <MapPin className="w-5 h-5 text-primary" />
-                                お届け先
-                            </h2>
-                            <Link href="/mypage/address" className="text-xs text-primary hover:underline font-medium">編集</Link>
-                        </div>
+                        <h2 className="font-bold text-stone-900 flex items-center gap-2 mb-4">
+                            <MapPin className="w-5 h-5 text-primary" />
+                            お届け先
+                        </h2>
                         {!loaded ? (
                             <p className="text-sm text-stone-400">読み込み中...</p>
                         ) : addresses.length === 0 ? (
-                            <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 text-sm">
-                                <p className="text-orange-700 mb-1">配送先が登録されていません</p>
-                                <Link href="/mypage/address" className="text-xs text-orange-600 underline font-medium">配送先を登録する →</Link>
+                            <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 text-sm">
+                                <p className="text-orange-700 mb-2 font-medium">配送先が登録されていません</p>
+                                <Link href="/mypage/address" className="inline-flex items-center gap-1.5 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white text-sm font-bold rounded-lg transition-colors">
+                                    配送先を登録する
+                                </Link>
                             </div>
                         ) : !addressPickerOpen ? (
                             <div>
@@ -517,13 +516,27 @@ export default function CartPage() {
                                     <span className="bg-primary/10 text-primary text-xs font-bold px-2 py-0.5 rounded-full mr-2">{selectedAddress?.label}</span>
                                     <span className="text-stone-700 font-medium">{selectedAddress?.name}</span>
                                 </div>
-                                <p className="text-sm text-stone-500">
+                                <p className="text-sm text-stone-500 mb-3">
                                     〒{selectedAddress?.postalCode} {selectedAddress?.prefecture}{selectedAddress?.city}{selectedAddress?.street}
                                     {selectedAddress?.building && ` ${selectedAddress.building}`}
                                 </p>
-                                {addresses.length > 1 && (
-                                    <button onClick={() => setAddressPickerOpen(true)} className="text-xs text-primary hover:underline font-medium mt-2">変更</button>
-                                )}
+                                <div className="flex flex-wrap gap-2 pt-3 border-t border-stone-100">
+                                    {addresses.length > 1 && (
+                                        <button
+                                            onClick={() => setAddressPickerOpen(true)}
+                                            className="inline-flex items-center gap-1.5 px-3 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 text-sm font-bold rounded-lg transition-colors"
+                                        >
+                                            <MapPin className="w-3.5 h-3.5" />
+                                            別の住所を選ぶ
+                                        </button>
+                                    )}
+                                    <Link
+                                        href="/mypage/address"
+                                        className="inline-flex items-center gap-1.5 px-3 py-2 bg-white border border-stone-200 hover:bg-stone-50 text-stone-700 text-sm font-bold rounded-lg transition-colors"
+                                    >
+                                        住所を編集・追加する
+                                    </Link>
+                                </div>
                             </div>
                         ) : (
                             <div className="space-y-2">
