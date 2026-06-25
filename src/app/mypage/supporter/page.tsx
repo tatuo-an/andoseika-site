@@ -8,6 +8,7 @@ import { google } from "googleapis";
 import { getTier, TIERS, type TierKey } from "@/lib/tiers";
 import { CancelSupporterButton } from "@/components/mypage/CancelSupporterButton";
 import { DeliverySeasonSelector } from "@/components/mypage/DeliverySeasonSelector";
+import { DeliveryHistory } from "@/components/mypage/DeliveryHistory";
 
 export const dynamic = "force-dynamic";
 
@@ -111,6 +112,9 @@ export default async function MyPageSupporterPage() {
               <DeliverySeasonSelector />
             </div>
           )}
+
+          {/* 詰め合わせ発送履歴（実り・パートナーのみ） */}
+          {(tier === "minori" || tier === "partner") && <DeliveryHistory />}
 
           {/* アクション */}
           <div className="space-y-3">
