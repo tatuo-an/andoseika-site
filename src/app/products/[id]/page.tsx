@@ -515,29 +515,27 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                                 const filled = EXTRA_FIELDS.filter((f) => (extra[f.key] ?? "").trim());
                                 if (filled.length === 0) return null;
                                 return (
-                                    <div className="mb-8 border-t border-stone-100 pt-4 space-y-2">
-                                        {filled.map(({ key, label }) => (
-                                            <details
-                                                key={key}
-                                                className="group border border-stone-100 rounded-xl bg-stone-50/40 overflow-hidden"
+                                    <details className="group mb-8 border border-stone-200 rounded-xl bg-stone-50/40 overflow-hidden">
+                                        <summary className="flex items-center justify-between px-4 py-3 cursor-pointer list-none hover:bg-stone-50 transition-colors">
+                                            <span className="text-sm font-bold text-stone-900">商品の詳しい情報を見る</span>
+                                            <svg
+                                                className="h-4 w-4 text-stone-400 transition-transform group-open:rotate-180 flex-shrink-0"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                viewBox="0 0 24 24"
                                             >
-                                                <summary className="flex items-center justify-between px-4 py-3 cursor-pointer list-none hover:bg-stone-50 transition-colors">
-                                                    <span className="text-sm font-bold text-stone-900">{label}</span>
-                                                    <svg
-                                                        className="h-4 w-4 text-stone-400 transition-transform group-open:rotate-180 flex-shrink-0"
-                                                        fill="none"
-                                                        stroke="currentColor"
-                                                        viewBox="0 0 24 24"
-                                                    >
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                                    </svg>
-                                                </summary>
-                                                <p className="px-4 pb-4 text-sm text-stone-600 leading-relaxed whitespace-pre-wrap">
-                                                    {extra[key]}
-                                                </p>
-                                            </details>
-                                        ))}
-                                    </div>
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                            </svg>
+                                        </summary>
+                                        <div className="px-4 pb-4 space-y-4 border-t border-stone-200/60 pt-4">
+                                            {filled.map(({ key, label }) => (
+                                                <div key={key}>
+                                                    <h3 className="text-sm font-bold text-stone-900 mb-1.5">{label}</h3>
+                                                    <p className="text-sm text-stone-600 leading-relaxed whitespace-pre-wrap">{extra[key]}</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </details>
                                 );
                             })()}
 
