@@ -335,7 +335,11 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                     shipValue: cartShipValue,
                     quote: {
                         matchedVariantId: matchedVariant?.id ?? null,
-                        matchedVariantName: matchedVariant?.name ?? null,
+                        matchedVariantName: matchedVariant
+                            ? (matchedVariant.family && !matchedVariant.name.includes(matchedVariant.family)
+                                ? `${matchedVariant.family} ${matchedVariant.name}`
+                                : matchedVariant.name)
+                            : null,
                         itemsTotal: itemsBodyShown,
                         baseShipFee: shipFeeShown,
                         profit: profitShown,
