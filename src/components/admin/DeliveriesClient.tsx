@@ -89,14 +89,14 @@ export function DeliveriesClient({ cycles, initialCycle }: { cycles: CycleId[]; 
         }),
       });
       if (res.ok) {
-        const data = await res.json().catch(() => ({} as { notification?: { channel: string; status: string; detail?: string }[] }));
+        type NotificationLog = { channel: string; status: string; detail?: string };
+        const data: { notification?: NotificationLog[] } = await res.json().catch(() => ({}));
         const r = await fetch(`/api/admin/deliveries?cycle=${cycle}`);
         const d = await r.json();
         setItems(Array.isArray(d.items) ? d.items : []);
         setEditing(null);
 
-        // 通知結果サマリーを表示
-        const log = data.notification ?? [];
+        const log: NotificationLog[] = data.notification ?? [];
         const sent = log.find((l) => l.status === "sent");
         if (sent) {
           alert(`✅ 発送記録しました\n通知送信：${sent.channel}（${sent.detail ?? "成功"}）`);
