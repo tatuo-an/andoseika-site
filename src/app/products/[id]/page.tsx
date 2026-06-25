@@ -33,6 +33,73 @@ function getSheets() {
     return google.sheets({ version: "v4", auth: authClient });
 }
 
+// 追加送料計算用デフォルト（送料マスタが未取得の場合のフォールバック）
+type ShipRates = { region: string; s60: number; s80: number; s100: number; s120: number; s140: number; s160: number; s180: number; s200: number; compact: number; clickpost: number };
+const DEFAULT_SHIP_RATES: ShipRates[] = [
+    { region: "北海道", s60: 1200, s80: 1400, s100: 1600, s120: 1750, s140: 2000, s160: 2200, s180: 2400, s200: 2600, compact: 990, clickpost: 185 },
+    { region: "東北",   s60: 800,  s80: 1000, s100: 1200, s120: 1400, s140: 1600, s160: 1800, s180: 2000, s200: 2200, compact: 790, clickpost: 185 },
+    { region: "沖縄",   s60: 1200, s80: 1700, s100: 2200, s120: 2700, s140: 3200, s160: 3700, s180: 4200, s200: 4900, compact: 790, clickpost: 185 },
+    { region: "それ以外", s60: 600, s80: 700, s100: 800,  s120: 1000, s140: 1200, s160: 1400, s180: 1600, s200: 1800, compact: 690, clickpost: 185 },
+];
+
+function rateForShipType(rates: ShipRates, shipType: string): number {
+    switch (shipType) {
+        case "60": return rates.s60;
+        case "80": return rates.s80;
+        case "100": return rates.s100;
+        case "120": return rates.s120;
+        case "140": return rates.s140;
+        case "160": return rates.s160;
+        case "180": return rates.s180;
+        case "200": return rates.s200;
+        case "compact": return rates.compact;
+        case "clickpost": return rates.clickpost;
+        default: return 0;
+    }
+}
+
+async function getShippingSurcharges(shipType: string): Promise<{ region: string; surchargeTaxed: number }[]> {
+    if (!shipType) return [];
+    let rows: ShipRates[] = DEFAULT_SHIP_RATES;
+    try {
+        const sheets = getSheets();
+        const res = await sheets.spreadsheets.values.get({
+            spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
+            range: "送料マスタ!A:L",
+        });
+        const data = res.data.values ?? [];
+        if (data.length > 1) {
+            rows = data.slice(1).map((r) => ({
+                region: r[0] ?? "",
+                s60: parseInt(r[2] ?? "0", 10) || 0,
+                s80: parseInt(r[3] ?? "0", 10) || 0,
+                s100: parseInt(r[4] ?? "0", 10) || 0,
+                s120: parseInt(r[5] ?? "0", 10) || 0,
+                s140: parseInt(r[6] ?? "0", 10) || 0,
+                s160: parseInt(r[7] ?? "0", 10) || 0,
+                s180: parseInt(r[8] ?? "0", 10) || 0,
+                s200: parseInt(r[9] ?? "0", 10) || 0,
+                compact: parseInt(r[10] ?? "0", 10) || 0,
+                clickpost: parseInt(r[11] ?? "0", 10) || 0,
+            }));
+        }
+    } catch { /* fallback to DEFAULT_SHIP_RATES */ }
+
+    const baseRow = rows[rows.length - 1];
+    if (!baseRow) return [];
+    const baseRate = rateForShipType(baseRow, shipType);
+    const targetRegions = ["北海道", "東北", "沖縄"];
+    return targetRegions
+        .map((region) => {
+            const row = rows.find((r) => r.region === region);
+            if (!row) return null;
+            const rate = rateForShipType(row, shipType);
+            const surcharge = Math.max(0, rate - baseRate);
+            return { region, surchargeTaxed: Math.round(surcharge * 1.10) };
+        })
+        .filter((x): x is { region: string; surchargeTaxed: number } => !!x && x.surchargeTaxed > 0);
+}
+
 async function getInventoryData(id: string): Promise<{
     stock: number; price: number | null; name: string; shipType: string; hidden: boolean; deleted: boolean; nextShipment: string; badges: string[]; family: string; imageUrl: string; familyImages: string[]; cost: number | null; profitRate: number | null; coolAvailable: boolean; description: string; clickpostMax: number; options: string; salePercent: number; saleStart: string; saleEnd: string; shipMode: string; shipValue: string; extraDescriptions: string;
     familyRows: SheetRow[];
@@ -265,6 +332,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
     const [productDirect, invData] = await Promise.all([getProduct(id), getInventoryData(id)]);
     const { stock, price: invPrice, name: invName, shipType, hidden, deleted, nextShipment, badges, familyRows, imageUrl: invImageUrl, familyImages, cost: invCost, profitRate: invProfitRate, coolAvailable: invCoolAvailable } = invData;
 
+    const surcharges = await getShippingSurcharges(shipType);
     const isSoldOut = stock !== -1 && stock === 0;
 
     // custom-ID など MicroCMS にない場合、同じファミリーの代表商品データを流用
@@ -378,15 +446,25 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                                         </p>
                                     );
                                 })()}
+                                {surcharges.length > 0 && (
+                                    <div className="mt-3 bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-stone-700 leading-relaxed">
+                                        <p className="font-bold text-amber-900 mb-1.5 text-sm">お届け地域別の追加送料</p>
+                                        <ul className="space-y-0.5">
+                                            {surcharges.map(({ region, surchargeTaxed }) => (
+                                                <li key={region} className="flex items-baseline gap-2">
+                                                    <span className="text-stone-600 text-xs min-w-[3rem]">{region}</span>
+                                                    <span className="font-bold text-base text-amber-900">+ ¥{surchargeTaxed.toLocaleString()}</span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                )}
                                 <div className="mt-3 bg-stone-50 border border-stone-100 rounded-lg p-3 text-xs text-stone-500 leading-relaxed space-y-2">
                                     <p>
                                         表示価格は、1点のみ購入した場合の<span className="font-medium text-stone-700">商品代・送料・サービス料を含む税込総額</span>です。
                                     </p>
                                     <p>
                                         複数商品を同梱する場合は、合計重量に応じて送料等を再計算し、カート内で<span className="font-medium text-emerald-600">同梱割引</span>を適用します。
-                                    </p>
-                                    <p className="text-stone-400">
-                                        ※お届け地域により追加送料が発生する場合があります。最終金額はカートでご確認ください。
                                     </p>
                                 </div>
                             </div>
