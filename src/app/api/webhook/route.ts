@@ -112,17 +112,30 @@ export async function POST(req: NextRequest) {
     const name = session.customer_details?.name ?? "";
     const email = session.customer_details?.email ?? "";
     const rawPhone = session.customer_details?.phone ?? "";
-    const phoneDigits = rawPhone.startsWith("+81") ? "0" + rawPhone.slice(3) : rawPhone;
-    const phone = phoneDigits ? `'${phoneDigits}` : "";
-    const addr = session.customer_details?.address;
-    const address = addr
-      ? [addr.postal_code, addr.state, addr.city, addr.line1, addr.line2].filter(Boolean).join(" ")
-      : (session.payment_intent as Stripe.PaymentIntent)?.shipping
-        ? (() => {
-            const s = (session.payment_intent as Stripe.PaymentIntent).shipping!.address!;
-            return [s.postal_code, s.state, s.city, s.line1, s.line2].filter(Boolean).join(" ");
-          })()
-        : "";
+    // 住所の優先順位：
+    //   1. payment_intent.shipping（カートで選んだ住所＝事前入力したもの）
+    //   2. customer_details.address（Apple Pay 等で Stripe 側が集めた住所）
+    //
+    // Apple Pay は Apple Wallet の住所を customer_details に入れるため、
+    // カートで選択した住所を尊重するには payment_intent.shipping を優先する必要がある。
+    const pi = session.payment_intent as Stripe.PaymentIntent | null;
+    const piShipping = pi?.shipping;
+    const customerAddr = session.customer_details?.address;
+
+    let address = "";
+    if (piShipping?.address) {
+      const s = piShipping.address;
+      address = [s.postal_code, s.state, s.city, s.line1, s.line2].filter(Boolean).join(" ");
+    } else if (customerAddr) {
+      address = [customerAddr.postal_code, customerAddr.state, customerAddr.city, customerAddr.line1, customerAddr.line2].filter(Boolean).join(" ");
+    }
+
+    // 電話番号も同様にカート由来を優先
+    const cartPhone = piShipping?.phone ?? "";
+    const stripePhone = rawPhone;
+    const chosenPhone = cartPhone || stripePhone;
+    const phoneDigitsFinal = chosenPhone.startsWith("+81") ? "0" + chosenPhone.slice(3) : chosenPhone;
+    const phone = phoneDigitsFinal ? `'${phoneDigitsFinal}` : "";
     const amount = session.amount_total?.toString() ?? "";
     const sessionId = session.id;
 
