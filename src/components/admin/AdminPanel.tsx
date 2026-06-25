@@ -21,6 +21,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { BADGE_COLORS, DEFAULT_BADGE_COLOR } from "@/lib/badges";
 import { AiDraftButton } from "@/components/admin/AiDraftButton";
+import { BulkAiDraftButton } from "@/components/admin/BulkAiDraftButton";
 import { EXTRA_FIELDS, type ExtraFieldKey, type ExtraDescriptions, parseExtra, serializeExtra } from "@/lib/extraDescriptions";
 
 export { BADGE_COLORS, DEFAULT_BADGE_COLOR };
@@ -668,6 +669,26 @@ export function AdminPanel({
                                                             familyImages={familyItems[0]?.familyImages ?? []}
                                                             onUpdate={(imgs) => updateFamilyImages(fam, imgs)}
                                                         />
+                                                        <div className="px-4 py-2 bg-amber-50/30 border-b border-stone-100 flex justify-end">
+                                                            <BulkAiDraftButton
+                                                                family={fam}
+                                                                variations={familyItems.map((fi) => fi.name).filter(Boolean)}
+                                                                category={familyItems[0]?.category ?? ""}
+                                                                badges={familyItems[0]?.badges ?? []}
+                                                                description={familyItems[0]?.description ?? ""}
+                                                                extras={parseExtra(familyItems[0]?.extraDescriptions ?? "")}
+                                                                onApply={(drafts) => {
+                                                                    if (drafts.description !== undefined) {
+                                                                        updateFamilyDescription(fam, drafts.description);
+                                                                    }
+                                                                    if (Object.keys(drafts.extras).length > 0) {
+                                                                        const current = parseExtra(familyItems[0]?.extraDescriptions ?? "");
+                                                                        const merged = { ...current, ...drafts.extras };
+                                                                        updateFamilyExtra(fam, serializeExtra(merged));
+                                                                    }
+                                                                }}
+                                                            />
+                                                        </div>
                                                         <FamilyDescription
                                                             description={familyItems[0]?.description ?? ""}
                                                             family={fam}
