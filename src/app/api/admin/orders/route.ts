@@ -26,6 +26,7 @@ export type Order = {
   desiredTime: string;
   complaint: string;
   estimatedDate: string;
+  salesTransferLog: string;
 };
 
 export async function GET() {
@@ -44,7 +45,7 @@ export async function GET() {
   const sheets = google.sheets({ version: "v4", auth: authClient });
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-    range: "注文管理!A:O",
+    range: "注文管理!A:P",
   });
   const rows = res.data.values ?? [];
 
@@ -65,6 +66,7 @@ export async function GET() {
       desiredTime: r[11] ?? "",
       complaint: r[12] ?? "",
       estimatedDate: r[14] ?? "",
+      salesTransferLog: r[15] ?? "",
     }))
     .reverse();
 

@@ -151,6 +151,45 @@ export function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
   const [filterProduct, setFilterProduct] = useState("");
   const [sortDir, setSortDir] = useState<"desc" | "asc">("desc");
   const [transferring, setTransferring] = useState<string | null>(null);
+  const [bulkTransferring, setBulkTransferring] = useState(false);
+
+  async function handleBulkTransfer() {
+    // 発送準備中（paid）かつ未転記の注文を抽出
+    const pending = orders.filter((o) => o.status === "paid" && !o.salesTransferLog);
+    if (pending.length === 0) {
+      alert("一括転記できる未転記の発送準備中の注文がありません");
+      return;
+    }
+    if (!confirm(`未転記の発送準備中の注文 ${pending.length} 件を一括で売上シートに転記します。\nよろしいですか？`)) return;
+
+    setBulkTransferring(true);
+    try {
+      const res = await fetch("/api/admin/orders/transfer-bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderNumbers: pending.map((o) => o.orderNumber) }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(`一括転記に失敗しました\n${data.error ?? ""}\n${data.detail ?? ""}`);
+        return;
+      }
+      const errors = (data.results ?? []).filter((r: { status: string }) => r.status === "error");
+      let msg = `✅ 一括転記が完了しました\n\n転記：${data.transferred} 件\nスキップ：${data.skipped} 件\nエラー：${data.error} 件`;
+      if (errors.length > 0) {
+        msg += "\n\n【エラー詳細】\n" + errors.slice(0, 5).map((e: { orderNumber: string; message?: string }) => `${e.orderNumber}: ${e.message ?? ""}`).join("\n");
+      }
+      alert(msg);
+      // 再読込
+      const r = await fetch("/api/admin/orders");
+      const d = await r.json();
+      if (Array.isArray(d.orders)) setOrders(d.orders);
+    } catch (err) {
+      alert(`通信エラー：${String(err)}`);
+    } finally {
+      setBulkTransferring(false);
+    }
+  }
 
   async function handleTransferToSales(orderNumber: string, force = false) {
     setTransferring(orderNumber);
@@ -467,6 +506,33 @@ export function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
         )}
         <span className="ml-auto text-xs text-stone-400 self-center">{filtered.length}件</span>
       </div>
+
+      {/* 売上シート一括転記 */}
+      {(() => {
+        const pendingCount = orders.filter((o) => o.status === "paid" && !o.salesTransferLog).length;
+        if (pendingCount === 0) return null;
+        return (
+          <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 mb-4 flex items-center gap-3">
+            <FileSpreadsheet className="w-5 h-5 text-emerald-700 flex-shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-emerald-900">
+                未転記の発送準備中の注文が <strong>{pendingCount} 件</strong> あります
+              </p>
+              <p className="text-[11px] text-emerald-700 mt-0.5">
+                売上シートへ一括転記できます（商品名キーワードで自動振り分け）
+              </p>
+            </div>
+            <button
+              onClick={handleBulkTransfer}
+              disabled={bulkTransferring}
+              className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-lg transition-colors disabled:opacity-50 whitespace-nowrap"
+            >
+              <FileSpreadsheet className="w-4 h-4" />
+              {bulkTransferring ? "一括転記中..." : `📊 ${pendingCount}件を一括転記`}
+            </button>
+          </div>
+        );
+      })()}
 
       {/* Order list */}
       <div className="space-y-3">
