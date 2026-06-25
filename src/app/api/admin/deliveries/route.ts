@@ -332,6 +332,7 @@ export async function POST(req: NextRequest) {
   }
 
   // 通知送信
+  const notificationLog: { channel: string; status: string; detail?: string }[] = [];
   if (shouldNotify) {
     const baseUrl = process.env.NEXT_PUBLIC_URL || "https://andoseika.jp";
     const notifyName = (primary?.name || profile.displayName || "お客様").trim();
@@ -347,20 +348,35 @@ export async function POST(req: NextRequest) {
       try {
         await sendDeliveryLine(profile.lineUserId, params);
         sentViaLine = true;
+        notificationLog.push({ channel: "LINE", status: "sent" });
       } catch (err) {
+        notificationLog.push({ channel: "LINE", status: "failed", detail: String(err) });
         console.error("[deliveries] LINE notification failed", err);
       }
+    } else {
+      notificationLog.push({ channel: "LINE", status: "skipped", detail: "lineUserId 未登録（LINEログイン時に自動保存）" });
     }
-    if (!sentViaLine && !email.endsWith("@line.user")) {
-      try {
-        await sendDeliveryEmail(email, params);
-      } catch (err) {
-        console.error("[deliveries] email notification failed", err);
+
+    if (!sentViaLine) {
+      if (email.endsWith("@line.user")) {
+        notificationLog.push({ channel: "email", status: "skipped", detail: "LINE専用メールアドレスのため送信不可" });
+      } else if (!process.env.RESEND_API_KEY) {
+        notificationLog.push({ channel: "email", status: "skipped", detail: "RESEND_API_KEY 未設定" });
+      } else {
+        try {
+          await sendDeliveryEmail(email, params);
+          notificationLog.push({ channel: "email", status: "sent", detail: email });
+        } catch (err) {
+          notificationLog.push({ channel: "email", status: "failed", detail: String(err) });
+          console.error("[deliveries] email notification failed", err);
+        }
       }
     }
+  } else {
+    notificationLog.push({ channel: "none", status: "skipped", detail: "通知OFFで保存" });
   }
 
-  return NextResponse.json({ success: true });
+  return NextResponse.json({ success: true, notification: notificationLog });
 }
 
 /** DELETE: 発送記録を取り消す */

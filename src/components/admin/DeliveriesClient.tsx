@@ -89,10 +89,23 @@ export function DeliveriesClient({ cycles, initialCycle }: { cycles: CycleId[]; 
         }),
       });
       if (res.ok) {
+        const data = await res.json().catch(() => ({} as { notification?: { channel: string; status: string; detail?: string }[] }));
         const r = await fetch(`/api/admin/deliveries?cycle=${cycle}`);
         const d = await r.json();
         setItems(Array.isArray(d.items) ? d.items : []);
         setEditing(null);
+
+        // 通知結果サマリーを表示
+        const log = data.notification ?? [];
+        const sent = log.find((l) => l.status === "sent");
+        if (sent) {
+          alert(`✅ 発送記録しました\n通知送信：${sent.channel}（${sent.detail ?? "成功"}）`);
+        } else if (log.some((l) => l.channel === "none")) {
+          alert("✅ 発送記録しました（通知OFFで保存）");
+        } else {
+          const reasons = log.map((l) => `${l.channel}：${l.status}${l.detail ? "（" + l.detail + "）" : ""}`).join("\n");
+          alert(`✅ 発送記録しました\n\n⚠ ただし通知は送信されていません：\n${reasons}`);
+        }
       } else {
         const d = await res.json().catch(() => ({}));
         alert(`発送記録に失敗しました\n${d.error ?? ""}\n${d.detail ?? ""}`);
