@@ -43,6 +43,25 @@ async function appendToOrderSheet(values: string[][]) {
   });
 }
 
+/**
+ * 名前の表記を「姓 名」順に正規化する。
+ * Apple Pay や海外サービスは「given family」（名 姓）順で氏名を渡してくるため、
+ * 日本語名（漢字・かな含む）が「名 姓」の順で入っている場合に反転させる。
+ */
+function normalizeJapaneseName(name: string): string {
+  if (!name) return name;
+  const trimmed = name.trim();
+  // スペース区切りで2要素のみを対象とする
+  const parts = trimmed.split(/[\s　]+/);
+  if (parts.length !== 2) return trimmed;
+  const [first, second] = parts;
+  // 両方が日本語（CJK 漢字 / ひらがな / カタカナ）を含むかチェック
+  const jpRegex = /[぀-ヿ㐀-䶿一-鿿]/;
+  if (!jpRegex.test(first) || !jpRegex.test(second)) return trimmed;
+  // Apple Pay は「名 姓」の順で渡してくる前提で反転 → 「姓 名」
+  return `${second} ${first}`;
+}
+
 function calcEstimatedDate(shipMode: string, shipValue: string): string {
   if (!shipMode || !shipValue) return "";
   const now = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" }));
@@ -145,7 +164,10 @@ export async function POST(req: NextRequest) {
       : {};
     const desiredDate = piMeta.desiredDeliveryDate ?? meta.desiredDeliveryDate ?? "";
     const desiredTime = piMeta.desiredDeliveryTime ?? meta.desiredDeliveryTime ?? "";
-    const shippingName = piMeta.shippingName ?? name;
+    // 氏名は piMeta.shippingName（カート入力＝姓 名順）を優先、無ければ
+    // customer_details.name（Apple Pay 等の「名 姓」順）を反転して正規化
+    const shippingNameRaw = piMeta.shippingName || name;
+    const shippingName = piMeta.shippingName ? shippingNameRaw : normalizeJapaneseName(shippingNameRaw);
     const shipMode = piMeta.shipMode ?? meta.shipMode ?? "";
     const shipValue = piMeta.shipValue ?? meta.shipValue ?? "";
 
