@@ -43,7 +43,14 @@ export function activeMailerName(): string {
 const FROM_NAME = "安藤青果";
 const FROM_GMAIL = gmailUser;
 const FROM_RESEND = "onboarding@resend.dev";
-const REPLY_TO_DEFAULT = "imamura0510@gmail.com";
+/**
+ * 返信先（Reply-To）の解決順：
+ *   1. 関数呼び出し時の引数 replyTo
+ *   2. 環境変数 MAIL_REPLY_TO
+ *   3. GMAIL_USER（送信元と同じにするのが自然）
+ *   4. ハードコードのフォールバック
+ */
+const REPLY_TO_DEFAULT = process.env.MAIL_REPLY_TO || gmailUser || "imamura0510@gmail.com";
 
 export async function sendMail({ to, subject, html, replyTo }: SendArgs): Promise<void> {
   if (gmailTransporter) {
