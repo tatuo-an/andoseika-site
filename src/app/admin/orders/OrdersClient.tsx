@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Package, Truck, CheckCircle, XCircle, ChevronDown, ChevronUp, RefreshCw, Send, Search } from "lucide-react";
+import { Package, Truck, CheckCircle, XCircle, ChevronDown, ChevronUp, RefreshCw, Send, Search, FileSpreadsheet } from "lucide-react";
 import type { Order } from "@/app/api/admin/orders/route";
 
 type Message = { senderType: string; senderName: string; message: string; sentAt: string };
@@ -150,6 +150,34 @@ export function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
   const [filterStatus, setFilterStatus] = useState("");
   const [filterProduct, setFilterProduct] = useState("");
   const [sortDir, setSortDir] = useState<"desc" | "asc">("desc");
+  const [transferring, setTransferring] = useState<string | null>(null);
+
+  async function handleTransferToSales(orderNumber: string, force = false) {
+    setTransferring(orderNumber);
+    try {
+      const res = await fetch(`/api/admin/orders/${encodeURIComponent(orderNumber)}/transfer-to-sales`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ force }),
+      });
+      const data = await res.json();
+      if (data.alreadyTransferred) {
+        if (confirm(`既に転記されています：\n${data.transferInfo}\n\nもう一度書き込みますか？`)) {
+          return handleTransferToSales(orderNumber, true);
+        }
+        return;
+      }
+      if (!res.ok) {
+        alert(`転記失敗：\n${data.error ?? ""}\n${data.detail ?? ""}`);
+        return;
+      }
+      alert(`✅ 売上シートに転記しました\n対象シート：${data.targetSheet}\n商品名：${data.productName} × ${data.qty}\n金額：¥${(data.amount as number).toLocaleString()}`);
+    } catch (err) {
+      alert(`通信エラー：${String(err)}`);
+    } finally {
+      setTransferring(null);
+    }
+  }
   const [page, setPage] = useState(1);
 
   const productOptions = useMemo(() => {
@@ -622,6 +650,21 @@ export function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
                             発送後、「発送済みにする」を押して追跡番号を入力してください
                           </p>
                         )}
+
+                        {/* 売上シート転記ボタン */}
+                        <div className="w-full pt-2 mt-1 border-t border-stone-100">
+                          <button
+                            onClick={() => handleTransferToSales(order.orderNumber)}
+                            disabled={transferring === order.orderNumber}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 text-xs font-bold rounded-lg transition-colors disabled:opacity-50"
+                          >
+                            <FileSpreadsheet className="w-3.5 h-3.5" />
+                            {transferring === order.orderNumber ? "転記中..." : "📊 売上シートに転記"}
+                          </button>
+                          <p className="text-[10px] text-stone-400 mt-1">
+                            商品名のキーワードで「売上データ／（予約）洗い／（予約）根付／（予約）メロン」に自動振り分け
+                          </p>
+                        </div>
                       </div>
                     </div>
 
