@@ -68,9 +68,16 @@ export async function POST(req: NextRequest) {
     scopes: ["https://www.googleapis.com/auth/spreadsheets"],
   });
   const sheets = google.sheets({ version: "v4", auth: authClient });
-  await sheets.spreadsheets.values.append({
-    spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-    range: "注文管理!A:O",
+  const spreadsheetId = process.env.GOOGLE_SPREADSHEET_ID!;
+  // append の自動テーブル境界判定が列ずれを起こすため、A列の最終行を取って明示的にupdateする
+  const a = await sheets.spreadsheets.values.get({
+    spreadsheetId,
+    range: "注文管理!A:A",
+  });
+  const nextRow = (a.data.values?.length ?? 0) + 1;
+  await sheets.spreadsheets.values.update({
+    spreadsheetId,
+    range: `注文管理!A${nextRow}:O${nextRow}`,
     valueInputOption: "USER_ENTERED",
     requestBody: {
       values: [[
