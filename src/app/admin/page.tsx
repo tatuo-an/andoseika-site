@@ -9,6 +9,7 @@ import { client } from "@/lib/microcms";
 import { Product } from "@/types/microcms";
 import localProducts from "@/data/products.json";
 import { AdminPanel } from "@/components/admin/AdminPanel";
+import { AnnouncementsEditor } from "@/components/admin/AnnouncementsEditor";
 import { google } from "googleapis";
 
 export const dynamic = "force-dynamic";
@@ -146,6 +147,7 @@ export default async function AdminPage() {
                             顧客一覧
                         </Link>
                     </div>
+                    <AnnouncementsEditor />
                     <AdminPanel
                         products={products}
                         initialInventory={inventory}

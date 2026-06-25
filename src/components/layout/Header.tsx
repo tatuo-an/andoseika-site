@@ -6,6 +6,7 @@ import { useShoppingCart } from "use-shopping-cart";
 import { useState } from "react";
 import { CartModal } from "@/components/cart/CartModal";
 import { OnlineTracker } from "@/components/layout/OnlineTracker";
+import { AnnouncementMarquee } from "@/components/AnnouncementMarquee";
 
 const NAV_ITEMS = [
     { href: "/", label: "TOP" },
@@ -13,7 +14,6 @@ const NAV_ITEMS = [
     { href: "/community", label: "みんなの料理" },
     { href: "/experience", label: "体験・予約" },
     { href: "/supporter", label: "サポーター募集", highlight: true },
-    { href: "/news", label: "お知らせ" },
     { href: "/business", label: "業務用・卸" },
     { href: "/about", label: "私たちについて" },
 ];
@@ -80,6 +80,8 @@ export function Header() {
                     </div>
                 </div>
             </header>
+
+            <AnnouncementMarquee />
 
             {/* モバイルメニュー */}
             {isMenuOpen && (

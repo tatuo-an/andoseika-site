@@ -13,11 +13,3 @@ export type Product = {
     order?: number;
 } & MicroCMSDate;
 
-// News Type
-export type News = {
-    id: string;
-    title: string;
-    content: string;
-    thumbnail?: MicroCMSImage;
-    publishedAt: string;
-} & MicroCMSDate;
