@@ -1,6 +1,4 @@
-import { Resend } from "resend";
-
-const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+import { sendMail, isMailerConfigured } from "@/lib/mailer";
 
 type RenewalParams = {
   customerName: string;
@@ -25,7 +23,7 @@ function buildMessageLines(p: RenewalParams): string[] {
 }
 
 export async function sendRenewalEmail(to: string, params: RenewalParams): Promise<void> {
-  if (!resend) return;
+  if (!isMailerConfigured()) return;
 
   const lines = buildMessageLines(params);
   const html = `
@@ -55,9 +53,7 @@ export async function sendRenewalEmail(to: string, params: RenewalParams): Promi
 </body>
 </html>`.trim();
 
-  await resend.emails.send({
-    from: "安藤青果 <onboarding@resend.dev>",
-    replyTo: "imamura0510@gmail.com",
+  await sendMail({
     to,
     subject: `【安藤青果】サポータープラン更新のご案内（${params.daysUntil}日前）`,
     html,

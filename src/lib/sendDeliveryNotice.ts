@@ -1,6 +1,4 @@
-import { Resend } from "resend";
-
-const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+import { sendMail, isMailerConfigured } from "@/lib/mailer";
 
 export type DeliveryNoticeParams = {
   customerName: string;
@@ -44,7 +42,7 @@ export async function sendDeliveryLine(lineUserId: string, params: DeliveryNotic
 }
 
 export async function sendDeliveryEmail(to: string, params: DeliveryNoticeParams): Promise<void> {
-  if (!resend) return;
+  if (!isMailerConfigured()) return;
   const lines = buildLines(params);
   const html = `
 <!DOCTYPE html>
@@ -70,9 +68,7 @@ export async function sendDeliveryEmail(to: string, params: DeliveryNoticeParams
 </body>
 </html>`.trim();
 
-  await resend.emails.send({
-    from: "安藤青果 <onboarding@resend.dev>",
-    replyTo: "imamura0510@gmail.com",
+  await sendMail({
     to,
     subject: `【安藤青果】${params.cycleLabel} 発送のお知らせ`,
     html,

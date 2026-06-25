@@ -1,6 +1,4 @@
-import { Resend } from "resend";
-
-const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+import { sendMail, isMailerConfigured } from "@/lib/mailer";
 
 type OrderEmailParams = {
   to: string;
@@ -88,10 +86,8 @@ export async function sendOrderConfirmationEmail(params: OrderEmailParams) {
 </html>
   `.trim();
 
-  if (!resend) return;
-  await resend.emails.send({
-    from: "安藤青果 <onboarding@resend.dev>",
-    replyTo: "imamura0510@gmail.com",
+  if (!isMailerConfigured()) return;
+  await sendMail({
     to,
     subject: `【安藤青果】ご注文ありがとうございます（${orderNumber}）`,
     html,

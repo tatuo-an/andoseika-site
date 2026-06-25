@@ -360,15 +360,18 @@ export async function POST(req: NextRequest) {
     if (!sentViaLine) {
       if (email.endsWith("@line.user")) {
         notificationLog.push({ channel: "email", status: "skipped", detail: "LINE専用メールアドレスのため送信不可" });
-      } else if (!process.env.RESEND_API_KEY) {
-        notificationLog.push({ channel: "email", status: "skipped", detail: "RESEND_API_KEY 未設定" });
       } else {
-        try {
-          await sendDeliveryEmail(email, params);
-          notificationLog.push({ channel: "email", status: "sent", detail: email });
-        } catch (err) {
-          notificationLog.push({ channel: "email", status: "failed", detail: String(err) });
-          console.error("[deliveries] email notification failed", err);
+        const { isMailerConfigured, activeMailerName } = await import("@/lib/mailer");
+        if (!isMailerConfigured()) {
+          notificationLog.push({ channel: "email", status: "skipped", detail: "メール送信が未設定（GMAIL_USER/GMAIL_APP_PASSWORD または RESEND_API_KEY を設定）" });
+        } else {
+          try {
+            await sendDeliveryEmail(email, params);
+            notificationLog.push({ channel: `email(${activeMailerName()})`, status: "sent", detail: email });
+          } catch (err) {
+            notificationLog.push({ channel: "email", status: "failed", detail: String(err) });
+            console.error("[deliveries] email notification failed", err);
+          }
         }
       }
     }
