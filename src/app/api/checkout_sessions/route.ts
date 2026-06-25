@@ -215,6 +215,12 @@ export async function POST(req: NextRequest) {
                     shipValue: shipValue ?? "",
                     pointsUsed: (pointsUsed ?? 0).toString(),
                     userEmail,
+                    // 注文管理シートでの商品特定用：カート内全商品IDと数量、マッチした単一バリエーションID
+                    cartItems: Object.entries(cartDetails)
+                        .map(([id, item]) => `${id}:${item.quantity}`)
+                        .join(",")
+                        .slice(0, 490), // Stripe metadata 値は 500 文字制限
+                    matchedVariantId: quote?.matchedVariantId ?? "",
                 },
             },
         };
