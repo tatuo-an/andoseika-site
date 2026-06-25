@@ -164,10 +164,33 @@ export async function POST(req: NextRequest) {
       : {};
     const desiredDate = piMeta.desiredDeliveryDate ?? meta.desiredDeliveryDate ?? "";
     const desiredTime = piMeta.desiredDeliveryTime ?? meta.desiredDeliveryTime ?? "";
-    // 氏名は piMeta.shippingName（カート入力＝姓 名順）を優先、無ければ
-    // customer_details.name（Apple Pay 等の「名 姓」順）を反転して正規化
-    const shippingNameRaw = piMeta.shippingName || name;
-    const shippingName = piMeta.shippingName ? shippingNameRaw : normalizeJapaneseName(shippingNameRaw);
+    // 氏名の決定優先度：
+    //   1. piMeta.shippingName（カートで選択した配送先住所の name＝姓 名順）
+    //   2. 顧客マスタの登録住所の name（メールアドレスで紐付け）
+    //   3. customer_details.name（Apple Pay 等）を 姓 名順に正規化
+    const userEmailMeta = piMeta.userEmail ?? meta.userEmail ?? email;
+    let shippingName = piMeta.shippingName || "";
+    if (!shippingName && userEmailMeta) {
+      try {
+        const sh = await getSheets();
+        const res = await sh.spreadsheets.values.get({
+          spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
+          range: "顧客マスタ!A:K",
+        });
+        const rows = res.data.values ?? [];
+        // 同じメールで __profile__ 以外の住所行を取得、デフォルト or 最初の住所を採用
+        const addresses = rows.filter((r) => r[0] === userEmailMeta && r[1] !== "__profile__");
+        const primary = addresses.find((r) => r[1] === "自分") || addresses.find((r) => r[1] === "デフォルト") || addresses[0];
+        if (primary) {
+          shippingName = String(primary[2] ?? "").trim();
+        }
+      } catch (lookupErr) {
+        console.error("[webhook] customer address lookup failed", lookupErr);
+      }
+    }
+    if (!shippingName) {
+      shippingName = normalizeJapaneseName(name);
+    }
     const shipMode = piMeta.shipMode ?? meta.shipMode ?? "";
     const shipValue = piMeta.shipValue ?? meta.shipValue ?? "";
 
