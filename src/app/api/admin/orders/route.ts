@@ -53,17 +53,30 @@ export async function GET() {
     }),
     sheets.spreadsheets.values.get({
       spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-      range: "顧客マスタ!A:C",
+      range: "顧客マスタ!A:K",
     }).catch(() => ({ data: { values: [] as string[][] } })),
   ]);
 
   const rows = ordersRes.data.values ?? [];
 
-  // メール→購入者表示名のマップ（顧客マスタの __profile__ 行から）
+  // メール→購入者名のマップ
+  // 優先順位：
+  //   1. 続柄が「自分」の住所行の氏名（本人の本名）
+  //   2. __profile__ 行の表示名（display name、ハンドルネーム等）
+  const buyerNameByEmail = new Map<string, string>();
   const profileNameByEmail = new Map<string, string>();
   for (const r of customersRes.data.values ?? []) {
-    if (r[0] && r[1] === "__profile__" && r[2]) {
-      profileNameByEmail.set(String(r[0]), String(r[2]));
+    const email = String(r[0] ?? "").trim();
+    if (!email) continue;
+    if (r[1] === "__profile__") {
+      if (r[2]) profileNameByEmail.set(email, String(r[2]));
+    } else {
+      // 住所行：続柄（K列）が「自分」なら優先採用
+      const relation = String(r[10] ?? "").trim();
+      const addrName = String(r[2] ?? "").trim();
+      if (relation === "自分" && addrName && !buyerNameByEmail.has(email)) {
+        buyerNameByEmail.set(email, addrName);
+      }
     }
   }
 
@@ -72,8 +85,11 @@ export async function GET() {
     .map((r) => {
       const email = r[3] ?? "";
       const buyerFromQ = r[16] ?? "";
-      // Q列が空の場合は顧客マスタの__profile__から購入者名を補完
-      const buyerName = buyerFromQ || profileNameByEmail.get(email) || "";
+      // 購入者名の優先順位：
+      //   1. Q列（webhook が記録した購入者氏名）
+      //   2. 続柄「自分」の住所行の氏名
+      //   3. __profile__ の表示名（最終フォールバック）
+      const buyerName = buyerFromQ || buyerNameByEmail.get(email) || profileNameByEmail.get(email) || "";
       return {
         orderNumber: r[0] ?? "",
         createdAt: r[1] ?? "",

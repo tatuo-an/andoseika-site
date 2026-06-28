@@ -33,14 +33,23 @@ async function getOrders(): Promise<Order[]> {
       }),
       sheets.spreadsheets.values.get({
         spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-        range: "顧客マスタ!A:C",
+        range: "顧客マスタ!A:K",
       }).catch(() => ({ data: { values: [] as string[][] } })),
     ]);
     const rows = ordersRes.data.values ?? [];
+    const buyerNameByEmail = new Map<string, string>();
     const profileNameByEmail = new Map<string, string>();
     for (const r of customersRes.data.values ?? []) {
-      if (r[0] && r[1] === "__profile__" && r[2]) {
-        profileNameByEmail.set(String(r[0]), String(r[2]));
+      const email = String(r[0] ?? "").trim();
+      if (!email) continue;
+      if (r[1] === "__profile__") {
+        if (r[2]) profileNameByEmail.set(email, String(r[2]));
+      } else {
+        const relation = String(r[10] ?? "").trim();
+        const addrName = String(r[2] ?? "").trim();
+        if (relation === "自分" && addrName && !buyerNameByEmail.has(email)) {
+          buyerNameByEmail.set(email, addrName);
+        }
       }
     }
     return rows
@@ -48,7 +57,7 @@ async function getOrders(): Promise<Order[]> {
       .map((r) => {
         const email = r[3] ?? "";
         const buyerFromQ = r[16] ?? "";
-        const buyerName = buyerFromQ || profileNameByEmail.get(email) || "";
+        const buyerName = buyerFromQ || buyerNameByEmail.get(email) || profileNameByEmail.get(email) || "";
         return {
           orderNumber: r[0] ?? "",
           createdAt: r[1] ?? "",
