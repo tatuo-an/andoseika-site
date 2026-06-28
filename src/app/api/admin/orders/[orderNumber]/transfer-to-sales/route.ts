@@ -138,9 +138,9 @@ function extractQty(raw: string): number {
   return m ? parseInt(m[1], 10) || 1 : 1;
 }
 
-/** 住所文字列を分割（郵便番号 / 都道府県 / 残り） */
-function splitAddress(addr: string): { zip: string; pref: string; rest: string } {
-  if (!addr) return { zip: "", pref: "", rest: "" };
+/** 住所文字列を分割（郵便番号 / 都道府県 / 市区町村 / 町・番地） */
+function splitAddress(addr: string): { zip: string; pref: string; city: string; street: string } {
+  if (!addr) return { zip: "", pref: "", city: "", street: "" };
   let s = addr.trim();
   let zip = "";
   let pref = "";
@@ -160,7 +160,48 @@ function splitAddress(addr: string): { zip: string; pref: string; rest: string }
     s = s.slice(prefMatch[0].length).trim();
   }
 
-  return { zip, pref, rest: s };
+  // 市区町村と町・番地を分離
+  const { city, street } = splitCityStreet(s);
+  return { zip, pref, city, street };
+}
+
+/** 政令指定都市（区を持つ） */
+const DESIGNATED_CITIES = [
+  "札幌市", "仙台市", "さいたま市", "千葉市", "横浜市", "川崎市", "相模原市",
+  "新潟市", "静岡市", "浜松市", "名古屋市", "京都市", "大阪市", "堺市",
+  "神戸市", "岡山市", "広島市", "北九州市", "福岡市", "熊本市",
+];
+
+/** 住所文字列を市区町村と町・番地に分離 */
+function splitCityStreet(input: string): { city: string; street: string } {
+  if (!input) return { city: "", street: "" };
+  const trimmed = input.trim();
+
+  // 1. 政令指定都市の場合は「市＋区」までを市区町村に
+  for (const dc of DESIGNATED_CITIES) {
+    if (trimmed.startsWith(dc)) {
+      const rest = trimmed.slice(dc.length);
+      const wardMatch = rest.match(/^([^\s]+?区)\s*(.*)$/);
+      if (wardMatch) {
+        return { city: dc + wardMatch[1], street: wardMatch[2].trim() };
+      }
+      return { city: dc, street: rest.trim() };
+    }
+  }
+
+  // 2. 郡＋町村（例：東伯郡北栄町）を市区町村に
+  const districtMatch = trimmed.match(/^([^\s]+?郡[^\s]+?[町村])\s*(.*)$/);
+  if (districtMatch) {
+    return { city: districtMatch[1], street: districtMatch[2].trim() };
+  }
+
+  // 3. 通常の市/区/町/村（最初の出現で切る）
+  const cityMatch = trimmed.match(/^([^\s]+?[市区町村])\s*(.*)$/);
+  if (cityMatch) {
+    return { city: cityMatch[1], street: cityMatch[2].trim() };
+  }
+
+  return { city: trimmed, street: "" };
 }
 
 function zeroPad(n: number, len = 2): string {
@@ -320,7 +361,7 @@ export async function POST(
   const cleanedName = cleanProductName(rawProductName);
   const qty = extractQty(rawProductName);
   const targetSheet = classifySheet(rawProductName);
-  const { zip, pref, rest } = splitAddress(fullAddress);
+  const { zip, pref, city: cityVal, street: streetVal } = splitAddress(fullAddress);
 
   // 販売日／販売月：作成日時の日付部分 → YYYY-MM-DD
   const saleDateRaw = createdAt.split(/[ \t]/)[0]; // "2026/6/25"
@@ -343,12 +384,11 @@ export async function POST(
   const productMaster = await loadProductMaster(salesSheetId);
   const masterEntry = fullCode && productMaster[fullCode] ? productMaster[fullCode] : null;
 
-  // マスタの「商品名」「商品カテゴリ」「規格表示」「重量kg」「内容品」を優先的に使う
+  // マスタの「商品名」「商品カテゴリ」「規格表示」「重量kg」を優先的に使う
   const productName  = masterEntry?.["商品名"] || cleanedName;
   const categoryVal  = masterEntry?.["商品カテゴリ"] || "";
   const specVal      = masterEntry?.["規格表示"] || "";
   const weightVal    = masterEntry?.["重量kg"] || "";
-  const contentVal   = masterEntry?.["内容品"] || productName;
 
   // 売上シートのヘッダーを取得
   const headers = await getSalesSheetHeaders(salesSheetId, targetSheet);
@@ -358,13 +398,33 @@ export async function POST(
     }, { status: 500 });
   }
 
-  // 販売先コード
+  // 販売先コード（自社サイトは固定で "X"）
   const custName = "自社サイト";
-  const custCode = await lookupCustCode(salesSheetId, custName);
+  const custCode = "X";
+
+  // 次の No.（A列の最大値 + 1）と書き込み行を1回の取得で算出
+  const sheets = getSheets();
+  const colA = await sheets.spreadsheets.values.get({
+    spreadsheetId: salesSheetId,
+    range: `${targetSheet}!A:A`,
+  });
+  const colARows = colA.data.values ?? [];
+  const nextRow = colARows.length + 1;
+  let nextNo = 1;
+  for (const r of colARows.slice(1)) {
+    const n = parseInt(String(r[0] ?? ""), 10);
+    if (!isNaN(n) && n >= nextNo) nextNo = n + 1;
+  }
+
+  // 内容品は「No. + 商品名」（マスタの内容品があればそちらを優先）
+  const contentDisplay = masterEntry?.["内容品"] || productName;
+  const contentWithNo = `${nextNo} ${contentDisplay}`;
 
   // 書き込む値（ヘッダー名 → 値）
   const ts = new Date().toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" });
   const valueMap: Record<string, string | number> = {
+    "No": nextNo,
+    "No.": nextNo,
     "販売日": saleDate,
     "販売月": saleMonth,
     "販売先コード": custCode,
@@ -375,7 +435,7 @@ export async function POST(
     "商品名": productName,
     "規格表示": specVal,
     "重量kg": weightVal,
-    "内容品": contentVal,
+    "内容品": contentWithNo,
     "数量": qty,
     "販売価格": amount,
     "発送予定日": shipDate,
@@ -391,8 +451,8 @@ export async function POST(
     "取込元": custName,
     "郵便番号": zip,
     "都道府県": pref,
-    "市区町村": rest, // 自動分割の限界として市区町村に残り全部を入れる
-    "町・番地": "",
+    "市区町村": cityVal,
+    "町・番地": streetVal,
     "建物名": "",
     "配送先住所": fullAddress,
     "電話番号": phone,
@@ -403,14 +463,7 @@ export async function POST(
   const newRow: (string | number)[] = headers.map((h) => valueMap[h] ?? "");
 
   // 書き込み
-  const sheets = getSheets();
   try {
-    // 末尾に追記（A列で最終行を判定）
-    const colA = await sheets.spreadsheets.values.get({
-      spreadsheetId: salesSheetId,
-      range: `${targetSheet}!A:A`,
-    });
-    const nextRow = (colA.data.values?.length ?? 0) + 1;
     await sheets.spreadsheets.values.update({
       spreadsheetId: salesSheetId,
       range: `${targetSheet}!A${nextRow}:${columnIndexToLetter(headers.length)}${nextRow}`,

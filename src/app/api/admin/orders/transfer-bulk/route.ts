@@ -106,8 +106,8 @@ function extractQty(raw: string): number {
   return m ? parseInt(m[1], 10) || 1 : 1;
 }
 
-function splitAddress(addr: string): { zip: string; pref: string; rest: string } {
-  if (!addr) return { zip: "", pref: "", rest: "" };
+function splitAddress(addr: string): { zip: string; pref: string; city: string; street: string } {
+  if (!addr) return { zip: "", pref: "", city: "", street: "" };
   let s = addr.trim();
   let zip = "";
   let pref = "";
@@ -122,7 +122,32 @@ function splitAddress(addr: string): { zip: string; pref: string; rest: string }
     pref = prefMatch[1];
     s = s.slice(prefMatch[0].length).trim();
   }
-  return { zip, pref, rest: s };
+  const { city, street } = splitCityStreet(s);
+  return { zip, pref, city, street };
+}
+
+const DESIGNATED_CITIES_B = [
+  "札幌市", "仙台市", "さいたま市", "千葉市", "横浜市", "川崎市", "相模原市",
+  "新潟市", "静岡市", "浜松市", "名古屋市", "京都市", "大阪市", "堺市",
+  "神戸市", "岡山市", "広島市", "北九州市", "福岡市", "熊本市",
+];
+
+function splitCityStreet(input: string): { city: string; street: string } {
+  if (!input) return { city: "", street: "" };
+  const trimmed = input.trim();
+  for (const dc of DESIGNATED_CITIES_B) {
+    if (trimmed.startsWith(dc)) {
+      const rest = trimmed.slice(dc.length);
+      const wardMatch = rest.match(/^([^\s]+?区)\s*(.*)$/);
+      if (wardMatch) return { city: dc + wardMatch[1], street: wardMatch[2].trim() };
+      return { city: dc, street: rest.trim() };
+    }
+  }
+  const districtMatch = trimmed.match(/^([^\s]+?郡[^\s]+?[町村])\s*(.*)$/);
+  if (districtMatch) return { city: districtMatch[1], street: districtMatch[2].trim() };
+  const cityMatch = trimmed.match(/^([^\s]+?[市区町村])\s*(.*)$/);
+  if (cityMatch) return { city: cityMatch[1], street: cityMatch[2].trim() };
+  return { city: trimmed, street: "" };
 }
 
 function zeroPad(n: number, len = 2): string {
@@ -253,7 +278,7 @@ export async function POST(req: NextRequest) {
   // 商品マスタも1回だけ読み込み
   const productMaster = await loadProductMaster(salesSheetId);
   const custName = "自社サイト";
-  const custCode = await lookupCustCode(salesSheetId, custName);
+  const custCode = "X"; // 自社サイトは固定で "X"
 
   // シートごとのヘッダーキャッシュ
   const headersCache = new Map<string, string[]>();
@@ -272,17 +297,27 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // シートごとの「次の追記行」キャッシュ
+  // シートごとの「次の追記行」と「次の No.」をキャッシュ
   const nextRowCache = new Map<string, number>();
-  async function getNextRow(sheetName: string): Promise<number> {
-    if (nextRowCache.has(sheetName)) return nextRowCache.get(sheetName)!;
+  const nextNoCache = new Map<string, number>();
+  async function getNextRowAndNo(sheetName: string): Promise<{ row: number; no: number }> {
+    if (nextRowCache.has(sheetName) && nextNoCache.has(sheetName)) {
+      return { row: nextRowCache.get(sheetName)!, no: nextNoCache.get(sheetName)! };
+    }
     const colA = await sheets.spreadsheets.values.get({
       spreadsheetId: salesSheetId,
       range: `${sheetName}!A:A`,
     });
-    const next = (colA.data.values?.length ?? 0) + 1;
-    nextRowCache.set(sheetName, next);
-    return next;
+    const rows = colA.data.values ?? [];
+    const row = rows.length + 1;
+    let no = 1;
+    for (const r of rows.slice(1)) {
+      const n = parseInt(String(r[0] ?? ""), 10);
+      if (!isNaN(n) && n >= no) no = n + 1;
+    }
+    nextRowCache.set(sheetName, row);
+    nextNoCache.set(sheetName, no);
+    return { row, no };
   }
 
   const results: BulkResult[] = [];
@@ -318,7 +353,7 @@ export async function POST(req: NextRequest) {
     const cleanedName = cleanProductName(rawProductName);
     const qty = extractQty(rawProductName);
     const targetSheet = classifySheet(rawProductName);
-    const { zip, pref, rest } = splitAddress(fullAddress);
+    const { zip, pref, city: cityVal, street: streetVal } = splitAddress(fullAddress);
 
     const saleDateRaw = createdAt.split(/[ \t]/)[0];
     const saleDate = normalizeDate(saleDateRaw, new Date().getFullYear());
@@ -339,7 +374,6 @@ export async function POST(req: NextRequest) {
     const categoryVal = masterEntry?.["商品カテゴリ"] || "";
     const specVal = masterEntry?.["規格表示"] || "";
     const weightVal = masterEntry?.["重量kg"] || "";
-    const contentVal = masterEntry?.["内容品"] || productName;
 
     const headers = await getHeaders(targetSheet);
     if (!headers || headers.length === 0) {
@@ -347,19 +381,23 @@ export async function POST(req: NextRequest) {
       continue;
     }
 
+    const { row: nextRow, no: nextNo } = await getNextRowAndNo(targetSheet);
+    const contentDisplay = masterEntry?.["内容品"] || productName;
+    const contentWithNo = `${nextNo} ${contentDisplay}`;
+
     const valueMap: Record<string, string | number> = {
+      "No": nextNo, "No.": nextNo,
       "販売日": saleDate, "販売月": saleMonth, "販売先コード": custCode, "販売先名": custName, "販売先": custName,
-      "フルコード": fullCode, "商品カテゴリ": categoryVal, "商品名": productName, "規格表示": specVal, "重量kg": weightVal, "内容品": contentVal,
+      "フルコード": fullCode, "商品カテゴリ": categoryVal, "商品名": productName, "規格表示": specVal, "重量kg": weightVal, "内容品": contentWithNo,
       "数量": qty, "販売価格": amount, "発送予定日": shipDate, "発送月": shipMonth, "発送方法": shipMethod,
       "時間指定": desiredTime, "購入者名": customerName, "入力者": "サイト", "備考": `[CSV:${orderNumber}]`,
       "登録タイムスタンプ": ts, "注文番号": orderNumber, "受注番号": sessionId, "取込元": custName,
-      "郵便番号": zip, "都道府県": pref, "市区町村": rest, "町・番地": "", "建物名": "",
+      "郵便番号": zip, "都道府県": pref, "市区町村": cityVal, "町・番地": streetVal, "建物名": "",
       "配送先住所": fullAddress, "電話番号": phone,
       "配送希望日": desiredDate ? normalizeDate(desiredDate, fallbackYear) : "",
     };
 
     const newRow = headers.map((h) => valueMap[h] ?? "");
-    const nextRow = await getNextRow(targetSheet);
 
     try {
       await sheets.spreadsheets.values.update({
@@ -369,6 +407,7 @@ export async function POST(req: NextRequest) {
         requestBody: { values: [newRow] },
       });
       nextRowCache.set(targetSheet, nextRow + 1);
+      nextNoCache.set(targetSheet, nextNo + 1);
 
       const transferLog = `転記済 ${ts.split(" ")[0]} ${targetSheet}`;
       logUpdates.push({
