@@ -132,11 +132,10 @@ export async function POST(req: NextRequest) {
                     quantity: 1,
                 });
             }
-            // セール割引は商品本体行の単価から差し引く
+            // セール割引は商品本体行の単価から差し引く（名前には付与しない）
             if (quote.saleDiscount && quote.saleDiscount > 0 && line_items[0]) {
                 const discount = Math.min(quote.saleDiscount, line_items[0].price_data.unit_amount);
                 line_items[0].price_data.unit_amount -= discount;
-                line_items[0].price_data.product_data.name += "（セール価格）";
             }
             // オプション調整（割引は商品本体価格から差し引く / 追加料金は別行）
             if (quote.optionsAdjustment && quote.optionsAdjustment !== 0) {
