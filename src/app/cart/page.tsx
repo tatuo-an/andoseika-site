@@ -263,6 +263,15 @@ export default function CartPage() {
         });
         return sum;
     })();
+    // 商品名に表示する用：割引（amount < 0）以外のオプションラベルを抽出
+    const displayOptionLabels: string[] = [];
+    familyOptionsMap.forEach((opts, fam) => {
+        opts.forEach(o => {
+            if (selectedOptions.has(`${fam}:${o.label}`) && o.amount >= 0) {
+                displayOptionLabels.push(o.label);
+            }
+        });
+    });
 
     const itemTaxedUnit = (item: { price: number; cost?: number | null }) => {
         const cost = item.cost ?? item.price;
@@ -403,6 +412,7 @@ export default function CartPage() {
                         shipSizeLabel: shipTypeLabel(effectiveShipType),
                         optionsAdjustment: optionsAdjustmentTaxed,
                         optionLabels: Array.from(selectedOptions),
+                        optionDisplayLabels: displayOptionLabels,
                         saleDiscount: saleDiscountTaxed,
                     },
                 }),

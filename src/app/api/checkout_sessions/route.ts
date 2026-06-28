@@ -48,6 +48,7 @@ export async function POST(req: NextRequest) {
                 shipSizeLabel?: string;
                 optionsAdjustment?: number; // オプション調整（税込, 8%、負値=割引）
                 optionLabels?: string[];    // 選択されたオプションのキー "family:label" 配列
+                optionDisplayLabels?: string[]; // 商品名に表示するラベル（割引系を除く）
                 saleDiscount?: number;      // セール割引総額（税込, 8%）
             };
             shippingAddress?: {
@@ -137,26 +138,28 @@ export async function POST(req: NextRequest) {
                 const discount = Math.min(quote.saleDiscount, line_items[0].price_data.unit_amount);
                 line_items[0].price_data.unit_amount -= discount;
             }
-            // オプション調整（割引は商品本体価格から差し引く / 追加料金は別行）
-            if (quote.optionsAdjustment && quote.optionsAdjustment !== 0) {
-                if (quote.optionsAdjustment > 0) {
-                    // 追加料金は別行
-                    line_items.push({
-                        price_data: {
-                            currency: "jpy",
-                            product_data: { name: `オプション（${quote.optionLabels?.map(k => k.split(":")[1]).join(", ") ?? ""}）`, images: [] },
-                            unit_amount: quote.optionsAdjustment,
-                        },
-                        quantity: 1,
-                    });
-                } else {
-                    // 割引は商品本体行の単価から差し引く（Stripeは負の単価不可）
-                    const discount = Math.abs(quote.optionsAdjustment);
-                    if (line_items[0] && line_items[0].price_data.unit_amount >= discount) {
-                        line_items[0].price_data.unit_amount -= discount;
-                        line_items[0].price_data.product_data.name += `（${quote.optionLabels?.map(k => k.split(":")[1]).join(", ") ?? ""}）`;
-                    }
+            // オプション調整：価格と表示を分離して処理
+            // - 価格：optionsAdjustment が正→追加料金行、負→商品本体行から控除
+            // - 表示：optionDisplayLabels（割引以外のラベル）のみを商品本体行の名前に付与
+            if (quote.optionsAdjustment && quote.optionsAdjustment > 0) {
+                line_items.push({
+                    price_data: {
+                        currency: "jpy",
+                        product_data: { name: `オプション（${quote.optionLabels?.map(k => k.split(":")[1]).join(", ") ?? ""}）`, images: [] },
+                        unit_amount: quote.optionsAdjustment,
+                    },
+                    quantity: 1,
+                });
+            } else if (quote.optionsAdjustment && quote.optionsAdjustment < 0) {
+                const discount = Math.abs(quote.optionsAdjustment);
+                if (line_items[0] && line_items[0].price_data.unit_amount >= discount) {
+                    line_items[0].price_data.unit_amount -= discount;
                 }
+            }
+            // 商品名に追加するラベルは割引系を除いたもののみ
+            const labelsToShow = quote.optionDisplayLabels ?? [];
+            if (labelsToShow.length > 0 && line_items[0]) {
+                line_items[0].price_data.product_data.name += `（${labelsToShow.join("・")}）`;
             }
         } else {
             for (const item of cartArr) {
