@@ -28,7 +28,7 @@ async function getOrders(): Promise<Order[]> {
     const sheets = google.sheets({ version: "v4", auth: authClient });
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-      range: "注文管理!A:P",
+      range: "注文管理!A:Q",
     });
     const rows = res.data.values ?? [];
     return rows
@@ -49,6 +49,7 @@ async function getOrders(): Promise<Order[]> {
         complaint: r[12] ?? "",
         estimatedDate: r[14] ?? "",
         salesTransferLog: r[15] ?? "",
+        buyerName: r[16] ?? "",
       }))
       .reverse();
   } catch {

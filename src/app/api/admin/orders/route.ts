@@ -27,6 +27,7 @@ export type Order = {
   complaint: string;
   estimatedDate: string;
   salesTransferLog: string;
+  buyerName: string; // 購入者氏名（Q列、Apple Pay 等で送り先と異なる場合あり）
 };
 
 export async function GET() {
@@ -45,7 +46,7 @@ export async function GET() {
   const sheets = google.sheets({ version: "v4", auth: authClient });
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-    range: "注文管理!A:P",
+    range: "注文管理!A:Q",
   });
   const rows = res.data.values ?? [];
 
@@ -67,6 +68,7 @@ export async function GET() {
       complaint: r[12] ?? "",
       estimatedDate: r[14] ?? "",
       salesTransferLog: r[15] ?? "",
+      buyerName: r[16] ?? "",
     }))
     .reverse();
 

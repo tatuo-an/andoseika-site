@@ -37,7 +37,7 @@ async function appendToOrderSheet(values: string[][]) {
   const nextRow = (a.data.values?.length ?? 0) + 1;
   await sheets.spreadsheets.values.update({
     spreadsheetId,
-    range: `注文管理!A${nextRow}:O${nextRow + values.length - 1}`,
+    range: `注文管理!A${nextRow}:Q${nextRow + values.length - 1}`,
     valueInputOption: "USER_ENTERED",
     requestBody: { values },
   });
@@ -225,12 +225,18 @@ export async function POST(req: NextRequest) {
     const lineItems = await stripe.checkout.sessions.listLineItems(sessionId, { limit: 10 });
     const productNames = lineItems.data.map((item) => item.description).join(", ");
 
+    // 購入者名（Apple Pay 等の海外順を正規化）
+    const buyerName = name ? normalizeJapaneseName(name) : "";
+
     try {
-      // 新シート「注文管理」: A=注文番号, B=作成日時, C=顧客名, D=メール, E=電話, F=住所, G=商品名, H=金額, I=ステータス, J=セッションID, K=希望配達日, L=希望時間帯, M=問題内容, N=受取完了日時, O=お届け予定日
+      // 注文管理: A=注文番号, B=作成日時, C=送り先氏名, D=メール, E=電話, F=住所,
+      //           G=商品名, H=金額, I=ステータス, J=セッションID, K=希望配達日,
+      //           L=希望時間帯, M=問題内容, N=受取完了日時, O=お届け予定日,
+      //           P=売上転記履歴, Q=購入者氏名
       await appendToOrderSheet([[
-        orderNumber, now, shippingName || name, email, phone, address,
+        orderNumber, now, shippingName || buyerName, email, phone, address,
         productNames, amount, "paid", sessionId, desiredDate, desiredTime,
-        "", "", estimatedDate,
+        "", "", estimatedDate, "", buyerName,
       ]]);
       console.log("[webhook] order recorded:", orderNumber, sessionId);
 

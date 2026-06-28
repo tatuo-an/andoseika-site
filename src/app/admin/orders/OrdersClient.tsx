@@ -595,35 +595,58 @@ export function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
                   <div className="flex flex-col md:flex-row gap-4">
                     {/* 左：注文情報＋ステータス */}
                     <div className="flex-1 space-y-4">
-                      <div className="grid grid-cols-2 gap-3 text-sm">
-                        <div>
-                          <p className="text-xs text-stone-400 mb-0.5">注文番号</p>
-                          <p className="font-mono text-xs text-stone-700">{order.orderNumber}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-stone-400 mb-0.5">注文日時</p>
-                          <p className="text-stone-700">{order.createdAt}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-stone-400 mb-0.5">金額</p>
-                          <p className="font-bold text-stone-900">¥{order.amount.toLocaleString()}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-stone-400 mb-0.5">氏名</p>
-                          <p className="text-stone-700">{order.name}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-stone-400 mb-0.5">電話</p>
-                          <p className="text-stone-700">{order.phone || "—"}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-stone-400 mb-0.5">メール</p>
-                          <p className="text-stone-700 text-xs break-all">{order.email || "—"}</p>
-                        </div>
-                        <div className="col-span-2">
-                          <p className="text-xs text-stone-400 mb-0.5">お届け先</p>
-                          <p className="text-stone-700">{order.address || "—"}</p>
-                        </div>
+                      {(() => {
+                        // 購入者と送り先が異なる場合の判定
+                        const buyerName = order.buyerName?.trim() || "";
+                        const recipientName = order.name?.trim() || "";
+                        const isDifferentRecipient = !!buyerName && !!recipientName && buyerName !== recipientName;
+                        return (
+                          <>
+                            {isDifferentRecipient && (
+                              <div className="bg-amber-50 border border-amber-300 rounded-lg px-3 py-2 flex items-center gap-2 text-xs font-bold text-amber-900">
+                                <span className="text-base">🎁</span>
+                                <span>購入者と送り先が異なります（ギフト注文の可能性）</span>
+                              </div>
+                            )}
+                            <div className="grid grid-cols-2 gap-3 text-sm">
+                              <div>
+                                <p className="text-xs text-stone-400 mb-0.5">注文番号</p>
+                                <p className="font-mono text-xs text-stone-700">{order.orderNumber}</p>
+                              </div>
+                              <div>
+                                <p className="text-xs text-stone-400 mb-0.5">注文日時</p>
+                                <p className="text-stone-700">{order.createdAt}</p>
+                              </div>
+                              <div>
+                                <p className="text-xs text-stone-400 mb-0.5">金額</p>
+                                <p className="font-bold text-stone-900">¥{order.amount.toLocaleString()}</p>
+                              </div>
+                              <div>
+                                <p className="text-xs text-stone-400 mb-0.5">メール（購入者）</p>
+                                <p className="text-stone-700 text-xs break-all">{order.email || "—"}</p>
+                              </div>
+                            </div>
+
+                            {/* 購入者と送り先を分けて表示 */}
+                            <div className={`grid gap-3 ${isDifferentRecipient ? "md:grid-cols-2" : "grid-cols-1"}`}>
+                              {isDifferentRecipient && (
+                                <div className="bg-white border border-stone-200 rounded-lg p-3">
+                                  <p className="text-[10px] font-bold text-stone-500 uppercase tracking-widest mb-2">👤 購入者</p>
+                                  <p className="text-sm text-stone-800 font-medium">{buyerName}</p>
+                                  <p className="text-xs text-stone-500 mt-0.5">{order.email}</p>
+                                </div>
+                              )}
+                              <div className={`bg-white border-2 ${isDifferentRecipient ? "border-amber-300" : "border-stone-200"} rounded-lg p-3`}>
+                                <p className="text-[10px] font-bold text-stone-500 uppercase tracking-widest mb-2">
+                                  📦 {isDifferentRecipient ? "送り先（ギフト宛先）" : "送り先"}
+                                </p>
+                                <p className="text-sm text-stone-800 font-medium">{recipientName || "—"}</p>
+                                <p className="text-xs text-stone-600 mt-0.5">{order.address || "—"}</p>
+                                {order.phone && <p className="text-xs text-stone-500 mt-0.5">TEL: {order.phone}</p>}
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3 text-sm">
                         {(order.desiredDate || order.desiredTime) && (
                           <div className="col-span-2">
                             <p className="text-xs text-stone-400 mb-0.5">配達希望</p>
@@ -641,6 +664,9 @@ export function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
                           <p className="text-stone-700">{order.productNames}</p>
                         </div>
                       </div>
+                          </>
+                        );
+                      })()}
 
                       {/* Status actions */}
                       <div className="flex flex-wrap gap-2 pt-2 border-t border-stone-200">
