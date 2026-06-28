@@ -416,9 +416,12 @@ export async function POST(
     if (!isNaN(n) && n >= nextNo) nextNo = n + 1;
   }
 
-  // 内容品は「No. + 商品名」（マスタの内容品があればそちらを優先）
-  const contentDisplay = masterEntry?.["内容品"] || productName;
-  const contentWithNo = `${nextNo} ${contentDisplay}`;
+  // 内容品は「No. + 商品名 + 重量（規格表示）」
+  // 規格表示があればそれを優先（"1kg" "1.5kg" "180g" など）、無ければ "重量kg" + "kg"
+  const weightDisplay = specVal || (weightVal ? `${weightVal}kg` : "");
+  const contentWithNo = weightDisplay
+    ? `${nextNo} ${productName} ${weightDisplay}`
+    : `${nextNo} ${productName}`;
 
   // 書き込む値（ヘッダー名 → 値）
   const ts = new Date().toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" });

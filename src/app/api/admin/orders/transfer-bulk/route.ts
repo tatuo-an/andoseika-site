@@ -382,8 +382,11 @@ export async function POST(req: NextRequest) {
     }
 
     const { row: nextRow, no: nextNo } = await getNextRowAndNo(targetSheet);
-    const contentDisplay = masterEntry?.["内容品"] || productName;
-    const contentWithNo = `${nextNo} ${contentDisplay}`;
+    // 内容品は「No. + 商品名 + 重量（規格表示）」
+    const weightDisplay = specVal || (weightVal ? `${weightVal}kg` : "");
+    const contentWithNo = weightDisplay
+      ? `${nextNo} ${productName} ${weightDisplay}`
+      : `${nextNo} ${productName}`;
 
     const valueMap: Record<string, string | number> = {
       "No": nextNo, "No.": nextNo,
