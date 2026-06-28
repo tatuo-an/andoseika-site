@@ -223,7 +223,13 @@ export async function POST(req: NextRequest) {
     console.log("[webhook] shipMode:", shipMode, "shipValue:", shipValue, "estimatedDate:", estimatedDate);
 
     const lineItems = await stripe.checkout.sessions.listLineItems(sessionId, { limit: 10 });
-    const productNames = lineItems.data.map((item) => item.description).join(", ");
+    // 送料・サービス料・クール便・追加送料・オプション行などは商品名から除外
+    const isFeeLine = (desc: string) =>
+      /^(送料|サービス料|クール便|追加送料|オプション)/.test(desc.trim());
+    const productNames = lineItems.data
+      .map((item) => item.description ?? "")
+      .filter((desc) => desc && !isFeeLine(desc))
+      .join(", ");
 
     // 購入者名（Apple Pay 等の海外順を正規化）
     const buyerName = name ? normalizeJapaneseName(name) : "";
