@@ -44,32 +44,55 @@ export async function GET() {
     scopes: ["https://www.googleapis.com/auth/spreadsheets"],
   });
   const sheets = google.sheets({ version: "v4", auth: authClient });
-  const res = await sheets.spreadsheets.values.get({
-    spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-    range: "注文管理!A:Q",
-  });
-  const rows = res.data.values ?? [];
+
+  // 注文管理シートと顧客マスタを並列取得（過去注文で Q列が空でも購入者名を補完するため）
+  const [ordersRes, customersRes] = await Promise.all([
+    sheets.spreadsheets.values.get({
+      spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
+      range: "注文管理!A:Q",
+    }),
+    sheets.spreadsheets.values.get({
+      spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
+      range: "顧客マスタ!A:C",
+    }).catch(() => ({ data: { values: [] as string[][] } })),
+  ]);
+
+  const rows = ordersRes.data.values ?? [];
+
+  // メール→購入者表示名のマップ（顧客マスタの __profile__ 行から）
+  const profileNameByEmail = new Map<string, string>();
+  for (const r of customersRes.data.values ?? []) {
+    if (r[0] && r[1] === "__profile__" && r[2]) {
+      profileNameByEmail.set(String(r[0]), String(r[2]));
+    }
+  }
 
   const orders: Order[] = rows
     .filter((r) => r[0] && r[0] !== "注文番号")
-    .map((r) => ({
-      orderNumber: r[0] ?? "",
-      createdAt: r[1] ?? "",
-      name: r[2] ?? "",
-      email: r[3] ?? "",
-      phone: normalizePhone(r[4] ?? ""),
-      address: r[5] ?? "",
-      productNames: r[6] ?? "",
-      amount: parseInt(r[7] ?? "0", 10) || 0,
-      status: r[8] ?? "paid",
-      sessionId: r[9] ?? "",
-      desiredDate: r[10] ?? "",
-      desiredTime: r[11] ?? "",
-      complaint: r[12] ?? "",
-      estimatedDate: r[14] ?? "",
-      salesTransferLog: r[15] ?? "",
-      buyerName: r[16] ?? "",
-    }))
+    .map((r) => {
+      const email = r[3] ?? "";
+      const buyerFromQ = r[16] ?? "";
+      // Q列が空の場合は顧客マスタの__profile__から購入者名を補完
+      const buyerName = buyerFromQ || profileNameByEmail.get(email) || "";
+      return {
+        orderNumber: r[0] ?? "",
+        createdAt: r[1] ?? "",
+        name: r[2] ?? "",
+        email,
+        phone: normalizePhone(r[4] ?? ""),
+        address: r[5] ?? "",
+        productNames: r[6] ?? "",
+        amount: parseInt(r[7] ?? "0", 10) || 0,
+        status: r[8] ?? "paid",
+        sessionId: r[9] ?? "",
+        desiredDate: r[10] ?? "",
+        desiredTime: r[11] ?? "",
+        complaint: r[12] ?? "",
+        estimatedDate: r[14] ?? "",
+        salesTransferLog: r[15] ?? "",
+        buyerName,
+      };
+    })
     .reverse();
 
   return NextResponse.json({ orders });
