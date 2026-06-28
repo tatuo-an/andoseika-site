@@ -78,14 +78,20 @@ export async function POST(req: NextRequest) {
         if (quote) {
             // 商品本体価格（税込）
             const firstImg = cartArr[0]?.image;
-            // 複数商品時はすべての商品名を連結（Stripeのname上限250字を考慮して切詰め）
-            const composedName = cartArr
-                .map((item) => item.quantity > 1 ? `${item.name} ×${item.quantity}` : item.name)
-                .join(" / ");
-            const itemsName = quote.matchedVariantName
-                ?? (cartArr.length === 1
-                    ? cartArr[0].name
-                    : (composedName.length <= 240 ? composedName : `${composedName.slice(0, 235)}…`));
+            // 商品名はカート内容そのまま反映する（matchedVariantName で差し替えない）
+            // 数量×N も明示し、複数商品はすべて連結（Stripe name 上限250字を考慮して切詰め）
+            const composedName = (() => {
+                if (cartArr.length === 0) return "商品";
+                if (cartArr.length === 1) {
+                    const it = cartArr[0];
+                    return it.quantity > 1 ? `${it.name} ×${it.quantity}` : it.name;
+                }
+                const joined = cartArr
+                    .map((item) => item.quantity > 1 ? `${item.name} ×${item.quantity}` : item.name)
+                    .join(" / ");
+                return joined.length <= 240 ? joined : `${joined.slice(0, 235)}…`;
+            })();
+            const itemsName = composedName;
             line_items.push({
                 price_data: {
                     currency: "jpy",
