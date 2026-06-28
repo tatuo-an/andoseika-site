@@ -82,7 +82,8 @@ export function ProfileCard({ fallbackName, email, image }: Props) {
     <div className="bg-white rounded-2xl shadow-sm p-6 mb-6 flex items-center gap-4">
       {image && <img src={image} alt={displayName} className="w-16 h-16 rounded-full shrink-0" />}
       <div className="flex-1 min-w-0">
-        {/* 名前 */}
+        {/* アカウント名 */}
+        <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-0.5">アカウント名</p>
         {editingName ? (
           <div className="flex items-center gap-2 mb-1">
             <input
@@ -92,7 +93,8 @@ export function ProfileCard({ fallbackName, email, image }: Props) {
               onKeyDown={(e) => { if (e.key === "Enter") saveName(); if (e.key === "Escape") setEditingName(false); }}
               maxLength={50}
               autoFocus
-              className="border border-stone-300 rounded-lg px-3 py-1.5 text-base font-bold text-stone-900 focus:outline-none focus:ring-2 focus:ring-primary/30 w-full max-w-[200px]"
+              placeholder="サイトで使う表示名（ニックネーム可）"
+              className="border border-stone-300 rounded-lg px-3 py-1.5 text-base font-bold text-stone-900 focus:outline-none focus:ring-2 focus:ring-primary/30 w-full max-w-[240px]"
             />
             <button onClick={saveName} disabled={saving || !nameInput.trim()} className="p-1.5 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-40 transition-colors">
               <Check className="w-4 h-4" />
@@ -102,12 +104,17 @@ export function ProfileCard({ fallbackName, email, image }: Props) {
             </button>
           </div>
         ) : (
-          <div className="flex items-center gap-2 mb-0.5">
+          <button
+            onClick={() => { setNameInput(displayName); setEditingName(true); }}
+            className="group flex items-center gap-2 mb-0.5 cursor-pointer hover:bg-stone-50 -mx-2 px-2 py-1 rounded-lg transition-colors w-full text-left"
+            title="アカウント名を編集"
+          >
             <p className="font-bold text-lg text-stone-900 truncate">{displayName}</p>
-            <button onClick={() => { setNameInput(displayName); setEditingName(true); }} className="p-1 text-stone-400 hover:text-stone-600 transition-colors shrink-0" title="名前を編集">
-              <Pencil className="w-3.5 h-3.5" />
-            </button>
-          </div>
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-stone-100 group-hover:bg-primary group-hover:text-white text-stone-500 text-[10px] font-bold transition-colors shrink-0">
+              <Pencil className="w-3 h-3" />
+              編集
+            </span>
+          </button>
         )}
 
         <p className="text-stone-500 text-sm truncate mb-1">{email}</p>
