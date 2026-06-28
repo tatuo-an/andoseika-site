@@ -152,9 +152,9 @@ export async function POST(req: NextRequest) {
     // 電話番号も同様にカート由来を優先
     const cartPhone = piShipping?.phone ?? "";
     const stripePhone = rawPhone;
-    const chosenPhone = cartPhone || stripePhone;
-    const phoneDigitsFinal = chosenPhone.startsWith("+81") ? "0" + chosenPhone.slice(3) : chosenPhone;
-    const phone = phoneDigitsFinal ? `'${phoneDigitsFinal}` : "";
+    let phoneDigitsFinal = (cartPhone || stripePhone).startsWith("+81")
+      ? "0" + (cartPhone || stripePhone).slice(3)
+      : (cartPhone || stripePhone);
     const amount = session.amount_total?.toString() ?? "";
     const sessionId = session.id;
 
@@ -164,13 +164,16 @@ export async function POST(req: NextRequest) {
       : {};
     const desiredDate = piMeta.desiredDeliveryDate ?? meta.desiredDeliveryDate ?? "";
     const desiredTime = piMeta.desiredDeliveryTime ?? meta.desiredDeliveryTime ?? "";
-    // 氏名の決定優先度：
-    //   1. piMeta.shippingName（カートで選択した配送先住所の name＝姓 名順）
-    //   2. 顧客マスタの登録住所の name（メールアドレスで紐付け）
-    //   3. customer_details.name（Apple Pay 等）を 姓 名順に正規化
+    // 氏名・住所・電話番号の決定優先度：
+    //   1. piMeta.shippingName / piShipping.address / piShipping.phone（カート由来）
+    //   2. customer_details.name / customer_details.address / customer_details.phone（Apple Pay 等）
+    //   3. 顧客マスタの登録住所（メールアドレスで紐付け）
+    //   4. 正規化処理
     const userEmailMeta = piMeta.userEmail ?? meta.userEmail ?? email;
-    let shippingName = piMeta.shippingName || "";
-    if (!shippingName && userEmailMeta) {
+
+    // 顧客マスタの登録住所を取得（必要時のみ使うが先に1回読む）
+    let masterPrimary: string[] | null = null;
+    if (userEmailMeta) {
       try {
         const sh = await getSheets();
         const res = await sh.spreadsheets.values.get({
@@ -178,19 +181,39 @@ export async function POST(req: NextRequest) {
           range: "顧客マスタ!A:K",
         });
         const rows = res.data.values ?? [];
-        // 同じメールで __profile__ 以外の住所行を取得、デフォルト or 最初の住所を採用
         const addresses = rows.filter((r) => r[0] === userEmailMeta && r[1] !== "__profile__");
-        const primary = addresses.find((r) => r[1] === "自分") || addresses.find((r) => r[1] === "デフォルト") || addresses[0];
-        if (primary) {
-          shippingName = String(primary[2] ?? "").trim();
-        }
+        masterPrimary =
+          addresses.find((r) => r[1] === "自分") ||
+          addresses.find((r) => r[1] === "デフォルト") ||
+          addresses.find((r) => r[1] === "本人") ||
+          addresses[0] ||
+          null;
       } catch (lookupErr) {
-        console.error("[webhook] customer address lookup failed", lookupErr);
+        console.error("[webhook] customer master lookup failed", lookupErr);
       }
     }
-    if (!shippingName) {
-      shippingName = normalizeJapaneseName(name);
+
+    // 氏名
+    let shippingName = piMeta.shippingName || "";
+    if (!shippingName && masterPrimary) shippingName = String(masterPrimary[2] ?? "").trim();
+    if (!shippingName) shippingName = normalizeJapaneseName(name);
+
+    // 住所（既に決定済みの address に対して空ならマスタ参照）
+    if (!address && masterPrimary) {
+      const mZip = String(masterPrimary[3] ?? "").trim();
+      const mPref = String(masterPrimary[4] ?? "").trim();
+      const mCity = String(masterPrimary[5] ?? "").trim();
+      const mStreet = String(masterPrimary[6] ?? "").trim();
+      const mBldg = String(masterPrimary[7] ?? "").trim();
+      address = [mZip, mPref, mCity, mStreet, mBldg].filter(Boolean).join(" ");
     }
+
+    // 電話（既に決定済みの phone が空ならマスタ参照）
+    if (!phoneDigitsFinal && masterPrimary) {
+      const mPhone = String(masterPrimary[8] ?? "").trim();
+      if (mPhone) phoneDigitsFinal = mPhone;
+    }
+    const phone = phoneDigitsFinal ? `'${phoneDigitsFinal}` : "";
     const shipMode = piMeta.shipMode ?? meta.shipMode ?? "";
     const shipValue = piMeta.shipValue ?? meta.shipValue ?? "";
 
