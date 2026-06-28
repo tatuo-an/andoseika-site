@@ -55,7 +55,12 @@ export function AddressForm() {
 
     useEffect(() => { load(); }, []);
 
-    const startNew = () => { setEditing({ ...EMPTY }); setOriginalLabel(null); };
+    const startNew = () => {
+        // 初回登録（住所がまだ無い）なら続柄を「自分」で初期化
+        const initialRelation = addresses.length === 0 ? "自分" : "";
+        setEditing({ ...EMPTY, relation: initialRelation });
+        setOriginalLabel(null);
+    };
     const startEdit = (addr: Address) => { setEditing({ ...addr }); setOriginalLabel(addr.label); };
     const cancelEdit = () => { setEditing(null); setOriginalLabel(null); };
 
@@ -101,6 +106,7 @@ export function AddressForm() {
         e.preventDefault();
         if (!editing) return;
         if (!editing.name.trim()) { alert("お名前を入力してください"); return; }
+        if (!editing.relation) { alert("続柄を選択してください"); return; }
 
         // ラベルは名前から自動生成（重複時は (2),(3)...を付加）
         let autoLabel = editing.name.trim();
@@ -160,6 +166,31 @@ export function AddressForm() {
                     <button type="button" onClick={cancelEdit} className="p-1 text-stone-400 hover:text-stone-600">
                         <X className="w-5 h-5" />
                     </button>
+                </div>
+
+                <div>
+                    <label className="block text-sm font-medium text-stone-700 mb-1">
+                        続柄 <span className="text-red-500">*必須</span>
+                    </label>
+                    <div className="flex items-center gap-2">
+                        {RELATIONS.map(rel => (
+                            <button
+                                key={rel.value}
+                                type="button"
+                                onClick={() => setEditing({ ...editing, relation: rel.value })}
+                                className={`px-4 py-2 rounded-lg text-sm font-bold border-2 transition-colors ${
+                                    editing.relation === rel.value
+                                        ? rel.color
+                                        : "bg-stone-50 text-stone-500 border-stone-200 hover:border-stone-300"
+                                }`}
+                            >
+                                {rel.value}
+                            </button>
+                        ))}
+                    </div>
+                    <p className="text-xs text-stone-400 mt-1">
+                        「自分」を選んだ住所のお名前が、ご本人として記録されます。
+                    </p>
                 </div>
 
                 <div>
