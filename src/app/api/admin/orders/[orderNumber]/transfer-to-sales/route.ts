@@ -343,11 +343,12 @@ export async function POST(
   const productMaster = await loadProductMaster(salesSheetId);
   const masterEntry = fullCode && productMaster[fullCode] ? productMaster[fullCode] : null;
 
-  // マスタの「商品名」「商品カテゴリ」「規格表示」「重量kg」を優先的に使う
+  // マスタの「商品名」「商品カテゴリ」「規格表示」「重量kg」「内容品」を優先的に使う
   const productName  = masterEntry?.["商品名"] || cleanedName;
   const categoryVal  = masterEntry?.["商品カテゴリ"] || "";
   const specVal      = masterEntry?.["規格表示"] || "";
   const weightVal    = masterEntry?.["重量kg"] || "";
+  const contentVal   = masterEntry?.["内容品"] || productName;
 
   // 売上シートのヘッダーを取得
   const headers = await getSalesSheetHeaders(salesSheetId, targetSheet);
@@ -374,6 +375,7 @@ export async function POST(
     "商品名": productName,
     "規格表示": specVal,
     "重量kg": weightVal,
+    "内容品": contentVal,
     "数量": qty,
     "販売価格": amount,
     "発送予定日": shipDate,

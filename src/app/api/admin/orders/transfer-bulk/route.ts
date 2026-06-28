@@ -339,6 +339,7 @@ export async function POST(req: NextRequest) {
     const categoryVal = masterEntry?.["商品カテゴリ"] || "";
     const specVal = masterEntry?.["規格表示"] || "";
     const weightVal = masterEntry?.["重量kg"] || "";
+    const contentVal = masterEntry?.["内容品"] || productName;
 
     const headers = await getHeaders(targetSheet);
     if (!headers || headers.length === 0) {
@@ -348,7 +349,7 @@ export async function POST(req: NextRequest) {
 
     const valueMap: Record<string, string | number> = {
       "販売日": saleDate, "販売月": saleMonth, "販売先コード": custCode, "販売先名": custName, "販売先": custName,
-      "フルコード": fullCode, "商品カテゴリ": categoryVal, "商品名": productName, "規格表示": specVal, "重量kg": weightVal,
+      "フルコード": fullCode, "商品カテゴリ": categoryVal, "商品名": productName, "規格表示": specVal, "重量kg": weightVal, "内容品": contentVal,
       "数量": qty, "販売価格": amount, "発送予定日": shipDate, "発送月": shipMonth, "発送方法": shipMethod,
       "時間指定": desiredTime, "購入者名": customerName, "入力者": "サイト", "備考": `[CSV:${orderNumber}]`,
       "登録タイムスタンプ": ts, "注文番号": orderNumber, "受注番号": sessionId, "取込元": custName,
