@@ -132,6 +132,7 @@ export default function ExperiencePage() {
                             <li>• 雨天の場合は中止になることがあります（前日〜当日にご連絡します）</li>
                             <li>• 動きやすい服装と、汚れてもよい靴でお越しください</li>
                             <li>• お子様の参加は保護者同伴をお願いします</li>
+                            <li>• 防護服を着用しますが、蜂に刺される可能性を完全になくすことはできません。蜂アレルギーのある方は参加をご遠慮ください</li>
                             <li>• ご不明な点は<a href="https://lin.ee/xzQv9l5" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">LINE</a>またはお問い合わせフォームからご相談ください</li>
                         </ul>
                     </div>
