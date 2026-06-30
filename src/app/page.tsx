@@ -2,7 +2,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, ChevronRight, ShoppingBasket, Leaf, Heart, Building2 } from "lucide-react";
+import { ArrowRight, ChevronRight, ShoppingBasket, Leaf, Heart, Building2, Package, Truck, ShieldCheck } from "lucide-react";
 import { CommunityScroller } from "@/components/community/CommunityScroller";
 import { client } from "@/lib/microcms";
 import { Product } from "@/types/microcms";
@@ -188,6 +188,42 @@ export default async function Home() {
           </section>
         )}
 
+        {/* ── 初めての方へ ── */}
+        <section className="py-10 bg-stone-50">
+          <div className="container mx-auto px-4 md:px-6">
+            <h2 className="text-xl font-bold text-stone-900 mb-6">初めての方へ</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-white rounded-2xl p-6 shadow-sm flex gap-4 items-start">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <Package className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <p className="font-bold text-stone-900 text-sm mb-1">送料込みで分かりやすい価格</p>
+                  <p className="text-xs text-stone-500 leading-relaxed">一部地域のみ追加送料が発生します。</p>
+                </div>
+              </div>
+              <div className="bg-white rounded-2xl p-6 shadow-sm flex gap-4 items-start">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <Truck className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <p className="font-bold text-stone-900 text-sm mb-1">農家から直接発送</p>
+                  <p className="text-xs text-stone-500 leading-relaxed">収穫状況に合わせて4〜10日以内に発送します。</p>
+                </div>
+              </div>
+              <div className="bg-white rounded-2xl p-6 shadow-sm flex gap-4 items-start">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <ShieldCheck className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <p className="font-bold text-stone-900 text-sm mb-1">傷みがあった場合も対応</p>
+                  <p className="text-xs text-stone-500 leading-relaxed">到着後3日以内に写真を添えてご連絡ください。</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* ── Promo Banners ── */}
         <section className="py-4 bg-stone-50">
           <div className="container mx-auto px-4 md:px-6">
@@ -213,7 +249,7 @@ export default async function Home() {
                 <div className="absolute inset-0 flex flex-col justify-center px-8">
                   <p className="text-white/70 text-xs font-bold tracking-widest uppercase mb-1">Experience</p>
                   <p className="text-white text-xl md:text-2xl font-bold leading-snug drop-shadow">畑で、体を動かす日。</p>
-                  <p className="text-white/80 text-sm mt-2">養蜂体験・芋掘り体験。予約受付中</p>
+                  <p className="text-white/80 text-sm mt-2">養蜂体験（5〜10月）・芋掘り体験（10〜12月）。事前予約必須</p>
                   <span className="mt-4 inline-flex items-center gap-1 text-white text-sm font-bold">
                     予約する <ChevronRight className="w-4 h-4" />
                   </span>

@@ -124,6 +124,17 @@ export default function ExperiencePage() {
                             />
                         </div>
                     </div>
+                    {/* Participation Conditions */}
+                    <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 md:p-8">
+                        <h3 className="font-bold text-stone-900 text-lg mb-4">ご参加の条件・注意事項</h3>
+                        <ul className="space-y-2 text-sm text-stone-700">
+                            <li>• 事前予約が必須です（当日の飛び込み参加はできません）</li>
+                            <li>• 雨天の場合は中止になることがあります（前日〜当日にご連絡します）</li>
+                            <li>• 動きやすい服装と、汚れてもよい靴でお越しください</li>
+                            <li>• お子様の参加は保護者同伴をお願いします</li>
+                            <li>• ご不明な点は<a href="https://lin.ee/xzQv9l5" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">LINE</a>またはお問い合わせフォームからご相談ください</li>
+                        </ul>
+                    </div>
                 </div>
             </main>
 

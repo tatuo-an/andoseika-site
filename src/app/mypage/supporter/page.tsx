@@ -49,7 +49,7 @@ export default async function MyPageSupporterPage() {
   const nextRenewalDate = tierExpiry; // 契約期間終了日 = 次回更新日
 
   const TIER_BENEFITS: Record<TierKey, string[]> = {
-    free:     ["無料会員登録で、1日1ptのログインボーナス", "通常価格で購入可能", "通常商品を自由に購入できます"],
+    free:     ["通常価格で購入可能", "ログインボーナス 1pt/日", "お気に入り登録・注文履歴の確認"],
     mebuking: ["通常商品 3% OFF（セール品除く）", "ログインボーナス 2pt/日", "誕生日ボーナス 500pt", "限定商品を購入可能"],
     minori:   ["通常商品 5% OFF（セール品除く）", "ログインボーナス 3pt/日", "誕生日ボーナス 1,000pt", "限定商品を購入可能", "年1回 旬の小さなお届け（送料込み）"],
     partner:  ["通常商品 8% OFF（セール品除く）", "ログインボーナス 5pt/日", "誕生日ボーナス 2,000pt", "限定商品を購入可能", "年2回 詰め合わせセットをお届け"],

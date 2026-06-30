@@ -483,7 +483,7 @@ export default async function SupporterPage({
                         なりませんか？
                     </h2>
                     <p className="text-white/80 leading-relaxed mb-10 max-w-lg mx-auto">
-                        年に2回届く旬の贈り物と、いつでも使える会員割引。
+                        旬の詰め合わせのお届け（実りサポーターは年1回・農園パートナーは年2回）と、いつでも使える会員割引。
                         <br />
                         鳥取の畑から届く「温かい仕送り」を、
                         <br />
@@ -627,15 +627,15 @@ function FreePlanCard({
                 <div className="space-y-3 mb-6 text-stone-400">
                     <div className="flex items-start gap-2">
                         <Check className="h-5 w-5 flex-shrink-0 mt-0.5" />
-                        <span className="text-sm">通常価格で購入可能</span>
+                        <span className="text-sm">通常価格で商品を購入できます</span>
                     </div>
                     <div className="flex items-start gap-2">
                         <Check className="h-5 w-5 flex-shrink-0 mt-0.5" />
-                        <span className="text-sm">無料会員登録で、1日1ptのログインボーナス</span>
+                        <span className="text-sm">ログインボーナス 1pt/日を獲得</span>
                     </div>
                     <div className="flex items-start gap-2">
                         <Check className="h-5 w-5 flex-shrink-0 mt-0.5" />
-                        <span className="text-sm">通常商品を自由に購入できます</span>
+                        <span className="text-sm">貯めたポイントを商品代に利用できます</span>
                     </div>
                 </div>
                 <div className="mt-auto">
@@ -778,6 +778,10 @@ function PlanCard({
                     )}
                 </div>
 
+                <p className="text-xs text-stone-400 text-center leading-relaxed mb-3">
+                    契約期間は1年間で、その後は1年ごとに自動更新されます。<br />
+                    マイページから次回更新を停止できます。
+                </p>
                 {isCurrent ? (
                     <div className="w-full py-3.5 rounded-full text-sm text-center font-bold bg-primary/10 text-primary cursor-default">
                         ✓ 現在のプラン
