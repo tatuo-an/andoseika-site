@@ -209,7 +209,7 @@ export async function POST(req: NextRequest) {
 
         // 配送先住所が事前指定されている場合は Stripe 側で再入力させない
         const sessionParams: Stripe.Checkout.SessionCreateParams = {
-            payment_method_types: ["card", "customer_balance", "paypay"],
+            payment_method_types: ["card", "customer_balance", "paypay"] as Stripe.Checkout.SessionCreateParams["payment_method_types"],
             payment_method_options: {
                 customer_balance: {
                     funding_type: "bank_transfer",
@@ -223,7 +223,7 @@ export async function POST(req: NextRequest) {
                     : {}),
             line_items,
             mode: "payment",
-            success_url: `${baseUrl}/success`,
+            success_url: `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
             cancel_url: `${baseUrl}/cancel`,
             custom_text: {
                 submit: {
