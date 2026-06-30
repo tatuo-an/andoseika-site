@@ -763,11 +763,16 @@ export default function CartPage() {
                             : (selectedAddress ? "お支払いへ進む" : "配送先を登録してください")}
                     </button>
                     {!skipMode && (
-                        <p className="text-xs text-center text-stone-500 mt-3">
-                            Stripeのセキュアな決済画面へ移動します。ご注文前に
-                            <Link href="/tokusho" className="font-medium text-primary hover:underline">特定商取引法に基づく表示</Link>
-                            をご確認ください。
-                        </p>
+                        <>
+                            <p className="text-xs text-center text-stone-500 mt-3">
+                                Stripeのセキュアな決済画面へ移動します。ご注文前に
+                                <Link href="/tokusho" className="font-medium text-primary hover:underline">特定商取引法に基づく表示</Link>
+                                をご確認ください。
+                            </p>
+                            <div className="mt-3 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-xs text-amber-800 leading-relaxed">
+                                <span className="font-bold">銀行振り込みをご利用の方へ：</span>振込先口座はStripe（決済代行）が管理する仮想口座となります。口座名義が「安藤青果」と異なる場合がありますが、安藤青果への正規のお支払いとして処理されますのでご安心ください。
+                            </div>
+                        </>
                     )}
                 </div>
             </main>
