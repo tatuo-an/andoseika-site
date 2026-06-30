@@ -52,8 +52,15 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   if (!target) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   const post = rowToPost(target, myEmail);
+  // 対象投稿のファミリー名セット（カンマ区切りに対応）
+  const targetFamilies = new Set((target[9] ?? "").split(",").map((s: string) => s.trim()).filter(Boolean));
   const related = rows
-    .filter((r) => r[0] !== id && r[9] && r[9] === target[9])
+    .filter((r) => {
+      if (r[0] === id) return false;
+      if (!r[9]) return false;
+      const families = r[9].split(",").map((s: string) => s.trim()).filter(Boolean);
+      return families.some((f: string) => targetFamilies.has(f));
+    })
     .slice(-4)
     .reverse()
     .map((r) => rowToPost(r, myEmail));

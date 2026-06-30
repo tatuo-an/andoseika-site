@@ -84,9 +84,13 @@ export default function CommunityPostPage() {
 
                 <div className="p-5">
                   {post.productFamily && (
-                    <span className="inline-block text-xs font-medium text-primary bg-primary/10 px-2.5 py-1 rounded-full mb-3">
-                      🥬 {post.productFamily}
-                    </span>
+                    <div className="flex flex-wrap gap-1.5 mb-3">
+                      {post.productFamily.split(",").map((f) => (
+                        <span key={f} className="text-xs font-medium text-primary bg-primary/10 px-2.5 py-1 rounded-full">
+                          🥬 {f.trim()}
+                        </span>
+                      ))}
+                    </div>
                   )}
 
                   {post.caption && (
@@ -116,13 +120,21 @@ export default function CommunityPostPage() {
                   </div>
 
                   {post.productId && (
-                    <Link
-                      href={`/products/${post.productId}`}
-                      className="flex items-center justify-center gap-2 w-full py-3 bg-primary text-white font-bold rounded-xl hover:bg-primary/90 transition-colors text-sm"
-                    >
-                      <ShoppingCart className="w-4 h-4" />
-                      {post.productFamily ? `${post.productFamily}を購入する` : "この商品を購入する"}
-                    </Link>
+                    <div className="flex flex-col gap-2">
+                      {post.productId.split(",").map((pid, i) => {
+                        const fname = post.productFamily.split(",")[i]?.trim() ?? "";
+                        return (
+                          <Link
+                            key={pid}
+                            href={`/products/${pid.trim()}`}
+                            className="flex items-center justify-center gap-2 w-full py-3 bg-primary text-white font-bold rounded-xl hover:bg-primary/90 transition-colors text-sm"
+                          >
+                            <ShoppingCart className="w-4 h-4" />
+                            {fname ? `${fname}を購入する` : "この商品を購入する"}
+                          </Link>
+                        );
+                      })}
+                    </div>
                   )}
                 </div>
               </div>

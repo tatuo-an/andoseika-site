@@ -134,7 +134,7 @@ function PostForm({ myEmail, myName, onPosted }: { myEmail: string; myName: stri
   const [open, setOpen] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState("");
-  const [selectedProduct, setSelectedProduct] = useState<PurchasedProduct | null>(null);
+  const [selectedProducts, setSelectedProducts] = useState<PurchasedProduct[]>([]);
   const [caption, setCaption] = useState("");
   const [uploading, setUploading] = useState(false);
   const [displayName, setDisplayName] = useState(myName);
@@ -158,8 +158,16 @@ function PostForm({ myEmail, myName, onPosted }: { myEmail: string; myName: stri
     setImagePreview(URL.createObjectURL(f));
   }
 
+  function toggleProduct(p: PurchasedProduct) {
+    setSelectedProducts((prev) =>
+      prev.some((x) => x.family === p.family)
+        ? prev.filter((x) => x.family !== p.family)
+        : [...prev, p]
+    );
+  }
+
   async function submit() {
-    if (!imageFile || !selectedProduct) return;
+    if (!imageFile || selectedProducts.length === 0) return;
     setUploading(true);
     try {
       const form = new FormData();
@@ -168,19 +176,22 @@ function PostForm({ myEmail, myName, onPosted }: { myEmail: string; myName: stri
       const { url } = await uploadRes.json();
       if (!url) throw new Error("upload failed");
 
+      const familyStr = selectedProducts.map((p) => p.family).join(",");
+      const idStr = selectedProducts.map((p) => p.id).join(",");
+
       const res = await fetch("/api/community", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productName: selectedProduct.family, productFamily: selectedProduct.family, productId: selectedProduct.id, imageUrl: url, caption, displayName }),
+        body: JSON.stringify({ productName: familyStr, productFamily: familyStr, productId: idStr, imageUrl: url, caption, displayName }),
       });
       const data = await res.json();
       if (data.ok) {
         const now = new Date().toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" });
-        onPosted({ id: data.postId, email: myEmail, displayName, productName: selectedProduct.family, imageUrl: url, caption, createdAt: now, likeCount: 0, liked: false, saved: false, isOwner: true, productFamily: selectedProduct.family, productId: selectedProduct.id }, data.pointsEarned ?? 0);
+        onPosted({ id: data.postId, email: myEmail, displayName, productName: familyStr, imageUrl: url, caption, createdAt: now, likeCount: 0, liked: false, saved: false, isOwner: true, productFamily: familyStr, productId: idStr }, data.pointsEarned ?? 0);
         setOpen(false);
         setImageFile(null);
         setImagePreview("");
-        setSelectedProduct(null);
+        setSelectedProducts([]);
         setCaption("");
       }
     } finally {
@@ -237,18 +248,32 @@ function PostForm({ myEmail, myName, onPosted }: { myEmail: string; myName: stri
           <input ref={fileRef} type="file" accept="image/*" onChange={handleFile} className="hidden" />
 
           <div>
-            <label className="block text-xs text-stone-500 mb-1.5">使った商品</label>
-            <select
-              value={selectedProduct?.family ?? ""}
-              onChange={(e) => {
-                const found = products.find((p) => p.family === e.target.value) ?? null;
-                setSelectedProduct(found);
-              }}
-              className="w-full border border-stone-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 bg-white"
-            >
-              <option value="">選択してください</option>
-              {products.map((p) => <option key={p.family} value={p.family}>{p.family}</option>)}
-            </select>
+            <label className="block text-xs text-stone-500 mb-1.5">使った商品（複数選択可）</label>
+            <div className="border border-stone-200 rounded-xl overflow-hidden divide-y divide-stone-100">
+              {products.map((p) => {
+                const checked = selectedProducts.some((x) => x.family === p.family);
+                return (
+                  <label key={p.family} className={`flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors ${checked ? "bg-primary/5" : "hover:bg-stone-50"}`}>
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => toggleProduct(p)}
+                      className="w-4 h-4 accent-primary"
+                    />
+                    <span className="text-sm text-stone-700">{p.family}</span>
+                  </label>
+                );
+              })}
+            </div>
+            {selectedProducts.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {selectedProducts.map((p) => (
+                  <span key={p.family} className="text-xs bg-primary/10 text-primary px-2.5 py-1 rounded-full font-medium">
+                    🥬 {p.family}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
 
           <div>
@@ -264,7 +289,7 @@ function PostForm({ myEmail, myName, onPosted }: { myEmail: string; myName: stri
 
           <button
             onClick={submit}
-            disabled={!imageFile || !selectedProduct || uploading}
+            disabled={!imageFile || selectedProducts.length === 0 || uploading}
             className="w-full py-3 bg-primary text-white font-bold rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-50"
           >
             {uploading ? "投稿中..." : "投稿する"}
