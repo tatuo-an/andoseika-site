@@ -235,7 +235,7 @@ export default async function Home() {
                 <div className="absolute inset-0 flex flex-col justify-center px-8">
                   <p className="text-white/70 text-xs font-bold tracking-widest uppercase mb-1">Supporter</p>
                   <p className="text-white text-xl md:text-2xl font-bold leading-snug drop-shadow">農家の「親戚」になりませんか</p>
-                  <p className="text-white/80 text-sm mt-2">無料〜年会費10,000円。ポイント・割引・限定商品など特典あり</p>
+                  <p className="text-white/80 text-sm mt-2">無料会員あり／サポーターは年会費3,000円〜。ポイント・割引・限定商品など特典あり</p>
                   <span className="mt-4 inline-flex items-center gap-1 text-white text-sm font-bold">
                     詳しく見る <ChevronRight className="w-4 h-4" />
                   </span>

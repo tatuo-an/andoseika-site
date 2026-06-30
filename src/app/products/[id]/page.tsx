@@ -305,22 +305,23 @@ const FALLBACK_DESCRIPTION = "鳥取県の安藤青果がお届けする商品�
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
     const { id } = await params;
-    const { product, hidden, deleted } = await resolveProductForDisplay(id);
+    const [{ product, hidden, deleted }, inv] = await Promise.all([resolveProductForDisplay(id), getInventoryData(id)]);
     if (!product || hidden || deleted) return { title: "商品が見つかりません" };
 
+    const displayName = inv.family || product.name;
     const description = (product.description ?? "").trim() || FALLBACK_DESCRIPTION;
-    const imageUrl = product.image?.url || "";
+    const imageUrl = inv.imageUrl || product.image?.url || "";
     return {
-        title: product.name,
+        title: displayName,
         description,
         openGraph: {
-            title: product.name,
+            title: displayName,
             description,
             images: imageUrl ? [imageUrl] : undefined,
         },
         twitter: {
             card: "summary_large_image",
-            title: product.name,
+            title: displayName,
             description,
             images: imageUrl ? [imageUrl] : undefined,
         },
@@ -404,7 +405,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                                     {invData.salePercent}% OFF
                                 </span>
                             )}
-                            <ProductImageSlideshow images={displayImages} alt={product.name} />
+                            <ProductImageSlideshow images={displayImages} alt={invData.family || product.name} />
                         </div>
 
                         {/* Content */}
