@@ -24,6 +24,7 @@ export function Footer() {
                         <li><Link href="/business" className="hover:text-primary">業務用のお取引</Link></li>
                         <li><Link href="/point-terms" className="hover:text-primary">ポイント利用条件</Link></li>
                         <li><Link href="/tokusho" className="hover:text-primary">特定商取引法に基づく表示</Link></li>
+                        <li><Link href="/privacy" className="hover:text-primary">プライバシーポリシー</Link></li>
                     </ul>
                 </div>
 
