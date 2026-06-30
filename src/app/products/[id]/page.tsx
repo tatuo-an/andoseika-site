@@ -281,12 +281,13 @@ async function resolveProductForDisplay(id: string): Promise<{ product: Product 
         }
     }
 
-    // ファミリー全員が MicroCMS 未登録 → 在庫シートから擬似 Product を構築
-    if (!product && inv.family) {
+    // ファミリー全員が MicroCMS 未登録 → 在庫シートから擬似 Product を構築（family なければ variantName を使用）
+    const fallbackName = inv.family || inv.name;
+    if (!product && fallbackName) {
         const now = new Date().toISOString();
         product = {
             id,
-            name: inv.family,
+            name: fallbackName,
             category: "processed",
             price: inv.price ?? 0,
             description: inv.description || "",
@@ -347,12 +348,13 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
         }
     }
 
-    // ファミリー全員がMicroCMS未登録 → シートデータだけで擬似Productを構築
-    if (!product && invData.family) {
+    // ファミリー全員がMicroCMS未登録 → シートデータだけで擬似Productを構築（family なければ variantName を使用）
+    const fallbackDisplayName = invData.family || invName;
+    if (!product && fallbackDisplayName) {
         const now = new Date().toISOString();
         product = {
             id,
-            name: invData.family,
+            name: fallbackDisplayName,
             category: "processed",
             price: invPrice ?? 0,
             description: invData.description || "",
