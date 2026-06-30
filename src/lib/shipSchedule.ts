@@ -2,13 +2,6 @@
 const WEEKDAY_LABELS = ["日", "月", "火", "水", "木", "金", "土"];
 const DELIVERY_BUFFER_DAYS = 2; // 発送から到着までの目安
 
-function formatMd(d: Date): string {
-    return `${d.getMonth() + 1}月${d.getDate()}日`;
-}
-function formatMdW(d: Date): string {
-    return `${formatMd(d)}（${WEEKDAY_LABELS[d.getDay()]}）`;
-}
-
 export type ScheduleDisplay = {
     shippingLabel: string; // 例: "ご注文後 3〜5日以内に発送"
     deliveryLabel: string; // 例: "お届け予定: 6/17〜6/19頃"
@@ -25,19 +18,15 @@ export function computeShipSchedule(shipMode: string, shipValue: string, now: Da
         const minN = parseInt(minStr, 10);
         const maxN = parseInt(maxStr, 10);
         if (isNaN(minN) || isNaN(maxN)) return null;
-        const shipFrom = new Date(now);
-        shipFrom.setDate(now.getDate() + minN);
-        const shipTo = new Date(now);
-        shipTo.setDate(now.getDate() + maxN);
-        const deliverFrom = new Date(shipFrom);
-        deliverFrom.setDate(shipFrom.getDate() + DELIVERY_BUFFER_DAYS);
-        const deliverTo = new Date(shipTo);
-        deliverTo.setDate(shipTo.getDate() + DELIVERY_BUFFER_DAYS);
+        const deliverMin = minN + DELIVERY_BUFFER_DAYS;
+        const deliverMax = maxN + DELIVERY_BUFFER_DAYS;
         return {
             shippingLabel: minN === maxN
                 ? `ご注文後 ${minN}日以内に発送`
                 : `ご注文後 ${minN}〜${maxN}日以内に発送`,
-            deliveryLabel: `お届け予定 ${formatMd(deliverFrom)}〜${formatMd(deliverTo)}頃`,
+            deliveryLabel: deliverMin === deliverMax
+                ? `発送後 ${deliverMin}日程度でお届け`
+                : `発送後 ${deliverMin}〜${deliverMax}日程度でお届け`,
         };
     }
 
@@ -47,22 +36,9 @@ export function computeShipSchedule(shipMode: string, shipValue: string, now: Da
             .map(l => WEEKDAY_LABELS.indexOf(l))
             .filter(i => i >= 0);
         if (selectedIndices.length === 0) return null;
-        // 次の発送日を見つける（今日含む）
-        let nextShip: Date | null = null;
-        for (let i = 1; i <= 14; i++) {
-            const d = new Date(now);
-            d.setDate(now.getDate() + i);
-            if (selectedIndices.includes(d.getDay())) {
-                nextShip = d;
-                break;
-            }
-        }
-        if (!nextShip) return null;
-        const deliver = new Date(nextShip);
-        deliver.setDate(nextShip.getDate() + DELIVERY_BUFFER_DAYS);
         return {
             shippingLabel: `毎週 ${selectedLabels.join("・")}曜日に発送`,
-            deliveryLabel: `次回発送 ${formatMdW(nextShip)} → お届け予定 ${formatMdW(deliver)}頃`,
+            deliveryLabel: `発送後1〜2日程度でお届け`,
         };
     }
 
