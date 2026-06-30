@@ -8,10 +8,16 @@ export default function LoginPage() {
       <Header />
       <main className="flex-1 flex items-center justify-center py-16">
         <div className="bg-white rounded-2xl shadow-sm p-10 w-full max-w-md text-center">
-          <h1 className="text-2xl font-bold text-stone-900 mb-2">マイページにログイン</h1>
-          <p className="text-stone-500 text-sm mb-8">
-            注文履歴・配送状況・会員情報を確認できます
+          <h1 className="text-2xl font-bold text-stone-900 mb-2">無料会員登録 / ログイン</h1>
+          <p className="text-stone-500 text-sm mb-5">
+            アカウントをお持ちでない方も、以下のボタンから<strong className="text-stone-700">無料で登録</strong>できます。
           </p>
+          <ul className="text-left text-sm text-stone-600 bg-stone-50 rounded-xl px-5 py-4 mb-6 space-y-1.5">
+            <li>🎁 ポイントが貯まる・使える</li>
+            <li>🛒 注文履歴・配送状況を確認できる</li>
+            <li>📅 体験農業・農場見学の予約ができる</li>
+            <li>🌿 サポーター会員へのアップグレードができる</li>
+          </ul>
           <div className="flex flex-col gap-3">
             <form
               action={async () => {
