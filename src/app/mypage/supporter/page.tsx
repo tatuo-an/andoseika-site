@@ -2,7 +2,7 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
-import { ArrowLeft, Sprout, Star, Lock } from "lucide-react";
+import { ArrowLeft, Sprout, Star } from "lucide-react";
 import Link from "next/link";
 import { google } from "googleapis";
 import { getTier, TIERS, type TierKey } from "@/lib/tiers";
@@ -173,14 +173,6 @@ export default async function MyPageSupporterPage() {
               {nextDelivery && <Row label="次のお届け予定" value={nextDelivery} />}
             </div>
 
-            {/* 準備中コンテンツ */}
-            <div className="px-6 py-5 space-y-3">
-              <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1">今後の予定</p>
-              <ComingSoonRow label="限定の畑日記" note="農園のリアルな日常をサポーター限定で公開予定" />
-              <ComingSoonRow label="商品開発への投票" note="次に作る商品をサポーターが決める仕組みを準備中" />
-              <ComingSoonRow label="デジタル住民証" note="年1回、あなた専用の住民証を発行予定" />
-            </div>
-
             {/* フッター */}
             <div className="bg-stone-100 px-6 py-3 text-center">
               <p className="text-[10px] text-stone-400">この住民票は &YOU農園 が発行します。譲渡・転売はできません。</p>
@@ -241,14 +233,3 @@ function Row({ label, value, mono }: { label: string; value: React.ReactNode; mo
   );
 }
 
-function ComingSoonRow({ label, note }: { label: string; note: string }) {
-  return (
-    <div className="flex items-start gap-3">
-      <div className="flex items-center gap-1.5 shrink-0 w-28">
-        <Lock className="w-3 h-3 text-stone-300" />
-        <span className="text-xs text-stone-400">{label}</span>
-      </div>
-      <span className="text-xs text-stone-400 text-right leading-relaxed">{note}</span>
-    </div>
-  );
-}
