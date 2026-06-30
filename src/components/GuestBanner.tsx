@@ -14,7 +14,7 @@ export function GuestBanner() {
   return (
     <div className="sticky top-0 z-50 bg-primary text-white px-4 py-2.5 flex items-center justify-between gap-3">
       <p className="text-sm font-medium">
-        🌿 会員登録すると購入・体験予約・ポイント獲得ができます！
+        🌿 無料会員登録で、ポイント・お気に入り・体験予約が利用できます！
         <Link href="/guide" className="underline underline-offset-2 ml-2 font-bold whitespace-nowrap">
           使い方を見る →
         </Link>

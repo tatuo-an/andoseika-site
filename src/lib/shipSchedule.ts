@@ -18,15 +18,11 @@ export function computeShipSchedule(shipMode: string, shipValue: string, now: Da
         const minN = parseInt(minStr, 10);
         const maxN = parseInt(maxStr, 10);
         if (isNaN(minN) || isNaN(maxN)) return null;
-        const deliverMin = minN + DELIVERY_BUFFER_DAYS;
-        const deliverMax = maxN + DELIVERY_BUFFER_DAYS;
         return {
             shippingLabel: minN === maxN
                 ? `ご注文後 ${minN}日以内に発送`
                 : `ご注文後 ${minN}〜${maxN}日以内に発送`,
-            deliveryLabel: deliverMin === deliverMax
-                ? `発送後 ${deliverMin}日程度でお届け`
-                : `発送後 ${deliverMin}〜${deliverMax}日程度でお届け`,
+            deliveryLabel: `発送後 1〜2日程度でお届け`,
         };
     }
 
