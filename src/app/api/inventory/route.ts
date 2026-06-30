@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 const SPREADSHEET_ID = process.env.GOOGLE_SPREADSHEET_ID!;
 const SHEET_NAME = "商品在庫";
-// 列: A=商品ID, B=商品名, C=在庫数, D=販売価格, E=配送区分, F=非表示(1/""), G=未使用, H=次回出荷, I=バッジ(カンマ区切り), J=ファミリー, K=画像URL, L=ファミリーギャラリー画像(カンマ区切り), M=原価, N=利益率(%), O=クール便対応(1/""), P=商品説明, Q=クリックポスト最大同梱数(0=不可), R=オプション(ラベル:金額|...), S=セール割引率(%), T=セール開始日(YYYY-MM-DD), U=セール終了日(YYYY-MM-DD), V=発送モード(days/weekdays/""), W=発送値(daysなら "min-max"、weekdaysなら "月,木"), X=コンパクト最大同梱数(0=未設定/制限なし), Y=カテゴリ(root/leaf/honey/processed/other), Z=会員限定(1/""), AA=詳細情報JSON(特徴/保存方法/おすすめ/注意 等)
+// 列: A=商品ID, B=商品名, C=在庫数, D=販売価格, E=配送区分, F=非表示(1/""), G=未使用, H=次回出荷, I=バッジ(カンマ区切り), J=ファミリー, K=画像URL, L=ファミリーギャラリー画像(カンマ区切り), M=原価, N=利益率(%), O=クール便対応(1/""), P=商品説明, Q=クリックポスト最大同梱数(0=不可), R=オプション(ラベル:金額|...), S=セール割引率(%), T=セール開始日(YYYY-MM-DD), U=セール終了日(YYYY-MM-DD), V=発送モード(days/weekdays/""), W=発送値(daysなら "min-max"、weekdaysなら "月,木"), X=コンパクト最大同梱数(0=未設定/制限なし), Y=カテゴリ(root/leaf/honey/processed/other), Z=会員限定(1/""), AA=詳細情報JSON(特徴/保存方法/おすすめ/注意 等), AB=レスキュー便(1/""), AC=レスキュー期限(YYYY-MM-DD)
 
 function getSheets() {
     const authClient = new google.auth.GoogleAuth({
@@ -25,7 +25,7 @@ export async function GET() {
         const sheets = getSheets();
         const res = await sheets.spreadsheets.values.get({
             spreadsheetId: SPREADSHEET_ID,
-            range: `${SHEET_NAME}!A:AA`,
+            range: `${SHEET_NAME}!A:AC`,
         });
         const rows = res.data.values ?? [];
         const data = rows.slice(1).map((r) => ({
@@ -56,6 +56,8 @@ export async function GET() {
             category: r[24] ?? "",
             limitedOnly: r[25] === "1",
             extraDescriptions: r[26] ?? "",
+            rescue: r[27] === "1",
+            rescueDeadline: r[28] ?? "",
         }));
         return NextResponse.json({ inventory: data });
     } catch (err) {
@@ -71,7 +73,7 @@ export async function POST(req: NextRequest) {
     }
 
     const { items } = await req.json() as {
-        items: { id: string; name: string; stock: number; price: number | null; shipType: string; hidden: boolean; nextShipment: string; badges: string[]; family: string; imageUrl?: string; familyImages?: string[]; cost?: number | null; profitRate?: number | null; coolAvailable?: boolean; limitedOnly?: boolean; description?: string; clickpostMax?: number; options?: string; salePercent?: number; saleStart?: string; saleEnd?: string; shipMode?: string; shipValue?: string; compactMax?: number; category?: string; extraDescriptions?: string }[];
+        items: { id: string; name: string; stock: number; price: number | null; shipType: string; hidden: boolean; nextShipment: string; badges: string[]; family: string; imageUrl?: string; familyImages?: string[]; cost?: number | null; profitRate?: number | null; coolAvailable?: boolean; limitedOnly?: boolean; rescue?: boolean; rescueDeadline?: string; description?: string; clickpostMax?: number; options?: string; salePercent?: number; saleStart?: string; saleEnd?: string; shipMode?: string; shipValue?: string; compactMax?: number; category?: string; extraDescriptions?: string }[];
     };
 
     try {
@@ -79,7 +81,7 @@ export async function POST(req: NextRequest) {
 
         await sheets.spreadsheets.values.clear({
             spreadsheetId: SPREADSHEET_ID,
-            range: `${SHEET_NAME}!A2:AA1000`,
+            range: `${SHEET_NAME}!A2:AC1000`,
         });
 
         if (items.length > 0) {
@@ -116,6 +118,8 @@ export async function POST(req: NextRequest) {
                         item.category ?? "",
                         item.limitedOnly ? "1" : "",
                         item.extraDescriptions ?? "",
+                        item.rescue ? "1" : "",
+                        item.rescueDeadline ?? "",
                     ]),
                 },
             });

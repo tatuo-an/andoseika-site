@@ -43,6 +43,8 @@ export type InventoryItem = {
     profitRate: number | null;  // 利益率(%)
     coolAvailable: boolean;     // クール便対応(ファミリー単位)
     limitedOnly: boolean;       // 会員限定商品(ファミリー単位)
+    rescue: boolean;            // レスキュー便(ファミリー単位)
+    rescueDeadline: string;     // レスキュー期限(YYYY-MM-DD)
     description: string;        // 商品説明（ファミリー単位）
     clickpostMax: number;       // クリックポスト最大同梱数(0=不可)
     options: string;            // ファミリー単位の割引/追加オプション (ラベル:金額|...)
@@ -124,6 +126,8 @@ export function AdminPanel({
             profitRate: inv.profitRate ?? null,
             coolAvailable: inv.coolAvailable ?? false,
             limitedOnly: inv.limitedOnly ?? false,
+            rescue: inv.rescue ?? false,
+            rescueDeadline: inv.rescueDeadline ?? "",
             description: inv.description ?? "",
             clickpostMax: inv.clickpostMax ?? 0,
             options: inv.options ?? "",
@@ -270,6 +274,25 @@ export function AdminPanel({
         setSavedInventory(false);
     };
 
+    // ファミリー全体のレスキュー便フラグを一括切替
+    const toggleFamilyRescue = (family: string) => {
+        setItems((prev) => {
+            const current = prev.find(i => i.family?.trim() === family)?.rescue ?? false;
+            return prev.map((item) => item.family?.trim() === family ? { ...item, rescue: !current } : item);
+        });
+        setSavedInventory(false);
+    };
+
+    // ファミリーのレスキュー期限を一括更新
+    const updateFamilyRescueDeadline = (family: string, deadline: string) => {
+        setItems((prev) => prev.map((item) =>
+            item.family?.trim() === family ? { ...item, rescueDeadline: deadline } : item
+        ));
+        setSavedInventory(false);
+    };
+
+    const [notifyingFamily, setNotifyingFamily] = useState<string | null>(null);
+
 
     // ファミリー全体の在庫を一括0にする
     const zeroFamilyStock = (family: string) => {
@@ -302,7 +325,7 @@ export function AdminPanel({
             const coolAvailable = familyMember?.coolAvailable ?? false;
             const limitedOnly = familyMember?.limitedOnly ?? false;
             const description = familyMember?.description ?? "";
-            next.splice(lastIdx + 1, 0, { id: newId, name: "バリエーション名", stock: -1, price: null, shipType: "", hidden: false, deleted: false, nextShipment: "", badges: [], family, imageUrl: "", familyImages: [...familyImages], cost: null, profitRate: null, coolAvailable, limitedOnly, description, clickpostMax: 0, options: familyMember?.options ?? "", salePercent: familyMember?.salePercent ?? 0, saleStart: familyMember?.saleStart ?? "", saleEnd: familyMember?.saleEnd ?? "", shipMode: familyMember?.shipMode ?? "", shipValue: familyMember?.shipValue ?? "", compactMax: 0, category: familyMember?.category ?? "", extraDescriptions: familyMember?.extraDescriptions ?? "" });
+            next.splice(lastIdx + 1, 0, { id: newId, name: "バリエーション名", stock: -1, price: null, shipType: "", hidden: false, deleted: false, nextShipment: "", badges: [], family, imageUrl: "", familyImages: [...familyImages], cost: null, profitRate: null, coolAvailable, limitedOnly, rescue: familyMember?.rescue ?? false, rescueDeadline: familyMember?.rescueDeadline ?? "", description, clickpostMax: 0, options: familyMember?.options ?? "", salePercent: familyMember?.salePercent ?? 0, saleStart: familyMember?.saleStart ?? "", saleEnd: familyMember?.saleEnd ?? "", shipMode: familyMember?.shipMode ?? "", shipValue: familyMember?.shipValue ?? "", compactMax: 0, category: familyMember?.category ?? "", extraDescriptions: familyMember?.extraDescriptions ?? "" });
             return next;
         });
         setSavedInventory(false);
@@ -442,6 +465,8 @@ export function AdminPanel({
             profitRate: null,
             coolAvailable: false,
             limitedOnly: false,
+            rescue: false,
+            rescueDeadline: "",
             description: "",
             clickpostMax: 0,
             options: "",
@@ -476,6 +501,8 @@ export function AdminPanel({
             profitRate: null,
             coolAvailable: false,
             limitedOnly: false,
+            rescue: false,
+            rescueDeadline: "",
             description: "",
             clickpostMax: 0,
             options: "",
@@ -644,6 +671,54 @@ export function AdminPanel({
                                                                 >
                                                                     🔒 会員限定
                                                                 </button>
+                                                                <button
+                                                                    onClick={() => toggleFamilyRescue(fam)}
+                                                                    title={familyItems[0]?.rescue ? "レスキュー解除" : "レスキュー便にする"}
+                                                                    className={`px-2.5 py-1 rounded-full text-[11px] font-bold transition-colors border whitespace-nowrap flex-shrink-0 ${
+                                                                        familyItems[0]?.rescue
+                                                                            ? "bg-red-500 text-white border-red-600"
+                                                                            : "bg-stone-50 text-stone-400 border-stone-200 hover:bg-stone-100"
+                                                                    }`}
+                                                                >
+                                                                    🚨 レスキュー
+                                                                </button>
+                                                                {familyItems[0]?.rescue && (
+                                                                    <>
+                                                                        <input
+                                                                            type="date"
+                                                                            value={familyItems[0]?.rescueDeadline ?? ""}
+                                                                            onChange={(e) => updateFamilyRescueDeadline(fam, e.target.value)}
+                                                                            title="レスキュー便の販売期限"
+                                                                            className="border border-red-200 rounded-lg px-1.5 py-0.5 text-[11px] text-red-700 bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-300 flex-shrink-0"
+                                                                        />
+                                                                        <button
+                                                                            onClick={async () => {
+                                                                                const fi = familyItems[0];
+                                                                                if (!confirm(`「${fam}」のLINE一斉通知を送信しますか？\n全ての友だちに送信されます。`)) return;
+                                                                                setNotifyingFamily(fam);
+                                                                                const res = await fetch("/api/admin/rescue-notify", {
+                                                                                    method: "POST",
+                                                                                    headers: { "Content-Type": "application/json" },
+                                                                                    body: JSON.stringify({
+                                                                                        family: fam,
+                                                                                        productId: fi?.id ?? "",
+                                                                                        description: fi?.description ?? "",
+                                                                                        stock: fi?.stock ?? null,
+                                                                                        deadline: fi?.rescueDeadline ?? "",
+                                                                                    }),
+                                                                                });
+                                                                                const d = await res.json();
+                                                                                setNotifyingFamily(null);
+                                                                                if (d.ok) alert("LINE通知を送信しました");
+                                                                                else alert(`送信失敗: ${d.error}`);
+                                                                            }}
+                                                                            disabled={notifyingFamily === fam}
+                                                                            className="px-2.5 py-1 rounded-full text-[11px] font-bold transition-colors border whitespace-nowrap flex-shrink-0 bg-green-600 text-white border-green-700 hover:bg-green-700 disabled:opacity-50"
+                                                                        >
+                                                                            {notifyingFamily === fam ? "送信中..." : "📣 LINE通知"}
+                                                                        </button>
+                                                                    </>
+                                                                )}
                                                                 <button
                                                                     onClick={() => toggleFamilyHidden(fam)}
                                                                     title={allHidden ? "全て表示する" : "全て非表示にする"}

@@ -103,7 +103,7 @@ const CATEGORIES = [
   { href: "/business", label: "業務用・卸", icon: Building2 },
 ];
 
-type RescueItem = { id: string; title: string; description: string; stock: number | null; deadline: string; productId: string };
+type RescueItem = { id: string; title: string; description: string; stock: number | null; deadline: string; productId: string; rescueDeadline: string };
 
 async function getRescueItems(): Promise<RescueItem[]> {
   try {
@@ -118,16 +118,29 @@ async function getRescueItems(): Promise<RescueItem[]> {
     const sheets = googleapis.sheets({ version: "v4", auth: a });
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-      range: "レスキュー便!A:H",
+      range: "商品在庫!A:AC",
     });
-    const today = new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Tokyo" });
-    return (res.data.values ?? [])
-      .filter((r) => r[0] && r[6] === "1" && r[4] >= today)
-      .map((r) => ({
-        id: r[0], title: r[1] ?? "", description: r[2] ?? "",
-        stock: r[3] ? parseInt(r[3], 10) : null,
-        deadline: r[4] ?? "", productId: r[5] ?? "",
-      }));
+    const rows = (res.data.values ?? []).slice(1).filter((r) => r[0] && r[27] === "1" && r[5] !== "1");
+    // ファミリーごとに最初の1件をまとめてバナー化
+    const seenFamilies = new Set<string>();
+    const result: RescueItem[] = [];
+    for (const r of rows) {
+      const family = (r[9] ?? "").trim();
+      const key = family || r[0];
+      if (seenFamilies.has(key)) continue;
+      seenFamilies.add(key);
+      const stock = r[2] !== undefined && r[2] !== "" ? parseInt(r[2], 10) : null;
+      result.push({
+        id: r[0],
+        title: family || r[1] || "",
+        description: r[15] ?? "",
+        stock: stock !== null && stock >= 0 ? stock : null,
+        deadline: "",
+        productId: r[0],
+        rescueDeadline: r[28] ?? "",
+      });
+    }
+    return result;
   } catch {
     return [];
   }
@@ -238,9 +251,9 @@ export default async function Home() {
                         {item.stock !== null && (
                           <span className="text-xs text-stone-500">残り約 <span className="font-bold text-stone-800">{item.stock}</span> 点</span>
                         )}
-                        {item.deadline && (
+                        {item.rescueDeadline && (
                           <span className="text-xs text-stone-500">
-                            <span className="font-bold text-red-600">{item.deadline.replace(/^(\d{4})-(\d{2})-(\d{2})$/, "$2月$3日")}</span> まで
+                            <span className="font-bold text-red-600">{item.rescueDeadline.replace(/^(\d{4})-(\d{2})-(\d{2})$/, "$2月$3日")}</span> まで
                           </span>
                         )}
                       </div>
