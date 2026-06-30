@@ -307,6 +307,22 @@ export default async function Home() {
           </section>
         )}
 
+        {/* ── Season Calendar ── */}
+        <section className="py-10 bg-stone-50">
+          <div className="container mx-auto px-4 md:px-6">
+            <h2 className="text-xl font-bold text-stone-900 mb-4">旬の恵みカレンダー</h2>
+            <div className="rounded-2xl overflow-hidden shadow-sm">
+              <Image
+                src="/images/season-calendar.png"
+                alt="安藤青果の旬の恵みカレンダー"
+                width={1200}
+                height={630}
+                className="w-full h-auto"
+              />
+            </div>
+          </div>
+        </section>
+
         {/* ── Promo Banners ── */}
         <section className="py-4 bg-stone-50">
           <div className="container mx-auto px-4 md:px-6">
