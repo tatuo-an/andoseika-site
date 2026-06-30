@@ -34,11 +34,11 @@ const rows = [
   {
     label: "支払方法",
     value:
-      "クレジットカード決済（Visa / Mastercard / American Express / JCB 等）\n※ Stripe決済を利用します。",
+      "クレジットカード決済（Visa / Mastercard / American Express / JCB 等）\n銀行振り込み（振込先はご注文後に表示されます）\nPayPay\n※ Stripe決済を利用します。",
   },
   {
     label: "支払時期",
-    value: "クレジットカード決済：ご注文時に決済が確定します。",
+    value: "クレジットカード決済・PayPay：ご注文時に決済が確定します。\n銀行振り込み：ご注文後7日以内にお振り込みください。",
   },
   {
     label: "商品の引渡時期",
