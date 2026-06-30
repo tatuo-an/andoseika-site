@@ -154,40 +154,6 @@ export default async function Home() {
         {/* ── Community Scroller ── */}
         <CommunityScroller />
 
-        {/* ── Featured Products ── */}
-        {products.length > 0 && (
-          <section className="py-10 bg-white mt-3 shadow-sm">
-            <div className="container mx-auto px-4 md:px-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-stone-900">おすすめ商品</h2>
-                <Link href="/products" className="text-sm text-primary font-medium hover:underline flex items-center gap-1">
-                  すべて見る <ChevronRight className="w-4 h-4" />
-                </Link>
-              </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {products.map((p) => (
-                  <Link key={p.id} href={`/products/${p.id}`} className="group bg-stone-50 rounded-xl overflow-hidden hover:shadow-md transition-shadow">
-                    <div className="relative aspect-square bg-white">
-                      {p.image ? (
-                        <Image src={p.image} alt={p.name} fill className="object-contain p-3 group-hover:scale-105 transition-transform duration-300" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-stone-300 text-xs">No Image</div>
-                      )}
-                      {p.onSale && (
-                        <span className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">SALE</span>
-                      )}
-                    </div>
-                    <div className="p-3">
-                      <p className="text-xs text-stone-700 font-medium line-clamp-2 leading-snug">{p.name}</p>
-                      <p className="text-sm font-bold text-stone-900 mt-1">¥{p.price.toLocaleString()}<span className="text-xs font-normal text-stone-500">（税込）</span></p>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          </section>
-        )}
-
         {/* ── 初めての方へ ── */}
         <section className="py-10 bg-stone-50">
           <div className="container mx-auto px-4 md:px-6">
@@ -223,6 +189,40 @@ export default async function Home() {
             </div>
           </div>
         </section>
+
+        {/* ── Featured Products ── */}
+        {products.length > 0 && (
+          <section className="py-10 bg-white mt-3 shadow-sm">
+            <div className="container mx-auto px-4 md:px-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-stone-900">おすすめ商品</h2>
+                <Link href="/products" className="text-sm text-primary font-medium hover:underline flex items-center gap-1">
+                  すべて見る <ChevronRight className="w-4 h-4" />
+                </Link>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {products.map((p) => (
+                  <Link key={p.id} href={`/products/${p.id}`} className="group bg-stone-50 rounded-xl overflow-hidden hover:shadow-md transition-shadow">
+                    <div className="relative aspect-square bg-white">
+                      {p.image ? (
+                        <Image src={p.image} alt={p.name} fill className="object-contain p-3 group-hover:scale-105 transition-transform duration-300" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-stone-300 text-xs">No Image</div>
+                      )}
+                      {p.onSale && (
+                        <span className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">SALE</span>
+                      )}
+                    </div>
+                    <div className="p-3">
+                      <p className="text-xs text-stone-700 font-medium line-clamp-2 leading-snug">{p.name}</p>
+                      <p className="text-sm font-bold text-stone-900 mt-1">¥{p.price.toLocaleString()}<span className="text-xs font-normal text-stone-500">（税込）</span></p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* ── Promo Banners ── */}
         <section className="py-4 bg-stone-50">
