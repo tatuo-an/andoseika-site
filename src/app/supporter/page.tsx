@@ -17,6 +17,7 @@ import { SupporterPlanButton } from "@/components/supporter/SupporterPlanButton"
 import { HeroSlideshow } from "@/components/supporter/HeroSlideshow";
 import { getSupporterFirstViewVariant } from "@/config/supporter-variants";
 import { Header } from "@/components/layout/Header";
+import { Footer } from "@/components/layout/Footer";
 import { google } from "googleapis";
 import { auth } from "@/auth";
 import { getTier } from "@/lib/tiers";
@@ -136,9 +137,9 @@ export default async function SupporterPage({
     const userTier = userEmail ? await getUserActiveTier(userEmail) : "free";
 
     return (
-        <div className="bg-[#FAFAF9]">
+        <div className="min-h-screen flex flex-col bg-[#FAFAF9]">
         <Header />
-        <main>
+        <main className="flex-1">
             {/* ───────── 1. HERO (SLIDESHOW) ───────── */}
             <HeroSlideshow variant={heroVariant} />
 
@@ -604,6 +605,7 @@ export default async function SupporterPage({
                 </div>
             </section>
         </main>
+        <Footer />
         </div>
     );
 }

@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { Check, Heart } from "lucide-react";
+import { Header } from "@/components/layout/Header";
+import { Footer } from "@/components/layout/Footer";
 
 const PLAN_LABELS: Record<string, string> = {
     mebuking: "芽吹きサポーター",
@@ -19,7 +21,9 @@ export default function SupporterSuccessPage({
     const planLabel = PLAN_LABELS[plan] || plan;
 
     return (
-        <main className="min-h-screen bg-[#FAFAF9] flex items-center justify-center px-4">
+        <div className="min-h-screen flex flex-col bg-[#FAFAF9]">
+        <Header />
+        <main className="flex-1 flex items-center justify-center px-4">
             <div className="max-w-lg w-full text-center">
                 <div className="mb-8 flex justify-center">
                     <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center">
@@ -93,5 +97,7 @@ export default function SupporterSuccessPage({
                 </div>
             </div>
         </main>
+        <Footer />
+        </div>
     );
 }

@@ -46,7 +46,7 @@ const SECTIONS = [
     },
     {
         title: "6. LINEを利用した通知について",
-        body: `当店では、お得な情報や商品入荷案内をLINE公式アカウントを通じてお届けする場合があります。LINEのご利用はお客様の任意であり、ブロックによりいつでも受信を停止できます。LINE上でのデータ取り扱いはLINE株式会社のプライバシーポリシーに従います。`,
+        body: `当店では、お得な情報や商品入荷案内をLINE公式アカウントを通じてお届けする場合があります。LINEのご利用はお客様の任意であり、ブロックによりいつでも受信を停止できます。LINE上でのデータ取り扱いはLINEヤフー株式会社のプライバシーポリシーに従います。`,
     },
     {
         title: "7. 個人情報の開示・訂正・削除",
@@ -74,7 +74,7 @@ export default function PrivacyPage() {
             <main className="flex-1 py-16">
                 <div className="container mx-auto px-4 md:px-6 max-w-3xl">
                     <h1 className="text-2xl md:text-3xl font-bold text-stone-900 mb-2">プライバシーポリシー</h1>
-                    <p className="text-xs text-stone-400 mb-10">制定日：2024年1月1日　最終更新：2025年6月30日</p>
+                    <p className="text-xs text-stone-400 mb-10">制定日：2024年1月1日　最終更新：2026年6月30日</p>
 
                     <div className="space-y-8">
                         {SECTIONS.map((sec) => (
