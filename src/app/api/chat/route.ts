@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 const SYSTEM_PROMPT = `あなたは鳥取県倉吉市・北栄町の農家「安藤青果（&YOU）」のサポートチャットボットです。
 親しみやすく丁寧な口調で、お客様のご質問にお答えください。
@@ -26,25 +26,23 @@ const SYSTEM_PROMPT = `あなたは鳥取県倉吉市・北栄町の農家「安
 export async function POST(req: NextRequest) {
   const { messages } = await req.json();
 
-  const stream = await client.messages.stream({
-    model: "claude-opus-4-8",
+  const stream = await client.chat.completions.create({
+    model: "gpt-4o-mini",
     max_tokens: 1024,
-    thinking: { type: "adaptive" },
-    system: SYSTEM_PROMPT,
-    messages,
+    stream: true,
+    messages: [
+      { role: "system", content: SYSTEM_PROMPT },
+      ...messages,
+    ],
   });
 
   const encoder = new TextEncoder();
 
   const readable = new ReadableStream({
     async start(controller) {
-      for await (const event of stream) {
-        if (
-          event.type === "content_block_delta" &&
-          event.delta.type === "text_delta"
-        ) {
-          controller.enqueue(encoder.encode(event.delta.text));
-        }
+      for await (const chunk of stream) {
+        const text = chunk.choices[0]?.delta?.content ?? "";
+        if (text) controller.enqueue(encoder.encode(text));
       }
       controller.close();
     },
