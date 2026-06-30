@@ -18,6 +18,49 @@ function getSheets() {
 const ID = process.env.GOOGLE_SPREADSHEET_ID!;
 const SHEET = "料理投稿";
 
+function rowToPost(r: string[], myEmail: string) {
+  const likeEmails = r[7] ? r[7].split(",").filter(Boolean) : [];
+  const bookmarkEmails = r[8] ? r[8].split(",").filter(Boolean) : [];
+  return {
+    id: r[0] ?? "",
+    email: r[1] ?? "",
+    displayName: r[2] ?? "",
+    productName: r[3] ?? "",
+    imageUrl: r[4] ?? "",
+    caption: r[5] ?? "",
+    createdAt: r[6] ?? "",
+    likeCount: likeEmails.length,
+    liked: likeEmails.includes(myEmail),
+    saved: bookmarkEmails.includes(myEmail),
+    isOwner: r[1] === myEmail,
+    productFamily: r[9] ?? "",
+    productId: r[10] ?? "",
+  };
+}
+
+// 1件取得 + 同じファミリーの関連投稿
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const session = await auth();
+  const myEmail = session?.user?.email ?? "";
+  const { id } = await params;
+
+  const sheets = getSheets();
+  const res = await sheets.spreadsheets.values.get({ spreadsheetId: ID, range: `${SHEET}!A:K` });
+  const rows = (res.data.values ?? []).filter((r) => r[0]);
+
+  const target = rows.find((r) => r[0] === id);
+  if (!target) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  const post = rowToPost(target, myEmail);
+  const related = rows
+    .filter((r) => r[0] !== id && r[9] && r[9] === target[9])
+    .slice(-4)
+    .reverse()
+    .map((r) => rowToPost(r, myEmail));
+
+  return NextResponse.json({ post, related });
+}
+
 // 編集（投稿者のみ）
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();

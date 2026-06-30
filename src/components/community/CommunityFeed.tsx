@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import Link from "next/link";
 import { Heart, Bookmark, Pencil, Trash2, Check, X, Camera, ChevronDown } from "lucide-react";
 
 type Post = {
@@ -15,7 +16,11 @@ type Post = {
   liked: boolean;
   saved: boolean;
   isOwner: boolean;
+  productFamily: string;
+  productId: string;
 };
+
+type PurchasedProduct = { family: string; id: string };
 
 function PostCard({ post, myEmail, onLike, onSave, onEdit, onDelete }: {
   post: Post;
@@ -49,9 +54,9 @@ function PostCard({ post, myEmail, onLike, onSave, onEdit, onDelete }: {
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-stone-100 overflow-hidden">
-      <div className="aspect-square w-full bg-stone-100">
-        <img src={post.imageUrl} alt="料理写真" className="w-full h-full object-cover" />
-      </div>
+      <Link href={`/community/${post.id}`} className="block aspect-square w-full bg-stone-100">
+        <img src={post.imageUrl} alt="料理写真" className="w-full h-full object-cover hover:opacity-90 transition-opacity" />
+      </Link>
 
       <div className="p-4">
         <div className="mb-2">
@@ -124,12 +129,12 @@ function PostCard({ post, myEmail, onLike, onSave, onEdit, onDelete }: {
 }
 
 function PostForm({ myEmail, myName, onPosted }: { myEmail: string; myName: string; onPosted: (post: Post, pointsEarned: number) => void }) {
-  const [products, setProducts] = useState<string[]>([]);
+  const [products, setProducts] = useState<PurchasedProduct[]>([]);
   const [canPost, setCanPost] = useState<boolean | null>(null);
   const [open, setOpen] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState("");
-  const [selectedProduct, setSelectedProduct] = useState("");
+  const [selectedProduct, setSelectedProduct] = useState<PurchasedProduct | null>(null);
   const [caption, setCaption] = useState("");
   const [uploading, setUploading] = useState(false);
   const [displayName, setDisplayName] = useState(myName);
@@ -166,16 +171,16 @@ function PostForm({ myEmail, myName, onPosted }: { myEmail: string; myName: stri
       const res = await fetch("/api/community", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productName: selectedProduct, imageUrl: url, caption, displayName }),
+        body: JSON.stringify({ productName: selectedProduct.family, productFamily: selectedProduct.family, productId: selectedProduct.id, imageUrl: url, caption, displayName }),
       });
       const data = await res.json();
       if (data.ok) {
         const now = new Date().toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" });
-        onPosted({ id: data.postId, email: myEmail, displayName, productName: selectedProduct, imageUrl: url, caption, createdAt: now, likeCount: 0, liked: false, saved: false, isOwner: true }, data.pointsEarned ?? 0);
+        onPosted({ id: data.postId, email: myEmail, displayName, productName: selectedProduct.family, imageUrl: url, caption, createdAt: now, likeCount: 0, liked: false, saved: false, isOwner: true, productFamily: selectedProduct.family, productId: selectedProduct.id }, data.pointsEarned ?? 0);
         setOpen(false);
         setImageFile(null);
         setImagePreview("");
-        setSelectedProduct("");
+        setSelectedProduct(null);
         setCaption("");
       }
     } finally {
@@ -234,12 +239,15 @@ function PostForm({ myEmail, myName, onPosted }: { myEmail: string; myName: stri
           <div>
             <label className="block text-xs text-stone-500 mb-1.5">使った商品</label>
             <select
-              value={selectedProduct}
-              onChange={(e) => setSelectedProduct(e.target.value)}
+              value={selectedProduct?.family ?? ""}
+              onChange={(e) => {
+                const found = products.find((p) => p.family === e.target.value) ?? null;
+                setSelectedProduct(found);
+              }}
               className="w-full border border-stone-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 bg-white"
             >
               <option value="">選択してください</option>
-              {products.map((p) => <option key={p} value={p}>{p}</option>)}
+              {products.map((p) => <option key={p.family} value={p.family}>{p.family}</option>)}
             </select>
           </div>
 

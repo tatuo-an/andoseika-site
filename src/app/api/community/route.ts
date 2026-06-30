@@ -4,7 +4,7 @@ import { auth } from "@/auth";
 
 export const dynamic = "force-dynamic";
 
-// 料理投稿シート: A=投稿ID, B=メール, C=表示名, D=商品名, E=投稿画像URL, F=本文, G=投稿日時, H=いいねメールリスト, I=保存メールリスト
+// 料理投稿シート: A=投稿ID, B=メール, C=表示名, D=商品名, E=投稿画像URL, F=本文, G=投稿日時, H=いいねメールリスト, I=保存メールリスト, J=ファミリー名, K=代表商品ID
 
 function getSheets() {
   const a = new google.auth.GoogleAuth({
@@ -47,6 +47,8 @@ function rowToPost(r: string[], myEmail: string) {
     liked: likeEmails.includes(myEmail),
     saved: bookmarkEmails.includes(myEmail),
     isOwner: r[1] === myEmail,
+    productFamily: r[9] ?? "",
+    productId: r[10] ?? "",
   };
 }
 
@@ -75,8 +77,8 @@ export async function POST(req: NextRequest) {
   );
   if (!hasPurchase) return NextResponse.json({ error: "購入者のみ投稿できます" }, { status: 403 });
 
-  const { productName, imageUrl, caption, displayName } = await req.json() as {
-    productName: string; imageUrl: string; caption?: string; displayName?: string;
+  const { productName, productFamily, productId, imageUrl, caption, displayName } = await req.json() as {
+    productName: string; productFamily?: string; productId?: string; imageUrl: string; caption?: string; displayName?: string;
   };
   if (!imageUrl || !productName) return NextResponse.json({ error: "画像と商品名は必須です" }, { status: 400 });
 
@@ -86,9 +88,9 @@ export async function POST(req: NextRequest) {
 
   await sheets.spreadsheets.values.append({
     spreadsheetId: ID,
-    range: `${SHEET}!A:H`,
+    range: `${SHEET}!A:K`,
     valueInputOption: "RAW",
-    requestBody: { values: [[postId, session.user.email, name, productName, imageUrl, caption ?? "", createdAt, ""]] },
+    requestBody: { values: [[postId, session.user.email, name, productName, imageUrl, caption ?? "", createdAt, "", "", productFamily ?? "", productId ?? ""]] },
   });
 
   // 投稿ポイント付与（暦月1回／初回100pt・以降50pt）

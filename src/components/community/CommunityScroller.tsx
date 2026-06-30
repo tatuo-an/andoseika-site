@@ -44,7 +44,7 @@ export function CommunityScroller() {
           {doubled.map((post, i) => (
             <Link
               key={`${post.id}-${i}`}
-              href="/community"
+              href={`/community/${post.id}`}
               className="shrink-0 w-36 group"
             >
               <div className="aspect-square rounded-xl overflow-hidden bg-stone-200 mb-1.5">
