@@ -68,6 +68,21 @@ export async function POST(req: NextRequest) {
         const userEmail = nextAuthSession?.user?.email ?? "";
         console.log("[checkout] shipMode:", shipMode, "shipValue:", shipValue);
 
+        // Stripe Customer を検索または作成（銀行振り込み payment_method に必須）
+        let stripeCustomerId: string | undefined;
+        if (userEmail) {
+            const existing = await stripe.customers.list({ email: userEmail, limit: 1 });
+            if (existing.data.length > 0) {
+                stripeCustomerId = existing.data[0].id;
+            } else {
+                const customer = await stripe.customers.create({
+                    email: userEmail,
+                    metadata: { source: "ando-seika-store" },
+                });
+                stripeCustomerId = customer.id;
+            }
+        }
+
         const baseUrl = getBaseUrl(req);
         const legalDisclosureUrl = new URL("/tokusho", baseUrl).toString();
         const cartArr = Object.values(cartDetails);
@@ -194,7 +209,18 @@ export async function POST(req: NextRequest) {
 
         // 配送先住所が事前指定されている場合は Stripe 側で再入力させない
         const sessionParams: Stripe.Checkout.SessionCreateParams = {
-            payment_method_types: ["card"],
+            payment_method_types: ["card", "customer_balance"],
+            payment_method_options: {
+                customer_balance: {
+                    funding_type: "bank_transfer",
+                    bank_transfer: { type: "jp_bank_transfer" },
+                },
+            },
+            ...(stripeCustomerId
+                ? { customer: stripeCustomerId }
+                : userEmail
+                    ? { customer_email: userEmail }
+                    : {}),
             line_items,
             mode: "payment",
             success_url: `${baseUrl}/success`,

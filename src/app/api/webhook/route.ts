@@ -234,6 +234,9 @@ export async function POST(req: NextRequest) {
     // 購入者名（Apple Pay 等の海外順を正規化）
     const buyerName = name ? normalizeJapaneseName(name) : "";
 
+    // 銀行振り込みの場合は payment_status が "unpaid"（振り込み待ち）
+    const orderStatus = session.payment_status === "paid" ? "paid" : "振込待ち";
+
     try {
       // 注文管理: A=注文番号, B=作成日時, C=送り先氏名, D=メール, E=電話, F=住所,
       //           G=商品名, H=金額, I=ステータス, J=セッションID, K=希望配達日,
@@ -241,68 +244,71 @@ export async function POST(req: NextRequest) {
       //           P=売上転記履歴, Q=購入者氏名
       await appendToOrderSheet([[
         orderNumber, now, shippingName || buyerName, email, phone, address,
-        productNames, amount, "paid", sessionId, desiredDate, desiredTime,
+        productNames, amount, orderStatus, sessionId, desiredDate, desiredTime,
         "", "", estimatedDate, "", buyerName,
       ]]);
-      console.log("[webhook] order recorded:", orderNumber, sessionId);
+      console.log("[webhook] order recorded:", orderNumber, sessionId, "status:", orderStatus);
 
-      // 注文確認通知（LINE優先、失敗時または未登録時はメールへフォールバック）
-      const notifyName = shippingName || name || "お客様";
-      const userEmailFromMeta = piMeta.userEmail ?? meta.userEmail ?? "";
-      let sentViaLine = false;
+      // 銀行振り込み（振込待ち）の場合は入金確認後に通知するため、ここでは通知をスキップ
+      if (orderStatus === "paid") {
+        // 注文確認通知（LINE優先、失敗時または未登録時はメールへフォールバック）
+        const notifyName = shippingName || name || "お客様";
+        const userEmailFromMeta = piMeta.userEmail ?? meta.userEmail ?? "";
+        let sentViaLine = false;
 
-      // 1) LINE userId を顧客マスタから探索（NextAuthのemail優先、なければStripeのemail）
-      const lookupEmail = userEmailFromMeta || email;
-      let lineUserId = "";
-      if (lookupEmail) {
-        try {
-          const sheets = await getSheets();
-          const res = await sheets.spreadsheets.values.get({
-            spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID,
-            range: "顧客マスタ!A:H",
-          });
-          const rows = res.data.values ?? [];
-          const row = rows.find((r) => r[0] === lookupEmail && r[1] === "__profile__");
-          lineUserId = row?.[7] ?? "";
-        } catch (lookupErr) {
-          console.error("[webhook] line userId lookup failed", lookupErr);
+        // 1) LINE userId を顧客マスタから探索（NextAuthのemail優先、なければStripeのemail）
+        const lookupEmail = userEmailFromMeta || email;
+        let lineUserId = "";
+        if (lookupEmail) {
+          try {
+            const sheets = await getSheets();
+            const res = await sheets.spreadsheets.values.get({
+              spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID,
+              range: "顧客マスタ!A:H",
+            });
+            const rows = res.data.values ?? [];
+            const row = rows.find((r) => r[0] === lookupEmail && r[1] === "__profile__");
+            lineUserId = row?.[7] ?? "";
+          } catch (lookupErr) {
+            console.error("[webhook] line userId lookup failed", lookupErr);
+          }
         }
-      }
 
-      // 2) LINE push を試みる
-      if (lineUserId) {
-        try {
-          const baseUrl = process.env.NEXT_PUBLIC_URL || "https://andoseika.jp";
-          await sendOrderLineNotification({
-            lineUserId,
-            customerName: notifyName,
-            orderNumber,
-            productNames,
-            amount,
-            estimatedDate,
-            baseUrl,
-          });
-          sentViaLine = true;
-          console.log("[webhook] LINE notification sent:", orderNumber, lineUserId);
-        } catch (lineErr) {
-          console.error("[webhook] LINE push failed, falling back to email", lineErr);
+        // 2) LINE push を試みる
+        if (lineUserId) {
+          try {
+            const baseUrl = process.env.NEXT_PUBLIC_URL || "https://andoseika.jp";
+            await sendOrderLineNotification({
+              lineUserId,
+              customerName: notifyName,
+              orderNumber,
+              productNames,
+              amount,
+              estimatedDate,
+              baseUrl,
+            });
+            sentViaLine = true;
+            console.log("[webhook] LINE notification sent:", orderNumber, lineUserId);
+          } catch (lineErr) {
+            console.error("[webhook] LINE push failed, falling back to email", lineErr);
+          }
         }
-      }
 
-      // 3) LINE 未送信ならメール
-      if (!sentViaLine && email) {
-        try {
-          await sendOrderConfirmationEmail({
-            to: email,
-            customerName: notifyName,
-            orderNumber,
-            productNames,
-            amount,
-            estimatedDate,
-            address,
-          });
-        } catch (mailErr) {
-          console.error("[webhook] failed to send order email", mailErr);
+        // 3) LINE 未送信ならメール
+        if (!sentViaLine && email) {
+          try {
+            await sendOrderConfirmationEmail({
+              to: email,
+              customerName: notifyName,
+              orderNumber,
+              productNames,
+              amount,
+              estimatedDate,
+              address,
+            });
+          } catch (mailErr) {
+            console.error("[webhook] failed to send order email", mailErr);
+          }
         }
       }
 
@@ -364,6 +370,98 @@ export async function POST(req: NextRequest) {
           console.error("[webhook] failed to update tier", err);
         }
       }
+    }
+  }
+
+  // 銀行振り込み入金確認：ステータスを "paid" に更新して通知送信
+  if (event.type === "checkout.session.async_payment_succeeded") {
+    const session = event.data.object as Stripe.Checkout.Session;
+    const sessionId = session.id;
+    const email = session.customer_details?.email ?? "";
+    const name = session.customer_details?.name ?? "";
+
+    try {
+      const sheets = await getSheets();
+      const res = await sheets.spreadsheets.values.get({
+        spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
+        range: "注文管理!A:Q",
+      });
+      const rows = res.data.values ?? [];
+      const rowIndex = rows.findIndex((r) => r[9] === sessionId); // J列 = sessionId
+
+      if (rowIndex !== -1) {
+        const row = rows[rowIndex];
+        const orderNumber = row[0] ?? "";
+        const shippingName = row[2] ?? "";
+        const productNames = row[6] ?? "";
+        const amount = row[7] ?? "";
+        const estimatedDate = row[14] ?? "";
+        const address = row[5] ?? "";
+
+        // I列 (status) を "paid" に更新
+        await sheets.spreadsheets.values.update({
+          spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
+          range: `注文管理!I${rowIndex + 1}`,
+          valueInputOption: "RAW",
+          requestBody: { values: [["paid"]] },
+        });
+        console.log("[webhook] async payment succeeded, status updated:", orderNumber);
+
+        // 通知送信
+        const notifyName = shippingName || name || "お客様";
+        const lookupEmail = email;
+        let lineUserId = "";
+        if (lookupEmail) {
+          try {
+            const lRes = await sheets.spreadsheets.values.get({
+              spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
+              range: "顧客マスタ!A:H",
+            });
+            const lRows = lRes.data.values ?? [];
+            const lRow = lRows.find((r) => r[0] === lookupEmail && r[1] === "__profile__");
+            lineUserId = lRow?.[7] ?? "";
+          } catch (e) {
+            console.error("[webhook] async payment line userId lookup failed", e);
+          }
+        }
+
+        let sentViaLine = false;
+        if (lineUserId) {
+          try {
+            const baseUrl = process.env.NEXT_PUBLIC_URL || "https://andoseika.jp";
+            await sendOrderLineNotification({
+              lineUserId,
+              customerName: notifyName,
+              orderNumber,
+              productNames,
+              amount,
+              estimatedDate,
+              baseUrl,
+            });
+            sentViaLine = true;
+          } catch (lineErr) {
+            console.error("[webhook] async payment LINE push failed", lineErr);
+          }
+        }
+
+        if (!sentViaLine && email) {
+          try {
+            await sendOrderConfirmationEmail({
+              to: email,
+              customerName: notifyName,
+              orderNumber,
+              productNames,
+              amount,
+              estimatedDate,
+              address,
+            });
+          } catch (mailErr) {
+            console.error("[webhook] async payment email failed", mailErr);
+          }
+        }
+      }
+    } catch (err) {
+      console.error("[webhook] async_payment_succeeded handling failed", err);
     }
   }
 
