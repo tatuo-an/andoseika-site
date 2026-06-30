@@ -38,7 +38,6 @@ export async function POST(req: NextRequest) {
             shipValue?: string;
             quote?: {
                 matchedVariantId: string | null;
-                matchedVariantName: string | null;
                 itemsTotal: number;       // 商品本体価格（税込, 8%）
                 baseShipFee: number;      // 送料（税込, 10%）
                 profit: number;           // サービス料（税込, 10%）

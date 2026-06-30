@@ -301,22 +301,28 @@ export function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: "shipping", estimatedDate: finalEstimatedDate }),
       });
-      setOrders((prev) => prev.map((o) => o.orderNumber === orderNumber ? { ...o, status: "shipping" } : o));
+      setOrders((prev) => prev.map((o) => o.orderNumber === orderNumber
+        ? { ...o, status: "shipping", estimatedDate: finalEstimatedDate }
+        : o));
 
-      // 自動メッセージ送信
+      // 自動メッセージ送信（LINE/メール通知も兼ねる）
       const dateStr = finalEstimatedDate ? `\nお届け予定日：${finalEstimatedDate}` : "";
       const autoMsg = `商品を発送しました。\n追跡番号：${trackingNumber}${dateStr}\n\nお届けまでしばらくお待ちください。`;
-      const res = await fetch(`/api/admin/orders/${encodeURIComponent(orderNumber)}/message`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: autoMsg }),
-      });
-      const data = await res.json();
-      if (data.ok) {
-        setMessages((prev) => ({
-          ...prev,
-          [orderNumber]: [...(prev[orderNumber] ?? []), { senderType: "admin", senderName: "安藤青果", message: autoMsg, sentAt: data.sentAt }],
-        }));
+      try {
+        const res = await fetch(`/api/admin/orders/${encodeURIComponent(orderNumber)}/message`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: autoMsg }),
+        });
+        const data = await res.json();
+        if (data.ok) {
+          setMessages((prev) => ({
+            ...prev,
+            [orderNumber]: [...(prev[orderNumber] ?? []), { senderType: "admin", senderName: "安藤青果", message: autoMsg, sentAt: data.sentAt }],
+          }));
+        }
+      } catch (msgErr) {
+        console.error("[ship] message send failed", msgErr);
       }
     } finally {
       setUpdating(null);

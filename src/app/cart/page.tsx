@@ -398,11 +398,6 @@ export default function CartPage() {
                     tierDiscount: tierDiscountAmount,
                     quote: {
                         matchedVariantId: matchedVariant?.id ?? null,
-                        matchedVariantName: matchedVariant
-                            ? (matchedVariant.family && !matchedVariant.name.includes(matchedVariant.family)
-                                ? `${matchedVariant.family} ${matchedVariant.name}`
-                                : matchedVariant.name)
-                            : null,
                         itemsTotal: itemsBodyShown,
                         baseShipFee: shipFeeShown,
                         profit: profitShown,

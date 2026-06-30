@@ -19,12 +19,15 @@ function SuccessContent() {
         if (sessionId) {
             fetch(`/api/checkout_sessions/status?session_id=${sessionId}`)
                 .then((r) => r.json())
-                .then((d) => setPaymentStatus(d.paymentStatus ?? null))
-                .catch(() => {});
+                .then((d) => setPaymentStatus(d.paymentStatus ?? "paid"))
+                .catch(() => setPaymentStatus("paid"));
+        } else {
+            setPaymentStatus("paid");
         }
-    }, []);
+    }, [sessionId]);
 
     const isPending = paymentStatus === "unpaid";
+    if (paymentStatus === null) return null;
 
     return (
         <div className="bg-white p-12 rounded-2xl shadow-sm text-center max-w-lg mx-4 space-y-6">
