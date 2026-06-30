@@ -4,7 +4,7 @@ import { isAdmin } from "@/lib/admin";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import Link from "next/link";
-import { ShoppingBag, Users, Package } from "lucide-react";
+import { ShoppingBag, Users, Package, AlertTriangle } from "lucide-react";
 import { client } from "@/lib/microcms";
 import { Product } from "@/types/microcms";
 import localProducts from "@/data/products.json";
@@ -152,6 +152,13 @@ export default async function AdminPage() {
                         >
                             <Package className="w-4 h-4" />
                             詰め合わせ発送
+                        </Link>
+                        <Link
+                            href="/admin/rescue"
+                            className="flex items-center gap-2 px-4 py-2 bg-red-50 border border-red-200 text-red-700 text-sm font-bold rounded-lg hover:bg-red-100 transition-colors shadow-sm"
+                        >
+                            <AlertTriangle className="w-4 h-4" />
+                            畑のレスキュー便
                         </Link>
                     </div>
                     <AnnouncementsEditor />

@@ -2,7 +2,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, ChevronRight, ShoppingBasket, Leaf, Heart, Building2, Package, Truck, ShieldCheck } from "lucide-react";
+import { ArrowRight, ChevronRight, ShoppingBasket, Leaf, Heart, Building2, Package, Truck, ShieldCheck, AlertTriangle } from "lucide-react";
 import { CommunityScroller } from "@/components/community/CommunityScroller";
 import { client } from "@/lib/microcms";
 import { Product } from "@/types/microcms";
@@ -103,8 +103,38 @@ const CATEGORIES = [
   { href: "/business", label: "業務用・卸", icon: Building2 },
 ];
 
+type RescueItem = { id: string; title: string; description: string; stock: number | null; deadline: string; productId: string };
+
+async function getRescueItems(): Promise<RescueItem[]> {
+  try {
+    const { google: googleapis } = await import("googleapis");
+    const a = new googleapis.auth.GoogleAuth({
+      credentials: {
+        client_email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
+        private_key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+      },
+      scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+    });
+    const sheets = googleapis.sheets({ version: "v4", auth: a });
+    const res = await sheets.spreadsheets.values.get({
+      spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
+      range: "レスキュー便!A:H",
+    });
+    const today = new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Tokyo" });
+    return (res.data.values ?? [])
+      .filter((r) => r[0] && r[6] === "1" && r[4] >= today)
+      .map((r) => ({
+        id: r[0], title: r[1] ?? "", description: r[2] ?? "",
+        stock: r[3] ? parseInt(r[3], 10) : null,
+        deadline: r[4] ?? "", productId: r[5] ?? "",
+      }));
+  } catch {
+    return [];
+  }
+}
+
 export default async function Home() {
-  const products = await getTopProducts();
+  const [products, rescueItems] = await Promise.all([getTopProducts(), getRescueItems()]);
 
   return (
     <div className="min-h-screen flex flex-col font-sans bg-stone-50">
@@ -189,6 +219,46 @@ export default async function Home() {
             </div>
           </div>
         </section>
+
+        {/* ── 畑のレスキュー便 ── */}
+        {rescueItems.length > 0 && (
+          <section className="py-4 bg-red-50 border-y border-red-200">
+            <div className="container mx-auto px-4 md:px-6 space-y-3">
+              {rescueItems.map((item) => (
+                <div key={item.id} className="bg-white border border-red-200 rounded-2xl p-4 md:p-5 flex flex-col md:flex-row md:items-center gap-4">
+                  <div className="flex items-start gap-3 flex-1">
+                    <div className="w-9 h-9 rounded-full bg-red-100 flex items-center justify-center shrink-0 mt-0.5">
+                      <AlertTriangle className="w-4 h-4 text-red-500" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold text-red-500 uppercase tracking-wider mb-0.5">畑から緊急のお知らせ</p>
+                      <p className="font-bold text-stone-900 text-sm leading-snug">{item.title}</p>
+                      {item.description && <p className="text-xs text-stone-600 mt-1 leading-relaxed">{item.description}</p>}
+                      <div className="flex flex-wrap gap-3 mt-2">
+                        {item.stock !== null && (
+                          <span className="text-xs text-stone-500">残り約 <span className="font-bold text-stone-800">{item.stock}</span> 点</span>
+                        )}
+                        {item.deadline && (
+                          <span className="text-xs text-stone-500">
+                            <span className="font-bold text-red-600">{item.deadline.replace(/^(\d{4})-(\d{2})-(\d{2})$/, "$2月$3日")}</span> まで
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  {item.productId && (
+                    <Link
+                      href={`/products/${item.productId}`}
+                      className="shrink-0 px-5 py-2.5 bg-red-500 text-white text-sm font-bold rounded-xl hover:bg-red-600 transition-colors text-center"
+                    >
+                      レスキューする
+                    </Link>
+                  )}
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* ── Featured Products ── */}
         {products.length > 0 && (
