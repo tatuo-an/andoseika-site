@@ -17,33 +17,40 @@ type OrderLineParams = {
   amount: string; // 円単位の整数文字列
   estimatedDate: string;
   baseUrl: string; // マイページリンク用
+  customMessage?: string; // 指定時はこのテキストをそのまま送信
 };
 
 export async function sendOrderLineNotification(params: OrderLineParams): Promise<void> {
   const token = process.env.LINE_CHANNEL_ACCESS_TOKEN;
   if (!token) throw new Error("LINE_CHANNEL_ACCESS_TOKEN is not set");
 
-  const { lineUserId, customerName, orderNumber, productNames, amount, estimatedDate, baseUrl } = params;
+  const { lineUserId, customerName, orderNumber, productNames, amount, estimatedDate, baseUrl, customMessage } = params;
 
-  const lines: string[] = [
-    `🌿 ${customerName} 様`,
-    "",
-    "ご注文ありがとうございます。",
-    "下記の内容で受け付けました。",
-    "",
-    `注文番号：${orderNumber}`,
-    `商品：${productNames}`,
-    `合計金額：¥${parseInt(amount || "0", 10).toLocaleString()}（税込）`,
-  ];
-  if (estimatedDate) lines.push(`お届け予定：${estimatedDate}`);
-  lines.push("");
-  lines.push("発送準備ができ次第、改めてご連絡いたします。");
-  lines.push("");
-  lines.push(`注文履歴：${baseUrl}/mypage/orders`);
+  let text: string;
+  if (customMessage) {
+    text = `🌿 ${customerName} 様\n\n${customMessage}\n\n注文番号：${orderNumber}\n注文履歴：${baseUrl}/mypage/orders`;
+  } else {
+    const lines: string[] = [
+      `🌿 ${customerName} 様`,
+      "",
+      "ご注文ありがとうございます。",
+      "下記の内容で受け付けました。",
+      "",
+      `注文番号：${orderNumber}`,
+      `商品：${productNames}`,
+      `合計金額：¥${parseInt(amount || "0", 10).toLocaleString()}（税込）`,
+    ];
+    if (estimatedDate) lines.push(`お届け予定：${estimatedDate}`);
+    lines.push("");
+    lines.push("発送準備ができ次第、改めてご連絡いたします。");
+    lines.push("");
+    lines.push(`注文履歴：${baseUrl}/mypage/orders`);
+    text = lines.join("\n");
+  }
 
   const body = {
     to: lineUserId,
-    messages: [{ type: "text", text: lines.join("\n") }],
+    messages: [{ type: "text", text }],
   };
 
   const res = await fetch("https://api.line.me/v2/bot/message/push", {

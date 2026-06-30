@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { google } from "googleapis";
 import { auth } from "@/auth";
 import { isAdmin } from "@/lib/admin";
+import { sendOrderLineNotification } from "@/lib/sendOrderLine";
+import { sendMail } from "@/lib/mailer";
 
 function getSheets() {
   const a = new google.auth.GoogleAuth({
@@ -48,6 +50,62 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ ord
     valueInputOption: "RAW",
     requestBody: { values: [[orderNumber, "admin", "安藤青果", message.trim(), sentAt]] },
   });
+
+  // 注文情報を取得してLINE/メール通知
+  try {
+    const orderRes = await sheets.spreadsheets.values.get({
+      spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
+      range: "注文管理!A:Q",
+    });
+    const rows = (orderRes.data.values ?? []) as string[][];
+    const orderRow = rows.find((r) => r[0] === orderNumber);
+    if (orderRow) {
+      const customerName = orderRow[2] ?? "";
+      const email = orderRow[3] ?? "";
+      const productNames = orderRow[6] ?? "";
+
+      // LINE userId 検索
+      let lineUserId = "";
+      if (email) {
+        const masterRes = await sheets.spreadsheets.values.get({
+          spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
+          range: "顧客マスタ!A:H",
+        });
+        const masterRows = (masterRes.data.values ?? []) as string[][];
+        const profileRow = masterRows.find((r) => r[0] === email && r[1] === "__profile__");
+        lineUserId = profileRow?.[7] ?? "";
+      }
+
+      const baseUrl = process.env.NEXT_PUBLIC_URL || "https://andoseika.jp";
+      let sentViaLine = false;
+      if (lineUserId) {
+        try {
+          await sendOrderLineNotification({
+            lineUserId,
+            customerName: customerName || "お客様",
+            orderNumber,
+            productNames,
+            amount: orderRow[7] ?? "",
+            estimatedDate: orderRow[14] ?? "",
+            baseUrl,
+            customMessage: message.trim(),
+          });
+          sentViaLine = true;
+        } catch (e) {
+          console.error("[message] LINE push failed", e);
+        }
+      }
+      if (!sentViaLine && email) {
+        await sendMail({
+          to: email,
+          subject: `【安藤青果】${orderNumber} ご連絡`,
+          html: `<p>${(customerName || "お客様")}様</p><p>${message.trim().replace(/\n/g, "<br>")}</p><p>安藤青果 &amp;YOU</p>`,
+        }).catch((e) => console.error("[message] email failed", e));
+      }
+    }
+  } catch (e) {
+    console.error("[message] notification failed", e);
+  }
 
   return NextResponse.json({ ok: true, sentAt });
 }
