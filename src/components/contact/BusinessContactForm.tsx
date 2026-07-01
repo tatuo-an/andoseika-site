@@ -202,7 +202,7 @@ export function BusinessContactForm() {
                             </label>
                             <label className="flex items-center gap-3 cursor-pointer">
                                 <input type="checkbox" name="allowPartnerListing" value="yes" className="accent-primary w-4 h-4" />
-                                <span className="text-sm text-stone-700">当社サイトの「お取引先一覧」への掲載に同意する</span>
+                                <span className="text-sm text-stone-700">当社サイトの「お取引先一覧」への掲載に同意する<span className="text-xs text-stone-400 ml-1">（社名・業種のみ。個人情報は掲載しません）</span></span>
                             </label>
                         </div>
 
