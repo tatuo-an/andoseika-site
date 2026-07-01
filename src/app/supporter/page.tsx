@@ -433,6 +433,10 @@ export default async function SupporterPage({
                         <p>※ 年会費は1年間有効です。届け物の時期は収穫状況により前後する場合があります。</p>
                         <p>※ 詰め合わせの内容はお選びいただけません。天候、収穫量、在庫状況などにより、内容や発送時期を変更する場合があります。</p>
                         <p>※ 割引は通常商品代のみ対象（送料・セール品・農業体験は対象外。セール品には適用されません）。誕生日ボーナスは年1回。ログインボーナスは1日1回。</p>
+                        <p className="mt-3">
+                            <Link href="/supporter-terms" className="underline hover:text-stone-600">サポーター会員規約</Link>
+                            をお読みの上、お申し込みください。
+                        </p>
                     </div>
                 </div>
             </section>
@@ -499,8 +503,12 @@ export default async function SupporterPage({
                     </a>
                     <p className="mt-6 text-white/50 text-sm">
                         Stripeのセキュアな決済画面で、安全にお支払いいただけます。お申し込み前に
-                        <Link href="/tokusho" className="underline underline-offset-4 hover:text-white">
+                        <Link href="/tokusho" className="underline underline-offset-4 hover:text-white mx-1">
                             特定商取引法に基づく表示
+                        </Link>
+                        および
+                        <Link href="/supporter-terms" className="underline underline-offset-4 hover:text-white mx-1">
+                            サポーター会員規約
                         </Link>
                         をご確認ください。
                     </p>
