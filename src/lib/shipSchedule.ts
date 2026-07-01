@@ -11,7 +11,16 @@ export type ScheduleDisplay = {
  * 発送モードに応じた発送・お届け予定の表示テキスト
  */
 export function computeShipSchedule(shipMode: string, shipValue: string, now: Date = new Date()): ScheduleDisplay | null {
-    if (!shipMode || !shipValue) return null;
+    if (!shipMode) return null;
+
+    if (shipMode === "arrival") {
+        return {
+            shippingLabel: "入荷後順次発送",
+            deliveryLabel: "発送後 1〜2日程度でお届け",
+        };
+    }
+
+    if (!shipValue) return null;
 
     if (shipMode === "days") {
         const [minStr, maxStr] = shipValue.split("-");

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { Check, Loader2, Plus, Trash2, GripVertical, Eye, EyeOff, Copy, ChevronDown, ChevronRight, Camera, ChevronUp } from "lucide-react";
+import { Check, Loader2, Plus, Trash2, GripVertical, Eye, EyeOff, Copy, ChevronDown, ChevronRight, Camera, ChevronUp, CopyPlus } from "lucide-react";
 import { Product } from "@/types/microcms";
 import {
     DndContext,
@@ -58,7 +58,7 @@ export type InventoryItem = {
     extraDescriptions: string;  // 詳細情報 JSON文字列 (特徴/保存方法/おすすめ/注意 等)
 };
 
-const PRESET_BADGES = ["新物", "訳あり", "秀品", "贈答用", "栽培期間中農薬不使用", "慣行栽培"];
+const PRESET_BADGES = ["新物", "訳あり", "秀品", "贈答用", "栽培期間中農薬不使用", "慣行栽培", "予約受付中"];
 
 
 type ShippingItem = {
@@ -279,6 +279,26 @@ export function AdminPanel({
         setItems((prev) => {
             const current = prev.find(i => i.family?.trim() === family)?.rescue ?? false;
             return prev.map((item) => item.family?.trim() === family ? { ...item, rescue: !current } : item);
+        });
+        setSavedInventory(false);
+    };
+
+    // ファミリーごとコピー（全バリエーションを新ファミリー名で複製）
+    const copyFamily = (family: string) => {
+        const ts = Date.now();
+        setItems((prev) => {
+            const members = prev.filter((i) => i.family?.trim() === family);
+            const lastIdx = [...prev].map((i, idx) => ({ i, idx })).filter(({ i }) => i.family?.trim() === family).at(-1)?.idx ?? prev.length - 1;
+            const copies = members.map((m, offset) => ({
+                ...m,
+                id: `custom-${ts + offset}`,
+                family: `${family} (コピー)`,
+                badges: [...m.badges],
+                familyImages: [...m.familyImages],
+            }));
+            const next = [...prev];
+            next.splice(lastIdx + 1, 0, ...copies);
+            return next;
         });
         setSavedInventory(false);
     };
@@ -727,13 +747,23 @@ export function AdminPanel({
                                                                     {allHidden ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                                                 </button>
                                                                 {!collapsed && (
-                                                                    <button
-                                                                        onClick={() => addVariantToFamily(fam)}
-                                                                        className="ml-auto flex items-center gap-1 text-xs text-stone-500 hover:text-primary border border-stone-200 hover:border-primary/50 px-2.5 py-1 rounded-full transition-colors whitespace-nowrap"
-                                                                    >
-                                                                        <Plus className="w-3 h-3" />
-                                                                        バリエーションを追加
-                                                                    </button>
+                                                                    <div className="ml-auto flex items-center gap-2">
+                                                                        <button
+                                                                            onClick={() => copyFamily(fam)}
+                                                                            title="ファミリーごとコピー"
+                                                                            className="flex items-center gap-1 text-xs text-stone-500 hover:text-blue-600 border border-stone-200 hover:border-blue-300 px-2.5 py-1 rounded-full transition-colors whitespace-nowrap"
+                                                                        >
+                                                                            <CopyPlus className="w-3 h-3" />
+                                                                            ファミリーをコピー
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={() => addVariantToFamily(fam)}
+                                                                            className="flex items-center gap-1 text-xs text-stone-500 hover:text-primary border border-stone-200 hover:border-primary/50 px-2.5 py-1 rounded-full transition-colors whitespace-nowrap"
+                                                                        >
+                                                                            <Plus className="w-3 h-3" />
+                                                                            バリエーションを追加
+                                                                        </button>
+                                                                    </div>
                                                                 )}
                                                             </div>
                                                         );
@@ -1264,6 +1294,7 @@ function FamilyShipSchedule({ shipMode, shipValue, onUpdate }: {
                     <option value="">未設定</option>
                     <option value="days">日数指定</option>
                     <option value="weekdays">曜日指定</option>
+                    <option value="arrival">入荷時</option>
                 </select>
                 {shipMode === "days" && (
                     <div className="flex items-center gap-1">
@@ -1285,6 +1316,9 @@ function FamilyShipSchedule({ shipMode, shipValue, onUpdate }: {
                         />
                         <span className="text-xs text-stone-400">日以内に発送</span>
                     </div>
+                )}
+                {shipMode === "arrival" && (
+                    <span className="text-xs text-stone-500">入荷後順次発送（注文受付中）と表示されます</span>
                 )}
                 {shipMode === "weekdays" && (
                     <div className="flex items-center gap-1 flex-wrap">
