@@ -200,6 +200,10 @@ export function BusinessContactForm() {
                                 <input type="checkbox" name="sampleRequest" value="yes" className="accent-primary w-4 h-4" />
                                 <span className="text-sm text-stone-700">まずサンプルを試したい</span>
                             </label>
+                            <label className="flex items-center gap-3 cursor-pointer">
+                                <input type="checkbox" name="allowPartnerListing" value="yes" className="accent-primary w-4 h-4" />
+                                <span className="text-sm text-stone-700">当社サイトの「お取引先一覧」への掲載に同意する</span>
+                            </label>
                         </div>
 
                         {/* 自由記述 */}
