@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { signIn } from "@/auth";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
@@ -18,6 +19,13 @@ export default function LoginPage() {
             <li>📅 体験農業・農場見学の予約ができる</li>
             <li>🌿 サポーター会員へのアップグレードができる</li>
           </ul>
+          <p className="text-xs text-stone-400 mb-5">
+            登録・ログインにより
+            <Link href="/terms" className="underline hover:text-primary mx-1">利用規約</Link>
+            および
+            <Link href="/privacy" className="underline hover:text-primary mx-1">プライバシーポリシー</Link>
+            に同意したものとみなします。
+          </p>
           <div className="flex flex-col gap-3">
             {/* LINE（推奨） */}
             <div className="rounded-2xl border-2 border-[#06C755] bg-[#06C755]/5 p-4">
