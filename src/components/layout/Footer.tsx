@@ -22,6 +22,7 @@ export function Footer() {
                     <ul className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-stone-600">
                         <li><Link href="/contact" className="hover:text-primary">お問い合わせ</Link></li>
                         <li><Link href="/business" className="hover:text-primary">業務用のお取引</Link></li>
+                        <li><Link href="/safety" className="hover:text-primary">安心・安全への取り組み</Link></li>
                         <li><Link href="/terms" className="hover:text-primary">利用規約</Link></li>
                         <li><Link href="/supporter-terms" className="hover:text-primary">サポーター会員規約</Link></li>
                         <li><Link href="/community-guidelines" className="hover:text-primary">投稿ガイドライン</Link></li>
