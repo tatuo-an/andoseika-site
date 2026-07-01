@@ -96,6 +96,54 @@ async function getTopProducts(): Promise<{ id: string; name: string; image: stri
   }
 }
 
+async function getPreorderProducts(): Promise<{ id: string; name: string; image: string; price: number | null }[]> {
+  try {
+    let products: Product[] = [];
+    try {
+      const data = await client.getList<Product>({ endpoint: "products", queries: { orders: "order", limit: 100 } });
+      products = data.contents.length > 0 ? data.contents : (localProducts as Product[]);
+    } catch {
+      products = localProducts as Product[];
+    }
+    const authClient = new google.auth.GoogleAuth({
+      credentials: {
+        client_email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
+        private_key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+      },
+      scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+    });
+    const sheets = google.sheets({ version: "v4", auth: authClient });
+    const res = await sheets.spreadsheets.values.get({
+      spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
+      range: "商品在庫!A:Y",
+    });
+    const rows = res.data.values ?? [];
+    const productMap = Object.fromEntries(products.map((p) => [p.id, p]));
+    const seenFamilies = new Set<string>();
+    const result: { id: string; name: string; image: string; price: number | null }[] = [];
+    rows.slice(1).forEach((r) => {
+      if (!r[0]) return;
+      const badges: string[] = r[8] ? r[8].split(",").map((b: string) => b.trim()) : [];
+      if (!badges.includes("予約受付中")) return;
+      if (r[5] === "1") return; // 非表示
+      const family = (r[9] ?? "").trim();
+      const key = family || r[0];
+      if (seenFamilies.has(key)) return;
+      seenFamilies.add(key);
+      const product = productMap[r[0]];
+      const rawPrice = r[3] !== undefined && r[3] !== "" ? parseInt(r[3], 10) : (product?.price ?? null);
+      const cost = r[12] !== undefined && r[12] !== "" ? parseInt(r[12], 10) : null;
+      const price = rawPrice ? toTaxIncluded(rawPrice, cost) : null;
+      const image = (r[10]?.trim() || "") || product?.image?.url || "";
+      const name = family || r[1] || product?.name || "";
+      result.push({ id: r[0], name, image, price });
+    });
+    return result;
+  } catch {
+    return [];
+  }
+}
+
 const CATEGORIES = [
   { href: "/products", label: "商品一覧", icon: ShoppingBasket },
   { href: "/experience", label: "体験・予約", icon: Leaf },
@@ -147,7 +195,7 @@ async function getRescueItems(): Promise<RescueItem[]> {
 }
 
 export default async function Home() {
-  const [products, rescueItems] = await Promise.all([getTopProducts(), getRescueItems()]);
+  const [products, rescueItems, preorderProducts] = await Promise.all([getTopProducts(), getRescueItems(), getPreorderProducts()]);
 
   return (
     <div className="min-h-screen flex flex-col font-sans bg-stone-50">
@@ -269,6 +317,42 @@ export default async function Home() {
                   )}
                 </div>
               ))}
+            </div>
+          </section>
+        )}
+
+        {/* ── Preorder Products ── */}
+        {preorderProducts.length > 0 && (
+          <section className="py-10 bg-amber-50 border-y border-amber-200">
+            <div className="container mx-auto px-4 md:px-6">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <span className="text-xs font-bold text-amber-600 tracking-wider uppercase">Preorder</span>
+                  <h2 className="text-xl font-bold text-stone-900 mt-0.5">予約受付中の商品</h2>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {preorderProducts.map((p) => (
+                  <Link key={p.id} href={`/products/${p.id}`} className="group bg-white rounded-xl overflow-hidden hover:shadow-md transition-shadow border border-amber-100">
+                    <div className="relative aspect-square bg-stone-50">
+                      {p.image ? (
+                        <Image src={p.image} alt={p.name} fill className="object-contain p-3 group-hover:scale-105 transition-transform duration-300" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-stone-300 text-xs">No Image</div>
+                      )}
+                      <span className="absolute top-2 left-2 bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">予約受付中</span>
+                    </div>
+                    <div className="p-3">
+                      <p className="text-xs text-stone-700 font-medium line-clamp-2 leading-snug">{p.name}</p>
+                      {p.price ? (
+                        <p className="text-sm font-bold text-stone-900 mt-1">¥{p.price.toLocaleString()}<span className="text-xs font-normal text-stone-500">（税込）</span></p>
+                      ) : (
+                        <p className="text-sm text-stone-400 mt-1">価格未定</p>
+                      )}
+                    </div>
+                  </Link>
+                ))}
+              </div>
             </div>
           </section>
         )}
