@@ -125,16 +125,29 @@ export default function ExperiencePage() {
                         </div>
                     </div>
                     {/* Participation Conditions */}
-                    <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 md:p-8">
-                        <h3 className="font-bold text-stone-900 text-lg mb-4">ご参加の条件・注意事項</h3>
-                        <ul className="space-y-2 text-sm text-stone-700">
-                            <li>• 事前予約が必須です（当日の飛び込み参加はできません）</li>
-                            <li>• 雨天の場合は中止になることがあります（前日〜当日にご連絡します）</li>
-                            <li>• 動きやすい服装と、汚れてもよい靴でお越しください</li>
-                            <li>• お子様の参加は保護者同伴をお願いします</li>
-                            <li>• 防護服を着用しますが、蜂に刺される可能性を完全になくすことはできません。蜂アレルギーのある方は参加をご遠慮ください</li>
-                            <li>• ご不明な点は<a href="https://lin.ee/xzQv9l5" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">LINE</a>またはお問い合わせフォームからご相談ください</li>
-                        </ul>
+                    <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 md:p-8 space-y-6">
+                        <div>
+                            <h3 className="font-bold text-stone-900 text-lg mb-4">ご参加の条件・注意事項</h3>
+                            <ul className="space-y-2 text-sm text-stone-700">
+                                <li>• 事前予約が必須です（当日の飛び込み参加はできません）</li>
+                                <li>• 雨天の場合は中止になることがあります（前日〜当日にご連絡します）</li>
+                                <li>• 動きやすい服装と、汚れてもよい靴でお越しください</li>
+                                <li>• お子様の参加は保護者同伴をお願いします</li>
+                                <li>• 防護服を着用しますが、蜂に刺される可能性を完全になくすことはできません。蜂アレルギーのある方は参加をご遠慮ください</li>
+                                <li>• <strong>1歳未満のお子様は蜂蜜の試食ができません</strong>（乳児ボツリヌス症予防のため）。養蜂体験には参加いただけますが、試食はご遠慮ください</li>
+                                <li>• ご不明な点は<a href="https://lin.ee/xzQv9l5" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">LINE</a>またはお問い合わせフォームからご相談ください</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h3 className="font-bold text-stone-900 text-lg mb-4">キャンセル規定</h3>
+                            <ul className="space-y-2 text-sm text-stone-700">
+                                <li>• 体験日の3日前まで：キャンセル料なし</li>
+                                <li>• 体験日の2日前〜前日：参加料金の50%</li>
+                                <li>• 体験当日・無断キャンセル：参加料金の100%</li>
+                                <li>• 悪天候・農作業都合による当社側からの中止：全額返金またはご希望の日程に振替</li>
+                                <li>• キャンセルはLINEまたはお問い合わせフォームにてご連絡ください</li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </main>

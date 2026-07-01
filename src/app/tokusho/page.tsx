@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 };
 
 const rows = [
-  { label: "販売業者名", value: "安藤青果" },
+  { label: "販売業者名", value: "安藤達夫（屋号：安藤青果）" },
   { label: "代表者名", value: "安藤達夫" },
   {
     label: "所在地",
