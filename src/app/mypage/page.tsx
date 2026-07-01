@@ -9,6 +9,7 @@ import { OnlineCounter } from "@/components/admin/OnlineCounter";
 import { SkipModeToggle } from "@/components/admin/SkipModeToggle";
 import { DeliveryScheduleEditor } from "@/components/admin/DeliveryScheduleEditor";
 import { MyOrders } from "@/components/mypage/MyOrders";
+import { DeleteAccountButton } from "@/components/mypage/DeleteAccountButton";
 import { ProfileCard } from "@/components/mypage/ProfileCard";
 import { BirthdayBanner } from "@/components/mypage/BirthdayBanner";
 import { PointsCard } from "@/components/mypage/PointsCard";
@@ -139,21 +140,24 @@ export default async function MyPage() {
             </div>
           )}
 
-          {/* ログアウト */}
-          <form
-            action={async () => {
-              "use server";
-              await signOut({ redirectTo: "/" });
-            }}
-          >
-            <button
-              type="submit"
-              className="flex items-center gap-2 text-stone-500 hover:text-stone-700 transition-colors text-sm"
+          {/* ログアウト・退会 */}
+          <div className="flex items-center justify-between">
+            <form
+              action={async () => {
+                "use server";
+                await signOut({ redirectTo: "/" });
+              }}
             >
-              <LogOut className="w-4 h-4" />
-              ログアウト
-            </button>
-          </form>
+              <button
+                type="submit"
+                className="flex items-center gap-2 text-stone-500 hover:text-stone-700 transition-colors text-sm"
+              >
+                <LogOut className="w-4 h-4" />
+                ログアウト
+              </button>
+            </form>
+            <DeleteAccountButton />
+          </div>
         </div>
       </main>
       <Footer />
