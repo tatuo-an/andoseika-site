@@ -3,7 +3,7 @@
 import { useShoppingCart } from "use-shopping-cart";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ChevronLeft, Plus, Minus, Trash2, Calendar, MapPin, Star } from "lucide-react";
+import { ChevronLeft, Plus, Minus, Trash2, Calendar, MapPin, Star, X } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { earliestDeliveryDate } from "@/lib/shipSchedule";
@@ -120,6 +120,7 @@ export default function CartPage() {
     const [loaded, setLoaded] = useState(false);
     const [coolRequested, setCoolRequested] = useState(false);
     const [selectedOptions, setSelectedOptions] = useState<Set<string>>(new Set());
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
 
     // お届け希望日時
     const [desiredDate, setDesiredDate] = useState("");
@@ -349,11 +350,17 @@ export default function CartPage() {
         return arr;
     })();
 
-    const handleCheckout = async () => {
+    const handleCheckoutClick = () => {
         if (!selectedAddress) {
             alert("配送先を選択してください");
             return;
         }
+        setShowConfirmModal(true);
+    };
+
+    const handleCheckout = async () => {
+        setShowConfirmModal(false);
+        if (!selectedAddress) return;
 
         const firstWithShip = cartItems.find(i => (i as { shipMode?: string }).shipMode);
         const cartShipMode = (firstWithShip as { shipMode?: string } | undefined)?.shipMode ?? "";
@@ -747,7 +754,7 @@ export default function CartPage() {
                             <span><b>決済スキップモード ON</b> — Stripeをスキップしてテスト注文を作成します</span>
                         </div>
                     )}
-                    <button onClick={handleCheckout} disabled={!selectedAddress}
+                    <button onClick={handleCheckoutClick} disabled={!selectedAddress}
                         className={`w-full py-4 font-bold rounded-full transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed ${
                             skipMode
                                 ? "bg-amber-400 hover:bg-amber-500 text-white"
@@ -772,6 +779,94 @@ export default function CartPage() {
                 </div>
             </main>
             <Footer />
+
+            {/* 最終確認モーダル（特商法必須表示） */}
+            {showConfirmModal && (
+                <div
+                    className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 px-0 sm:px-4"
+                    onClick={(e) => { if (e.target === e.currentTarget) setShowConfirmModal(false); }}
+                >
+                    <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-lg max-h-[92vh] overflow-y-auto">
+                        <div className="flex items-center justify-between px-5 py-4 border-b border-stone-200 sticky top-0 bg-white">
+                            <h3 className="font-bold text-stone-900 text-base">ご注文内容の確認</h3>
+                            <button onClick={() => setShowConfirmModal(false)} className="text-stone-400 hover:text-stone-600 p-1">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        <div className="px-5 py-4 space-y-4 text-sm">
+                            {/* 商品一覧 */}
+                            <div>
+                                <p className="text-xs font-bold text-stone-400 uppercase tracking-widest mb-2">ご注文商品</p>
+                                <div className="space-y-1">
+                                    {cartItems.map(item => {
+                                        const original = itemTaxedUnit(item as { price: number; cost?: number | null });
+                                        const pct = (item as { salePercent?: number }).salePercent ?? 0;
+                                        const display = pct > 0 ? Math.ceil(original * (1 - pct / 100)) : original;
+                                        return (
+                                            <div key={item.id} className="flex justify-between text-xs text-stone-700 py-0.5">
+                                                <span className="flex-1 pr-2">{item.name} × {item.quantity}</span>
+                                                <span className="shrink-0">¥{(display * item.quantity).toLocaleString()}</span>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
+                            {/* お支払い合計 */}
+                            <div className="bg-stone-50 rounded-xl p-4 space-y-2.5">
+                                <CartInfoRow label="お支払い合計" value={`¥${grandTotal.toLocaleString()}（税込）`} highlight />
+                                <CartInfoRow label="支払方法" value="クレジットカード・銀行振込・PayPay（Stripe決済）" />
+                                <CartInfoRow label="支払時期" value="カード・PayPay：注文時に即時確定。銀行振込：注文後7日以内" />
+                                <CartInfoRow
+                                    label="発送予定"
+                                    value={cartEarliestDelivery
+                                        ? `${cartEarliestDelivery.toLocaleDateString("ja-JP", { month: "long", day: "numeric" })}以降に順次発送`
+                                        : "ご注文確認後4〜10日以内に発送（農産物の収穫状況により前後します）"
+                                    }
+                                />
+                                <CartInfoRow
+                                    label="返品・交換"
+                                    value="生鮮食品のためお客様都合の返品は承れません。商品に破損・不良があった場合は到着後3日以内にご連絡ください"
+                                    warn
+                                />
+                            </div>
+
+                            <p className="text-[11px] text-stone-500 leading-relaxed">
+                                ご注文前に
+                                <Link href="/tokusho" target="_blank" className="text-primary underline mx-0.5">特定商取引法に基づく表示</Link>
+                                をご確認ください。「同意してお支払いへ進む」を押すと、上記内容および利用規約に同意したものとみなします。
+                            </p>
+                        </div>
+
+                        <div className="px-5 pb-6 space-y-2 sticky bottom-0 bg-white pt-2 border-t border-stone-100">
+                            <button
+                                onClick={handleCheckout}
+                                className="w-full py-3.5 rounded-full font-bold bg-primary text-white hover:bg-primary/90 transition-colors text-sm"
+                            >
+                                同意してお支払いへ進む
+                            </button>
+                            <button
+                                onClick={() => setShowConfirmModal(false)}
+                                className="w-full py-2.5 rounded-full font-bold bg-stone-100 text-stone-700 hover:bg-stone-200 transition-colors text-sm"
+                            >
+                                カートに戻る
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
+function CartInfoRow({ label, value, highlight, warn }: { label: string; value: string; highlight?: boolean; warn?: boolean }) {
+    return (
+        <div className="flex gap-2">
+            <span className="text-stone-500 shrink-0 w-20 text-[11px] pt-0.5 leading-relaxed">{label}</span>
+            <span className={`flex-1 text-[11px] leading-relaxed ${highlight ? "font-bold text-stone-900 text-sm" : warn ? "text-red-600" : "text-stone-700"}`}>
+                {value}
+            </span>
         </div>
     );
 }

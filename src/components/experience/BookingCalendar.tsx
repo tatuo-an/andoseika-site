@@ -313,6 +313,31 @@ export function BookingCalendar({
                             </div>
                         )}
 
+                        {/* 予約確定前の必須開示（特商法） */}
+                        <div className="border border-amber-200 bg-amber-50 rounded-xl p-4 text-xs text-stone-700 space-y-3">
+                            <p className="font-bold text-stone-800 text-sm">予約確定前のご確認</p>
+
+                            <div>
+                                <p className="font-semibold text-stone-700 mb-1">お支払い方法・時期</p>
+                                <p className="leading-relaxed text-stone-600">体験料金は<strong>体験当日に現地払い</strong>となります。現金のみ。事前決済はありません。</p>
+                            </div>
+
+                            <div>
+                                <p className="font-semibold text-stone-700 mb-1">キャンセル規定</p>
+                                <ul className="space-y-0.5 leading-relaxed text-stone-600">
+                                    {CANCEL_POLICY[0].items.map((item, i) => (
+                                        <li key={i}>・{item}</li>
+                                    ))}
+                                </ul>
+                                <p className="mt-1 text-stone-500">※ {CANCEL_POLICY[1].items[0]}</p>
+                            </div>
+
+                            <div>
+                                <p className="font-semibold text-stone-700 mb-1">予約内容の変更・訂正</p>
+                                <p className="leading-relaxed text-stone-600">予約後の日時変更・人数変更はLINEまたはお問い合わせフォームからご連絡ください。</p>
+                            </div>
+                        </div>
+
                         <div className="flex gap-3 mt-auto">
                             <button
                                 onClick={() => setStep("calendar")}
@@ -326,7 +351,7 @@ export function BookingCalendar({
                                 className="flex-1 px-4 py-2.5 bg-primary text-white font-bold rounded-full hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm flex items-center justify-center gap-2"
                             >
                                 {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
-                                {submitting ? "送信中..." : "予約を確定する"}
+                                {submitting ? "送信中..." : "上記に同意して予約を確定する"}
                             </button>
                         </div>
                     </div>

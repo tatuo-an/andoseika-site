@@ -534,6 +534,21 @@ export default function OrderDetailPage() {
                         const res = await fetch(`/api/my/orders/${orderNumber}/delivered`, { method: "POST" });
                         if (res.ok) {
                           setOrder((prev) => prev ? { ...prev, status: "delivered" } : prev);
+                          const msgRes = await fetch(`/api/my/orders/${orderNumber}/message`, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ message: "商品を受け取りました。" }),
+                          });
+                          const msgData = await msgRes.json();
+                          if (msgData.ok) {
+                            setMessages((prev) => [...prev, {
+                              senderType: "user",
+                              senderName: "お客様",
+                              message: "商品を受け取りました。",
+                              sentAt: msgData.sentAt,
+                            }]);
+                            scrollToBottom();
+                          }
                           setShowThanksModal(true);
                         }
                       } finally { setCompleting(false); }

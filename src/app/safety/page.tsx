@@ -46,7 +46,7 @@ export default function SafetyPage() {
                   決済セキュリティ
                 </h2>
                 <div className="text-sm text-stone-700 leading-relaxed space-y-2">
-                  <p>本サービスの決済はすべて <strong>Stripe</strong>（Stripe, Inc.）を通じて処理されます。カード番号・セキュリティコードなどの決済情報は当社サーバーには一切保存されません。</p>
+                  <p>クレジットカード・PayPay・銀行振込はすべて <strong>Stripe</strong>（Stripe, Inc.）を通じて処理されます。銀行振込の振込先はStripeが管理する仮想口座となります（口座名義が当店名と異なる場合があります）。カード番号・セキュリティコードなどの決済情報は当社サーバーには一切保存されません。</p>
                   <p>通信はSSL/TLS暗号化により保護されており、Stripeは国際的なカードセキュリティ基準（PCI DSS）に準拠しています。</p>
                   <p>Stripeのプライバシーポリシー：<a href="https://stripe.com/jp/privacy" target="_blank" rel="noopener noreferrer" className="underline hover:text-primary">stripe.com/jp/privacy</a></p>
                 </div>
@@ -118,7 +118,7 @@ export default function SafetyPage() {
                       <span className="font-bold text-stone-800 text-sm">Stripe</span>
                     </div>
                     <p className="text-sm text-stone-600 leading-relaxed">
-                      クレジットカード決済・サポーター年会費の自動更新に利用します。決済画面ではStripeのサーバーと直接通信が行われ、カード情報は当社サーバーを経由しません。Stripeは不正利用検知のためにブラウザ情報等を収集することがあります（Stripeのプライバシーポリシーに準じます）。
+                      クレジットカード決済・年会費のお支払いに利用します。決済画面ではStripeのサーバーと直接通信が行われ、カード情報は当社サーバーを経由しません。Stripeは不正利用検知のためにブラウザ情報等を収集することがあります（Stripeのプライバシーポリシーに準じます）。
                     </p>
                   </div>
 
