@@ -40,7 +40,7 @@ export function DeleteAccountButton() {
         <p className="text-sm font-bold text-red-700">本当に退会しますか？</p>
         <ul className="text-xs text-red-600 space-y-1 leading-relaxed list-disc list-inside">
           <li>保有ポイント・お気に入り・投稿履歴はすべて削除されます（復元不可）</li>
-          <li>サポーター特典（自動更新を含む）は即時停止されます</li>
+          <li>サポーター特典は即時終了します（以後の請求はありません）</li>
           <li>注文履歴は法令上の保存義務に従い保持されます</li>
         </ul>
         {error && <p className="text-xs text-red-600">{error}</p>}

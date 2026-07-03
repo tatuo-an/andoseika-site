@@ -6,7 +6,7 @@ import { google } from "googleapis";
 
 const PLAN_LIMITS: Record<string, number> = { minori: 10, partner: 5 };
 
-async function getActiveCount(plan: string): Promise<number> {
+async function getActiveCount(plan: string, excludeEmail?: string): Promise<number> {
     try {
         const authClient = new google.auth.GoogleAuth({
             credentials: {
@@ -22,7 +22,7 @@ async function getActiveCount(plan: string): Promise<number> {
         });
         const today = new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Tokyo" });
         return (res.data.values ?? []).slice(1).filter(
-            (r) => r[1] === "__profile__" && r[4] === plan && (r[5] ?? "") >= today
+            (r) => r[0] !== excludeEmail && r[1] === "__profile__" && r[4] === plan && (r[5] ?? "") >= today
         ).length;
     } catch {
         return 0;
@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
 
         // 人数制限チェック
         if (PLAN_LIMITS[plan] !== undefined) {
-            const count = await getActiveCount(plan);
+            const count = await getActiveCount(plan, userEmail);
             if (count >= PLAN_LIMITS[plan]) {
                 return NextResponse.json({ error: "定員に達しています" }, { status: 409 });
             }

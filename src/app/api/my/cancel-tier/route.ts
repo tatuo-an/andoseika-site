@@ -35,7 +35,7 @@ export async function POST(): Promise<NextResponse> {
       return NextResponse.json({ error: "Profile not found" }, { status: 404 });
     }
 
-    // 自動更新停止フラグだけを立て、tier/expiry は据え置く。
+    // 更新案内停止フラグだけを立て、tier/expiry は据え置く。
     // 契約期間終了日（tierExpiry）までは特典を継続利用できる。
     const nowJST = new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Tokyo" }) + " " +
       new Date().toLocaleTimeString("ja-JP", { timeZone: "Asia/Tokyo", hour: "2-digit", minute: "2-digit" });

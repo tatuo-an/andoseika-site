@@ -14,9 +14,9 @@ function buildMessageLines(p: RenewalParams): string[] {
     `🌿 ${p.customerName} 様`,
     "",
     `現在ご利用中の「${p.planName}」は、${p.daysUntil}日後（${p.renewalDate}）に契約期間が終了します。`,
-    `次回更新日に同じプランへ自動更新される場合の年会費は ¥${p.planPrice.toLocaleString()}（税込）です。`,
     "",
-    "次回更新を希望されない場合は、契約期間終了の前日までにマイページから自動更新を停止してください。",
+    `継続をご希望の場合は、マイページから更新手続き（年会費 ¥${p.planPrice.toLocaleString()} 税込のお支払い）をお願いします。`,
+    "更新手続きがない場合、期間満了をもってサポーター特典は終了します。自動的に請求されることはありません。",
     "",
     `マイページ：${p.baseUrl}/mypage/supporter`,
   ];

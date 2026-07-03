@@ -9,6 +9,7 @@ import { getTier, TIERS, type TierKey } from "@/lib/tiers";
 import { CancelSupporterButton } from "@/components/mypage/CancelSupporterButton";
 import { DeliverySeasonSelector } from "@/components/mypage/DeliverySeasonSelector";
 import { DeliveryHistory } from "@/components/mypage/DeliveryHistory";
+import { RenewSupporterButton } from "@/components/mypage/RenewSupporterButton";
 
 export const dynamic = "force-dynamic";
 
@@ -33,6 +34,17 @@ function calcDuration(from: string): string {
   if (years === 0) return `${months}ヶ月`;
   if (months === 0) return `${years}年`;
   return `${years}年${months}ヶ月`;
+}
+
+function calcDaysUntil(dateStr: string): number | null {
+  const parts = dateStr.split("-").map(Number);
+  if (parts.length !== 3 || parts.some(Number.isNaN)) return null;
+
+  const todayStr = new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Tokyo" });
+  const todayParts = todayStr.split("-").map(Number);
+  const todayMs = Date.UTC(todayParts[0], todayParts[1] - 1, todayParts[2]);
+  const targetMs = Date.UTC(parts[0], parts[1] - 1, parts[2]);
+  return Math.ceil((targetMs - todayMs) / (1000 * 60 * 60 * 24));
 }
 
 async function fetchUserData(email: string) {
@@ -102,6 +114,12 @@ export default async function MyPageSupporterPage() {
   const isCancelled = !!cancelRequestedAt && activeTier !== "free";
   const isSupporter = activeTier !== "free";
   const duration = joinDateStr ? calcDuration(joinDateStr) : null;
+  const daysUntilExpiry = tierExpiry ? calcDaysUntil(tierExpiry) : null;
+  const canRenew =
+    isSupporter &&
+    daysUntilExpiry !== null &&
+    daysUntilExpiry >= 0 &&
+    daysUntilExpiry <= 60;
 
   const TIER_LABEL: Record<TierKey, string> = {
     free: "一般会員",
@@ -192,6 +210,16 @@ export default async function MyPageSupporterPage() {
 
           {/* アクション */}
           <div className="space-y-3 mt-5">
+            {canRenew && (
+              <div className="bg-white rounded-2xl shadow-sm p-5">
+                <p className="text-sm font-bold text-stone-700 mb-1">契約期間の更新</p>
+                <p className="text-xs text-stone-500 mb-3 leading-relaxed">
+                  期限まであと{daysUntilExpiry}日です。更新手続きが完了すると、現在の期限から1年間延長されます。
+                </p>
+                <RenewSupporterButton plan={activeTier as Exclude<TierKey, "free">} price={tierInfo.price} />
+              </div>
+            )}
+
             <Link
               href="/supporter#plans"
               className="block w-full py-4 rounded-2xl bg-primary text-white font-bold text-center hover:bg-primary/90 transition-colors shadow-sm"
@@ -201,9 +229,9 @@ export default async function MyPageSupporterPage() {
 
             {isSupporter && !isCancelled && (
               <div className="bg-white rounded-2xl shadow-sm p-5">
-                <p className="text-sm font-bold text-stone-700 mb-1">次回の自動更新を停止する</p>
+                <p className="text-sm font-bold text-stone-700 mb-1">更新案内を停止する</p>
                 <p className="text-xs text-stone-500 mb-3 leading-relaxed">
-                  停止しても {tierExpiry || "—"} までサポーター特典をご利用いただけます。
+                  停止しても {tierExpiry || "—"} までサポーター特典をご利用いただけます。更新手続きをされない限り、年会費は請求されません。
                 </p>
                 <CancelSupporterButton tierName={tierInfo.name} redirectTo="/mypage/supporter" />
                 <p className="text-[11px] text-stone-400 mt-3">
@@ -232,4 +260,3 @@ function Row({ label, value, mono }: { label: string; value: React.ReactNode; mo
     </div>
   );
 }
-

@@ -26,6 +26,30 @@ async function getSheets() {
   return google.sheets({ version: "v4", auth });
 }
 
+function todayJstDateString(): string {
+  return new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Tokyo" });
+}
+
+function isIsoDateString(value: string | undefined): value is string {
+  return !!value && /^\d{4}-\d{2}-\d{2}$/.test(value);
+}
+
+function addOneYear(dateStr: string): string {
+  const [year, month, day] = dateStr.split("-").map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  date.setUTCFullYear(date.getUTCFullYear() + 1);
+  return date.toISOString().slice(0, 10);
+}
+
+function calcNextTierExpiry(existingTierExpiry: string | undefined): string {
+  const today = todayJstDateString();
+  const baseDate =
+    isIsoDateString(existingTierExpiry) && existingTierExpiry >= today
+      ? existingTierExpiry
+      : today;
+  return addOneYear(baseDate);
+}
+
 async function appendToOrderSheet(values: string[][]) {
   const sheets = await getSheets();
   const spreadsheetId = process.env.GOOGLE_SPREADSHEET_ID;
@@ -339,30 +363,26 @@ export async function POST(req: NextRequest) {
           const SHEET = "顧客マスタ";
           const res = await sheets.spreadsheets.values.get({
             spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID,
-            range: `${SHEET}!A:F`,
+            range: `${SHEET}!A:I`,
           });
           const rows = res.data.values ?? [];
           const rowIndex = rows.findIndex((r) => r[0] === userEmail && r[1] === "__profile__");
-
-          // Expiry = 1 year from now (JST)
-          const expDate = new Date();
-          expDate.setFullYear(expDate.getFullYear() + 1);
-          const tierExpiry = expDate.toLocaleDateString("sv-SE", { timeZone: "Asia/Tokyo" });
+          const existing = rowIndex === -1 ? undefined : rows[rowIndex];
+          const tierExpiry = calcNextTierExpiry(existing?.[5]);
 
           if (rowIndex === -1) {
             await sheets.spreadsheets.values.append({
               spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID,
-              range: `${SHEET}!A:F`,
+              range: `${SHEET}!A:I`,
               valueInputOption: "RAW",
-              requestBody: { values: [[userEmail, "__profile__", "", "", tierKey, tierExpiry]] },
+              requestBody: { values: [[userEmail, "__profile__", "", "", tierKey, tierExpiry, "", "", ""]] },
             });
           } else {
-            const existing = rows[rowIndex];
             await sheets.spreadsheets.values.update({
               spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID,
-              range: `${SHEET}!A${rowIndex + 1}:F${rowIndex + 1}`,
+              range: `${SHEET}!A${rowIndex + 1}:I${rowIndex + 1}`,
               valueInputOption: "RAW",
-              requestBody: { values: [[userEmail, "__profile__", existing[2] ?? "", existing[3] ?? "", tierKey, tierExpiry]] },
+              requestBody: { values: [[userEmail, "__profile__", existing?.[2] ?? "", existing?.[3] ?? "", tierKey, tierExpiry, "", existing?.[7] ?? "", ""]] },
             });
           }
           console.log("[webhook] tier updated:", userEmail, tierKey, tierExpiry);

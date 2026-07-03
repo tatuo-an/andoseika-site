@@ -1,8 +1,7 @@
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import Image from "next/image";
-import Link from "next/link";
-import { Clock, Users } from "lucide-react";
+import { ChevronRight, Clock, Users } from "lucide-react";
 import { Metadata } from "next";
 import { BookingButton } from "@/components/experience/BookingButton";
 
@@ -10,6 +9,52 @@ export const metadata: Metadata = {
     title: "体験・予約",
     description: "鳥取の自然と触れ合う農業体験。ミツバチの世界をのぞく養蜂体験や、土まみれで楽しむ芋掘り体験など。",
 };
+
+const BEEKEEPING_FLOW = [
+    {
+        title: "集合・受付",
+        time: "約10分",
+        description: "受付後、体験内容と注意事項をご説明します",
+    },
+    {
+        title: "防護服の着用",
+        time: "約10分",
+        description: "お子様サイズもご用意。着方はスタッフがお手伝いします",
+    },
+    {
+        title: "巣箱の見学",
+        time: "約30分",
+        description: "巣箱の中を観察。女王蜂さがしにも挑戦",
+    },
+    {
+        title: "採れたて蜂蜜の試食",
+        time: "約10分",
+        description: "その場でしか味わえない採れたての味を（1歳未満のお子様はご遠慮ください）",
+    },
+];
+
+const EXPERIENCE_FAQS = [
+    {
+        q: "何歳から参加できますか？",
+        a: "未就学のお子様も保護者同伴でご参加いただけます。蜂蜜の試食は1歳未満のお子様はできません。",
+    },
+    {
+        q: "刺されることはありますか？",
+        a: "防護服を着用し、スタッフが安全に配慮してご案内しますが、蜂を扱う以上、刺される可能性を完全になくすことはできません。蜂アレルギーのある方はご参加いただけません。",
+    },
+    {
+        q: "雨の日はどうなりますか？",
+        a: "悪天候・農作業都合・安全上の理由により中止する場合は、キャンセル料なしで全額返金、またはご希望の日程への振替で対応します。前日から当日にかけてご連絡します。",
+    },
+    {
+        q: "服装・持ち物は？",
+        a: "長袖・長ズボン・運動靴でお越しください。防護服はこちらでご用意します。黒っぽい服は蜂が反応しやすいため、白っぽい服がおすすめです。",
+    },
+    {
+        q: "予約のキャンセルはできますか？",
+        a: "予約日の3日前まではキャンセル料無料、2日前から前日は体験料金の50%、当日・無断キャンセルは100%です。キャンセルはLINEまたはお問い合わせフォームからご連絡ください。",
+    },
+];
 
 export default function ExperiencePage() {
     return (
@@ -77,6 +122,62 @@ export default function ExperiencePage() {
                             <BookingButton experienceName="養蜂体験" durationMin={60} />
                         </div>
                     </div>
+
+                    {/* Beekeeping Flow */}
+                    <section className="space-y-8">
+                        <div className="text-center space-y-3">
+                            <p className="text-sm font-bold uppercase tracking-widest text-primary">FLOW</p>
+                            <h2 className="text-2xl md:text-3xl font-bold text-stone-900">当日の流れ</h2>
+                        </div>
+                        <div className="relative max-w-3xl mx-auto">
+                            <div className="absolute left-5 top-6 bottom-6 w-px bg-primary/20 md:left-1/2 md:-translate-x-1/2" />
+                            <div className="space-y-5">
+                                {BEEKEEPING_FLOW.map((step, index) => (
+                                    <div
+                                        key={step.title}
+                                        className={`relative flex items-start gap-4 md:gap-8 ${
+                                            index % 2 === 0 ? "md:flex-row" : "md:flex-row-reverse"
+                                        }`}
+                                    >
+                                        <div className="relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-white shadow-sm md:absolute md:left-1/2 md:-translate-x-1/2">
+                                            {index + 1}
+                                        </div>
+                                        <div className="bg-stone-50 border border-stone-100 rounded-2xl p-5 shadow-sm md:w-[calc(50%-2.5rem)]">
+                                            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 mb-2">
+                                                <h3 className="font-bold text-stone-900">{step.title}</h3>
+                                                <span className="text-xs font-bold text-primary">{step.time}</span>
+                                            </div>
+                                            <p className="text-sm text-stone-600 leading-relaxed">{step.description}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Experience FAQ */}
+                    <section className="max-w-3xl mx-auto space-y-8">
+                        <div className="text-center space-y-3">
+                            <p className="text-sm font-bold uppercase tracking-widest text-primary">FAQ</p>
+                            <h2 className="text-2xl md:text-3xl font-bold text-stone-900">よくある質問</h2>
+                        </div>
+                        <div className="space-y-4">
+                            {EXPERIENCE_FAQS.map((item) => (
+                                <details
+                                    key={item.q}
+                                    className="group bg-stone-50 rounded-2xl overflow-hidden border border-stone-100"
+                                >
+                                    <summary className="flex items-center justify-between p-5 cursor-pointer list-none hover:bg-stone-100 transition-colors">
+                                        <span className="font-bold text-stone-900 pr-4">{item.q}</span>
+                                        <ChevronRight className="h-5 w-5 text-stone-400 flex-shrink-0 transition-transform group-open:rotate-90" />
+                                    </summary>
+                                    <div className="px-5 pb-5 text-sm text-stone-600 leading-relaxed">
+                                        {item.a}
+                                    </div>
+                                </details>
+                            ))}
+                        </div>
+                    </section>
 
                     {/* Harvesting */}
                     <div className="grid md:grid-cols-2 gap-12 items-center">

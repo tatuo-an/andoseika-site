@@ -141,22 +141,22 @@ export function SupporterPlanButton({
                             <div className="bg-stone-50 rounded-xl p-4 space-y-2.5">
                                 <InfoRow label="プラン名" value={PLAN_NAMES[plan]} />
                                 <InfoRow label="年会費" value={`${priceStr}（税込）`} highlight />
-                                <InfoRow label="契約期間" value="決済完了日から1年間" />
+                                <InfoRow label="契約期間" value="お支払い完了日から1年間" />
                                 <InfoRow label="支払方法" value="クレジットカード・銀行振込・PayPay（Stripe決済）" />
                                 <InfoRow label="支払時期" value="カード・PayPay：申し込み時に即時確定。銀行振込：注文後7日以内" />
                                 <InfoRow
-                                    label="自動更新"
-                                    value={`契約終了後、1年ごとに同プランへ自動更新。次回更新日に${priceStr}を請求します`}
+                                    label="更新について"
+                                    value={`自動更新・自動課金はありません。継続をご希望の場合は期限前のご案内から更新手続き（${priceStr}）をお願いします`}
                                 />
-                                <InfoRow label="解約方法" value="マイページ →「次回の自動更新を停止する」から手続き（解約手数料なし）" />
-                                <InfoRow label="解約期限" value="次回更新日の前日まで。期限後は次年度分が請求されます" />
+                                <InfoRow label="解約方法" value="解約手続きは不要です（更新しなければ期間満了で終了）。更新案内はマイページから停止できます" />
+                                <InfoRow label="途中解約による返金" value="なし（詳細は特商法表示）" warn />
                                 {plan === "minori" && (
                                     <InfoRow label="特典お届け" value="年1回（春または秋）・旬の詰め合わせ・送料込み" />
                                 )}
                                 {plan === "partner" && (
                                     <InfoRow label="特典お届け" value="年2回（春・秋）・旬の詰め合わせ・送料込み" />
                                 )}
-                                <InfoRow label="返金" value="お支払い後の利用者都合による途中解約・日割り返金はありません" warn />
+                                <InfoRow label="返金条件" value="二重決済・誤請求など当社が必要と判断した場合は確認の上で返金します" />
                             </div>
 
                             <p className="text-[11px] text-stone-500 leading-relaxed">

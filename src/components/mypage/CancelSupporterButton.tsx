@@ -26,7 +26,7 @@ export function CancelSupporterButton({ redirectTo }: { tierName: string; redire
     return (
       <div className="space-y-3">
         <p className="text-xs text-stone-600 leading-relaxed bg-stone-50 border border-stone-200 rounded-lg p-3">
-          自動更新を停止しても、現在の契約期間終了まではサポーター特典をご利用いただけます。次回更新日以降の年会費は請求されません。
+          更新案内を停止しても、現在の契約期間終了まではサポーター特典をご利用いただけます。年会費は更新手続きをされない限り請求されません。
         </p>
         <div className="flex gap-2">
           <button
@@ -52,7 +52,7 @@ export function CancelSupporterButton({ redirectTo }: { tierName: string; redire
       onClick={() => setConfirm(true)}
       className="w-full py-2.5 rounded-xl border border-red-200 text-red-500 text-sm font-bold hover:bg-red-50 transition-colors"
     >
-      次回の自動更新を停止する
+      更新案内を停止する
     </button>
   );
 }
