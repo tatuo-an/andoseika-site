@@ -49,7 +49,7 @@ export default function ExperiencePage() {
                             <p className="text-stone-600 leading-relaxed">
                                 普段は見ることのできない巣箱の中を観察します。
                                 女王蜂を探したり、採れたての蜂蜜をその場で試食したり。
-                                防護服を着用するので、初めての方やお子様でも安心してご参加いただけます。
+                                防護服を着用し、スタッフが安全に配慮してご案内しますので、初めての方やお子様もご参加いただけます。
                             </p>
 
                             <div className="grid grid-cols-2 gap-4 py-4">
