@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { Zen_Kaku_Gothic_New, Outfit } from "next/font/google";
 import "./globals.css";
 
+// 独自ドメイン取得後は Vercel の NEXT_PUBLIC_SITE_URL を設定するだけで全体を切り替える。
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://ando-seika.vercel.app";
+
 const zenKaku = Zen_Kaku_Gothic_New({
   weight: ["300", "400", "500", "700"],
   subsets: ["latin"],
@@ -16,6 +19,7 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: {
     template: "%s | &YOU 安藤青果",
     default: "&YOU 安藤青果 | 鳥取の畑みんなで、まじめにふざける、おいしい毎日。",
@@ -24,7 +28,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "ja_JP",
-    url: "https://andoseika.jp",
+    url: SITE_URL,
     siteName: "&YOU 安藤青果",
     images: [
       {
@@ -69,4 +73,3 @@ export default function RootLayout({
     </html>
   );
 }
-

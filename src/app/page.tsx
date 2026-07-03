@@ -2,7 +2,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, ChevronRight, ShoppingBasket, Leaf, Heart, Building2, Package, Truck, ShieldCheck, AlertTriangle } from "lucide-react";
+import { ArrowRight, ChevronRight, ShoppingBasket, Leaf, Heart, Building2, Package, Truck, ShieldCheck, AlertTriangle, HeartHandshake, Sprout } from "lucide-react";
 import { CommunityScroller } from "@/components/community/CommunityScroller";
 import { client } from "@/lib/microcms";
 import { Product } from "@/types/microcms";
@@ -11,6 +11,9 @@ import { isSaleActive, calcSalePrice } from "@/lib/sale";
 import localProducts from "@/data/products.json";
 
 export const revalidate = 60;
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://ando-seika.vercel.app";
+const OG_IMAGE_URL = new URL("/images/hero/hero_sand_dunes.jpg", SITE_URL).toString();
 
 type InventoryData = {
   stock: number; variantName: string; hidden: boolean;
@@ -151,6 +154,24 @@ const CATEGORIES = [
   { href: "/business", label: "業務用・卸", icon: Building2 },
 ];
 
+const TRUST_ITEMS = [
+  {
+    title: "農家直送",
+    description: "畑から直接お届けします",
+    icon: Truck,
+  },
+  {
+    title: "まじめにふざける仲間たち",
+    description: "B型就労支援のみんなと一緒に育てています",
+    icon: HeartHandshake,
+  },
+  {
+    title: "体験できる農園",
+    description: "養蜂・農業体験で畑に遊びに来られます",
+    icon: Sprout,
+  },
+];
+
 type RescueItem = { id: string; title: string; description: string; stock: number | null; deadline: string; productId: string; rescueDeadline: string };
 
 async function getRescueItems(): Promise<RescueItem[]> {
@@ -196,14 +217,35 @@ async function getRescueItems(): Promise<RescueItem[]> {
 
 export default async function Home() {
   const [products, rescueItems, preorderProducts] = await Promise.all([getTopProducts(), getRescueItems(), getPreorderProducts()]);
+  const organizationJsonLd = {
+    "@context": "https://schema.org",
+    "@type": ["Organization", "LocalBusiness"],
+    name: "安藤青果",
+    alternateName: "&YOU 安藤青果",
+    url: SITE_URL,
+    image: OG_IMAGE_URL,
+    address: {
+      "@type": "PostalAddress",
+      postalCode: "682-0002",
+      addressRegion: "鳥取県",
+      addressLocality: "倉吉市",
+      streetAddress: "中江305-10",
+      addressCountry: "JP",
+    },
+  };
 
   return (
     <div className="min-h-screen flex flex-col font-sans bg-stone-50">
       <Header />
 
       <main className="flex-1">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+        />
+
         {/* ── Hero Banner ── */}
-        <section className="relative h-[28vh] w-full overflow-hidden bg-stone-900">
+        <section className="relative w-full overflow-hidden bg-stone-900 py-14 md:py-24">
           <Image
             src="/images/hero/hero_sand_dunes.jpg"
             alt="鳥取の砂丘長芋畑"
@@ -212,16 +254,49 @@ export default async function Home() {
             priority
           />
           <div className="absolute inset-0 bg-black/40" />
-          <div className="relative h-full container mx-auto px-4 md:px-6 flex items-center">
-            <div>
+          <div className="relative z-10 container mx-auto px-4 md:px-6">
+            <div className="max-w-3xl">
               <h1 className="text-xl md:text-4xl font-bold text-white leading-tight font-heading drop-shadow">
                 まじめにふざける、おいしい毎日。
+                <span className="sr-only">｜鳥取県倉吉市・北栄町の農家 安藤青果の産直通販</span>
               </h1>
-              <p className="mt-2 text-xs md:text-sm text-white/80 drop-shadow leading-relaxed">
-                鳥取の畑から、あなたへ。<br />
-                私たちは、ただ野菜を作るだけの農家ではありません。<br />
+              <p className="mt-3 text-sm md:text-base text-white/85 drop-shadow leading-relaxed">
+                鳥取県倉吉市・北栄町の農家です。白ネギ・長芋・梨・らっきょう・蜂蜜を育てて、畑から直送しています。<br />
                 「おいしい」のその先にある、みんなの笑顔をつくるために。
               </p>
+              <div className="mt-6 flex flex-col sm:flex-row gap-3">
+                <Link
+                  href="/products"
+                  className="inline-flex items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-bold text-white shadow-lg transition-colors hover:bg-primary/90"
+                >
+                  商品を見る
+                </Link>
+                <Link
+                  href="/about"
+                  className="inline-flex items-center justify-center rounded-full border border-white/70 bg-white/10 px-6 py-3 text-sm font-bold text-white backdrop-blur-sm transition-colors hover:bg-white/20"
+                >
+                  私たちについて
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── Trust Strip ── */}
+        <section className="bg-white border-b border-stone-200">
+          <div className="container mx-auto px-4 md:px-6">
+            <div className="grid grid-cols-3 divide-x divide-stone-100">
+              {TRUST_ITEMS.map((item) => (
+                <div key={item.title} className="flex items-center justify-center gap-2 px-2 py-4">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                    <item.icon className="h-4 w-4 text-primary" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-bold leading-tight text-stone-900 md:text-sm">{item.title}</p>
+                    <p className="mt-0.5 hidden text-xs leading-tight text-stone-500 sm:block">{item.description}</p>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </section>

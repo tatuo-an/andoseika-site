@@ -1,7 +1,6 @@
 
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
-import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, Check, Truck, CalendarCheck } from "lucide-react";
 import { client } from "@/lib/microcms";
@@ -19,8 +18,14 @@ import { DETAIL_EXTRA_FIELDS, FOOD_LABEL_FIELDS, parseExtra } from "@/lib/extraD
 
 export const revalidate = 60;
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://ando-seika.vercel.app";
+
 type SheetRow = { id: string; name: string; stock: number; price: number | null; shipType: string; hidden: boolean; deleted: boolean; nextShipment: string; badges: string[]; family: string; imageUrl: string; familyImages: string[]; cost: number | null; profitRate: number | null; coolAvailable: boolean; description: string; clickpostMax: number; options: string; salePercent: number; saleStart: string; saleEnd: string; shipMode: string; shipValue: string; extraDescriptions: string };
 type VariationInfo = { id: string; label: string; price: number; priceTaxed: number; salePercent: number; saleStart: string; saleEnd: string; isSoldOut: boolean };
+
+function absoluteUrl(pathOrUrl: string): string {
+    return new URL(pathOrUrl, SITE_URL).toString();
+}
 
 function getSheets() {
     const authClient = new google.auth.GoogleAuth({
@@ -240,19 +245,20 @@ async function buildVariations(familyRows: SheetRow[]): Promise<VariationInfo[]>
 
 async function getProduct(id: string): Promise<Product | null> {
     let data: Product | null = null;
+    const localProductList = localProducts as Product[];
     try {
         data = await client.get<Product>({ endpoint: "products", contentId: id });
     } catch { /* ignore */ }
 
     if (data) {
         if (!data.image) {
-            const localMatch = localProducts.find((p: any) => data!.name.includes(p.name) || p.name.includes(data!.name));
+            const localMatch = localProductList.find((p) => data!.name.includes(p.name) || p.name.includes(data!.name));
             if (localMatch) return { ...data, image: { url: localMatch.image.url, height: 800, width: 800 } };
         }
         return data;
     }
 
-    const localMatch = localProducts.find((p: any) => p.id === id);
+    const localMatch = localProductList.find((p) => p.id === id);
     if (localMatch) {
         return {
             ...localMatch,
@@ -387,10 +393,39 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
     const cartName = invData.family
         ? `${invData.family}${currentVariation?.label ? ` ${currentVariation.label}` : ""}`
         : invName || product.name;
+    const displayName = invData.family || product.name;
+    const productDescription = (invData.description || product.description || FALLBACK_DESCRIPTION).trim();
+    const basePrice = currentVariation?.price ?? invPrice ?? product.price;
+    const normalTaxed = currentVariation?.priceTaxed ?? toTaxIncluded(basePrice, invCost);
+    const onSale = isSaleActive(invData.salePercent, invData.saleStart, invData.saleEnd);
+    const displayTaxed = onSale ? calcSalePrice(normalTaxed, invData.salePercent) : normalTaxed;
+    const productImageUrls = displayImages.map(absoluteUrl).filter(Boolean);
+    const productJsonLd = basePrice > 0
+        ? {
+            "@context": "https://schema.org",
+            "@type": "Product",
+            name: displayName,
+            image: productImageUrls.length > 0 ? productImageUrls : undefined,
+            description: productDescription,
+            offers: {
+                "@type": "Offer",
+                url: absoluteUrl(`/products/${id}`),
+                priceCurrency: "JPY",
+                price: displayTaxed,
+                availability: isSoldOut ? "https://schema.org/OutOfStock" : "https://schema.org/InStock",
+            },
+        }
+        : null;
 
     return (
         <div className="min-h-screen flex flex-col bg-stone-50">
             <Header />
+            {productJsonLd && (
+                <script
+                    type="application/ld+json"
+                    dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+                />
+            )}
             <main className="flex-1 py-12">
             <div className="container mx-auto px-4 md:px-6">
                 <Link href="/products" className="inline-flex items-center text-stone-500 hover:text-primary mb-8 transition-colors">
@@ -424,7 +459,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                                 )}
                                 <div className="flex items-start justify-between gap-3 mb-4">
                                     <h1 className="text-3xl md:text-4xl font-bold text-stone-900 font-heading">
-                                        {invData.family || product.name}
+                                        {displayName}
                                     </h1>
                                     <FavoriteButton
                                         productId={invData.family ? `family:${invData.family}` : product.id}
@@ -432,23 +467,16 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                                         className="flex-shrink-0 mt-1"
                                     />
                                 </div>
-                                {(() => {
-                                    const normalTaxed = currentVariation?.priceTaxed ?? toTaxIncluded(invPrice ?? product.price, invCost);
-                                    const onSale = isSaleActive(invData.salePercent, invData.saleStart, invData.saleEnd);
-                                    const displayTaxed = onSale ? calcSalePrice(normalTaxed, invData.salePercent) : normalTaxed;
-                                    return (
-                                        <p className="text-2xl font-bold text-primary flex items-baseline gap-3 flex-wrap">
-                                            {onSale && (
-                                                <>
-                                                    <span className="bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-full">{invData.salePercent}% OFF</span>
-                                                    <span className="text-base text-stone-400 line-through font-normal">¥{normalTaxed.toLocaleString()}</span>
-                                                </>
-                                            )}
-                                            <span className={onSale ? "text-red-500" : ""}>¥{displayTaxed.toLocaleString()}</span>
-                                            <span className="text-sm text-stone-500 font-normal">（税込）</span>
-                                        </p>
-                                    );
-                                })()}
+                                <p className="text-2xl font-bold text-primary flex items-baseline gap-3 flex-wrap">
+                                    {onSale && (
+                                        <>
+                                            <span className="bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-full">{invData.salePercent}% OFF</span>
+                                            <span className="text-base text-stone-400 line-through font-normal">¥{normalTaxed.toLocaleString()}</span>
+                                        </>
+                                    )}
+                                    <span className={onSale ? "text-red-500" : ""}>¥{displayTaxed.toLocaleString()}</span>
+                                    <span className="text-sm text-stone-500 font-normal">（税込）</span>
+                                </p>
                                 {surcharges.length > 0 && (
                                     <div className="mt-3 bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-stone-700 leading-relaxed">
                                         <p className="font-bold text-amber-900 mb-1.5 text-sm">お届け地域別の追加送料</p>
@@ -510,7 +538,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                             )}
 
                             <div className="prose prose-stone mb-8">
-                                <p className="text-stone-600 leading-relaxed whitespace-pre-wrap">{invData.description || product.description}</p>
+                                <p className="text-stone-600 leading-relaxed whitespace-pre-wrap">{productDescription}</p>
                             </div>
 
                             {(() => {
