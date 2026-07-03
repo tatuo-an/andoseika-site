@@ -2,15 +2,28 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Check, Truck, Package, Users, Sprout } from "lucide-react";
+import { ArrowRight, Check, Truck, Package, Users, Sprout, MapPin, ExternalLink } from "lucide-react";
 import { Metadata } from "next";
+import type { Partner } from "@/app/api/partners/route";
 
 export const metadata: Metadata = {
     title: "業務用・卸売について",
     description: "飲食店・小売店様向けの卸売販売。白ネギ、長芋、里芋、梨、蜂蜜などを、業務用ロットで安定供給いたします。",
 };
 
-export default function BusinessPage() {
+async function fetchPartners(): Promise<Partner[]> {
+    try {
+        const baseUrl = process.env.NEXT_PUBLIC_URL ?? "http://localhost:3000";
+        const res = await fetch(`${baseUrl}/api/partners`, { cache: "no-store" });
+        const data = await res.json();
+        return data.partners ?? [];
+    } catch {
+        return [];
+    }
+}
+
+export default async function BusinessPage() {
+    const partners = await fetchPartners();
     return (
         <div className="min-h-screen flex flex-col font-sans bg-stone-50">
             <Header />
@@ -250,13 +263,6 @@ export default function BusinessPage() {
                             <p className="text-stone-600">
                                 様々な業種のお客様にご利用いただいています。
                             </p>
-                            <Link
-                                href="/partners"
-                                className="inline-flex items-center gap-1.5 mt-4 text-sm text-primary font-bold hover:underline"
-                            >
-                                取引先のお店を見る
-                                <ArrowRight className="h-4 w-4" />
-                            </Link>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -293,6 +299,25 @@ export default function BusinessPage() {
                     </div>
                 </section>
 
+                {/* Partners Section */}
+                {partners.length > 0 && (
+                    <section className="py-20 bg-white">
+                        <div className="container mx-auto px-4 md:px-6 max-w-5xl">
+                            <div className="text-center mb-12">
+                                <h2 className="text-3xl font-bold text-stone-900 mb-4 font-heading">取引先のご紹介</h2>
+                                <p className="text-stone-600">
+                                    安藤青果の食材をお料理に取り入れてくださっているお店です。
+                                </p>
+                            </div>
+                            <div className="space-y-10">
+                                {partners.map((p, i) => (
+                                    <PartnerCard key={i} partner={p} />
+                                ))}
+                            </div>
+                        </div>
+                    </section>
+                )}
+
                 {/* CTA Section */}
                 <section className="py-20 bg-primary text-white">
                     <div className="container mx-auto px-4 text-center">
@@ -315,6 +340,78 @@ export default function BusinessPage() {
             </main>
 
             <Footer />
+        </div>
+    );
+}
+
+function PartnerCard({ partner: p }: { partner: Partner }) {
+    const mapSrc = p.address
+        ? `https://maps.google.com/maps?q=${encodeURIComponent(p.address)}&output=embed&hl=ja&z=15`
+        : null;
+
+    return (
+        <div className="bg-stone-50 rounded-2xl overflow-hidden border border-stone-100">
+            <div className="grid md:grid-cols-2 gap-0">
+                <div className="p-6 md:p-8 flex flex-col justify-between">
+                    <div className="space-y-3">
+                        {p.genre && (
+                            <span className="inline-block text-xs font-bold bg-primary/10 text-primary px-3 py-1 rounded-full">
+                                {p.genre}
+                            </span>
+                        )}
+                        <h3 className="text-xl font-bold text-stone-900">{p.name}</h3>
+                        {p.catchphrase && (
+                            <p className="text-primary font-medium text-sm">{p.catchphrase}</p>
+                        )}
+                        {p.description && (
+                            <p className="text-stone-600 text-sm leading-relaxed whitespace-pre-line">
+                                {p.description}
+                            </p>
+                        )}
+                    </div>
+                    <div className="mt-6 space-y-2">
+                        {p.address && (
+                            <p className="flex items-start gap-1.5 text-xs text-stone-500">
+                                <MapPin className="w-3.5 h-3.5 mt-0.5 shrink-0 text-stone-400" />
+                                {p.address}
+                            </p>
+                        )}
+                        {p.websiteUrl && (
+                            <a
+                                href={p.websiteUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline font-medium"
+                            >
+                                <ExternalLink className="w-3.5 h-3.5" />
+                                ウェブサイトを見る
+                            </a>
+                        )}
+                    </div>
+                </div>
+                <div className="relative min-h-[220px] md:min-h-[280px] bg-stone-200">
+                    {p.driveId ? (
+                        /* eslint-disable-next-line @next/next/no-img-element */
+                        <img
+                            src={`/api/drive-image?id=${p.driveId}`}
+                            alt={p.name}
+                            className="absolute inset-0 w-full h-full object-cover"
+                        />
+                    ) : mapSrc ? (
+                        <iframe
+                            src={mapSrc}
+                            className="absolute inset-0 w-full h-full border-0"
+                            loading="lazy"
+                            referrerPolicy="no-referrer-when-downgrade"
+                            title={`${p.name}の地図`}
+                        />
+                    ) : (
+                        <div className="absolute inset-0 flex items-center justify-center text-stone-300">
+                            <MapPin className="w-12 h-12" />
+                        </div>
+                    )}
+                </div>
+            </div>
         </div>
     );
 }
