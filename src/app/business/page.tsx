@@ -250,6 +250,13 @@ export default function BusinessPage() {
                             <p className="text-stone-600">
                                 様々な業種のお客様にご利用いただいています。
                             </p>
+                            <Link
+                                href="/partners"
+                                className="inline-flex items-center gap-1.5 mt-4 text-sm text-primary font-bold hover:underline"
+                            >
+                                取引先のお店を見る
+                                <ArrowRight className="h-4 w-4" />
+                            </Link>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
