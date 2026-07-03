@@ -5,6 +5,7 @@ export const BADGE_COLORS: Record<string, string> = {
     "贈答用":             "bg-rose-100 text-rose-700 border-rose-200",
     "栽培期間中農薬不使用": "bg-teal-100 text-teal-700 border-teal-200",
     "慣行栽培":           "bg-stone-100 text-stone-600 border-stone-200",
+    "原材料は蜂蜜のみ":    "bg-amber-100 text-amber-700 border-amber-200",
 };
 
 export const DEFAULT_BADGE_COLOR = "bg-purple-100 text-purple-700 border-purple-200";

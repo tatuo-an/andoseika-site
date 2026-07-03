@@ -15,7 +15,7 @@ import { google } from "googleapis";
 import { BADGE_COLORS, DEFAULT_BADGE_COLOR } from "@/lib/badges";
 import { isSaleActive, calcSalePrice } from "@/lib/sale";
 import { computeShipSchedule } from "@/lib/shipSchedule";
-import { EXTRA_FIELDS, parseExtra } from "@/lib/extraDescriptions";
+import { DETAIL_EXTRA_FIELDS, FOOD_LABEL_FIELDS, parseExtra } from "@/lib/extraDescriptions";
 
 export const revalidate = 60;
 
@@ -515,30 +515,57 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
                             {(() => {
                                 const extra = parseExtra(invData.extraDescriptions);
-                                const filled = EXTRA_FIELDS.filter((f) => (extra[f.key] ?? "").trim());
-                                if (filled.length === 0) return null;
+                                const detailFields = DETAIL_EXTRA_FIELDS.filter((f) => (extra[f.key] ?? "").trim());
+                                const foodLabelFields = FOOD_LABEL_FIELDS.filter((f) => (extra[f.key] ?? "").trim());
+                                if (detailFields.length === 0 && foodLabelFields.length === 0) return null;
                                 return (
-                                    <details className="group mb-8 border border-stone-200 rounded-xl bg-stone-50/40 overflow-hidden">
-                                        <summary className="flex items-center justify-between px-4 py-3 cursor-pointer list-none hover:bg-stone-50 transition-colors">
-                                            <span className="text-sm font-bold text-stone-900">商品の詳しい情報を見る</span>
-                                            <svg
-                                                className="h-4 w-4 text-stone-400 transition-transform group-open:rotate-180 flex-shrink-0"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                viewBox="0 0 24 24"
-                                            >
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                            </svg>
-                                        </summary>
-                                        <div className="px-4 pb-4 space-y-4 border-t border-stone-200/60 pt-4">
-                                            {filled.map(({ key, label }) => (
-                                                <div key={key}>
-                                                    <h3 className="text-sm font-bold text-stone-900 mb-1.5">{label}</h3>
-                                                    <p className="text-sm text-stone-600 leading-relaxed whitespace-pre-wrap">{extra[key]}</p>
+                                    <>
+                                        {detailFields.length > 0 && (
+                                            <details className="group mb-8 border border-stone-200 rounded-xl bg-stone-50/40 overflow-hidden">
+                                                <summary className="flex items-center justify-between px-4 py-3 cursor-pointer list-none hover:bg-stone-50 transition-colors">
+                                                    <span className="text-sm font-bold text-stone-900">商品の詳しい情報を見る</span>
+                                                    <svg
+                                                        className="h-4 w-4 text-stone-400 transition-transform group-open:rotate-180 flex-shrink-0"
+                                                        fill="none"
+                                                        stroke="currentColor"
+                                                        viewBox="0 0 24 24"
+                                                    >
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                                    </svg>
+                                                </summary>
+                                                <div className="px-4 pb-4 space-y-4 border-t border-stone-200/60 pt-4">
+                                                    {detailFields.map(({ key, label }) => (
+                                                        <div key={key}>
+                                                            <h3 className="text-sm font-bold text-stone-900 mb-1.5">{label}</h3>
+                                                            <p className="text-sm text-stone-600 leading-relaxed whitespace-pre-wrap">{extra[key]}</p>
+                                                        </div>
+                                                    ))}
                                                 </div>
-                                            ))}
-                                        </div>
-                                    </details>
+                                            </details>
+                                        )}
+
+                                        {foodLabelFields.length > 0 && (
+                                            <section className="mb-8">
+                                                <h2 className="text-base font-bold text-stone-900 mb-3">食品表示</h2>
+                                                <div className="overflow-hidden rounded-xl border border-stone-200 bg-white">
+                                                    <table className="w-full text-sm">
+                                                        <tbody className="divide-y divide-stone-100">
+                                                            {foodLabelFields.map(({ key, label }) => (
+                                                                <tr key={key} className="align-top">
+                                                                    <th scope="row" className="w-32 bg-stone-50 px-4 py-3 text-left font-bold text-stone-700 sm:w-40">
+                                                                        {label}
+                                                                    </th>
+                                                                    <td className="px-4 py-3 text-stone-600 leading-relaxed whitespace-pre-wrap">
+                                                                        {extra[key]}
+                                                                    </td>
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </section>
+                                        )}
+                                    </>
                                 );
                             })()}
 

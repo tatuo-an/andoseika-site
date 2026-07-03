@@ -8,9 +8,38 @@ export const EXTRA_FIELDS = [
   { key: "notes",       label: "注意事項" },
   { key: "handling",    label: "到着後の取り扱い" },
   { key: "imperfect",   label: "訳あり商品の説明" },
+  { key: "foodName",      label: "名称" },
+  { key: "ingredients",   label: "原材料名" },
+  { key: "additives",     label: "添加物" },
+  { key: "allergens",     label: "アレルゲン" },
+  { key: "contentAmount", label: "内容量" },
+  { key: "expiry",        label: "賞味期限" },
+  { key: "manufacturer",  label: "製造者・販売者" },
+  { key: "nutrition",     label: "栄養成分表示" },
 ] as const;
 
 export type ExtraFieldKey = typeof EXTRA_FIELDS[number]["key"];
+
+export const FOOD_LABEL_FIELD_KEYS = [
+  "foodName",
+  "ingredients",
+  "additives",
+  "allergens",
+  "contentAmount",
+  "expiry",
+  "manufacturer",
+  "nutrition",
+] as const satisfies readonly ExtraFieldKey[];
+
+const FOOD_LABEL_FIELD_KEY_SET = new Set<ExtraFieldKey>(FOOD_LABEL_FIELD_KEYS);
+
+export const DETAIL_EXTRA_FIELDS = EXTRA_FIELDS.filter(
+  ({ key }) => !FOOD_LABEL_FIELD_KEY_SET.has(key),
+);
+
+export const FOOD_LABEL_FIELDS = EXTRA_FIELDS.filter(
+  ({ key }) => FOOD_LABEL_FIELD_KEY_SET.has(key),
+);
 
 export type ExtraDescriptions = Partial<Record<ExtraFieldKey, string>>;
 

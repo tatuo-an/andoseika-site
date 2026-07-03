@@ -30,8 +30,8 @@ export default function SafetyPage() {
                   個人情報・プライバシー保護
                 </h2>
                 <div className="text-sm text-stone-700 leading-relaxed space-y-2">
-                  <p>お客様からお預かりした個人情報（氏名・住所・メールアドレス等）は、商品発送・ご連絡・サービス提供のみに利用します。</p>
-                  <p>第三者への提供は、配送業者・決済事業者への最小限の情報共有（法令に基づく場合を除く）のみです。</p>
+                  <p>お客様からお預かりした個人情報は、プライバシーポリシーに記載した利用目的の範囲で利用します。</p>
+                  <p>サービス提供に必要な範囲で、配送・決済・アクセス解析・ソーシャルログイン・AI処理等の外部事業者へ情報を送信する場合があります。</p>
                   <p>
                     詳細は
                     <Link href="/privacy" className="underline hover:text-primary mx-1">プライバシーポリシー</Link>
@@ -83,7 +83,7 @@ export default function SafetyPage() {
                       <span className="font-bold text-stone-800 text-sm">Google Analytics</span>
                     </div>
                     <p className="text-sm text-stone-600 leading-relaxed">
-                      サイトの訪問状況・ページ閲覧数・流入経路などを匿名で計測するために利用しています。Cookieを使用してデータを収集しますが、個人を特定する情報は含みません。ブラウザの設定でCookieを無効にするか、
+                      サイトの訪問状況・ページ閲覧数・流入経路などを分析するために利用しています。計測にはCookie・IPアドレス・端末や閲覧に関する情報が使用されます。ブラウザの設定でCookieを無効にするか、
                       <a href="https://tools.google.com/dlpage/gaoptout" target="_blank" rel="noopener noreferrer" className="underline hover:text-primary mx-1">Google Analytics オプトアウトアドオン</a>
                       でデータ送信を停止できます。
                     </p>
@@ -107,7 +107,7 @@ export default function SafetyPage() {
                       <span className="font-bold text-stone-800 text-sm">LINEログイン</span>
                     </div>
                     <p className="text-sm text-stone-600 leading-relaxed">
-                      LINEアカウントで会員登録・ログインする際に利用します。当社が取得するのは、LINEの表示名・プロフィール画像URLのみです。友だちリストや会話内容は取得しません。LINEログインの利用はLINEヤフー株式会社のプライバシーポリシーに従います。
+                      LINEアカウントで会員登録・ログインする際に利用します。当社が取得するのは、LINE内ユーザー識別子・表示名・プロフィール画像URLです。友だちリストや会話内容は取得しません。LINEログインの利用はLINEヤフー株式会社のプライバシーポリシーに従います。
                     </p>
                   </div>
 
