@@ -826,8 +826,8 @@ export default function CartPage() {
                             {/* お支払い合計 */}
                             <div className="bg-stone-50 rounded-xl p-4 space-y-2.5">
                                 <CartInfoRow label="お支払い合計" value={`¥${grandTotal.toLocaleString()}（税込）`} highlight />
-                                <CartInfoRow label="支払方法" value="クレジットカード・銀行振込・PayPay（Stripe決済）" />
-                                <CartInfoRow label="支払時期" value="カード・PayPay：注文時に即時確定。銀行振込：注文後7日以内" />
+                                <CartInfoRow label="支払方法" value="クレジットカード・PayPay（Stripe決済）" />
+                                <CartInfoRow label="支払時期" value="注文時に即時確定" />
                                 <CartInfoRow
                                     label="発送予定"
                                     value={cartEarliestDelivery

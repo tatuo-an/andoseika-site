@@ -142,8 +142,8 @@ export function SupporterPlanButton({
                                 <InfoRow label="プラン名" value={PLAN_NAMES[plan]} />
                                 <InfoRow label="年会費" value={`${priceStr}（税込）`} highlight />
                                 <InfoRow label="契約期間" value="お支払い完了日から1年間" />
-                                <InfoRow label="支払方法" value="クレジットカード・銀行振込・PayPay（Stripe決済）" />
-                                <InfoRow label="支払時期" value="カード・PayPay：申し込み時に即時確定。銀行振込：注文後7日以内" />
+                                <InfoRow label="支払方法" value="クレジットカード（Stripe決済）" />
+                                <InfoRow label="支払時期" value="申し込み時に即時確定" />
                                 <InfoRow
                                     label="更新について"
                                     value={`自動更新・自動課金はありません。継続をご希望の場合は期限前のご案内から更新手続き（${priceStr}）をお願いします`}
