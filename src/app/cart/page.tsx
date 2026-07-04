@@ -419,11 +419,21 @@ export default function CartPage() {
                     },
                 }),
             });
-            if (!response.ok) { console.error(await response.json()); return; }
+            if (!response.ok) {
+                const errBody = await response.json().catch(() => null);
+                console.error(errBody);
+                alert(`決済ページの作成に失敗しました。${errBody?.error ? `（${errBody.error}）` : ""}\nお手数ですが時間を置いて再度お試しいただくか、お問い合わせください。`);
+                return;
+            }
             const { url } = await response.json();
-            if (url) window.location.href = url;
+            if (url) {
+                window.location.href = url;
+            } else {
+                alert("決済ページのURLを取得できませんでした。お手数ですが再度お試しください。");
+            }
         } catch (error) {
             console.error(error);
+            alert("通信エラーが発生しました。電波の良い環境で再度お試しください。");
         }
     };
 
