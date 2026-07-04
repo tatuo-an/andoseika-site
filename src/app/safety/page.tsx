@@ -46,7 +46,7 @@ export default function SafetyPage() {
                   決済セキュリティ
                 </h2>
                 <div className="text-sm text-stone-700 leading-relaxed space-y-2">
-                  <p>クレジットカード・PayPayはすべて <strong>Stripe</strong>（Stripe, Inc.）を通じて処理されます。カード番号・セキュリティコードなどの決済情報は当社サーバーには一切保存されません。</p>
+                  <p>クレジットカード決済はすべて <strong>Stripe</strong>（Stripe, Inc.）を通じて処理されます。カード番号・セキュリティコードなどの決済情報は当社サーバーには一切保存されません。</p>
                   <p>通信はSSL/TLS暗号化により保護されており、Stripeは国際的なカードセキュリティ基準（PCI DSS）に準拠しています。</p>
                   <p>Stripeのプライバシーポリシー：<a href="https://stripe.com/jp/privacy" target="_blank" rel="noopener noreferrer" className="underline hover:text-primary">stripe.com/jp/privacy</a></p>
                 </div>
