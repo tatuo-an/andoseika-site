@@ -156,6 +156,7 @@ export function SupporterPlanButton({
                                 {plan === "partner" && (
                                     <InfoRow label="特典お届け" value="年2回（春・秋）・旬の詰め合わせ・送料込み" />
                                 )}
+                                <InfoRow label="不作時の対応" value="天候不良・自然災害等で収穫量が著しく減少した場合、詰め合わせ内容を同等価格の別農産物・加工品等に代替、または発送時期を延期する場合があります" />
                                 <InfoRow label="返金条件" value="二重決済・誤請求など当社が必要と判断した場合は確認の上で返金します" />
                             </div>
 

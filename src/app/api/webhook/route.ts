@@ -149,6 +149,24 @@ export async function POST(req: NextRequest) {
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
+
+    // Stripeは同一イベントを複数回配信することがある（At-least-once配信）。
+    // 同じセッションIDの注文が既に記録済みなら、二重注文・二重tier延長・二重通知を防ぐためスキップする。
+    try {
+      const sheetsForDupCheck = await getSheets();
+      const existingRes = await sheetsForDupCheck.spreadsheets.values.get({
+        spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID,
+        range: "注文管理!J:J",
+      });
+      const existingSessionIds = new Set((existingRes.data.values ?? []).map((r) => r[0]));
+      if (existingSessionIds.has(session.id)) {
+        console.log("[webhook] duplicate checkout.session.completed ignored:", session.id);
+        return NextResponse.json({ received: true, duplicate: true });
+      }
+    } catch (dupErr) {
+      console.error("[webhook] duplicate check failed, proceeding cautiously", dupErr);
+    }
+
     const now = new Date().toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" });
     const orderNumber = generateOrderNumber();
 
@@ -408,6 +426,12 @@ export async function POST(req: NextRequest) {
       });
       const rows = res.data.values ?? [];
       const rowIndex = rows.findIndex((r) => r[9] === sessionId); // J列 = sessionId
+
+      // 既にpaid済みなら、イベント再配信による通知の二重送信を防ぐためスキップ
+      if (rowIndex !== -1 && rows[rowIndex][8] === "paid") {
+        console.log("[webhook] async_payment_succeeded already processed:", sessionId);
+        return NextResponse.json({ received: true, duplicate: true });
+      }
 
       if (rowIndex !== -1) {
         const row = rows[rowIndex];

@@ -333,6 +333,21 @@ export function BookingCalendar({
                             </div>
 
                             <div>
+                                <p className="font-semibold text-stone-700 mb-1">悪天候時の扱い</p>
+                                <p className="leading-relaxed text-stone-600">悪天候・農作業都合・安全上の理由により中止する場合は、キャンセル料なしで全額返金、またはご希望の日程への振替で対応します。前日から当日にかけてご連絡します。</p>
+                            </div>
+
+                            <div>
+                                <p className="font-semibold text-stone-700 mb-1">安全上の注意</p>
+                                <p className="leading-relaxed text-stone-600">防護服を着用し、スタッフが安全に配慮してご案内しますが、蜂を扱う以上、刺される可能性を完全になくすことはできません。蜂アレルギーのある方はご参加いただけません。1歳未満のお子様は蜂蜜の試食ができません。</p>
+                            </div>
+
+                            <div>
+                                <p className="font-semibold text-stone-700 mb-1">集合場所</p>
+                                <p className="leading-relaxed text-stone-600">予約確定後、集合場所の詳細をLINEまたはお問い合わせフォームにてご案内します。</p>
+                            </div>
+
+                            <div>
                                 <p className="font-semibold text-stone-700 mb-1">予約内容の変更・訂正</p>
                                 <p className="leading-relaxed text-stone-600">予約後の日時変更・人数変更はLINEまたはお問い合わせフォームからご連絡ください。</p>
                             </div>
