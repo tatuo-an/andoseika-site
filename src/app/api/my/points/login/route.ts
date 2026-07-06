@@ -2,10 +2,10 @@ import { NextResponse } from "next/server";
 import { google } from "googleapis";
 import { auth } from "@/auth";
 import { getTier, TIERS } from "@/lib/tiers";
+import { claimOnceOrVoid } from "@/lib/pointsDedup";
 
 export const dynamic = "force-dynamic";
 
-const POINTS_SHEET = "ポイント履歴";
 const PROFILE_SHEET = "顧客マスタ";
 
 function getSheets() {
@@ -21,13 +21,6 @@ function getSheets() {
 
 function todayJST(): string {
   return new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Tokyo" });
-}
-
-function nowJST(): string {
-  const d = new Date();
-  const date = d.toLocaleDateString("sv-SE", { timeZone: "Asia/Tokyo" });
-  const time = d.toLocaleTimeString("ja-JP", { timeZone: "Asia/Tokyo", hour: "2-digit", minute: "2-digit" });
-  return `${date} ${time}`;
 }
 
 export async function POST() {
@@ -49,22 +42,16 @@ export async function POST() {
     const activeTier = (tier && tierExpiry && tierExpiry >= today) ? getTier(tier) : "free";
     const loginPt = TIERS[activeTier].loginPt;
 
-    // Check if already earned today
-    const res = await sheets.spreadsheets.values.get({ spreadsheetId: id, range: `${POINTS_SHEET}!A:E` });
-    const rows = res.data.values ?? [];
-    const alreadyToday = rows.some(
-      (r) => r[0] === email && r[2] === "login" && (r[1] ?? "").startsWith(today)
-    );
-    if (alreadyToday) return NextResponse.json({ earned: false });
-
-    await sheets.spreadsheets.values.append({
-      spreadsheetId: id,
-      range: `${POINTS_SHEET}!A:E`,
-      valueInputOption: "RAW",
-      requestBody: { values: [[email, nowJST(), "login", loginPt, "ログインボーナス"]] },
+    // 複数タブ・連打による同時リクエストでも二重付与されないよう、追記後に再確認して勝者のみ確定させる
+    const { earned } = await claimOnceOrVoid({
+      email,
+      type: "login",
+      dedupKey: today,
+      points: loginPt,
+      memoPrefix: "ログインボーナス",
     });
 
-    return NextResponse.json({ earned: true, points: loginPt });
+    return NextResponse.json({ earned, points: earned ? loginPt : undefined });
   } catch {
     return NextResponse.json({ earned: false });
   }

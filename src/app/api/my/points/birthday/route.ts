@@ -2,10 +2,10 @@ import { NextResponse } from "next/server";
 import { google } from "googleapis";
 import { auth } from "@/auth";
 import { getTier, TIERS } from "@/lib/tiers";
+import { claimOnceOrVoid } from "@/lib/pointsDedup";
 
 export const dynamic = "force-dynamic";
 
-const POINTS_SHEET = "ポイント履歴";
 const PROFILE_SHEET = "顧客マスタ";
 
 function getSheets() {
@@ -17,13 +17,6 @@ function getSheets() {
     scopes: ["https://www.googleapis.com/auth/spreadsheets"],
   });
   return google.sheets({ version: "v4", auth: a });
-}
-
-function nowJST(): string {
-  const d = new Date();
-  const date = d.toLocaleDateString("sv-SE", { timeZone: "Asia/Tokyo" });
-  const time = d.toLocaleTimeString("ja-JP", { timeZone: "Asia/Tokyo", hour: "2-digit", minute: "2-digit" });
-  return `${date} ${time}`;
 }
 
 function todayMMDD(): string {
@@ -69,23 +62,17 @@ export async function POST() {
 
     if (birthdayPt === 0) return NextResponse.json({ earned: false, reason: "no_birthday_bonus_for_tier" });
 
-    // Check if already earned this year
-    const pointsRes = await sheets.spreadsheets.values.get({ spreadsheetId: id, range: `${POINTS_SHEET}!A:E` });
-    const pointsRows = pointsRes.data.values ?? [];
+    // 複数タブ・連打による同時リクエストでも二重付与されないよう、追記後に再確認して勝者のみ確定させる
     const year = thisYear();
-    const alreadyThisYear = pointsRows.some(
-      (r) => r[0] === email && r[2] === "birthday" && (r[4] ?? "").includes(year)
-    );
-    if (alreadyThisYear) return NextResponse.json({ earned: false, reason: "already_earned" });
-
-    await sheets.spreadsheets.values.append({
-      spreadsheetId: id,
-      range: `${POINTS_SHEET}!A:E`,
-      valueInputOption: "RAW",
-      requestBody: { values: [[email, nowJST(), "birthday", birthdayPt, `誕生日ボーナス ${year}`]] },
+    const { earned } = await claimOnceOrVoid({
+      email,
+      type: "birthday",
+      dedupKey: year,
+      points: birthdayPt,
+      memoPrefix: "誕生日ボーナス",
     });
 
-    return NextResponse.json({ earned: true, points: birthdayPt });
+    return NextResponse.json({ earned, points: earned ? birthdayPt : undefined, reason: earned ? undefined : "already_earned" });
   } catch {
     return NextResponse.json({ earned: false });
   }
