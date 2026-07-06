@@ -104,6 +104,12 @@ function itemTaxedUnit(price: number, cost: number | null | undefined): number {
 
 export type ServerCartLine = { id: string; quantity: number };
 
+export type ItemDisplay = {
+    id: string;
+    quantity: number;
+    displayUnitPrice: number; // 税込・セール適用後の単価（原価は含まない）
+};
+
 export type PricingResult = {
     itemsBodyShown: number;
     shipFeeShown: number;
@@ -119,6 +125,9 @@ export type PricingResult = {
     displayOptionLabels: string[];
     matchedVariantId: string | null;
     surchargeLabel: string | null;
+    isClickpost: boolean;
+    coolEligible: boolean;
+    items: ItemDisplay[];
 };
 
 // クライアントからは商品ID・数量・希望オプション・クール便希望のみを受け取り、
@@ -277,6 +286,13 @@ export function computeCartPricing(params: {
 
     const grandTotal = Math.max(0, grandTotalBeforePoints - effectivePointsToUse);
 
+    const items: ItemDisplay[] = cartItems.map(item => {
+        const original = itemTaxedUnit(item.price, item.cost);
+        const pct = item.salePercent ?? 0;
+        const displayUnitPrice = pct > 0 ? Math.ceil(original * (1 - pct / 100)) : original;
+        return { id: item.id, quantity: item.quantity, displayUnitPrice };
+    });
+
     return {
         itemsBodyShown,
         shipFeeShown,
@@ -292,5 +308,8 @@ export function computeCartPricing(params: {
         displayOptionLabels,
         matchedVariantId: matchedVariant?.id ?? null,
         surchargeLabel: isExtraRegion && regionRow ? `追加送料(${regionRow.region})` : null,
+        isClickpost,
+        coolEligible,
+        items,
     };
 }
