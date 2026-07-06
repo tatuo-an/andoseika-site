@@ -34,7 +34,6 @@ export async function GET() {
       const likeEmails = r[7] ? r[7].split(",").filter(Boolean) : [];
       return {
         id: r[0] ?? "",
-        email: r[1] ?? "",
         displayName: r[2] ?? "",
         productName: r[3] ?? "",
         imageUrl: r[4] ?? "",

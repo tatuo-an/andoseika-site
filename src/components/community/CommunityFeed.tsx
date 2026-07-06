@@ -6,7 +6,7 @@ import { Heart, Bookmark, Pencil, Trash2, Check, X, Camera, ChevronDown } from "
 
 type Post = {
   id: string;
-  email: string;
+  email?: string;
   displayName: string;
   productName: string;
   imageUrl: string;
