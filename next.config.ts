@@ -4,7 +4,8 @@ import type { NextConfig } from "next";
 // 外部サービスとの通信を壊さない範囲で設定したセキュリティヘッダー。
 const CSP = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' https://js.stripe.com",
+  // 'unsafe-eval' は開発時のReactデバッグ機能に必要（本番のReactはevalを使わない）
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",

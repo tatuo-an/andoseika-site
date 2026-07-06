@@ -18,7 +18,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "5MB以下の画像を送信してください" }, { status: 400 });
     }
 
-    const ext = file.name.split(".").pop() ?? "jpg";
+    // 任意ファイル種別のアップロード・ホスティングを防ぐため、画像形式のみ許可する
+    const ALLOWED_TYPES: Record<string, string> = {
+      "image/jpeg": "jpg",
+      "image/png": "png",
+      "image/webp": "webp",
+      "image/gif": "gif",
+    };
+    const ext = ALLOWED_TYPES[file.type];
+    if (!ext) {
+      return NextResponse.json({ error: "画像ファイル（jpg/png/webp/gif）のみアップロードできます" }, { status: 400 });
+    }
     const filename = `complaints/${Date.now()}.${ext}`;
 
     const blob = await put(filename, file, {
