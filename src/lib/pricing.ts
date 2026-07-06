@@ -120,6 +120,7 @@ export type PricingResult = {
     saleDiscountTaxed: number;
     tierDiscountAmount: number;
     effectivePointsToUse: number;
+    maxPointsUsable: number;
     grandTotal: number;
     shipSizeLabel: string;
     displayOptionLabels: string[];
@@ -303,6 +304,7 @@ export function computeCartPricing(params: {
         saleDiscountTaxed,
         tierDiscountAmount,
         effectivePointsToUse,
+        maxPointsUsable,
         grandTotal,
         shipSizeLabel: shipTypeLabel(effectiveShipType),
         displayOptionLabels,

@@ -338,7 +338,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 export default async function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
     const [productDirect, invData] = await Promise.all([getProduct(id), getInventoryData(id)]);
-    const { stock, price: invPrice, name: invName, shipType, hidden, deleted, nextShipment, badges, familyRows, imageUrl: invImageUrl, familyImages, cost: invCost, profitRate: invProfitRate, coolAvailable: invCoolAvailable } = invData;
+    const { stock, price: invPrice, name: invName, shipType, hidden, deleted, nextShipment, badges, familyRows, imageUrl: invImageUrl, familyImages, cost: invCost, coolAvailable: invCoolAvailable } = invData;
 
     const surcharges = await getShippingSurcharges(shipType);
     const isSoldOut = stock !== -1 && stock === 0;
@@ -648,8 +648,6 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                                                 shipType={shipType}
                                                 imageUrl={invImageUrl || undefined}
                                                 family={invData.family || undefined}
-                                                cost={invCost}
-                                                profitRate={invProfitRate}
                                                 coolAvailable={invCoolAvailable}
                                                 clickpostMax={invData.clickpostMax}
                                                 familyOptions={invData.options}

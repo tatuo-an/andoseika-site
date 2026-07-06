@@ -5,7 +5,7 @@ import { useState } from "react";
 import { Check, ShoppingCart } from "lucide-react";
 import { Product } from "@/types/microcms";
 
-export function AddToCartButton({ product, variantId, variantName, price, shipType, imageUrl, family, cost, profitRate, coolAvailable, clickpostMax, familyOptions, salePercent, shipMode, shipValue }: {
+export function AddToCartButton({ product, variantId, variantName, price, shipType, imageUrl, family, coolAvailable, clickpostMax, familyOptions, salePercent, shipMode, shipValue }: {
     product: Product;
     variantId?: string;
     variantName?: string;
@@ -13,8 +13,6 @@ export function AddToCartButton({ product, variantId, variantName, price, shipTy
     shipType?: string;
     imageUrl?: string;
     family?: string;
-    cost?: number | null;
-    profitRate?: number | null;
     coolAvailable?: boolean;
     clickpostMax?: number;
     familyOptions?: string;
@@ -36,8 +34,6 @@ export function AddToCartButton({ product, variantId, variantName, price, shipTy
             sku: variantId ?? product.id,
             shipType: shipType ?? "",
             family: family ?? "",
-            cost: cost ?? null,
-            profitRate: profitRate ?? null,
             coolAvailable: coolAvailable ?? false,
             clickpostMax: clickpostMax ?? 0,
             familyOptions: familyOptions ?? "",

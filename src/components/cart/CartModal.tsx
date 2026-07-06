@@ -4,6 +4,7 @@ import { useShoppingCart } from "use-shopping-cart";
 import { X, Plus, Minus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import type { PricingResult } from "@/lib/pricing";
 
 type ShippingRow = {
     region: string;
@@ -12,16 +13,6 @@ type ShippingRow = {
     s140: number; s160: number; s180: number; s200: number;
     compact: number; clickpost: number;
 };
-
-function getRate(row: ShippingRow, shipType: string): number {
-    const map: Record<string, keyof ShippingRow> = {
-        "60": "s60", "80": "s80", "100": "s100", "120": "s120",
-        "140": "s140", "160": "s160", "180": "s180", "200": "s200",
-        "compact": "compact", "clickpost": "clickpost",
-    };
-    const key = map[shipType];
-    return key ? (row[key] as number) : 0;
-}
 
 // 都道府県の末尾「都道府県」を除いて正規化（例:「沖縄」「沖縄県」→「沖縄」）
 function normPref(p: string) { return p.replace(/[都道府県]$/, ""); }
@@ -86,17 +77,15 @@ const DEFAULT_SHIPPING: ShippingRow[] = [
     { region: "それ以外", prefectures: "東京都,神奈川県,埼玉県,千葉県,茨城県,栃木県,群馬県,新潟県,富山県,石川県,福井県,山梨県,長野県,岐阜県,静岡県,愛知県,三重県,滋賀県,京都府,大阪府,兵庫県,奈良県,和歌山県,鳥取県,島根県,岡山県,広島県,山口県,徳島県,香川県,愛媛県,高知県,福岡県,佐賀県,長崎県,熊本県,大分県,宮崎県,鹿児島県", s60: 600, s80: 700, s100: 800, s120: 1000, s140: 1200, s160: 1400, s180: 1600, s200: 1800, compact: 690, clickpost: 185 },
 ];
 
-type InvItem = { id: string; name: string; price: number | null; family: string; coolAvailable?: boolean; shipType?: string; clickpostMax?: number; cost?: number | null; profitRate?: number | null; compactMax?: number; shipMode?: string; shipValue?: string };
+type InvItem = { id: string; name: string; price: number | null; family: string; coolAvailable?: boolean; shipType?: string; clickpostMax?: number; compactMax?: number; shipMode?: string; shipValue?: string };
 
 // カートのitemに保存されたフィールドが欠落していても、inventoryから復元する
 function enrichItem<T extends { id: string }>(item: T, inventory: InvItem[]): T {
     const inv = inventory.find(v => v.id === item.id);
     if (!inv) return item;
-    const it = item as T & { cost?: number | null; profitRate?: number | null; shipType?: string; coolAvailable?: boolean; clickpostMax?: number; compactMax?: number; family?: string; shipMode?: string; shipValue?: string };
+    const it = item as T & { shipType?: string; coolAvailable?: boolean; clickpostMax?: number; compactMax?: number; family?: string; shipMode?: string; shipValue?: string };
     return {
         ...item,
-        cost: it.cost ?? inv.cost ?? null,
-        profitRate: it.profitRate ?? inv.profitRate ?? null,
         shipType: it.shipType || inv.shipType || "",
         coolAvailable: it.coolAvailable ?? inv.coolAvailable ?? false,
         clickpostMax: it.clickpostMax ?? inv.clickpostMax ?? 0,
@@ -129,6 +118,7 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
     const [selectedOptions, setSelectedOptions] = useState<Set<string>>(new Set());
     const [tierDiscountRate, setTierDiscountRate] = useState(0);
     const [tierName, setTierName] = useState("");
+    const [preview, setPreview] = useState<PricingResult | null>(null);
 
     useEffect(() => {
         if (!isOpen || addressLoaded) return;
@@ -159,6 +149,38 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
     const baseRow = findBaseRow(shippingRows);
     const isExtraRegion = regionRow && baseRow && regionRow !== baseRow;
 
+    // 金額の内訳（原価・利益率を含む）はサーバー側 /api/cart-preview で算出する。
+    // クライアントは商品ID・数量・希望オプション・クール便希望のみ送信する。
+    const cartDetailsKey = JSON.stringify(
+        Object.entries(cartDetails ?? {}).map(([id, item]) => [id, item.quantity])
+    );
+    const optionKeysStr = Array.from(selectedOptions).sort().join(",");
+    useEffect(() => {
+        if (!isOpen || cartCount === 0) { return; }
+        const timer = setTimeout(() => {
+            fetch("/api/cart-preview", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    cartDetails: Object.fromEntries(
+                        Object.entries(cartDetails ?? {}).map(([id, item]) => [id, { quantity: item.quantity }])
+                    ),
+                    prefecture,
+                    optionLabels: Array.from(selectedOptions),
+                    coolRequested,
+                    pointsToUse: 0,
+                }),
+            })
+                .then(r => r.json())
+                .then(d => { if (d.pricing) setPreview(d.pricing); })
+                .catch(() => {});
+        }, 250);
+        return () => clearTimeout(timer);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isOpen, cartDetailsKey, prefecture, optionKeysStr, coolRequested, cartCount]);
+
+    const itemDisplayPrice = (id: string) => preview?.items.find(i => i.id === id)?.displayUnitPrice ?? 0;
+
     const rawCartItems = Object.values(cartDetails ?? {});
     // inventory から原価・利益率などを復元
     const cartItems = rawCartItems.map(item => enrichItem(item, inventory));
@@ -183,17 +205,6 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
         if (variants.length === 1 && cartItems.length === 1 && cartItems[0].quantity === 1) return null;
         return match ?? null;
     })();
-
-    // 原価合計・最低利益率
-    const itemsTotalCost = cartItems.reduce((sum, item) => {
-        const cost = (item as { cost?: number | null }).cost;
-        return sum + (cost ?? item.price) * item.quantity;
-    }, 0);
-    const minProfitRate = cartItems.reduce<number | null>((min, item) => {
-        const pr = (item as { profitRate?: number | null }).profitRate;
-        if (pr === null || pr === undefined) return min;
-        return min === null ? pr : Math.min(min, pr);
-    }, null);
 
     // 単体×nでマッチした場合はそのバリエーションの配送区分を優先する
     const matchedInv = matchedVariant ? inventory.find(v => v.id === matchedVariant.id) : null;
@@ -229,18 +240,6 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                 ? singleItemShipType
                 : weightBasedShipType;
 
-    const baseShipFee = effectiveShipType && baseRow ? getRate(baseRow, effectiveShipType) : 0;
-    // サービス料は 販売価格 = (原価+送料) / (1 - 利益率/100) から逆算した利益分
-    // 利益 = 販売価格 - (原価+送料) = (原価+送料) × 利益率/100 / (1 - 利益率/100)
-    const profit = (minProfitRate !== null && minProfitRate < 100)
-        ? Math.ceil((itemsTotalCost + baseShipFee) * (minProfitRate / 100) / (1 - minProfitRate / 100))
-        : 0;
-
-    const surcharge = (() => {
-        if (!isExtraRegion || !regionRow || !baseRow || !effectiveShipType) return 0;
-        return Math.max(0, getRate(regionRow, effectiveShipType) - getRate(baseRow, effectiveShipType));
-    })();
-
     // クール便判定:
     //   1. カート内のいずれかが coolAvailable=true
     //   2. かつ「実効発送サイズ」が60~120（コンパクト/クリックポスト/140以上は不可）
@@ -248,7 +247,6 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
         && effectiveShipType !== null
         && coolSurchargeBySize(effectiveShipType) > 0
         && cartItems.some(i => (i as { coolAvailable?: boolean }).coolAvailable);
-    const coolFee = coolEligible && coolRequested ? coolSurchargeBySize(effectiveShipType) : 0;
 
     // ファミリーオプションを集約: { familyName: OptionEntry[] }
     const familyOptionsMap = new Map<string, OptionEntry[]>();
@@ -261,57 +259,17 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
         }
     });
 
-    // 選択されたオプションの合計（税抜）
-    const optionsAdjustment = (() => {
-        let sum = 0;
-        familyOptionsMap.forEach((opts, fam) => {
-            opts.forEach(o => {
-                if (selectedOptions.has(`${fam}:${o.label}`)) sum += o.amount;
-            });
-        });
-        return sum;
-    })();
-
-    // 税込み単価計算（item.price は割引前の税抜き販売価格）
-    const itemTaxedUnit = (item: { price: number; cost?: number | null }) => {
-        const cost = item.cost ?? item.price;
-        const others = Math.max(0, item.price - cost);
-        return Math.round(cost * 1.08 + others * 1.10);
-    };
-    // セール割引合計（税込）= Σ((元税込単価 - セール後税込単価) × qty)
-    const saleDiscountTaxedTotal = cartItems.reduce((sum, item) => {
-        const pct = (item as { salePercent?: number }).salePercent ?? 0;
-        if (pct <= 0) return sum;
-        const original = itemTaxedUnit(item as { price: number; cost?: number | null });
-        const after = Math.ceil(original * (1 - pct / 100));
-        return sum + (original - after) * item.quantity;
-    }, 0);
-
-    // 税抜きの内訳（本体・送料・サービス料）
-    const itemsBodyNet = itemsTotalCost;
-    const shipFeeNet = baseShipFee;
-    const profitNet = matchedVariant
-        ? Math.max(0, matchedVariant.price! - itemsTotalCost - baseShipFee)
-        : profit;
-
-    // 税込み変換: 本体=8%, 送料/サービス料/追加送料/クール便=10%
-    const itemsBodyShown = Math.round(itemsBodyNet * 1.08);
-    const shipFeeShown = Math.round(shipFeeNet * 1.10);
-    const profitShown = Math.round(profitNet * 1.10);
-    const surchargeTaxed = Math.round(surcharge * 1.10);
-    const coolFeeTaxed = Math.round(coolFee * 1.10);
-    // オプション調整（本体価格扱い: 8%）
-    const optionsAdjustmentTaxed = Math.round(optionsAdjustment * 1.08);
-    // セール割引（税込）
-    const saleDiscountTaxed = saleDiscountTaxedTotal;
-    const tierDiscountBase = cartItems.reduce((sum, item) => {
-        const pct = (item as { salePercent?: number }).salePercent ?? 0;
-        if (pct > 0) return sum;
-        return sum + itemTaxedUnit(item as { price: number; cost?: number | null }) * item.quantity;
-    }, 0);
-    const tierDiscountAmount = tierDiscountRate > 0 ? Math.floor(tierDiscountBase * tierDiscountRate) : 0;
-
-    const grandTotal = itemsBodyShown + shipFeeShown + profitShown + surchargeTaxed + coolFeeTaxed + optionsAdjustmentTaxed - saleDiscountTaxed - tierDiscountAmount;
+    // 金額の内訳は原価・利益率を必要とするため、サーバー側 /api/cart-preview の
+    // 計算結果（preview）をそのまま表示に使う。preview 読み込み中は 0 表示。
+    const itemsBodyShown = preview?.itemsBodyShown ?? 0;
+    const shipFeeShown = preview?.shipFeeShown ?? 0;
+    const profitShown = preview?.profitShown ?? 0;
+    const surchargeTaxed = preview?.surchargeTaxed ?? 0;
+    const coolFeeTaxed = preview?.coolFeeTaxed ?? 0;
+    const optionsAdjustmentTaxed = preview?.optionsAdjustmentTaxed ?? 0;
+    const saleDiscountTaxed = preview?.saleDiscountTaxed ?? 0;
+    const tierDiscountAmount = preview?.tierDiscountAmount ?? 0;
+    const grandTotal = preview?.grandTotal ?? 0;
 
     if (!isOpen) return null;
 
@@ -389,12 +347,7 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                                 </div>
                                 <div className="flex-1 space-y-1">
                                     <h3 className="font-bold text-stone-900">{item.name}</h3>
-                                    <p className="text-sm text-stone-500">¥{(() => {
-                                        const original = itemTaxedUnit(item as { price: number; cost?: number | null });
-                                        const pct = (item as { salePercent?: number }).salePercent ?? 0;
-                                        const display = pct > 0 ? Math.ceil(original * (1 - pct / 100)) : original;
-                                        return display.toLocaleString();
-                                    })()}</p>
+                                    <p className="text-sm text-stone-500">¥{itemDisplayPrice(item.id).toLocaleString()}</p>
                                     <div className="flex items-center gap-3 pt-2">
                                         <div className="flex items-center border border-stone-200 rounded-full">
                                             <button onClick={() => decrementItem(item.id)} className="p-1 hover:bg-stone-100 rounded-l-full">
@@ -422,10 +375,7 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                         {addressLoaded && (() => {
                             // 単品購入時価格の合計（税込・セール反映）
                             const singlePurchaseTotal = cartItems.reduce((sum, item) => {
-                                const original = itemTaxedUnit(item as { price: number; cost?: number | null });
-                                const pct = (item as { salePercent?: number }).salePercent ?? 0;
-                                const display = pct > 0 ? Math.ceil(original * (1 - pct / 100)) : original;
-                                return sum + display * item.quantity;
+                                return sum + itemDisplayPrice(item.id) * item.quantity;
                             }, 0);
                             const bundledTotal = itemsBodyShown + shipFeeShown + profitShown; // 追加送料・クール抜きの本体合計（税込）
                             const bundleDiscount = singlePurchaseTotal - bundledTotal;
