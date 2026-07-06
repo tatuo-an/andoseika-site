@@ -402,21 +402,8 @@ export default function CartPage() {
                     shipMode: cartShipMode,
                     shipValue: cartShipValue,
                     pointsUsed: effectivePointsToUse,
-                    tierDiscount: tierDiscountAmount,
-                    quote: {
-                        matchedVariantId: matchedVariant?.id ?? null,
-                        itemsTotal: itemsBodyShown,
-                        baseShipFee: shipFeeShown,
-                        profit: profitShown,
-                        surcharge: surchargeTaxed,
-                        surchargeLabel: isExtraRegion ? `追加送料(${regionRow!.region})` : null,
-                        coolFee: coolFeeTaxed,
-                        shipSizeLabel: shipTypeLabel(effectiveShipType),
-                        optionsAdjustment: optionsAdjustmentTaxed,
-                        optionLabels: Array.from(selectedOptions),
-                        optionDisplayLabels: displayOptionLabels,
-                        saleDiscount: saleDiscountTaxed,
-                    },
+                    coolRequested,
+                    optionLabels: Array.from(selectedOptions),
                 }),
             });
             if (!response.ok) {
