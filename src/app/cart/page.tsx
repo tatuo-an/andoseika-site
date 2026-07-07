@@ -95,6 +95,8 @@ const DEFAULT_SHIPPING: ShippingRow[] = [
     { region: "それ以外", prefectures: "東京都,神奈川県,埼玉県,千葉県,茨城県,栃木県,群馬県,新潟県,富山県,石川県,福井県,山梨県,長野県,岐阜県,静岡県,愛知県,三重県,滋賀県,京都府,大阪府,兵庫県,奈良県,和歌山県,鳥取県,島根県,岡山県,広島県,山口県,徳島県,香川県,愛媛県,高知県,福岡県,佐賀県,長崎県,熊本県,大分県,宮崎県,鹿児島県", s60: 600, s80: 700, s100: 800, s120: 1000, s140: 1200, s160: 1400, s180: 1600, s200: 1800, compact: 690, clickpost: 185 },
 ];
 
+const CHECKOUT_ERROR_MESSAGE = "決済ページを開けませんでした。時間をおいて再度お試しいただくか、公式LINEにてご連絡ください。";
+
 // 配送希望時間帯
 const TIME_SLOTS = ["指定なし", "午前中", "14:00〜16:00", "16:00〜18:00", "18:00〜20:00", "19:00〜21:00"];
 
@@ -111,6 +113,8 @@ export default function CartPage() {
     const [coolRequested, setCoolRequested] = useState(false);
     const [selectedOptions, setSelectedOptions] = useState<Set<string>>(new Set());
     const [showConfirmModal, setShowConfirmModal] = useState(false);
+    const [checkoutError, setCheckoutError] = useState<string | null>(null);
+    const [isCheckoutSubmitting, setIsCheckoutSubmitting] = useState(false);
 
     // お届け希望日時
     const [desiredDate, setDesiredDate] = useState("");
@@ -314,12 +318,24 @@ export default function CartPage() {
             alert("配送先を選択してください");
             return;
         }
+        setCheckoutError(null);
         setShowConfirmModal(true);
     };
 
-    const handleCheckout = async () => {
+    const closeConfirmModal = () => {
+        if (isCheckoutSubmitting) return;
+        setCheckoutError(null);
         setShowConfirmModal(false);
-        if (!selectedAddress) return;
+    };
+
+    const handleCheckout = async () => {
+        if (isCheckoutSubmitting) return;
+        if (!selectedAddress) {
+            setCheckoutError("配送先を選択してください。");
+            return;
+        }
+        setCheckoutError(null);
+        setIsCheckoutSubmitting(true);
 
         const firstWithShip = cartItems.find(i => (i as { shipMode?: string }).shipMode);
         const cartShipMode = (firstWithShip as { shipMode?: string } | undefined)?.shipMode ?? "";
@@ -341,10 +357,16 @@ export default function CartPage() {
                         shipValue: cartShipValue,
                     }),
                 });
-                if (!res.ok) { alert("テスト注文の作成に失敗しました"); return; }
+                if (!res.ok) {
+                    setCheckoutError("テスト注文の作成に失敗しました。時間をおいて再度お試しください。");
+                    return;
+                }
                 window.location.href = "/success";
             } catch (error) {
                 console.error(error);
+                setCheckoutError("テスト注文の作成に失敗しました。時間をおいて再度お試しください。");
+            } finally {
+                setIsCheckoutSubmitting(false);
             }
             return;
         }
@@ -368,18 +390,21 @@ export default function CartPage() {
             if (!response.ok) {
                 const errBody = await response.json().catch(() => null);
                 console.error(errBody);
-                alert(`決済ページの作成に失敗しました。${errBody?.error ? `（${errBody.error}）` : ""}\nお手数ですが時間を置いて再度お試しいただくか、お問い合わせください。`);
+                setCheckoutError(CHECKOUT_ERROR_MESSAGE);
                 return;
             }
             const { url } = await response.json();
             if (url) {
+                setShowConfirmModal(false);
                 window.location.href = url;
             } else {
-                alert("決済ページのURLを取得できませんでした。お手数ですが再度お試しください。");
+                setCheckoutError(CHECKOUT_ERROR_MESSAGE);
             }
         } catch (error) {
             console.error(error);
-            alert("通信エラーが発生しました。電波の良い環境で再度お試しください。");
+            setCheckoutError(CHECKOUT_ERROR_MESSAGE);
+        } finally {
+            setIsCheckoutSubmitting(false);
         }
     };
 
@@ -738,12 +763,16 @@ export default function CartPage() {
             {showConfirmModal && (
                 <div
                     className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 px-0 sm:px-4"
-                    onClick={(e) => { if (e.target === e.currentTarget) setShowConfirmModal(false); }}
+                    onClick={(e) => { if (e.target === e.currentTarget) closeConfirmModal(); }}
                 >
                     <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-lg max-h-[92vh] overflow-y-auto">
                         <div className="flex items-center justify-between px-5 py-4 border-b border-stone-200 sticky top-0 bg-white">
                             <h3 className="font-bold text-stone-900 text-base">ご注文内容の確認</h3>
-                            <button onClick={() => setShowConfirmModal(false)} className="text-stone-400 hover:text-stone-600 p-1">
+                            <button
+                                onClick={closeConfirmModal}
+                                disabled={isCheckoutSubmitting}
+                                className="text-stone-400 hover:text-stone-600 p-1 disabled:opacity-40 disabled:cursor-not-allowed"
+                            >
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
@@ -792,15 +821,22 @@ export default function CartPage() {
                         </div>
 
                         <div className="px-5 pb-6 space-y-2 sticky bottom-0 bg-white pt-2 border-t border-stone-100">
+                            {checkoutError && (
+                                <div role="alert" className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs font-medium leading-relaxed text-red-700">
+                                    {checkoutError}
+                                </div>
+                            )}
                             <button
                                 onClick={handleCheckout}
-                                className="w-full py-3.5 rounded-full font-bold bg-primary text-white hover:bg-primary/90 transition-colors text-sm"
+                                disabled={isCheckoutSubmitting}
+                                className="w-full py-3.5 rounded-full font-bold bg-primary text-white hover:bg-primary/90 transition-colors text-sm disabled:opacity-60 disabled:cursor-not-allowed"
                             >
-                                同意してお支払いへ進む
+                                {isCheckoutSubmitting ? "処理中…" : "同意してお支払いへ進む"}
                             </button>
                             <button
-                                onClick={() => setShowConfirmModal(false)}
-                                className="w-full py-2.5 rounded-full font-bold bg-stone-100 text-stone-700 hover:bg-stone-200 transition-colors text-sm"
+                                onClick={closeConfirmModal}
+                                disabled={isCheckoutSubmitting}
+                                className="w-full py-2.5 rounded-full font-bold bg-stone-100 text-stone-700 hover:bg-stone-200 transition-colors text-sm disabled:opacity-60 disabled:cursor-not-allowed"
                             >
                                 カートに戻る
                             </button>
