@@ -194,11 +194,12 @@ async function getRescueItems(): Promise<RescueItem[]> {
     const seenFamilies = new Set<string>();
     const result: RescueItem[] = [];
     for (const r of rows) {
+      const stock = r[2] !== undefined && r[2] !== "" ? parseInt(r[2], 10) : null;
+      if (stock === 0) continue; // 売り切れは表示しない
       const family = (r[9] ?? "").trim();
       const key = family || r[0];
       if (seenFamilies.has(key)) continue;
       seenFamilies.add(key);
-      const stock = r[2] !== undefined && r[2] !== "" ? parseInt(r[2], 10) : null;
       result.push({
         id: r[0],
         title: family || r[1] || "",
