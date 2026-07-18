@@ -9,7 +9,12 @@ const initialState: ContactState = {
     message: "",
 };
 
-export function PersonalContactForm() {
+type PersonalContactFormProps = {
+    defaultType?: string;
+    defaultMessage?: string;
+};
+
+export function PersonalContactForm({ defaultType, defaultMessage }: PersonalContactFormProps = {}) {
     const [state, formAction, isPending] = useActionState(submitContact, initialState);
 
     if (state.success) {
@@ -97,6 +102,7 @@ export function PersonalContactForm() {
                             id="type"
                             name="type"
                             required
+                            defaultValue={defaultType ?? ""}
                             className="w-full px-4 py-3 rounded-lg border border-stone-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all appearance-none bg-white"
                         >
                             <option value="">選択してください</option>
@@ -122,6 +128,7 @@ export function PersonalContactForm() {
                         name="message"
                         required
                         rows={6}
+                        defaultValue={defaultMessage}
                         className="w-full px-4 py-3 rounded-lg border border-stone-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all resize-none"
                         placeholder="ご質問内容をご記入ください"
                     ></textarea>
