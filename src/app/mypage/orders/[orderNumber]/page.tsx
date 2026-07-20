@@ -9,6 +9,8 @@ import { ChevronLeft, Send, XCircle, CheckCircle, ClipboardList } from "lucide-r
 import Link from "next/link";
 
 const SURVEY_FORM_URL = process.env.NEXT_PUBLIC_SURVEY_FORM_URL;
+// Googleフォームの「事前入力したリンクを取得」で確認できる、メールアドレス質問の entry.XXXXXXXXX の数字部分
+const SURVEY_FORM_EMAIL_ENTRY_ID = process.env.NEXT_PUBLIC_SURVEY_FORM_EMAIL_ENTRY_ID;
 const SURVEY_POINTS = 200;
 
 type Order = {
@@ -617,32 +619,43 @@ export default function OrderDetailPage() {
                   <p className="text-xs text-stone-600 leading-relaxed mb-3">
                     今回のお買い物についてのご感想をお聞かせください。ご回答いただいた方全員に<strong className="text-purple-600">{SURVEY_POINTS}ポイント</strong>プレゼントします（1アカウント1回まで）。
                   </p>
-                  {session?.user?.email && (
-                    <div className="bg-white rounded-lg px-3 py-2 mb-3">
-                      <p className="text-[11px] text-stone-500 mb-1">
-                        {session.user.email.endsWith("@line.user")
-                          ? "LINEでログインされているため、実際のメールアドレスの代わりに以下のアカウント識別用の文字列をフォームの「メールアドレス」欄にご入力ください（実在のメールアドレスではありませんが、これがお客様のアカウントを特定する情報になります）："
-                          : "フォーム内のメールアドレス欄には、ご登録のこちらのアドレスをご入力ください："}
-                      </p>
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs text-stone-700 break-all flex-1">{session.user.email}</span>
-                        <button
-                          onClick={() => { navigator.clipboard?.writeText(session.user!.email!); }}
-                          className="shrink-0 text-[11px] font-bold text-purple-600 border border-purple-300 rounded-full px-2.5 py-1 hover:bg-purple-50 transition-colors"
+                  {(() => {
+                    const email = session?.user?.email;
+                    const prefillUrl = email && SURVEY_FORM_EMAIL_ENTRY_ID
+                      ? `${SURVEY_FORM_URL}?usp=pp_url&entry.${SURVEY_FORM_EMAIL_ENTRY_ID}=${encodeURIComponent(email)}`
+                      : SURVEY_FORM_URL!;
+                    const isPrefilled = !!(email && SURVEY_FORM_EMAIL_ENTRY_ID);
+                    return (
+                      <>
+                        {!isPrefilled && email && (
+                          <div className="bg-white rounded-lg px-3 py-2 mb-3">
+                            <p className="text-[11px] text-stone-500 mb-1">
+                              {email.endsWith("@line.user")
+                                ? "LINEでログインされているため、実際のメールアドレスの代わりに以下のアカウント識別用の文字列をフォームの「メールアドレス」欄にご入力ください（実在のメールアドレスではありませんが、これがお客様のアカウントを特定する情報になります）："
+                                : "フォーム内のメールアドレス欄には、ご登録のこちらのアドレスをご入力ください："}
+                            </p>
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono text-xs text-stone-700 break-all flex-1">{email}</span>
+                              <button
+                                onClick={() => { navigator.clipboard?.writeText(email); }}
+                                className="shrink-0 text-[11px] font-bold text-purple-600 border border-purple-300 rounded-full px-2.5 py-1 hover:bg-purple-50 transition-colors"
+                              >
+                                コピー
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                        <a
+                          href={prefillUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center justify-center w-full py-2.5 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-colors text-sm font-bold"
                         >
-                          コピー
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                  <a
-                    href={SURVEY_FORM_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center w-full py-2.5 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-colors text-sm font-bold"
-                  >
-                    アンケートに回答する
-                  </a>
+                          アンケートに回答する
+                        </a>
+                      </>
+                    );
+                  })()}
                   <p className="text-[10px] text-stone-400 mt-2">※ポイントの反映まで数日かかる場合があります</p>
                 </div>
               )}
