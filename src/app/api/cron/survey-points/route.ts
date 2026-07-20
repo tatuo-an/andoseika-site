@@ -48,6 +48,7 @@ export async function GET(req: NextRequest) {
   const appendValues: string[][] = [];
 
   for (const row of responseRows) {
+    if (row[0] === "タイムスタンプ") continue; // Googleフォームのヘッダー行
     // メールアドレスは大文字小文字を区別した完全一致で扱う（他のポイント系APIと同じ規約）
     const email = (row[1] ?? "").trim();
     if (!email || !email.includes("@")) continue;
