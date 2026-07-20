@@ -13,7 +13,7 @@ export async function PATCH(
   }
 
   const { orderNumber } = await params;
-  const { status, clearComplaint, estimatedDate } = await req.json() as { status: string; clearComplaint?: boolean; estimatedDate?: string };
+  const { status, clearComplaint, estimatedDate } = await req.json() as { status?: string; clearComplaint?: boolean; estimatedDate?: string };
 
   const authClient = new google.auth.GoogleAuth({
     credentials: {
@@ -35,11 +35,14 @@ export async function PATCH(
   }
 
   const sheetRow = rowIndex + 1;
-  const updateData: { range: string; values: string[][] }[] = [
-    { range: `注文管理!I${sheetRow}`, values: [[status]] },
-  ];
+  const updateData: { range: string; values: string[][] }[] = [];
+  if (status !== undefined) updateData.push({ range: `注文管理!I${sheetRow}`, values: [[status]] });
   if (clearComplaint) updateData.push({ range: `注文管理!M${sheetRow}`, values: [[""]] });
   if (estimatedDate !== undefined) updateData.push({ range: `注文管理!O${sheetRow}`, values: [[estimatedDate]] });
+
+  if (updateData.length === 0) {
+    return NextResponse.json({ error: "No fields to update" }, { status: 400 });
+  }
 
   await sheets.spreadsheets.values.batchUpdate({
     spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,

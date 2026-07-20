@@ -131,6 +131,54 @@ function ShippingModal({ onConfirm, onCancel, loading }: {
   );
 }
 
+// お届け予定日 変更モーダル
+function EditEstimatedDateModal({ currentDate, onConfirm, onCancel, loading }: {
+  currentDate: string;
+  onConfirm: (newDate: string, notify: boolean) => void;
+  onCancel: () => void;
+  loading: boolean;
+}) {
+  const [value, setValue] = useState(currentDate);
+  const [notify, setNotify] = useState(true);
+  return (
+    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm">
+        <h3 className="font-bold text-stone-900 mb-1">お届け予定日を変更</h3>
+        <p className="text-sm text-stone-500 mb-4">例：7月10日〜7月12日頃</p>
+        <input
+          type="text"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          placeholder="お届け予定日"
+          autoFocus
+          className="w-full border border-stone-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 mb-4"
+        />
+        <label className="flex items-center gap-2 mb-4 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={notify}
+            onChange={(e) => setNotify(e.target.checked)}
+            className="w-4 h-4 accent-primary"
+          />
+          <span className="text-sm text-stone-700">お客様に変更をお知らせする（LINE/メール）</span>
+        </label>
+        <div className="flex gap-2">
+          <button onClick={onCancel} className="flex-1 py-2.5 border border-stone-200 rounded-xl text-sm text-stone-600 hover:bg-stone-50 transition-colors">
+            キャンセル
+          </button>
+          <button
+            onClick={() => onConfirm(value.trim(), notify)}
+            disabled={loading}
+            className="flex-1 py-2.5 bg-primary text-white rounded-xl text-sm font-bold hover:bg-primary/90 transition-colors disabled:opacity-50"
+          >
+            {loading ? "処理中..." : "変更する"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const PAGE_SIZE = 20;
 
 export function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
@@ -144,6 +192,8 @@ export function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
   const [msgText, setMsgText] = useState<Record<string, string>>({});
   const [sending, setSending] = useState<string | null>(null);
   const [shippingModal, setShippingModal] = useState<string | null>(null);
+  const [dateEditModal, setDateEditModal] = useState<string | null>(null);
+  const [dateUpdating, setDateUpdating] = useState<string | null>(null);
   const [cancelModal, setCancelModal] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
@@ -269,6 +319,43 @@ export function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
       setOrders((prev) => prev.map((o) => o.orderNumber === orderNumber ? { ...o, status } : o));
     } finally {
       setUpdating(null);
+    }
+  }
+
+  async function handleUpdateEstimatedDate(orderNumber: string, newDate: string, notify: boolean) {
+    setDateUpdating(orderNumber);
+    try {
+      await fetch(`/api/admin/orders/${encodeURIComponent(orderNumber)}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ estimatedDate: newDate }),
+      });
+      setOrders((prev) => prev.map((o) => o.orderNumber === orderNumber ? { ...o, estimatedDate: newDate } : o));
+
+      if (notify) {
+        const autoMsg = newDate
+          ? `お届け予定日が変更になりました。\n新しいお届け予定日：${newDate}`
+          : "お届け予定日の情報を更新しました。";
+        try {
+          const res = await fetch(`/api/admin/orders/${encodeURIComponent(orderNumber)}/message`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message: autoMsg }),
+          });
+          const data = await res.json();
+          if (data.ok) {
+            setMessages((prev) => ({
+              ...prev,
+              [orderNumber]: [...(prev[orderNumber] ?? []), { senderType: "admin", senderName: "安藤青果", message: autoMsg, sentAt: data.sentAt }],
+            }));
+          }
+        } catch (msgErr) {
+          console.error("[date-edit] message send failed", msgErr);
+        }
+      }
+    } finally {
+      setDateUpdating(null);
+      setDateEditModal(null);
     }
   }
 
@@ -428,6 +515,16 @@ export function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
           loading={updating === shippingModal}
           onConfirm={(trackingNumber, estimatedDate) => handleShipConfirm(shippingModal, trackingNumber, estimatedDate)}
           onCancel={() => setShippingModal(null)}
+        />
+      )}
+
+      {/* お届け予定日変更モーダル */}
+      {dateEditModal && (
+        <EditEstimatedDateModal
+          currentDate={orders.find((o) => o.orderNumber === dateEditModal)?.estimatedDate ?? ""}
+          loading={dateUpdating === dateEditModal}
+          onConfirm={(newDate, notify) => handleUpdateEstimatedDate(dateEditModal, newDate, notify)}
+          onCancel={() => setDateEditModal(null)}
         />
       )}
 
@@ -659,12 +756,18 @@ export function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
                             <p className="text-stone-700">{order.desiredDate} {order.desiredTime}</p>
                           </div>
                         )}
-                        {order.estimatedDate && (
-                          <div className="col-span-2">
+                        <div className="col-span-2 flex items-center justify-between gap-2">
+                          <div>
                             <p className="text-xs text-stone-400 mb-0.5">お届け予定日</p>
-                            <p className="text-stone-700">{order.estimatedDate}</p>
+                            <p className="text-stone-700">{order.estimatedDate || "未設定"}</p>
                           </div>
-                        )}
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setDateEditModal(order.orderNumber); }}
+                            className="text-xs text-primary font-bold px-3 py-1.5 rounded-full border border-primary/30 hover:bg-primary/5 transition-colors shrink-0"
+                          >
+                            変更
+                          </button>
+                        </div>
                         <div className="col-span-2">
                           <p className="text-xs text-stone-400 mb-0.5">商品</p>
                           <p className="text-stone-700">{order.productNames}</p>
