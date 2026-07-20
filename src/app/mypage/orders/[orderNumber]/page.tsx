@@ -618,10 +618,22 @@ export default function OrderDetailPage() {
                     今回のお買い物についてのご感想をお聞かせください。ご回答いただいた方全員に<strong className="text-purple-600">{SURVEY_POINTS}ポイント</strong>プレゼントします（1アカウント1回まで）。
                   </p>
                   {session?.user?.email && (
-                    <p className="text-[11px] text-stone-500 bg-white rounded-lg px-3 py-2 mb-3 break-all">
-                      フォーム内のメールアドレス欄には、ご登録のこちらのアドレスをご入力ください：<br />
-                      <span className="font-mono text-stone-700">{session.user.email}</span>
-                    </p>
+                    <div className="bg-white rounded-lg px-3 py-2 mb-3">
+                      <p className="text-[11px] text-stone-500 mb-1">
+                        {session.user.email.endsWith("@line.user")
+                          ? "LINEでログインされているため、実際のメールアドレスの代わりに以下のアカウント識別用の文字列をフォームの「メールアドレス」欄にご入力ください（実在のメールアドレスではありませんが、これがお客様のアカウントを特定する情報になります）："
+                          : "フォーム内のメールアドレス欄には、ご登録のこちらのアドレスをご入力ください："}
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-xs text-stone-700 break-all flex-1">{session.user.email}</span>
+                        <button
+                          onClick={() => { navigator.clipboard?.writeText(session.user!.email!); }}
+                          className="shrink-0 text-[11px] font-bold text-purple-600 border border-purple-300 rounded-full px-2.5 py-1 hover:bg-purple-50 transition-colors"
+                        >
+                          コピー
+                        </button>
+                      </div>
+                    </div>
                   )}
                   <a
                     href={SURVEY_FORM_URL}
