@@ -36,7 +36,14 @@ export async function PATCH(
 
   const sheetRow = rowIndex + 1;
   const updateData: { range: string; values: string[][] }[] = [];
-  if (status !== undefined) updateData.push({ range: `注文管理!I${sheetRow}`, values: [[status]] });
+  if (status !== undefined) {
+    updateData.push({ range: `注文管理!I${sheetRow}`, values: [[status]] });
+    // 発送済みに切り替えたタイミングを記録（未受取の自動受取完了処理の起点として使用）
+    if (status === "shipping") {
+      const now = new Date().toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" });
+      updateData.push({ range: `注文管理!R${sheetRow}`, values: [[now]] });
+    }
+  }
   if (clearComplaint) updateData.push({ range: `注文管理!M${sheetRow}`, values: [[""]] });
   if (estimatedDate !== undefined) updateData.push({ range: `注文管理!O${sheetRow}`, values: [[estimatedDate]] });
 
