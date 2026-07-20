@@ -2,10 +2,14 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
-import { ChevronLeft, Send, XCircle, CheckCircle } from "lucide-react";
+import { ChevronLeft, Send, XCircle, CheckCircle, ClipboardList } from "lucide-react";
 import Link from "next/link";
+
+const SURVEY_FORM_URL = process.env.NEXT_PUBLIC_SURVEY_FORM_URL;
+const SURVEY_POINTS = 200;
 
 type Order = {
   orderNumber: string; createdAt: string; name: string; productNames: string;
@@ -240,6 +244,7 @@ const STATUS_STEP: Record<string, number> = { paid: 2, shipping: 3, delivered: 4
 export default function OrderDetailPage() {
   const { orderNumber } = useParams<{ orderNumber: string }>();
   const router = useRouter();
+  const { data: session } = useSession();
   const [order, setOrder] = useState<Order | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
@@ -251,6 +256,7 @@ export default function OrderDetailPage() {
   const [showThanksModal, setShowThanksModal] = useState(false);
   const [responding, setResponding] = useState(false);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+  const [surveyAnswered, setSurveyAnswered] = useState<boolean | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -260,6 +266,14 @@ export default function OrderDetailPage() {
       .then((d) => { setOrder(d.order); setMessages(d.messages ?? []); })
       .finally(() => setLoading(false));
   }, [orderNumber]);
+
+  useEffect(() => {
+    if (!order || (order.status !== "delivered" && order.status !== "completed")) return;
+    fetch("/api/my/survey-status")
+      .then((r) => r.json())
+      .then((d) => setSurveyAnswered(!!d.answered))
+      .catch(() => {});
+  }, [order]);
 
   function scrollToBottom() {
     setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
@@ -592,6 +606,34 @@ export default function OrderDetailPage() {
                   </button>
                 )}
               </div>
+
+              {/* 受取完了後アンケート */}
+              {SURVEY_FORM_URL && (order.status === "delivered" || order.status === "completed") && surveyAnswered === false && (
+                <div className="bg-purple-50 border border-purple-200 rounded-2xl shadow-sm p-5 mt-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <ClipboardList className="w-5 h-5 text-purple-500" />
+                    <p className="font-bold text-stone-900 text-sm">アンケートにご協力をお願いします</p>
+                  </div>
+                  <p className="text-xs text-stone-600 leading-relaxed mb-3">
+                    今回のお買い物についてのご感想をお聞かせください。ご回答いただいた方全員に<strong className="text-purple-600">{SURVEY_POINTS}ポイント</strong>プレゼントします（1アカウント1回まで）。
+                  </p>
+                  {session?.user?.email && (
+                    <p className="text-[11px] text-stone-500 bg-white rounded-lg px-3 py-2 mb-3 break-all">
+                      フォーム内のメールアドレス欄には、ご登録のこちらのアドレスをご入力ください：<br />
+                      <span className="font-mono text-stone-700">{session.user.email}</span>
+                    </p>
+                  )}
+                  <a
+                    href={SURVEY_FORM_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center w-full py-2.5 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-colors text-sm font-bold"
+                  >
+                    アンケートに回答する
+                  </a>
+                  <p className="text-[10px] text-stone-400 mt-2">※ポイントの反映まで数日かかる場合があります</p>
+                </div>
+              )}
 
               {/* 注文情報 */}
               <div className="bg-white rounded-2xl shadow-sm p-5 text-sm">
