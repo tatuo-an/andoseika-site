@@ -10,7 +10,7 @@ const CSP = [
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
   "connect-src 'self' https://api.stripe.com https://m.stripe.network https://js.stripe.com",
-  "frame-src https://js.stripe.com https://checkout.stripe.com https://hooks.stripe.com",
+  "frame-src https://js.stripe.com https://checkout.stripe.com https://hooks.stripe.com https://www.youtube-nocookie.com https://www.youtube.com",
   "form-action 'self'",
   "frame-ancestors 'none'",
   "base-uri 'self'",
