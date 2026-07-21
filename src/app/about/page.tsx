@@ -274,7 +274,7 @@ export default function AboutPage() {
                                 <div className="grid md:grid-cols-3 gap-4">
                                     <dt className="font-bold text-stone-900">主な販売先</dt>
                                     <dd className="md:col-span-2 text-stone-600">
-                                        自社ECサイト、BASE、メルカリShops、<br />
+                                        自社ECサイト、Amazon、リベ市場、<br />
                                         道の駅、地域の直売所
                                     </dd>
                                 </div>
