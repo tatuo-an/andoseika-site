@@ -19,34 +19,53 @@ export const metadata: Metadata = {
         "コードは書けない経営者が、自分の会社をAIで仕組み化してきた実例をもとにお話しする無料相談。地方の小さな会社の「何から始めればいいかわからない」に、仕組み化診断で答えます。",
 };
 
-const LECTURE_VIDEOS: {
-    title: string;
-    note: string;
-    description: string;
-    youtubeId: string | null;
-}[] = [
+const LECTURE_PLAYLIST_URL =
+    "https://www.youtube.com/playlist?list=PLROQFcuDUc6U";
+
+const LECTURE_VIDEOS: { title: string; youtubeId: string }[] = [
     {
-        title: "仕組み化診断デモ講義 第1回",
-        note: "約3分30秒",
-        description:
-            "AIに任せられる仕事の見つけ方を、実際の診断の流れに沿って説明します。",
-        youtubeId: null,
+        title: "地方の中小企業がAIを導入する前にやること｜仕組み化診断",
+        youtubeId: "6JpXlc3bswQ",
     },
     {
-        title: "養蜂家が発信を自動化した話",
-        note: "準備中",
-        description:
-            "毎日の情報発信の作業をAIに任せるようにした実例を、そのままお話しします。",
-        youtubeId: null,
+        title: "毎朝の発信をAIで自動化した仕組み｜ネタ1つ出口4つ",
+        youtubeId: "h9fN6wL74m8",
     },
     {
-        title: "経理をAIで半自動化した話",
-        note: "準備中",
-        description:
-            "経理まわりの作業をAIで仕組み化した実例を、そのままお話しします。",
-        youtubeId: null,
+        title: "経理をAIで半自動化した実例｜仕訳・採算・帳簿点検",
+        youtubeId: "Sjf_RqeOf9Q",
+    },
+    {
+        title: "AI導入の最初の一週間｜紙に1つ書き出すだけ",
+        youtubeId: "a65M6BFtZ4c",
+    },
+    {
+        title: "仕入れと廃棄を見える化した話｜勘から数字へ",
+        youtubeId: "Y-hOqWcvXLc",
+    },
+    {
+        title: "毎朝の会議をAIとやる仕組み｜台帳と日誌で回す",
+        youtubeId: "nw3DXT_VJwk",
+    },
+    {
+        title: "AI導入で失敗する3つのパターン｜自社の反省録",
+        youtubeId: "oa_zmCN2b9c",
+    },
+    {
+        title: "AIの道具代は結局いくら？｜缶コーヒー数本分の実例",
+        youtubeId: "mYRqAoJs4jU",
+    },
+    {
+        title: "請求書づくりをAIで半自動化した話｜LINE注文の仕組み",
+        youtubeId: "r6eWJvozBRw",
+    },
+    {
+        title: "仕組み化診断から伴走支援まで｜全10回まとめ",
+        youtubeId: "nerm49aKmx8",
     },
 ];
+
+const [FIRST_LECTURE_VIDEO, ...REST_LECTURE_VIDEOS] = LECTURE_VIDEOS;
 
 export default function AiConsultingPage() {
     return (
@@ -229,47 +248,63 @@ export default function AiConsultingPage() {
 
                 {/* 4. Offer */}
                 <section id="lecture" className="py-20 bg-stone-100 scroll-mt-16">
-                    <div className="container mx-auto px-4 md:px-6 max-w-4xl">
+                    <div className="container mx-auto px-4 md:px-6 max-w-3xl">
                         <div className="text-center mb-12">
                             <h2 className="text-2xl md:text-3xl font-bold text-stone-900 font-heading mb-4">
-                                文章より、話しているところを見てください
+                                動画講義 全10回（無料・各3〜4分）
                             </h2>
                             <p className="text-stone-600 leading-relaxed">
-                                仕組み化診断のやり方を、無料の講義動画で公開しています。
+                                仕組み化診断のやり方と、自社での実例を、10本のショート講義にまとめました。
+                                第1回はこの場で見られます。
                             </p>
                         </div>
 
-                        <div className="grid md:grid-cols-3 gap-6">
-                            {LECTURE_VIDEOS.map((video) => (
-                                <div
-                                    key={video.title}
-                                    className="bg-white rounded-2xl overflow-hidden border border-stone-200 shadow-sm"
-                                >
-                                    <div className="relative aspect-video bg-stone-200 flex items-center justify-center">
-                                        {video.youtubeId ? (
-                                            <iframe
-                                                src={`https://www.youtube.com/embed/${video.youtubeId}`}
-                                                title={video.title}
-                                                className="absolute inset-0 w-full h-full"
-                                                loading="lazy"
-                                                allowFullScreen
-                                            />
-                                        ) : (
-                                            <>
-                                                <PlayCircle className="h-12 w-12 text-stone-400" />
-                                                <span className="absolute top-3 right-3 bg-stone-900/80 text-white text-xs font-bold px-3 py-1 rounded-full">
-                                                    近日公開
-                                                </span>
-                                            </>
-                                        )}
-                                    </div>
-                                    <div className="p-5">
-                                        <p className="text-xs text-stone-400 font-bold mb-1">{video.note}</p>
-                                        <h3 className="font-bold text-stone-900 mb-2">{video.title}</h3>
-                                        <p className="text-stone-600 text-sm leading-relaxed">{video.description}</p>
-                                    </div>
-                                </div>
+                        <div className="bg-white rounded-2xl overflow-hidden border border-stone-200 shadow-sm">
+                            <div className="relative aspect-video bg-stone-200">
+                                <iframe
+                                    src={`https://www.youtube-nocookie.com/embed/${FIRST_LECTURE_VIDEO.youtubeId}`}
+                                    title={FIRST_LECTURE_VIDEO.title}
+                                    className="absolute inset-0 w-full h-full"
+                                    loading="lazy"
+                                    allowFullScreen
+                                />
+                            </div>
+                            <div className="p-5">
+                                <p className="text-xs text-stone-400 font-bold mb-1">第1回</p>
+                                <h3 className="font-bold text-stone-900">{FIRST_LECTURE_VIDEO.title}</h3>
+                            </div>
+                        </div>
+
+                        <ol className="mt-8 bg-white rounded-2xl border border-stone-200 shadow-sm divide-y divide-stone-100 overflow-hidden">
+                            {REST_LECTURE_VIDEOS.map((video, index) => (
+                                <li key={video.youtubeId}>
+                                    <a
+                                        href={`https://www.youtube.com/watch?v=${video.youtubeId}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center gap-4 p-4 md:p-5 hover:bg-stone-50 transition-colors"
+                                    >
+                                        <span className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 text-primary font-bold text-sm flex items-center justify-center">
+                                            {index + 2}
+                                        </span>
+                                        <span className="flex-1 text-stone-800 text-sm md:text-base">
+                                            {video.title}
+                                        </span>
+                                        <PlayCircle className="h-5 w-5 text-stone-400 flex-shrink-0" />
+                                    </a>
+                                </li>
                             ))}
+                        </ol>
+
+                        <div className="text-center mt-8">
+                            <a
+                                href={LECTURE_PLAYLIST_URL}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center font-bold text-primary hover:text-primary-dark"
+                            >
+                                ▶ 全10回をまとめて見る
+                            </a>
                         </div>
 
                         <div className="max-w-2xl mx-auto mt-12 space-y-5 text-stone-700 leading-relaxed">
