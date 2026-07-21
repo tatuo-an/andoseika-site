@@ -2,7 +2,6 @@
   "crons": [
     { "path": "/api/cron/cleanup-images", "schedule": "0 2 * * *" },
     { "path": "/api/cron/auto-complete",  "schedule": "0 3 * * *" },
-    { "path": "/api/cron/renewal-notifications", "schedule": "0 0 * * *" },
-    { "path": "/api/cron/survey-points", "schedule": "0 5 * * *" }
+    { "path": "/api/cron/renewal-notifications", "schedule": "0 0 * * *" }
   ]
 }

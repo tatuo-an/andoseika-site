@@ -2,15 +2,12 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { ChevronLeft, Send, XCircle, CheckCircle, ClipboardList } from "lucide-react";
 import Link from "next/link";
 
 const SURVEY_FORM_URL = process.env.NEXT_PUBLIC_SURVEY_FORM_URL;
-// Googleフォームの「事前入力したリンクを取得」で確認できる、メールアドレス質問の entry.XXXXXXXXX の数字部分
-const SURVEY_FORM_EMAIL_ENTRY_ID = process.env.NEXT_PUBLIC_SURVEY_FORM_EMAIL_ENTRY_ID;
 const SURVEY_POINTS = 200;
 
 type Order = {
@@ -246,7 +243,6 @@ const STATUS_STEP: Record<string, number> = { paid: 2, shipping: 3, delivered: 4
 export default function OrderDetailPage() {
   const { orderNumber } = useParams<{ orderNumber: string }>();
   const router = useRouter();
-  const { data: session } = useSession();
   const [order, setOrder] = useState<Order | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
@@ -259,6 +255,9 @@ export default function OrderDetailPage() {
   const [responding, setResponding] = useState(false);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const [surveyAnswered, setSurveyAnswered] = useState<boolean | null>(null);
+  const [surveyPassword, setSurveyPassword] = useState("");
+  const [surveyClaiming, setSurveyClaiming] = useState(false);
+  const [surveyError, setSurveyError] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -279,6 +278,31 @@ export default function OrderDetailPage() {
 
   function scrollToBottom() {
     setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
+  }
+
+  async function claimSurveyPoints() {
+    if (!surveyPassword.trim()) return;
+    setSurveyClaiming(true);
+    setSurveyError(null);
+    try {
+      const res = await fetch("/api/my/survey-claim", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: surveyPassword }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setSurveyAnswered(true);
+      } else if (data.reason === "already_claimed") {
+        setSurveyAnswered(true);
+      } else {
+        setSurveyError("合言葉が正しくありません。フォーム送信後の画面をご確認ください。");
+      }
+    } catch {
+      setSurveyError("通信エラーが発生しました。時間をおいて再度お試しください。");
+    } finally {
+      setSurveyClaiming(false);
+    }
   }
 
   async function sendMessage() {
@@ -617,46 +641,39 @@ export default function OrderDetailPage() {
                     <p className="font-bold text-stone-900 text-sm">アンケートにご協力をお願いします</p>
                   </div>
                   <p className="text-xs text-stone-600 leading-relaxed mb-3">
-                    今回のお買い物についてのご感想をお聞かせください。ご回答いただいた方全員に<strong className="text-purple-600">{SURVEY_POINTS}ポイント</strong>プレゼントします（1アカウント1回まで）。
+                    今回のお買い物についてのご感想をお聞かせください。ご回答いただくと表示される合言葉を下に入力すると、<strong className="text-purple-600">{SURVEY_POINTS}ポイント</strong>プレゼントします（1アカウント1回まで）。
                   </p>
-                  {(() => {
-                    const email = session?.user?.email;
-                    const prefillUrl = email && SURVEY_FORM_EMAIL_ENTRY_ID
-                      ? `${SURVEY_FORM_URL}?usp=pp_url&entry.${SURVEY_FORM_EMAIL_ENTRY_ID}=${encodeURIComponent(email)}`
-                      : SURVEY_FORM_URL!;
-                    const isPrefilled = !!(email && SURVEY_FORM_EMAIL_ENTRY_ID);
-                    return (
-                      <>
-                        {!isPrefilled && email && (
-                          <div className="bg-white rounded-lg px-3 py-2 mb-3">
-                            <p className="text-[11px] text-stone-500 mb-1">
-                              {email.endsWith("@line.user")
-                                ? "LINEでログインされているため、実際のメールアドレスの代わりに以下のアカウント識別用の文字列をフォームの「メールアドレス」欄にご入力ください（実在のメールアドレスではありませんが、これがお客様のアカウントを特定する情報になります）："
-                                : "フォーム内のメールアドレス欄には、ご登録のこちらのアドレスをご入力ください："}
-                            </p>
-                            <div className="flex items-center gap-2">
-                              <span className="font-mono text-xs text-stone-700 break-all flex-1">{email}</span>
-                              <button
-                                onClick={() => { navigator.clipboard?.writeText(email); }}
-                                className="shrink-0 text-[11px] font-bold text-purple-600 border border-purple-300 rounded-full px-2.5 py-1 hover:bg-purple-50 transition-colors"
-                              >
-                                コピー
-                              </button>
-                            </div>
-                          </div>
-                        )}
-                        <a
-                          href={prefillUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center justify-center w-full py-2.5 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-colors text-sm font-bold"
-                        >
-                          アンケートに回答する
-                        </a>
-                      </>
-                    );
-                  })()}
-                  <p className="text-[10px] text-stone-400 mt-2">※ポイントの反映まで数日かかる場合があります</p>
+                  <a
+                    href={SURVEY_FORM_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center w-full py-2.5 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-colors text-sm font-bold mb-3"
+                  >
+                    アンケートに回答する
+                  </a>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={surveyPassword}
+                      onChange={(e) => { setSurveyPassword(e.target.value); setSurveyError(null); }}
+                      placeholder="フォーム回答後に表示される合言葉"
+                      className="flex-1 border border-purple-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300 bg-white"
+                    />
+                    <button
+                      onClick={claimSurveyPoints}
+                      disabled={surveyClaiming || !surveyPassword.trim()}
+                      className="shrink-0 px-4 py-2 bg-purple-600 text-white rounded-xl text-sm font-bold hover:bg-purple-700 transition-colors disabled:opacity-50"
+                    >
+                      {surveyClaiming ? "確認中..." : "送信"}
+                    </button>
+                  </div>
+                  {surveyError && <p className="text-xs text-red-500 mt-2">{surveyError}</p>}
+                </div>
+              )}
+              {surveyAnswered === true && (
+                <div className="bg-purple-50 border border-purple-200 rounded-2xl shadow-sm p-4 mt-4 flex items-center gap-2">
+                  <ClipboardList className="w-4 h-4 text-purple-500 shrink-0" />
+                  <p className="text-xs text-purple-700">アンケートへのご協力ありがとうございました！{SURVEY_POINTS}ポイントを進呈しました。</p>
                 </div>
               )}
 
