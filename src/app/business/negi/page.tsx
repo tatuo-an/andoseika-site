@@ -32,6 +32,7 @@ const NEGI_LP_CSS = `
 .negi-lp .hero-point{min-width:150px;background:#ffffff10;border:1px solid #ffffff22;border-radius:15px;padding:14px 18px}
 .negi-lp .hero-point b{display:block;font-size:24px;color:#ffe283}
 .negi-lp .hero-point span{display:block;font-size:12px;color:#d7e7de;margin-top:3px}
+.negi-lp .hero-photo{display:none}
 .negi-lp section{padding:82px 0}
 .negi-lp .section-head{max-width:820px;margin:0 auto 44px;text-align:center}
 .negi-lp .section-head .mini{font-size:13px;font-weight:900;letter-spacing:.12em;color:#14713e}
@@ -81,8 +82,11 @@ const NEGI_LP_CSS = `
 .negi-lp footer .container{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;font-size:13px}
 .negi-lp .note{font-size:12px;color:#607167;line-height:1.8;margin-top:18px}
 @media(max-width:960px){
-  .negi-lp .hero::after{inset:48% 0 0 0;background:linear-gradient(#143b27 0%,transparent 30%),url('/images/negi-lp/negi-regai-dai.jpg') center/cover}
-  .negi-lp .hero-inner{width:100%;padding:58px 0 76px}
+  .negi-lp .hero::after{content:none}
+  .negi-lp .hero-inner{width:100%;padding:58px 0 40px;background:#143b27}
+  .negi-lp .hero-point{background:#0d3320;border:1px solid #ffffff26}
+  .negi-lp .hero-photo{display:block;width:100%;height:220px;overflow:hidden}
+  .negi-lp .hero-photo img{width:100%;height:100%;object-fit:cover;display:block}
   .negi-lp .nav-links a:not(.btn){display:none}
   .negi-lp .info-grid,.negi-lp .product-grid,.negi-lp .related-grid,.negi-lp .delivery-list{grid-template-columns:1fr}
   .negi-lp .delivery-grid{grid-template-columns:1fr}
@@ -148,6 +152,13 @@ export default function NegiLPPage() {
                             </div>
                         </div>
                     </div>
+                </div>
+                <div className="hero-photo" aria-hidden="true">
+                    <img
+                        src="/images/negi-lp/negi-regai-dai.jpg"
+                        alt=""
+                        loading="lazy"
+                    />
                 </div>
             </header>
 

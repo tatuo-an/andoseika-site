@@ -155,10 +155,17 @@ export function ChatWidget() {
             <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white/50 shrink-0">
               <Image src="/images/ando-ai.png" alt="安藤AI" width={40} height={40} className="object-cover" />
             </div>
-            <div>
+            <div className="flex-1 min-w-0">
               <p className="text-white font-bold text-sm">安藤AIに聞く</p>
               <p className="text-white/70 text-xs">商品・サポーター・体験など気軽にどうぞ</p>
             </div>
+            <button
+              onClick={() => setOpen(false)}
+              aria-label="チャットを閉じる"
+              className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
 
           {/* メッセージ */}
