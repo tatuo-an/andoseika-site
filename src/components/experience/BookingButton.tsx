@@ -3,9 +3,11 @@
 import { useState } from "react";
 import { BookingCalendar } from "./BookingCalendar";
 
-export function BookingButton({ experienceName, durationMin }: {
+export function BookingButton({ experienceName, durationMin, seasonMonths, seasonLabel }: {
     experienceName: string;
     durationMin: number;
+    seasonMonths?: number[];
+    seasonLabel?: string;
 }) {
     const [open, setOpen] = useState(false);
     return (
@@ -21,6 +23,8 @@ export function BookingButton({ experienceName, durationMin }: {
                 onClose={() => setOpen(false)}
                 experienceName={experienceName}
                 durationMin={durationMin}
+                seasonMonths={seasonMonths}
+                seasonLabel={seasonLabel}
             />
         </>
     );

@@ -6,6 +6,11 @@ export const dynamic = "force-dynamic";
 
 const SPREADSHEET_ID = process.env.GOOGLE_SPREADSHEET_ID!;
 const SHEET_NAME = "体験予約";
+// 体験ごとの予約受付月（1〜12）。ここに無い体験名は月の制限なし。
+const EXPERIENCE_SEASONS: Record<string, number[]> = {
+    "養蜂体験": [5, 6, 7, 8, 9, 10],
+    "芋掘り体験": [10, 11, 12],
+};
 // 列: A=予約ID, B=メール, C=名前, D=電話, E=体験名, F=日付, G=開始時刻, H=所要分, I=人数, J=ステータス, K=作成日時, L=料金
 
 function getSheets() {
@@ -92,6 +97,14 @@ export async function POST(req: NextRequest) {
 
     if (!experienceName || !date || !startTime || !durationMin || !headcount) {
         return NextResponse.json({ error: "必須項目が不足しています" }, { status: 400 });
+    }
+
+    const allowedMonths = EXPERIENCE_SEASONS[experienceName];
+    if (allowedMonths) {
+        const month = parseInt(date.slice(5, 7), 10);
+        if (!allowedMonths.includes(month)) {
+            return NextResponse.json({ error: "この体験は現在予約受付期間外です" }, { status: 400 });
+        }
     }
 
     try {

@@ -42,11 +42,15 @@ export function BookingCalendar({
     onClose,
     experienceName,
     durationMin,
+    seasonMonths,
+    seasonLabel,
 }: {
     isOpen: boolean;
     onClose: () => void;
     experienceName: string;
     durationMin: number;
+    seasonMonths?: number[]; // 予約可能な月（例: [10, 11, 12]）。未指定なら通年予約可
+    seasonLabel?: string; // 表示用の期間ラベル（例: "10月〜12月"）
 }) {
     const [weekOffset, setWeekOffset] = useState(0);
     const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -156,6 +160,9 @@ export function BookingCalendar({
                     <div>
                         <h2 className="text-lg font-bold text-stone-900">{experienceName} の予約</h2>
                         <p className="text-xs text-stone-500 mt-0.5">所要時間 {durationMin}分 / 営業 9:00〜17:00 / 休憩 12:00〜13:00 / 予約は1週間先から</p>
+                        {seasonLabel && (
+                            <p className="text-xs text-amber-600 font-bold mt-0.5">予約受付期間：{seasonLabel}（期間外の日付は選択できません）</p>
+                        )}
                     </div>
                     <button onClick={onClose} className="p-2 hover:bg-stone-200 rounded-full transition-colors">
                         <X className="h-5 w-5 text-stone-500" />
@@ -193,10 +200,11 @@ export function BookingCalendar({
                                         <th className="border-b border-stone-200 p-2 text-xs text-stone-400 w-16 text-left">時間</th>
                                         {dates.map((d, i) => {
                                             const isWeekend = d.getDay() === 0 || d.getDay() === 6;
+                                            const outOfSeason = !!seasonMonths && !seasonMonths.includes(d.getMonth() + 1);
                                             return (
-                                                <th key={i} className={`border-b border-stone-200 p-2 text-xs font-medium ${isWeekend ? "text-red-500" : "text-stone-700"}`}>
+                                                <th key={i} className={`border-b border-stone-200 p-2 text-xs font-medium ${outOfSeason ? "text-stone-300" : isWeekend ? "text-red-500" : "text-stone-700"}`}>
                                                     <div>{d.getMonth() + 1}/{d.getDate()}</div>
-                                                    <div className="text-[10px] text-stone-400">{WEEKDAYS[d.getDay()]}</div>
+                                                    <div className="text-[10px] text-stone-400">{outOfSeason ? "期間外" : WEEKDAYS[d.getDay()]}</div>
                                                 </th>
                                             );
                                         })}
@@ -211,21 +219,23 @@ export function BookingCalendar({
                                             {dates.map((d, i) => {
                                                 const dateStr = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, "0")}-${d.getDate().toString().padStart(2, "0")}`;
                                                 const isSelected = selectedDate === dateStr && selectedSlot === slot.startMin;
+                                                const outOfSeason = !!seasonMonths && !seasonMonths.includes(d.getMonth() + 1);
                                                 const booked = isBooked(dateStr, slot.startMin);
+                                                const unavailable = booked || outOfSeason;
                                                 return (
                                                     <td key={i} className="border-b border-stone-100 p-1">
                                                         <button
-                                                            onClick={() => !booked && handleSelect(dateStr, slot.startMin)}
-                                                            disabled={booked}
+                                                            onClick={() => !unavailable && handleSelect(dateStr, slot.startMin)}
+                                                            disabled={unavailable}
                                                             className={`w-full h-9 rounded-md text-xs font-medium transition-colors ${
-                                                                booked
+                                                                unavailable
                                                                     ? "bg-stone-100 text-stone-300 cursor-not-allowed"
                                                                     : isSelected
                                                                         ? "bg-primary text-white"
                                                                         : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
                                                             }`}
                                                         >
-                                                            {booked ? "×" : isSelected ? "✓" : "○"}
+                                                            {outOfSeason ? "―" : booked ? "×" : isSelected ? "✓" : "○"}
                                                         </button>
                                                     </td>
                                                 );

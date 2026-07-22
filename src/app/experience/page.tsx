@@ -119,7 +119,7 @@ export default function ExperiencePage() {
                                 <p className="text-xs text-stone-500 mt-2">防護服レンタル・蜂蜜試食込 / 1回最大4名程度</p>
                             </div>
 
-                            <BookingButton experienceName="養蜂体験" durationMin={60} />
+                            <BookingButton experienceName="養蜂体験" durationMin={60} seasonMonths={[5, 6, 7, 8, 9, 10]} seasonLabel="5月〜10月" />
                         </div>
                     </div>
 
@@ -214,7 +214,7 @@ export default function ExperiencePage() {
                                 <p className="text-xs text-stone-500 mt-2">道具レンタル込み</p>
                             </div>
 
-                            <BookingButton experienceName="芋掘り体験" durationMin={90} />
+                            <BookingButton experienceName="芋掘り体験" durationMin={90} seasonMonths={[10, 11, 12]} seasonLabel="10月〜12月" />
                         </div>
                         <div className="order-1 md:order-2 relative aspect-square w-full rounded-2xl overflow-hidden bg-stone-100 shadow-lg">
                             <Image
