@@ -81,6 +81,13 @@ export default async function BusinessPage() {
                                 <div className="text-xs text-stone-500 bg-white p-3 rounded border border-stone-200">
                                     <p><span className="font-bold">出荷形態:</span> 3kg箱 / 10kg箱 等</p>
                                 </div>
+                                <Link
+                                    href="/business/negi"
+                                    className="mt-4 inline-flex items-center justify-center w-full bg-primary/10 hover:bg-primary/20 text-primary text-sm font-bold py-2.5 px-4 rounded-full transition-colors"
+                                >
+                                    白ネギの規格・参考価格はこちら
+                                    <ArrowRight className="ml-1.5 h-4 w-4" />
+                                </Link>
                             </div>
 
                             {/* Item 2: Nagaimo / Mukago */}
