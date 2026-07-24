@@ -53,7 +53,7 @@ async function getOrders(): Promise<Order[]> {
       }
     }
     return rows
-      .filter((r) => r[0] && r[0] !== "注文番号")
+      .filter((r) => r[0] && r[0] !== "注文番号" && !(r[6] ?? "").includes("年会費"))
       .map((r) => {
         const email = r[3] ?? "";
         const buyerFromQ = r[16] ?? "";
@@ -114,15 +114,6 @@ export default async function AdminOrdersPage() {
           >
             <FileSpreadsheet className="w-3.5 h-3.5" />
             スプレッドシート
-          </a>
-          <a
-            href="https://docs.google.com/spreadsheets/d/15f9srYPB0WxN0D_YlT5dMvd6uV8DgwG6WgUU9YxVfA8/edit?gid=1036575973#gid=1036575973"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1.5 text-xs font-bold text-[#06C755] border border-[#06C755]/30 bg-[#06C755]/10 rounded-full px-3 py-1.5 hover:bg-[#06C755]/20 transition-colors"
-          >
-            <FileSpreadsheet className="w-3.5 h-3.5" />
-            LINE注文シート
           </a>
         </div>
 

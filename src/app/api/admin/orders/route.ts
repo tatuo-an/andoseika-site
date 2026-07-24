@@ -81,7 +81,7 @@ export async function GET() {
   }
 
   const orders: Order[] = rows
-    .filter((r) => r[0] && r[0] !== "注文番号")
+    .filter((r) => r[0] && r[0] !== "注文番号" && !(r[6] ?? "").includes("年会費"))
     .map((r) => {
       const email = r[3] ?? "";
       const buyerFromQ = r[16] ?? "";
