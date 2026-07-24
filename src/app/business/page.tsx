@@ -48,13 +48,24 @@ export default async function BusinessPage() {
                             鳥取県倉吉市・北栄町の畑から、白ネギ・長芋・里芋・梨・蜂蜜・らっきょう・むかごなどを、<br className="hidden md:block" />
                             業務用ロットで全国にお届けします。
                         </p>
-                        <Link
-                            href="/contact/business"
-                            className="inline-flex items-center bg-primary hover:bg-primary-dark text-white font-bold py-4 px-8 rounded-full transition-all transform hover:scale-105 shadow-lg"
-                        >
-                            業務用のお問い合わせ
-                            <ArrowRight className="ml-2 h-5 w-5" />
-                        </Link>
+                        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                            <Link
+                                href="/contact/business"
+                                className="inline-flex items-center justify-center bg-primary hover:bg-primary-dark text-white font-bold py-4 px-8 rounded-full transition-all transform hover:scale-105 shadow-lg"
+                            >
+                                業務用のお問い合わせ
+                                <ArrowRight className="ml-2 h-5 w-5" />
+                            </Link>
+                            <a
+                                href="https://liff.line.me/2010168694-HkGwLgs9"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center justify-center bg-[#06C755] hover:bg-[#05b34c] text-white font-bold py-4 px-8 rounded-full transition-all transform hover:scale-105 shadow-lg"
+                            >
+                                LINEで注文する
+                                <ArrowRight className="ml-2 h-5 w-5" />
+                            </a>
+                        </div>
                     </div>
                 </section>
 
@@ -335,13 +346,24 @@ export default async function BusinessPage() {
                             お見積もり、納品時期のご相談など、<br />
                             専用フォームよりお問い合わせをお待ちしております。
                         </p>
-                        <Link
-                            href="/contact/business"
-                            className="inline-flex items-center bg-white text-primary font-bold py-4 px-10 rounded-full transition-all transform hover:scale-105 shadow-lg"
-                        >
-                            業務用のお問い合わせはこちら
-                            <ArrowRight className="ml-2 h-5 w-5" />
-                        </Link>
+                        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                            <Link
+                                href="/contact/business"
+                                className="inline-flex items-center justify-center bg-white text-primary font-bold py-4 px-10 rounded-full transition-all transform hover:scale-105 shadow-lg"
+                            >
+                                業務用のお問い合わせはこちら
+                                <ArrowRight className="ml-2 h-5 w-5" />
+                            </Link>
+                            <a
+                                href="https://liff.line.me/2010168694-HkGwLgs9"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center justify-center bg-[#06C755] hover:bg-[#05b34c] text-white font-bold py-4 px-10 rounded-full transition-all transform hover:scale-105 shadow-lg"
+                            >
+                                LINEで注文する
+                                <ArrowRight className="ml-2 h-5 w-5" />
+                            </a>
+                        </div>
                     </div>
                 </section>
             </main>
