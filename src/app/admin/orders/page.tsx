@@ -4,7 +4,7 @@ import { isAdmin } from "@/lib/admin";
 import { Header } from "@/components/layout/Header";
 import { google } from "googleapis";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, FileSpreadsheet } from "lucide-react";
 import { OrdersClient } from "./OrdersClient";
 import type { Order } from "@/app/api/admin/orders/route";
 
@@ -105,7 +105,16 @@ export default async function AdminOrdersPage() {
           <Link href="/admin" className="text-stone-400 hover:text-stone-600 transition-colors">
             <ArrowLeft className="w-5 h-5" />
           </Link>
-          <h1 className="text-2xl font-bold text-stone-900">注文管理</h1>
+          <h1 className="text-2xl font-bold text-stone-900 flex-1">注文管理</h1>
+          <a
+            href="https://docs.google.com/spreadsheets/d/1M4UsoDXt7LgtNNkwzLqVb6yl8vWo7NdzobpmdKkWDGE/edit?gid=2061195783#gid=2061195783"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 text-xs font-bold text-emerald-700 border border-emerald-200 bg-emerald-50 rounded-full px-3 py-1.5 hover:bg-emerald-100 transition-colors"
+          >
+            <FileSpreadsheet className="w-3.5 h-3.5" />
+            スプレッドシート
+          </a>
         </div>
 
         {/* Summary cards */}
