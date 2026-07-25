@@ -170,7 +170,7 @@ export function SupportersClient() {
                             {isExpanded && (
                                 <div className="border-t border-stone-100 px-4 py-4 bg-stone-50 space-y-3">
                                     <div>
-                                        <p className="text-xs text-stone-400 mb-1">表示名（顧客マスタ・LINE注文ユーザーどちらにも無い場合は手入力できます）</p>
+                                        <p className="text-xs text-stone-400 mb-1">表示名（各シートから自動で取得します。上書きしたい場合のみ編集してください）</p>
                                         <div className="flex items-center gap-2">
                                             <input
                                                 type="text"
