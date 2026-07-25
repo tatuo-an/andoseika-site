@@ -25,6 +25,8 @@ export function SupportersClient() {
     const [tab, setTab] = useState<Tab>("active");
     const [searchQuery, setSearchQuery] = useState("");
     const [expandedEmail, setExpandedEmail] = useState<string | null>(null);
+    const [nameDraft, setNameDraft] = useState<Record<string, string>>({});
+    const [nameSaving, setNameSaving] = useState<string | null>(null);
 
     async function load() {
         try {
@@ -44,6 +46,23 @@ export function SupportersClient() {
     useEffect(() => {
         load().finally(() => setLoading(false));
     }, []);
+
+    async function saveName(email: string) {
+        const displayName = nameDraft[email] ?? "";
+        setNameSaving(email);
+        try {
+            const res = await fetch(`/api/admin/supporters/${encodeURIComponent(email)}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ displayName }),
+            });
+            if (res.ok) {
+                setSupporters((prev) => prev.map((s) => s.email === email ? { ...s, displayName } : s));
+            }
+        } finally {
+            setNameSaving(null);
+        }
+    }
 
     async function handleRefresh() {
         setRefreshing(true);
@@ -150,6 +169,25 @@ export function SupportersClient() {
 
                             {isExpanded && (
                                 <div className="border-t border-stone-100 px-4 py-4 bg-stone-50 space-y-3">
+                                    <div>
+                                        <p className="text-xs text-stone-400 mb-1">表示名（顧客マスタ・LINE注文ユーザーどちらにも無い場合は手入力できます）</p>
+                                        <div className="flex items-center gap-2">
+                                            <input
+                                                type="text"
+                                                value={nameDraft[s.email] ?? s.displayName}
+                                                onChange={(e) => setNameDraft((prev) => ({ ...prev, [s.email]: e.target.value }))}
+                                                placeholder="お名前"
+                                                className="flex-1 border border-stone-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 bg-white"
+                                            />
+                                            <button
+                                                onClick={() => saveName(s.email)}
+                                                disabled={nameSaving === s.email}
+                                                className="shrink-0 px-4 py-2 bg-primary text-white rounded-xl text-sm font-bold hover:bg-primary/90 transition-colors disabled:opacity-50"
+                                            >
+                                                {nameSaving === s.email ? "保存中..." : "保存"}
+                                            </button>
+                                        </div>
+                                    </div>
                                     <div className="grid grid-cols-2 gap-3 text-sm">
                                         <div>
                                             <p className="text-xs text-stone-400 mb-0.5">契約期限</p>

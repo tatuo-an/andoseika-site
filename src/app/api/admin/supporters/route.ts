@@ -43,7 +43,8 @@ export async function GET() {
 
     try {
         const sheets = getSheets();
-        const [customersRes, ordersRes] = await Promise.all([
+        const lineOrderSpreadsheetId = process.env.LINE_ORDER_SPREADSHEET_ID;
+        const [customersRes, ordersRes, lineUsersRes] = await Promise.all([
             sheets.spreadsheets.values.get({
                 spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
                 range: "顧客マスタ!A:I",
@@ -52,7 +53,19 @@ export async function GET() {
                 spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
                 range: "注文管理!A:Q",
             }),
+            lineOrderSpreadsheetId
+                ? sheets.spreadsheets.values.get({ spreadsheetId: lineOrderSpreadsheetId, range: "ユーザー!A:F" }).catch(() => ({ data: { values: [] as string[][] } }))
+                : Promise.resolve({ data: { values: [] as string[][] } }),
         ]);
+
+        // LINE注文管理の「ユーザー」シート（A=LINE ID, B=氏名, C=住所, D=電話番号, E=メールアドレス）を
+        // メールアドレスで引けるようにしておく。顧客マスタに表示名が無いサポーターの補完に使う。
+        const nameByEmail = new Map<string, string>();
+        for (const r of lineUsersRes.data.values ?? []) {
+            const email = r[4] ?? "";
+            const name = r[1] ?? "";
+            if (email && name) nameByEmail.set(email, name);
+        }
 
         const today = new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Tokyo" });
 
@@ -92,7 +105,7 @@ export async function GET() {
             seenEmails.add(email);
             supporters.push({
                 email,
-                displayName: r[2] ?? "",
+                displayName: (r[2] ?? "") || nameByEmail.get(email) || "",
                 tier: tierKey,
                 tierName: TIERS[tierKey].name,
                 tierExpiry,
@@ -108,7 +121,7 @@ export async function GET() {
             if (seenEmails.has(email)) continue;
             supporters.push({
                 email,
-                displayName: "",
+                displayName: nameByEmail.get(email) || "",
                 tier: "free",
                 tierName: "（退会済み等）",
                 tierExpiry: "",
