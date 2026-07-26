@@ -16,6 +16,7 @@ const NAV_ITEMS = [
     { href: "/supporter", label: "サポーター募集", highlight: true },
     { href: "/business", label: "業務用・卸" },
     { href: "/about", label: "私たちについて" },
+    { href: "/sns", label: "つぶやき" },
 ];
 
 export function Header() {
