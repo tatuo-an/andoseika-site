@@ -10,6 +10,11 @@ export const metadata: Metadata = {
 
 const X_USERNAME = "tacchannooen";
 
+// 表示したい投稿のURLをここに追加していく（新しい投稿を上に追加）
+const TWEET_URLS = [
+    "https://x.com/tacchannooen/status/2081148890808774830",
+];
+
 export default function SnsPage() {
     return (
         <div className="min-h-screen flex flex-col font-sans bg-stone-50">
@@ -38,7 +43,7 @@ export default function SnsPage() {
 
                 <section className="py-12 md:py-16">
                     <div className="container mx-auto px-4 md:px-6 max-w-xl">
-                        <XTimeline username={X_USERNAME} />
+                        <XTimeline tweetUrls={TWEET_URLS} />
                     </div>
                 </section>
             </main>
