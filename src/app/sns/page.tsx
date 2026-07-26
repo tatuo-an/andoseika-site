@@ -22,10 +22,7 @@ export default function SnsPage() {
             <main className="flex-1">
                 <section className="bg-primary/5 border-b border-primary/10 py-16 md:py-20">
                     <div className="container mx-auto px-4 md:px-6 max-w-3xl text-center space-y-4">
-                        <p className="text-sm font-bold uppercase tracking-widest text-primary">つぶやき</p>
-                        <h1 className="text-3xl md:text-4xl font-bold font-heading text-stone-900">
-                            たっちゃんの農園日記
-                        </h1>
+                        <h1 className="text-sm font-bold uppercase tracking-widest text-primary">つぶやき</h1>
                         <p className="text-stone-600 leading-relaxed">
                             畑の様子や収穫の様子、日々の出来事をXで発信しています。<br />
                             最新の投稿をこちらでご覧いただけます。
