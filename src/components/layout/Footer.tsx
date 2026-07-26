@@ -20,6 +20,7 @@ export function Footer() {
                         </p>
                     </div>
                     <ul className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-stone-600">
+                        <li><Link href="/sns" className="hover:text-primary">たっちゃんの農園日記（X）</Link></li>
                         <li><Link href="/contact" className="hover:text-primary">お問い合わせ</Link></li>
                         <li><Link href="/business" className="hover:text-primary">業務用のお取引</Link></li>
                         <li><Link href="/partners" className="hover:text-primary">取引先のご紹介</Link></li>
