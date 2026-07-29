@@ -98,6 +98,7 @@ const NEGI_LP_CSS = `
 .negi-lp .client-card-body{padding:14px 16px;text-align:center}
 .negi-lp .client-card-body strong{display:block;font-size:16px;color:#183022}
 .negi-lp .client-card-body span{display:block;margin-top:4px;font-size:12px;color:#7a8a80}
+.negi-lp .voice-source{display:block;font-size:11px;font-weight:900;color:#7a8a80;letter-spacing:.04em;margin:14px 0 4px}
 .negi-lp .achv-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
 .negi-lp .achv-item{background:#fff;border:1px solid #dbe7dd;border-radius:10px;padding:16px 14px;text-align:center;font-weight:800;font-size:15px;color:#20331d}
 .negi-lp .voice{background:#fff;border:1px solid #dbe7dd;border-radius:14px;padding:22px 24px}
@@ -547,17 +548,17 @@ export default function NegiLPPage() {
                     <div className="worry-grid">
                         <div className="worry-card">
                             <span className="worry-role">仕入れ担当</span>
-                            <p>近所を何軒も回り、電話をかけ続けても、見つからない。</p>
+                            <p>近所を何軒も回り、電話をかけ続けても、見つかりません。</p>
                         </div>
                         <div className="worry-card">
                             <span className="worry-role">店長</span>
-                            <p>出せないメニューが出る。</p>
-                            <p>お客様への説明と、売上が下がる。</p>
+                            <p>出せないメニューが出ます。</p>
+                            <p>お客様への説明と、売上が下がります。</p>
                         </div>
                         <div className="worry-card">
                             <span className="worry-role">経営者</span>
                             <p>急いで買い足すと、</p>
-                            <p>その時だけ原価が跳ねる。</p>
+                            <p>その時だけ原価が跳ねます。</p>
                         </div>
                     </div>
                 </div>
@@ -595,7 +596,7 @@ export default function NegiLPPage() {
                             <div className="product-body">
                                 <span className="tag">見栄え重視</span>
                                 <h3>店頭に並べる</h3>
-                                <p>サイズ毎に選ぶことができ、見た目と品質が問題なし。</p>
+                                <p>サイズごとに選ぶことができ、見た目も品質も問題ありません。</p>
                                 <details className="spec">
                                     <summary>サイズと本数を見る</summary>
                                     <p>3kg入り。2L 約20本（太めで食べ応えがあります）／L 約30本／L4 約40本／M 約50本</p>
@@ -685,7 +686,7 @@ export default function NegiLPPage() {
                         <span className="ba-tag">規格外もあります</span>
                         <div className="ba-before">
                             <span>いまの仕入れ</span>
-                            <p>刻んで使う料理にも、綺麗なネギを購入してます。</p>
+                            <p>刻んで使う料理にも、綺麗なネギを購入しています。</p>
                         </div>
                         <div className="ba-after">
                             <span>切り替えたあと</span>
@@ -793,6 +794,7 @@ export default function NegiLPPage() {
                                 <span>業務用のお取引先</span>
                                 <p>「値段が手頃で、太さも同じくらいのものをそろえて納めてくれるので助かっています」</p>
                                 <p>「量がまとまって仕入れられるのもありがたいです」</p>
+                                <p>価格だけでなく、鳥取県産を農家から直接仕入れられる安心感でも選んでいただいています。</p>
                             </div>
                         </div>
                         <div className="client-card">
@@ -805,6 +807,9 @@ export default function NegiLPPage() {
                                 <span>県外の産直市場</span>
                                 <p>「鳥取県産の野菜が少ないなかで、コンスタントに送ってもらえるのがいいですね」</p>
                                 <p>「店舗数が多いのですが、途切れずに届くので、お客さんにも喜ばれています」</p>
+                                <p>毎週、店頭からの要望数がPDFで届き、できる限りその数に合わせて出荷しています。</p>
+                                <span className="voice-source">売り場のお客様から</span>
+                                <p>「年中手に入るのは本当に助かります」</p>
                             </div>
                         </div>
                     </div>
