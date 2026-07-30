@@ -46,9 +46,8 @@ export function getActiveSeasonalSale(sales: SeasonalSale[], now: Date = new Dat
     return active.reduce((max, s) => (s.discountPercent > max.discountPercent ? s : max));
 }
 
-// 「季節セール」シートを読み、現在有効な割引率を返す（読み取り失敗時は0＝影響なし）。
-// 商品一覧・詳細ページなど、価格表示のみが目的の呼び出し元向けの簡易ヘルパー。
-export async function fetchActiveSeasonalDiscountPercent(): Promise<number> {
+// 「季節セール」シートを読み、現在有効なセール（名前・割引率）を返す（読み取り失敗時はnull＝影響なし）。
+export async function fetchActiveSeasonalSale(): Promise<SeasonalSale | null> {
     try {
         const authClient = new google.auth.GoogleAuth({
             credentials: {
@@ -70,8 +69,14 @@ export async function fetchActiveSeasonalDiscountPercent(): Promise<number> {
             discountPercent: parseInt(r[3] ?? "0", 10) || 0,
             enabled: r[4] === "TRUE",
         }));
-        return getActiveSeasonalSale(sales)?.discountPercent ?? 0;
+        return getActiveSeasonalSale(sales);
     } catch {
-        return 0;
+        return null;
     }
+}
+
+// 商品一覧・詳細ページなど、割引率の数値だけが必要な呼び出し元向けの簡易ヘルパー。
+export async function fetchActiveSeasonalDiscountPercent(): Promise<number> {
+    const sale = await fetchActiveSeasonalSale();
+    return sale?.discountPercent ?? 0;
 }

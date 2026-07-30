@@ -12,8 +12,8 @@ import localProducts from "@/data/products.json";
 import { Metadata } from "next";
 import { google } from "googleapis";
 import { BADGE_COLORS, DEFAULT_BADGE_COLOR } from "@/lib/badges";
-import { getEffectiveSalePercent, calcSalePrice } from "@/lib/sale";
-import { fetchActiveSeasonalDiscountPercent } from "@/lib/seasonalSales";
+import { isSaleActive, getEffectiveSalePercent, calcSalePrice } from "@/lib/sale";
+import { fetchActiveSeasonalSale } from "@/lib/seasonalSales";
 import { computeShipSchedule } from "@/lib/shipSchedule";
 import { DETAIL_EXTRA_FIELDS, FOOD_LABEL_FIELDS, parseExtra } from "@/lib/extraDescriptions";
 
@@ -338,7 +338,8 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
 export default async function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
-    const [productDirect, invData, seasonalDiscountPercent] = await Promise.all([getProduct(id), getInventoryData(id), fetchActiveSeasonalDiscountPercent()]);
+    const [productDirect, invData, seasonalSale] = await Promise.all([getProduct(id), getInventoryData(id), fetchActiveSeasonalSale()]);
+    const seasonalDiscountPercent = seasonalSale?.discountPercent ?? 0;
     const { stock, price: invPrice, name: invName, shipType, hidden, deleted, nextShipment, badges, familyRows, imageUrl: invImageUrl, familyImages, cost: invCost, coolAvailable: invCoolAvailable } = invData;
 
     const surcharges = await getShippingSurcharges(shipType);
@@ -400,6 +401,8 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
     const normalTaxed = currentVariation?.priceTaxed ?? toTaxIncluded(basePrice, invCost);
     const effPct = getEffectiveSalePercent(invData.salePercent, invData.saleStart, invData.saleEnd, seasonalDiscountPercent);
     const onSale = effPct > 0;
+    const isSeasonalSaleItem = onSale && !isSaleActive(invData.salePercent, invData.saleStart, invData.saleEnd);
+    const saleLabel = isSeasonalSaleItem && seasonalSale ? `${seasonalSale.name} ${effPct}% OFF` : `${effPct}% OFF`;
     const displayTaxed = onSale ? calcSalePrice(normalTaxed, effPct) : normalTaxed;
     const productImageUrls = displayImages.map(absoluteUrl).filter(Boolean);
     const productJsonLd = basePrice > 0
@@ -441,7 +444,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                         <div className="p-4 md:p-0 max-w-sm mx-auto md:max-w-none w-full relative">
                             {onSale && (
                                 <span className="absolute top-6 right-6 md:top-3 md:right-3 bg-red-500 text-white text-sm font-bold px-3 py-1.5 rounded-full shadow-lg z-20">
-                                    {effPct}% OFF
+                                    {saleLabel}
                                 </span>
                             )}
                             <ProductImageSlideshow images={displayImages} alt={invData.family || product.name} />
@@ -472,7 +475,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                                 <p className="text-2xl font-bold text-primary flex items-baseline gap-3 flex-wrap">
                                     {onSale && (
                                         <>
-                                            <span className="bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-full">{effPct}% OFF</span>
+                                            <span className="bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-full">{saleLabel}</span>
                                             <span className="text-base text-stone-400 line-through font-normal">¥{normalTaxed.toLocaleString()}</span>
                                         </>
                                     )}

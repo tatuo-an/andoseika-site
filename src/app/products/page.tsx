@@ -9,8 +9,8 @@ import localProducts from "@/data/products.json";
 import { google } from "googleapis";
 import { BADGE_COLORS, DEFAULT_BADGE_COLOR } from "@/lib/badges";
 import { FavoriteButton } from "@/components/products/FavoriteButton";
-import { getEffectiveSalePercent, calcSalePrice } from "@/lib/sale";
-import { fetchActiveSeasonalDiscountPercent } from "@/lib/seasonalSales";
+import { isSaleActive, getEffectiveSalePercent, calcSalePrice } from "@/lib/sale";
+import { fetchActiveSeasonalSale } from "@/lib/seasonalSales";
 import { auth } from "@/auth";
 import { getTier } from "@/lib/tiers";
 
@@ -126,7 +126,8 @@ export default async function ProductsPage() {
   }
   const isSupporter = userTier !== "free";
 
-  const [products, { map: inventoryMap, order: inventoryOrder }, seasonalDiscountPercent] = await Promise.all([getProducts(), getInventoryMap(), fetchActiveSeasonalDiscountPercent()]);
+  const [products, { map: inventoryMap, order: inventoryOrder }, seasonalSale] = await Promise.all([getProducts(), getInventoryMap(), fetchActiveSeasonalSale()]);
+  const seasonalDiscountPercent = seasonalSale?.discountPercent ?? 0;
 
   const productMap = Object.fromEntries(products.map((p) => [p.id, p]));
 
@@ -200,6 +201,8 @@ export default async function ProductsPage() {
       const imgSrc = inv.imageUrl || product.image?.url;
       const effPct = getEffectiveSalePercent(inv.salePercent, inv.saleStart, inv.saleEnd, seasonalDiscountPercent);
       const onSale = effPct > 0;
+      const isSeasonalSaleItem = onSale && !isSaleActive(inv.salePercent, inv.saleStart, inv.saleEnd);
+      const saleLabel = isSeasonalSaleItem && seasonalSale ? `${seasonalSale.name} ${effPct}% OFF` : `${effPct}% OFF`;
       const originalTaxed = toTaxIncluded(inv.price ?? product.price, inv.cost);
       const displayTaxed = onSale ? calcSalePrice(originalTaxed, effPct) : originalTaxed;
       const href = isLocked ? "/supporter#plans" : `/products/${product.id}`;
@@ -231,7 +234,7 @@ export default async function ProductsPage() {
               )}
               {onSale && !isLocked && (
                 <span className="absolute top-3 right-3 bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-md z-10">
-                  {effPct}% OFF
+                  {saleLabel}
                 </span>
               )}
               {isLimited && (
@@ -271,6 +274,8 @@ export default async function ProductsPage() {
       const familyImgSrc = repInv.familyImages[0] || repInv.imageUrl || repProduct?.image?.url;
       const familyEffPct = getEffectiveSalePercent(repInv.salePercent, repInv.saleStart, repInv.saleEnd, seasonalDiscountPercent);
       const familyOnSale = familyEffPct > 0;
+      const familyIsSeasonalSaleItem = familyOnSale && !isSaleActive(repInv.salePercent, repInv.saleStart, repInv.saleEnd);
+      const familySaleLabel = familyIsSeasonalSaleItem && seasonalSale ? `${seasonalSale.name} ${familyEffPct}% OFF` : `${familyEffPct}% OFF`;
       const href = isLocked ? "/supporter#plans" : `/products/${repId}`;
       return (
         <Link href={href} key={`family-${familyName}`} className={`group ${allSoldOut && !isLocked ? "pointer-events-none" : ""}`}>
@@ -300,7 +305,7 @@ export default async function ProductsPage() {
               )}
               {familyOnSale && !isLocked && (
                 <span className="absolute top-3 right-3 bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-md z-10">
-                  {familyEffPct}% OFF
+                  {familySaleLabel}
                 </span>
               )}
               {isLimited && (
@@ -358,6 +363,11 @@ export default async function ProductsPage() {
               安藤青果と、ご近所の農家さんが丹精込めて育てた自慢の逸品たち。<br />
               旬の時期に一番おいしい状態でお届けします。
             </p>
+            {seasonalSale && (
+              <p className="inline-block bg-red-500 text-white text-sm font-bold px-4 py-2 rounded-full shadow-md">
+                🎁 {seasonalSale.name}開催中！対象商品が{seasonalSale.discountPercent}%OFF
+              </p>
+            )}
           </div>
           <ProductSection title="根菜・芋類" items={rootCards} />
           <ProductSection title="葉物野菜" items={leafCards} />

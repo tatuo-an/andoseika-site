@@ -8,7 +8,7 @@ import { client } from "@/lib/microcms";
 import { Product } from "@/types/microcms";
 import { google } from "googleapis";
 import { getEffectiveSalePercent, calcSalePrice } from "@/lib/sale";
-import { fetchActiveSeasonalDiscountPercent } from "@/lib/seasonalSales";
+import { fetchActiveSeasonalSale } from "@/lib/seasonalSales";
 import localProducts from "@/data/products.json";
 
 export const revalidate = 60;
@@ -28,9 +28,8 @@ function toTaxIncluded(price: number, cost: number | null): number {
   return Math.round(cost * 1.08 + others * 1.10);
 }
 
-async function getTopProducts(): Promise<{ id: string; name: string; image: string; price: number; onSale: boolean }[]> {
+async function getTopProducts(seasonalDiscountPercent: number): Promise<{ id: string; name: string; image: string; price: number; onSale: boolean }[]> {
   try {
-    const seasonalDiscountPercent = await fetchActiveSeasonalDiscountPercent();
     let products: Product[] = [];
     try {
       const data = await client.getList<Product>({ endpoint: "products", queries: { orders: "order", limit: 100 } });
@@ -220,7 +219,8 @@ async function getRescueItems(): Promise<RescueItem[]> {
 }
 
 export default async function Home() {
-  const [products, rescueItems, preorderProducts] = await Promise.all([getTopProducts(), getRescueItems(), getPreorderProducts()]);
+  const seasonalSale = await fetchActiveSeasonalSale();
+  const [products, rescueItems, preorderProducts] = await Promise.all([getTopProducts(seasonalSale?.discountPercent ?? 0), getRescueItems(), getPreorderProducts()]);
   const organizationJsonLd = {
     "@context": "https://schema.org",
     "@type": ["Organization", "LocalBusiness"],
@@ -285,6 +285,17 @@ export default async function Home() {
             </div>
           </div>
         </section>
+
+        {/* ── 季節セールバナー ── */}
+        {seasonalSale && (
+          <section className="bg-red-500 text-white">
+            <div className="container mx-auto px-4 md:px-6 py-2.5 text-center">
+              <p className="text-sm font-bold">
+                🎁 {seasonalSale.name}開催中！対象商品が{seasonalSale.discountPercent}%OFF
+              </p>
+            </div>
+          </section>
+        )}
 
         {/* ── Trust Strip ── */}
         <section className="bg-white border-b border-stone-200">
