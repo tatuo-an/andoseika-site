@@ -3,6 +3,7 @@ import { google } from "googleapis";
 import { auth } from "@/auth";
 import { TIERS, getTier } from "@/lib/tiers";
 import { computeCartPricing, type InvItem, type ShippingRow } from "@/lib/pricing";
+import { getActiveSeasonalSale } from "@/lib/seasonalSales";
 
 export const dynamic = "force-dynamic";
 
@@ -43,8 +44,31 @@ async function fetchInventory(): Promise<InvItem[]> {
             clickpostMax: r[16] !== undefined && r[16] !== "" ? parseInt(r[16], 10) : 0,
             options: r[17] ?? "",
             salePercent: r[18] !== undefined && r[18] !== "" ? parseInt(r[18], 10) : 0,
+            saleStart: r[19] ?? "",
+            saleEnd: r[20] ?? "",
             compactMax: r[23] !== undefined && r[23] !== "" ? parseInt(r[23], 10) : 0,
         }));
+}
+
+async function fetchSeasonalDiscountPercent(): Promise<number> {
+    try {
+        const sheets = getSheets();
+        const res = await sheets.spreadsheets.values.get({
+            spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
+            range: "季節セール!A:E",
+        });
+        const rows = (res.data.values ?? []).slice(1).filter((r) => r[0]);
+        const sales = rows.map((r) => ({
+            name: r[0] ?? "",
+            startDate: r[1] ?? "",
+            endDate: r[2] ?? "",
+            discountPercent: parseInt(r[3] ?? "0", 10) || 0,
+            enabled: r[4] === "TRUE",
+        }));
+        return getActiveSeasonalSale(sales)?.discountPercent ?? 0;
+    } catch {
+        return 0;
+    }
 }
 
 async function fetchShippingRows(): Promise<ShippingRow[]> {
@@ -110,11 +134,12 @@ export async function POST(req: NextRequest) {
         const nextAuthSession = await auth();
         const userEmail = nextAuthSession?.user?.email ?? "";
 
-        const [inventory, shippingRows, tierDiscountRate, pointsBalance] = await Promise.all([
+        const [inventory, shippingRows, tierDiscountRate, pointsBalance, seasonalDiscountPercent] = await Promise.all([
             fetchInventory(),
             fetchShippingRows(),
             fetchTierDiscountRate(userEmail),
             fetchPointsBalance(userEmail),
+            fetchSeasonalDiscountPercent(),
         ]);
 
         const cartLines = Object.entries(cartDetails).map(([id, item]) => ({
@@ -132,6 +157,7 @@ export async function POST(req: NextRequest) {
             tierDiscountRate,
             pointsBalance,
             pointsToUse: pointsToUse ?? 0,
+            seasonalDiscountPercent,
         });
 
         return NextResponse.json({ pricing, pointsBalance });

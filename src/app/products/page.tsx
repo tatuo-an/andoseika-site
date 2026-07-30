@@ -9,7 +9,8 @@ import localProducts from "@/data/products.json";
 import { google } from "googleapis";
 import { BADGE_COLORS, DEFAULT_BADGE_COLOR } from "@/lib/badges";
 import { FavoriteButton } from "@/components/products/FavoriteButton";
-import { isSaleActive, calcSalePrice } from "@/lib/sale";
+import { getEffectiveSalePercent, calcSalePrice } from "@/lib/sale";
+import { fetchActiveSeasonalDiscountPercent } from "@/lib/seasonalSales";
 import { auth } from "@/auth";
 import { getTier } from "@/lib/tiers";
 
@@ -125,7 +126,7 @@ export default async function ProductsPage() {
   }
   const isSupporter = userTier !== "free";
 
-  const [products, { map: inventoryMap, order: inventoryOrder }] = await Promise.all([getProducts(), getInventoryMap()]);
+  const [products, { map: inventoryMap, order: inventoryOrder }, seasonalDiscountPercent] = await Promise.all([getProducts(), getInventoryMap(), fetchActiveSeasonalDiscountPercent()]);
 
   const productMap = Object.fromEntries(products.map((p) => [p.id, p]));
 
@@ -150,8 +151,8 @@ export default async function ProductsPage() {
         const p = x.inv.price ?? x.product?.price;
         if (!p) return 0;
         const taxed = toTaxIncluded(p, x.inv.cost);
-        const active = isSaleActive(x.inv.salePercent, x.inv.saleStart, x.inv.saleEnd);
-        return active ? calcSalePrice(taxed, x.inv.salePercent) : taxed;
+        const pct = getEffectiveSalePercent(x.inv.salePercent, x.inv.saleStart, x.inv.saleEnd, seasonalDiscountPercent);
+        return pct > 0 ? calcSalePrice(taxed, pct) : taxed;
       }).filter(Boolean) as number[];
       const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
 
@@ -197,9 +198,10 @@ export default async function ProductsPage() {
       const isSoldOut = inv.stock !== -1 && inv.stock === 0;
       const displayName = inv.variantName || product.name;
       const imgSrc = inv.imageUrl || product.image?.url;
-      const onSale = isSaleActive(inv.salePercent, inv.saleStart, inv.saleEnd);
+      const effPct = getEffectiveSalePercent(inv.salePercent, inv.saleStart, inv.saleEnd, seasonalDiscountPercent);
+      const onSale = effPct > 0;
       const originalTaxed = toTaxIncluded(inv.price ?? product.price, inv.cost);
-      const displayTaxed = onSale ? calcSalePrice(originalTaxed, inv.salePercent) : originalTaxed;
+      const displayTaxed = onSale ? calcSalePrice(originalTaxed, effPct) : originalTaxed;
       const href = isLocked ? "/supporter#plans" : `/products/${product.id}`;
       return (
         <Link href={href} key={product.id} className={`group ${isSoldOut && !isLocked ? "pointer-events-none" : ""}`}>
@@ -229,7 +231,7 @@ export default async function ProductsPage() {
               )}
               {onSale && !isLocked && (
                 <span className="absolute top-3 right-3 bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-md z-10">
-                  {inv.salePercent}% OFF
+                  {effPct}% OFF
                 </span>
               )}
               {isLimited && (
@@ -267,7 +269,8 @@ export default async function ProductsPage() {
     } else {
       const { familyName, repProduct, repInv, repId, minPrice, allSoldOut } = card;
       const familyImgSrc = repInv.familyImages[0] || repInv.imageUrl || repProduct?.image?.url;
-      const familyOnSale = isSaleActive(repInv.salePercent, repInv.saleStart, repInv.saleEnd);
+      const familyEffPct = getEffectiveSalePercent(repInv.salePercent, repInv.saleStart, repInv.saleEnd, seasonalDiscountPercent);
+      const familyOnSale = familyEffPct > 0;
       const href = isLocked ? "/supporter#plans" : `/products/${repId}`;
       return (
         <Link href={href} key={`family-${familyName}`} className={`group ${allSoldOut && !isLocked ? "pointer-events-none" : ""}`}>
@@ -297,7 +300,7 @@ export default async function ProductsPage() {
               )}
               {familyOnSale && !isLocked && (
                 <span className="absolute top-3 right-3 bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-md z-10">
-                  {repInv.salePercent}% OFF
+                  {familyEffPct}% OFF
                 </span>
               )}
               {isLimited && (

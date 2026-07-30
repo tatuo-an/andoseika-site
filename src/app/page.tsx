@@ -7,7 +7,8 @@ import { CommunityScroller } from "@/components/community/CommunityScroller";
 import { client } from "@/lib/microcms";
 import { Product } from "@/types/microcms";
 import { google } from "googleapis";
-import { isSaleActive, calcSalePrice } from "@/lib/sale";
+import { getEffectiveSalePercent, calcSalePrice } from "@/lib/sale";
+import { fetchActiveSeasonalDiscountPercent } from "@/lib/seasonalSales";
 import localProducts from "@/data/products.json";
 
 export const revalidate = 60;
@@ -29,6 +30,7 @@ function toTaxIncluded(price: number, cost: number | null): number {
 
 async function getTopProducts(): Promise<{ id: string; name: string; image: string; price: number; onSale: boolean }[]> {
   try {
+    const seasonalDiscountPercent = await fetchActiveSeasonalDiscountPercent();
     let products: Product[] = [];
     try {
       const data = await client.getList<Product>({ endpoint: "products", queries: { orders: "order", limit: 100 } });
@@ -87,8 +89,9 @@ async function getTopProducts(): Promise<{ id: string; name: string; image: stri
       const rawPrice = inv.price ?? product?.price;
       if (!rawPrice) continue;
       const taxed = toTaxIncluded(rawPrice, inv.cost);
-      const onSale = isSaleActive(inv.salePercent, inv.saleStart, inv.saleEnd);
-      const finalPrice = onSale ? calcSalePrice(taxed, inv.salePercent) : taxed;
+      const pct = getEffectiveSalePercent(inv.salePercent, inv.saleStart, inv.saleEnd, seasonalDiscountPercent);
+      const onSale = pct > 0;
+      const finalPrice = onSale ? calcSalePrice(taxed, pct) : taxed;
       const image = inv.imageUrl || product?.image?.url || "";
       const name = inv.family || inv.variantName || product?.name || "";
       result.push({ id, name, image, price: finalPrice, onSale });

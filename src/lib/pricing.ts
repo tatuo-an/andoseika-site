@@ -3,6 +3,8 @@
 // 価格・原価・利益率・セール率・オプション金額は必ずサーバーで取得した商品在庫（inventory）から参照し、
 // クライアントから送られてくる価格情報は一切使用しない。
 
+import { getEffectiveSalePercent } from "@/lib/sale";
+
 export type ShippingRow = {
     region: string; prefectures: string;
     s60: number; s80: number; s100: number; s120: number;
@@ -23,6 +25,8 @@ export type InvItem = {
     profitRate?: number | null;
     options?: string;
     salePercent?: number;
+    saleStart?: string; // YYYY-MM-DD
+    saleEnd?: string;   // YYYY-MM-DD
 };
 
 export type OptionEntry = { label: string; amount: number };
@@ -144,16 +148,18 @@ export function computeCartPricing(params: {
     tierDiscountRate: number;
     pointsBalance: number;
     pointsToUse: number;
+    seasonalDiscountPercent?: number; // 現在有効な季節セールの割引率（商品個別セールとは二重取りせず高い方を採用）
 }): PricingResult {
-    const { cartLines, inventory, shippingRows, prefecture, selectedOptionKeys, coolRequested, tierDiscountRate, pointsBalance, pointsToUse } = params;
+    const { cartLines, inventory, shippingRows, prefecture, selectedOptionKeys, coolRequested, tierDiscountRate, pointsBalance, pointsToUse, seasonalDiscountPercent = 0 } = params;
 
     const cartItems = cartLines
         .map(line => {
             const inv = inventory.find(v => v.id === line.id);
             if (!inv || inv.price === null) return null;
-            return { ...inv, price: inv.price, quantity: Math.max(1, Math.floor(line.quantity)) };
+            const effectivePercent = getEffectiveSalePercent(inv.salePercent ?? 0, inv.saleStart ?? "", inv.saleEnd ?? "", seasonalDiscountPercent);
+            return { ...inv, price: inv.price, quantity: Math.max(1, Math.floor(line.quantity)), salePercent: effectivePercent };
         })
-        .filter((x): x is InvItem & { price: number; quantity: number } => x !== null);
+        .filter((x): x is InvItem & { price: number; quantity: number; salePercent: number } => x !== null);
 
     const regionRow = prefecture ? findRegionRow(prefecture, shippingRows) : null;
     const baseRow = findBaseRow(shippingRows);
