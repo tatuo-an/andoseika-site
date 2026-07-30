@@ -19,7 +19,8 @@ export function calcSalePrice(originalPrice: number, salePercent: number): numbe
 }
 
 /**
- * 商品個別のセール割引率と、現在有効な季節セール割引率のうち高い方を採用する
+ * 商品個別のセール設定が有効な場合はそちらを優先する（割引率の大小に関わらず）。
+ * 個別セールが設定されていない・期間外の場合にのみ、季節セールの割引率を適用する。
  * （二重値引きにはせず、必ずどちらか一方の割引率のみが適用される）
  */
 export function getEffectiveSalePercent(
@@ -30,5 +31,6 @@ export function getEffectiveSalePercent(
     now: Date = new Date()
 ): number {
     const productActive = isSaleActive(productSalePercent, saleStart, saleEnd, now);
-    return Math.max(productActive ? productSalePercent : 0, seasonalDiscountPercent);
+    if (productActive) return productSalePercent;
+    return seasonalDiscountPercent;
 }
