@@ -6,8 +6,6 @@ import { User, MapPin, LogOut, Settings, Heart, CalendarDays, Bookmark } from "l
 import Link from "next/link";
 import { isAdmin } from "@/lib/admin";
 import { OnlineCounter } from "@/components/admin/OnlineCounter";
-import { SkipModeToggle } from "@/components/admin/SkipModeToggle";
-import { DeliveryScheduleEditor } from "@/components/admin/DeliveryScheduleEditor";
 import { MyOrders } from "@/components/mypage/MyOrders";
 import { DeleteAccountButton } from "@/components/mypage/DeleteAccountButton";
 import { ProfileCard } from "@/components/mypage/ProfileCard";
@@ -128,8 +126,6 @@ export default async function MyPage() {
           {isAdmin(user.email) && (
             <div className="mb-6 space-y-3">
               <OnlineCounter />
-              <SkipModeToggle />
-              <DeliveryScheduleEditor />
               <Link
                 href="/admin"
                 className="flex items-center gap-2 bg-stone-100 hover:bg-stone-200 text-stone-700 px-5 py-3 rounded-full text-sm font-bold transition-colors w-fit"

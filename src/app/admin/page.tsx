@@ -10,6 +10,8 @@ import { Product } from "@/types/microcms";
 import localProducts from "@/data/products.json";
 import { AdminPanel } from "@/components/admin/AdminPanel";
 import { AnnouncementsEditor } from "@/components/admin/AnnouncementsEditor";
+import { SkipModeToggle } from "@/components/admin/SkipModeToggle";
+import { DeliveryScheduleEditor } from "@/components/admin/DeliveryScheduleEditor";
 import { google } from "googleapis";
 
 export const dynamic = "force-dynamic";
@@ -176,6 +178,10 @@ export default async function AdminPage() {
                             <Tag className="w-4 h-4" />
                             季節セール管理
                         </Link>
+                    </div>
+                    <div className="mb-6 space-y-3">
+                        <SkipModeToggle />
+                        <DeliveryScheduleEditor />
                     </div>
                     <AnnouncementsEditor />
                     <AdminPanel
