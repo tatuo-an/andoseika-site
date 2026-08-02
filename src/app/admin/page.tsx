@@ -29,24 +29,30 @@ function getSheets() {
     return google.sheets({ version: "v4", auth: authClient });
 }
 
-async function getInventory(): Promise<{ items: ReturnType<typeof mapRow>[]; deletedIds: string[] }> {
+async function getDeletedIds(): Promise<string[]> {
     try {
         const sheets = getSheets();
-        const [rows, deletedRes] = await Promise.all([
-            getInventoryRows(),
-            withRetry(() => sheets.spreadsheets.values.get({
-                spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-                range: "商品在庫!K1",
-            })),
-        ]);
-        const items = rows.slice(1)
-            .filter((r) => r[0])
-            .map(mapRow);
-        const deletedIds: string[] = deletedRes.data.values?.[0]?.[0]
+        const deletedRes = await withRetry(() => sheets.spreadsheets.values.get({
+            spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
+            range: "商品在庫!K1",
+        }));
+        return deletedRes.data.values?.[0]?.[0]
             ? deletedRes.data.values[0][0].split(",").map((s: string) => s.trim()).filter(Boolean)
             : [];
-        return { items, deletedIds };
-    } catch { return { items: [], deletedIds: [] }; }
+    } catch { return []; }
+}
+
+async function getInventory(): Promise<{ items: ReturnType<typeof mapRow>[]; deletedIds: string[] }> {
+    // 削除済みID(K1セル)の取得に失敗しても、商品本体データまで巻き添えで
+    // 空にしないよう、それぞれ独立して失敗を吸収する。
+    const [rows, deletedIds] = await Promise.all([
+        getInventoryRows().catch(() => [] as string[][]),
+        getDeletedIds(),
+    ]);
+    const items = rows.slice(1)
+        .filter((r) => r[0])
+        .map(mapRow);
+    return { items, deletedIds };
 }
 
 function mapRow(r: string[]) {
