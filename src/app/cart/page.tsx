@@ -277,7 +277,6 @@ export default function CartPage() {
     // 計算結果（preview）をそのまま表示に使う。preview 読み込み中は 0 表示。
     const itemsBodyShown = preview?.itemsBodyShown ?? 0;
     const shipFeeShown = preview?.shipFeeShown ?? 0;
-    const profitShown = preview?.profitShown ?? 0;
     const surchargeTaxed = preview?.surchargeTaxed ?? 0;
     const coolFeeTaxed = preview?.coolFeeTaxed ?? 0;
     const optionsAdjustmentTaxed = preview?.optionsAdjustmentTaxed ?? 0;
@@ -716,7 +715,6 @@ export default function CartPage() {
                             <p className="text-stone-500 font-medium text-xs mb-1">内訳</p>
                             <div className="flex justify-between text-stone-600"><span>商品本体価格</span><span>¥{itemsBodyShown.toLocaleString()}</span></div>
                             {shipFeeShown > 0 && <div className="flex justify-between text-stone-600"><span>送料({shipTypeLabel(effectiveShipType)})</span><span>¥{shipFeeShown.toLocaleString()}</span></div>}
-                            {profitShown > 0 && <div className="flex justify-between text-stone-600"><span>サービス料</span><span>¥{profitShown.toLocaleString()}</span></div>}
                         </div>
                         {tierDiscountAmount > 0 && <div className="flex justify-between text-emerald-600 font-medium"><span>🌿 {tierName}割引（{Math.round(tierDiscountRate * 100)}%OFF・セール品除く）</span><span>−¥{tierDiscountAmount.toLocaleString()}</span></div>}
                         {saleDiscountTaxed > 0 && <div className="flex justify-between text-red-500 font-medium"><span>セール割引</span><span>−¥{saleDiscountTaxed.toLocaleString()}</span></div>}

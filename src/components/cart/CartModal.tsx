@@ -414,12 +414,6 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                                                 <span>¥{shipFeeShown.toLocaleString()}</span>
                                             </div>
                                         )}
-                                        {profitShown > 0 && (
-                                            <div className="flex justify-between text-stone-600">
-                                                <span>サービス料</span>
-                                                <span>¥{profitShown.toLocaleString()}</span>
-                                            </div>
-                                        )}
                                     </div>
 
                                     {tierDiscountAmount > 0 && (
