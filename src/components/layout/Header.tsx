@@ -17,6 +17,7 @@ const NAV_ITEMS = [
     { href: "/business", label: "業務用・卸" },
     { href: "/about", label: "私たちについて" },
     { href: "/sns", label: "つぶやき" },
+    { href: "/events/honey-label", label: "イベント" },
 ];
 
 export function Header() {
