@@ -5,6 +5,8 @@ import { auth } from "@/auth";
 import { TIERS, getTier } from "@/lib/tiers";
 import { computeCartPricing, type InvItem, type ShippingRow } from "@/lib/pricing";
 import { getActiveSeasonalSale } from "@/lib/seasonalSales";
+import { getInventoryRows } from "@/lib/inventorySheet";
+import { withRetry } from "@/lib/sheetsRetry";
 
 const stripe = process.env.STRIPE_SECRET_KEY
     ? new Stripe(process.env.STRIPE_SECRET_KEY, {
@@ -39,12 +41,7 @@ function getSheets() {
 }
 
 async function fetchInventory(): Promise<InvItem[]> {
-    const sheets = getSheets();
-    const res = await sheets.spreadsheets.values.get({
-        spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-        range: "商品在庫!A:Z",
-    });
-    const rows = res.data.values ?? [];
+    const rows = await getInventoryRows();
     return rows.slice(1)
         .filter(r => r[0])
         .map((r) => ({
@@ -88,10 +85,10 @@ async function fetchSeasonalDiscountPercent(): Promise<number> {
 
 async function fetchShippingRows(): Promise<ShippingRow[]> {
     const sheets = getSheets();
-    const res = await sheets.spreadsheets.values.get({
+    const res = await withRetry(() => sheets.spreadsheets.values.get({
         spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
         range: "送料マスタ!A:L",
-    });
+    }));
     const rows = res.data.values ?? [];
     const toInt = (v: string | undefined) => (v === undefined || v === "" ? 0 : parseInt(v, 10) || 0);
     return rows.slice(1).map((r) => ({
@@ -105,10 +102,10 @@ async function fetchShippingRows(): Promise<ShippingRow[]> {
 async function fetchTierDiscountRate(email: string): Promise<number> {
     if (!email) return 0;
     const sheets = getSheets();
-    const res = await sheets.spreadsheets.values.get({
+    const res = await withRetry(() => sheets.spreadsheets.values.get({
         spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
         range: "顧客マスタ!A:F",
-    });
+    }));
     const rows = res.data.values ?? [];
     const row = rows.find((r) => r[0] === email && r[1] === "__profile__");
     const tier = row?.[4] ?? "";
@@ -121,10 +118,10 @@ async function fetchTierDiscountRate(email: string): Promise<number> {
 async function fetchPointsBalance(email: string): Promise<number> {
     if (!email) return 0;
     const sheets = getSheets();
-    const res = await sheets.spreadsheets.values.get({
+    const res = await withRetry(() => sheets.spreadsheets.values.get({
         spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
         range: "ポイント履歴!A:E",
-    });
+    }));
     const rows = (res.data.values ?? []).filter((r) => r[0] === email);
     return rows.reduce((sum, r) => sum + (parseInt(r[3] ?? "0", 10) || 0), 0);
 }
