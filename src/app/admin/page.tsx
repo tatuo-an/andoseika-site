@@ -27,18 +27,33 @@ function getSheets() {
     return google.sheets({ version: "v4", auth: authClient });
 }
 
+// Google Sheets APIはナビゲーションが連続すると一時的な通信エラーで失敗することがあるため、
+// 数回リトライしてから諦める（失敗時に商品一覧が空になってしまう不具合の対策）。
+async function withRetry<T>(fn: () => Promise<T>, retries = 2): Promise<T> {
+    let lastErr: unknown;
+    for (let i = 0; i <= retries; i++) {
+        try {
+            return await fn();
+        } catch (err) {
+            lastErr = err;
+            if (i < retries) await new Promise((r) => setTimeout(r, 300 * (i + 1)));
+        }
+    }
+    throw lastErr;
+}
+
 async function getInventory(): Promise<{ items: ReturnType<typeof mapRow>[]; deletedIds: string[] }> {
     try {
         const sheets = getSheets();
         const [dataRes, deletedRes] = await Promise.all([
-            sheets.spreadsheets.values.get({
+            withRetry(() => sheets.spreadsheets.values.get({
                 spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
                 range: "商品在庫!A:AB",
-            }),
-            sheets.spreadsheets.values.get({
+            })),
+            withRetry(() => sheets.spreadsheets.values.get({
                 spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
                 range: "商品在庫!K1",
-            }),
+            })),
         ]);
         const rows = dataRes.data.values ?? [];
         const items = rows.slice(1)
@@ -93,10 +108,10 @@ function toInt(v: string | undefined) {
 async function getShipping() {
     try {
         const sheets = getSheets();
-        const res = await sheets.spreadsheets.values.get({
+        const res = await withRetry(() => sheets.spreadsheets.values.get({
             spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
             range: "送料マスタ!A:L",
-        });
+        }));
         const rows = res.data.values ?? [];
         return rows.slice(1).map((r) => ({
             region: r[0] ?? "",
