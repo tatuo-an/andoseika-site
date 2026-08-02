@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { google } from "googleapis";
+import { withRetry } from "@/lib/sheetsRetry";
 
 export const dynamic = "force-dynamic";
 
@@ -79,7 +80,7 @@ export async function GET() {
 
     try {
         const sheets = getSheets();
-        const res = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: `${SHEET_NAME}!A:K` });
+        const res = await withRetry(() => sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: `${SHEET_NAME}!A:K` }));
         const rows = res.data.values ?? [];
         const userRows = rows.slice(1).filter(r => r[0] === email && r[1] !== "__profile__");
         const addresses = userRows.map(r => {
