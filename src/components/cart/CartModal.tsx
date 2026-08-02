@@ -350,7 +350,11 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                                 </div>
                                 <div className="flex-1 space-y-1">
                                     <h3 className="font-bold text-stone-900">{item.name}</h3>
-                                    <p className="text-sm text-stone-500">¥{itemDisplayPrice(item.id).toLocaleString()}</p>
+                                    {preview ? (
+                                        <p className="text-sm text-stone-500">¥{itemDisplayPrice(item.id).toLocaleString()}</p>
+                                    ) : (
+                                        <p className="text-sm text-stone-400 animate-pulse">価格を計算中…</p>
+                                    )}
                                     <div className="flex items-center gap-3 pt-2">
                                         <div className="flex items-center border border-stone-200 rounded-full">
                                             <button onClick={() => decrementItem(item.id)} className="p-1 hover:bg-stone-100 rounded-l-full">
@@ -375,7 +379,12 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                 {cartCount! > 0 && (
                     <div className="p-6 border-t border-stone-100 bg-stone-50 space-y-3">
                         {/* 内訳表示 */}
-                        {addressLoaded && (() => {
+                        {addressLoaded && !preview && (
+                            <div className="text-sm text-stone-400 animate-pulse py-2">
+                                金額を計算中…
+                            </div>
+                        )}
+                        {addressLoaded && preview && (() => {
                             // 単品購入時価格の合計（税込・セール反映）
                             const singlePurchaseTotal = cartItems.reduce((sum, item) => {
                                 return sum + itemDisplayPrice(item.id) * item.quantity;
@@ -509,7 +518,11 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
 
                         <div className="flex items-center justify-between text-lg font-bold text-stone-900 border-t border-stone-200 pt-3">
                             <span>お支払い合計</span>
-                            <span>¥{grandTotal.toLocaleString()}<span className="text-xs font-normal text-stone-500 ml-1">（税込）</span></span>
+                            {preview ? (
+                                <span>¥{grandTotal.toLocaleString()}<span className="text-xs font-normal text-stone-500 ml-1">（税込）</span></span>
+                            ) : (
+                                <span className="text-sm font-normal text-stone-400 animate-pulse">計算中…</span>
+                            )}
                         </div>
 
                         <Link
