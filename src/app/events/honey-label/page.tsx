@@ -127,6 +127,9 @@ export default function HoneyLabelEventPage() {
                         <div>
                             <LineCTA />
                         </div>
+                        <p className="text-xs text-stone-500 mt-4">
+                            応募は公式LINEから／全国どなたでも参加可能
+                        </p>
                     </div>
                 </section>
 
@@ -304,7 +307,11 @@ export default function HoneyLabelEventPage() {
                                 </ul>
                             </div>
                         </div>
-                        <p className="text-center text-sm text-stone-500">最大6名が受賞予定です。</p>
+                        <p className="text-center text-sm text-stone-500">
+                            最大6名を選出予定です。
+                            <br />
+                            ※基準に達する作品がない場合、該当作品なしとなる場合があります。
+                        </p>
                     </div>
                 </section>
 
@@ -337,7 +344,8 @@ export default function HoneyLabelEventPage() {
                         <SectionHeading eyebrow="After the award" title="受賞作品の商品化" />
                         <div className="bg-[#FBF8F1] rounded-3xl p-8 md:p-10 text-stone-700 leading-loose space-y-4">
                             <p>はちみつ賞を受賞した作品は、限定ラベルとして使用させていただきます。</p>
-                            <p>商品化にあたっては、事前に作者ご本人（未成年の場合は保護者）へ確認いたします。</p>
+                            <p>商品ラベル化にあたり、必要に応じて補正・加工を行います。</p>
+                            <p>加工後のラベル案は、商品化前に作者ご本人（未成年の場合は保護者）へ確認したうえで使用します。</p>
                             <p className="font-medium text-stone-900">著作権は応募者に残ります。</p>
                         </div>
                     </div>
@@ -380,8 +388,13 @@ export default function HoneyLabelEventPage() {
                                     <ShieldCheck className="w-4 h-4 text-primary flex-shrink-0" />
                                     利用許諾
                                 </summary>
-                                <div className="px-6 pb-5 text-sm text-stone-600 leading-relaxed border-t border-stone-100 pt-4">
-                                    応募いただくことで、受賞作品を商品ラベル・告知・販促物等に使用することへご同意いただいたものとみなします（商品化前に改めて本人確認は行います）。
+                                <div className="px-6 pb-5 text-sm text-stone-600 leading-relaxed border-t border-stone-100 pt-4 space-y-2">
+                                    <p>
+                                        応募いただくことで、受賞作品を商品ラベル・当サイト・公式LINE・SNS等で使用することへご同意いただいたものとみなします（商品化前に改めて作者ご本人・保護者への確認は行います）。
+                                    </p>
+                                    <p>
+                                        本企画以外の用途で使用する場合は、あらためて作者ご本人・保護者へ確認のうえ、許諾をいただいてから使用します。
+                                    </p>
                                 </div>
                             </details>
                             <details className="group bg-white rounded-2xl shadow-sm overflow-hidden">
