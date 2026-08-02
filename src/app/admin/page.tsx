@@ -12,6 +12,7 @@ import { AdminPanel } from "@/components/admin/AdminPanel";
 import { AnnouncementsEditor } from "@/components/admin/AnnouncementsEditor";
 import { SkipModeToggle } from "@/components/admin/SkipModeToggle";
 import { DeliveryScheduleEditor } from "@/components/admin/DeliveryScheduleEditor";
+import { withRetry } from "@/lib/sheetsRetry";
 import { google } from "googleapis";
 
 export const dynamic = "force-dynamic";
@@ -25,21 +26,6 @@ function getSheets() {
         scopes: ["https://www.googleapis.com/auth/spreadsheets"],
     });
     return google.sheets({ version: "v4", auth: authClient });
-}
-
-// Google Sheets APIはナビゲーションが連続すると一時的な通信エラーで失敗することがあるため、
-// 数回リトライしてから諦める（失敗時に商品一覧が空になってしまう不具合の対策）。
-async function withRetry<T>(fn: () => Promise<T>, retries = 2): Promise<T> {
-    let lastErr: unknown;
-    for (let i = 0; i <= retries; i++) {
-        try {
-            return await fn();
-        } catch (err) {
-            lastErr = err;
-            if (i < retries) await new Promise((r) => setTimeout(r, 300 * (i + 1)));
-        }
-    }
-    throw lastErr;
 }
 
 async function getInventory(): Promise<{ items: ReturnType<typeof mapRow>[]; deletedIds: string[] }> {

@@ -11,6 +11,7 @@ import { BADGE_COLORS, DEFAULT_BADGE_COLOR } from "@/lib/badges";
 import { FavoriteButton } from "@/components/products/FavoriteButton";
 import { isSaleActive, getEffectiveSalePercent, calcSalePrice } from "@/lib/sale";
 import { fetchActiveSeasonalSale } from "@/lib/seasonalSales";
+import { withRetry } from "@/lib/sheetsRetry";
 import { auth } from "@/auth";
 import { getTier } from "@/lib/tiers";
 
@@ -45,10 +46,10 @@ async function getInventoryMap(): Promise<InventoryResult> {
       scopes: ["https://www.googleapis.com/auth/spreadsheets"],
     });
     const sheets = google.sheets({ version: "v4", auth: authClient });
-    const res = await sheets.spreadsheets.values.get({
+    const res = await withRetry(() => sheets.spreadsheets.values.get({
       spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
       range: "商品在庫!A:Z",
-    });
+    }));
     const rows = res.data.values ?? [];
     const map: Record<string, InventoryData> = {};
     const order: string[] = [];

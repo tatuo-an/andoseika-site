@@ -9,6 +9,7 @@ import { Product } from "@/types/microcms";
 import { google } from "googleapis";
 import { getEffectiveSalePercent, calcSalePrice } from "@/lib/sale";
 import { fetchActiveSeasonalSale } from "@/lib/seasonalSales";
+import { withRetry } from "@/lib/sheetsRetry";
 import localProducts from "@/data/products.json";
 
 export const revalidate = 60;
@@ -46,10 +47,10 @@ async function getTopProducts(seasonalDiscountPercent: number): Promise<{ id: st
       scopes: ["https://www.googleapis.com/auth/spreadsheets"],
     });
     const sheets = google.sheets({ version: "v4", auth: authClient });
-    const res = await sheets.spreadsheets.values.get({
+    const res = await withRetry(() => sheets.spreadsheets.values.get({
       spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
       range: "商品在庫!A:Y",
-    });
+    }));
     const rows = res.data.values ?? [];
     const invMap: Record<string, InventoryData> = {};
     const order: string[] = [];
@@ -118,10 +119,10 @@ async function getPreorderProducts(): Promise<{ id: string; name: string; image:
       scopes: ["https://www.googleapis.com/auth/spreadsheets"],
     });
     const sheets = google.sheets({ version: "v4", auth: authClient });
-    const res = await sheets.spreadsheets.values.get({
+    const res = await withRetry(() => sheets.spreadsheets.values.get({
       spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
       range: "商品在庫!A:Y",
-    });
+    }));
     const rows = res.data.values ?? [];
     const productMap = Object.fromEntries(products.map((p) => [p.id, p]));
     const seenFamilies = new Set<string>();
@@ -187,10 +188,10 @@ async function getRescueItems(): Promise<RescueItem[]> {
       scopes: ["https://www.googleapis.com/auth/spreadsheets"],
     });
     const sheets = googleapis.sheets({ version: "v4", auth: a });
-    const res = await sheets.spreadsheets.values.get({
+    const res = await withRetry(() => sheets.spreadsheets.values.get({
       spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
       range: "商品在庫!A:AC",
-    });
+    }));
     const rows = (res.data.values ?? []).slice(1).filter((r) => r[0] && r[27] === "1" && r[5] !== "1");
     // ファミリーごとに最初の1件をまとめてバナー化
     const seenFamilies = new Set<string>();
