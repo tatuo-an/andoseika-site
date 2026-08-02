@@ -1,6 +1,8 @@
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Metadata } from "next";
+import Link from "next/link";
+import Image from "next/image";
 import {
     Flower2,
     ArrowRight,
@@ -11,6 +13,7 @@ import {
     Camera,
     ShieldCheck,
     Sparkles,
+    Trophy,
 } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -88,6 +91,23 @@ const RULES_NG = [
 
 const HONEY_AWARDS = ["百花蜜賞", "アカシア賞", "トチ賞"];
 const DIVISION_AWARDS = ["こども部門特別賞", "一般部門特別賞", "シニア部門特別賞"];
+
+// 商品化後、限定ラベル商品の一覧・購入ページへのリンク先。
+// 専用ページができたらこのURLを差し替える。
+const PRODUCT_PAGE_URL = "/products";
+
+type Winner = {
+    award: string; // 例: 百花蜜賞 / こども部門特別賞
+    penName: string;
+    honeyType: string; // 百花蜜 / アカシア / トチ
+    imageUrl?: string; // 補正後のラベル/作品画像
+};
+
+// 受賞発表（2026年9月20日）後、ここに受賞者情報を追加すると
+// 下の「受賞作品発表」セクションが自動的に表示される。
+// 例:
+// { award: "百花蜜賞", penName: "はちみつ太郎", honeyType: "百花蜜", imageUrl: "/images/honey-label/H-001.jpg" }
+const WINNERS: Winner[] = [];
 
 export default function HoneyLabelEventPage() {
     return (
@@ -350,6 +370,58 @@ export default function HoneyLabelEventPage() {
                         </div>
                     </div>
                 </section>
+
+                {/* 10.5 受賞作品発表（受賞者確定後、WINNERSに追加すると表示される） */}
+                {WINNERS.length > 0 && (
+                    <section className="py-16 md:py-20">
+                        <div className="container mx-auto px-4 md:px-6 max-w-5xl">
+                            <SectionHeading eyebrow="Winners" title="受賞作品発表" />
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+                                {WINNERS.map((w) => (
+                                    <div
+                                        key={w.award}
+                                        className="bg-white rounded-2xl overflow-hidden shadow-sm border border-amber-100"
+                                    >
+                                        <div className="relative aspect-square bg-[#FBF8F1]">
+                                            {w.imageUrl ? (
+                                                <Image
+                                                    src={w.imageUrl}
+                                                    alt={`${w.award} 受賞作品`}
+                                                    fill
+                                                    className="object-cover"
+                                                />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center text-amber-300">
+                                                    <Trophy className="w-12 h-12" strokeWidth={1} />
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="p-5 text-center">
+                                            <p className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-700 bg-amber-50 px-3 py-1 rounded-full mb-2">
+                                                <Trophy className="w-3.5 h-3.5" />
+                                                {w.award}
+                                            </p>
+                                            <h3 className="font-bold text-stone-900 mb-1">{w.penName}</h3>
+                                            <p className="text-xs text-stone-500">{w.honeyType}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="text-center">
+                                <p className="text-stone-700 mb-6">
+                                    受賞作品の限定ラベル商品は、商品ページからご購入いただけます。
+                                </p>
+                                <Link
+                                    href={PRODUCT_PAGE_URL}
+                                    className="inline-flex items-center justify-center gap-2 font-bold py-4 px-10 rounded-full transition-all transform hover:scale-105 shadow-lg bg-primary text-white hover:bg-primary/90"
+                                >
+                                    限定ラベル商品を見る
+                                    <ArrowRight className="h-5 w-5" />
+                                </Link>
+                            </div>
+                        </div>
+                    </section>
+                )}
 
                 {/* 11. 応募要項詳細 */}
                 <section className="py-16 md:py-20">
