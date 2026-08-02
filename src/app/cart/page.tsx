@@ -48,11 +48,12 @@ function findRegionRow(prefecture: string, rows: ShippingRow[]): ShippingRow | n
 function findBaseRow(rows: ShippingRow[]): ShippingRow | null {
     return rows.length ? rows[rows.length - 1] : null;
 }
+// 「150g x3」のように商品名に個数指定(x3, ×3)が含まれる場合は、その個数分を重量に乗算する。
 function extractWeightG(name: string): number {
-    const kg = name.match(/(\d+(?:\.\d+)?)\s*kg/i);
-    if (kg) return parseFloat(kg[1]) * 1000;
-    const g = name.match(/(\d+(?:\.\d+)?)\s*g(?!l)/i);
-    if (g) return parseFloat(g[1]);
+    const kg = name.match(/(\d+(?:\.\d+)?)\s*kg(?:\s*[x×]\s*(\d+))?/i);
+    if (kg) return parseFloat(kg[1]) * 1000 * (kg[2] ? parseInt(kg[2], 10) : 1);
+    const g = name.match(/(\d+(?:\.\d+)?)\s*g(?!l)(?:\s*[x×]\s*(\d+))?/i);
+    if (g) return parseFloat(g[1]) * (g[2] ? parseInt(g[2], 10) : 1);
     return 0;
 }
 function weightToShipSize(totalG: number): string {
