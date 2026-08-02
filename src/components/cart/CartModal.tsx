@@ -200,11 +200,13 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
         if (totalWeightG <= 0) return null;
         const family = [...cartFamilies][0];
         const variants = inventory.filter(v => v.family === family);
-        const match = variants.find(v => extractWeightG(v.name) === totalWeightG && v.price !== null);
+        // 該当重量の候補が複数ある場合はどれが正しいか判別できないため、マッチさせない（安全側）
+        const candidates = variants.filter(v => extractWeightG(v.name) === totalWeightG && v.price !== null);
+        if (candidates.length !== 1) return null;
         // バリエーションが1つだけのファミリーでは、合計重量がそのバリエーションと一致するときのみマッチ扱いだが、
         // 「ファミリーに同じ重量の他バリエーションが無い場合」はマッチ不要なのでスキップ
         if (variants.length === 1 && cartItems.length === 1 && cartItems[0].quantity === 1) return null;
-        return match ?? null;
+        return candidates[0];
     })();
 
     // 単体×nでマッチした場合はそのバリエーションの配送区分を優先する
