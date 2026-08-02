@@ -15,7 +15,7 @@ import { BADGE_COLORS, DEFAULT_BADGE_COLOR } from "@/lib/badges";
 import { isSaleActive, getEffectiveSalePercent, calcSalePrice } from "@/lib/sale";
 import { fetchActiveSeasonalSale } from "@/lib/seasonalSales";
 import { computeShipSchedule } from "@/lib/shipSchedule";
-import { withRetry } from "@/lib/sheetsRetry";
+import { getInventoryRows } from "@/lib/inventorySheet";
 import { DETAIL_EXTRA_FIELDS, FOOD_LABEL_FIELDS, parseExtra } from "@/lib/extraDescriptions";
 
 export const revalidate = 60;
@@ -112,12 +112,7 @@ async function getInventoryData(id: string): Promise<{
     familyRows: SheetRow[];
 }> {
     try {
-        const sheets = getSheets();
-        const res = await withRetry(() => sheets.spreadsheets.values.get({
-            spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-            range: "商品在庫!A:AA",
-        }));
-        const rows = res.data.values ?? [];
+        const rows = await getInventoryRows();
         const allRows: SheetRow[] = rows.slice(1).filter(r => r[0]).map(r => ({
             id: r[0],
             name: r[1] ?? "",

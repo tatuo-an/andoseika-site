@@ -13,6 +13,7 @@ import { AnnouncementsEditor } from "@/components/admin/AnnouncementsEditor";
 import { SkipModeToggle } from "@/components/admin/SkipModeToggle";
 import { DeliveryScheduleEditor } from "@/components/admin/DeliveryScheduleEditor";
 import { withRetry } from "@/lib/sheetsRetry";
+import { getInventoryRows } from "@/lib/inventorySheet";
 import { google } from "googleapis";
 
 export const dynamic = "force-dynamic";
@@ -31,17 +32,13 @@ function getSheets() {
 async function getInventory(): Promise<{ items: ReturnType<typeof mapRow>[]; deletedIds: string[] }> {
     try {
         const sheets = getSheets();
-        const [dataRes, deletedRes] = await Promise.all([
-            withRetry(() => sheets.spreadsheets.values.get({
-                spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-                range: "商品在庫!A:AB",
-            })),
+        const [rows, deletedRes] = await Promise.all([
+            getInventoryRows(),
             withRetry(() => sheets.spreadsheets.values.get({
                 spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
                 range: "商品在庫!K1",
             })),
         ]);
-        const rows = dataRes.data.values ?? [];
         const items = rows.slice(1)
             .filter((r) => r[0])
             .map(mapRow);

@@ -6,10 +6,9 @@ import { ArrowRight, ChevronRight, ShoppingBasket, Leaf, Heart, Building2, Packa
 import { CommunityScroller } from "@/components/community/CommunityScroller";
 import { client } from "@/lib/microcms";
 import { Product } from "@/types/microcms";
-import { google } from "googleapis";
 import { getEffectiveSalePercent, calcSalePrice } from "@/lib/sale";
 import { fetchActiveSeasonalSale } from "@/lib/seasonalSales";
-import { withRetry } from "@/lib/sheetsRetry";
+import { getInventoryRows } from "@/lib/inventorySheet";
 import localProducts from "@/data/products.json";
 
 export const revalidate = 60;
@@ -39,19 +38,7 @@ async function getTopProducts(seasonalDiscountPercent: number): Promise<{ id: st
       products = localProducts as Product[];
     }
 
-    const authClient = new google.auth.GoogleAuth({
-      credentials: {
-        client_email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
-        private_key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-      },
-      scopes: ["https://www.googleapis.com/auth/spreadsheets"],
-    });
-    const sheets = google.sheets({ version: "v4", auth: authClient });
-    const res = await withRetry(() => sheets.spreadsheets.values.get({
-      spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-      range: "商品在庫!A:Y",
-    }));
-    const rows = res.data.values ?? [];
+    const rows = await getInventoryRows();
     const invMap: Record<string, InventoryData> = {};
     const order: string[] = [];
     rows.slice(1).forEach((r) => {
@@ -111,19 +98,7 @@ async function getPreorderProducts(): Promise<{ id: string; name: string; image:
     } catch {
       products = localProducts as Product[];
     }
-    const authClient = new google.auth.GoogleAuth({
-      credentials: {
-        client_email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
-        private_key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-      },
-      scopes: ["https://www.googleapis.com/auth/spreadsheets"],
-    });
-    const sheets = google.sheets({ version: "v4", auth: authClient });
-    const res = await withRetry(() => sheets.spreadsheets.values.get({
-      spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-      range: "商品在庫!A:Y",
-    }));
-    const rows = res.data.values ?? [];
+    const rows = await getInventoryRows();
     const productMap = Object.fromEntries(products.map((p) => [p.id, p]));
     const seenFamilies = new Set<string>();
     const result: { id: string; name: string; image: string; price: number | null }[] = [];
@@ -179,20 +154,8 @@ type RescueItem = { id: string; title: string; description: string; stock: numbe
 
 async function getRescueItems(): Promise<RescueItem[]> {
   try {
-    const { google: googleapis } = await import("googleapis");
-    const a = new googleapis.auth.GoogleAuth({
-      credentials: {
-        client_email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
-        private_key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-      },
-      scopes: ["https://www.googleapis.com/auth/spreadsheets"],
-    });
-    const sheets = googleapis.sheets({ version: "v4", auth: a });
-    const res = await withRetry(() => sheets.spreadsheets.values.get({
-      spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-      range: "商品在庫!A:AC",
-    }));
-    const rows = (res.data.values ?? []).slice(1).filter((r) => r[0] && r[27] === "1" && r[5] !== "1");
+    const allRows = await getInventoryRows();
+    const rows = allRows.slice(1).filter((r) => r[0] && r[27] === "1" && r[5] !== "1");
     // ファミリーごとに最初の1件をまとめてバナー化
     const seenFamilies = new Set<string>();
     const result: RescueItem[] = [];

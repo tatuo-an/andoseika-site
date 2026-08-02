@@ -11,7 +11,7 @@ import { BADGE_COLORS, DEFAULT_BADGE_COLOR } from "@/lib/badges";
 import { FavoriteButton } from "@/components/products/FavoriteButton";
 import { isSaleActive, getEffectiveSalePercent, calcSalePrice } from "@/lib/sale";
 import { fetchActiveSeasonalSale } from "@/lib/seasonalSales";
-import { withRetry } from "@/lib/sheetsRetry";
+import { getInventoryRows } from "@/lib/inventorySheet";
 import { auth } from "@/auth";
 import { getTier } from "@/lib/tiers";
 
@@ -38,19 +38,7 @@ type InventoryResult = { map: Record<string, InventoryData>; order: string[] };
 
 async function getInventoryMap(): Promise<InventoryResult> {
   try {
-    const authClient = new google.auth.GoogleAuth({
-      credentials: {
-        client_email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
-        private_key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-      },
-      scopes: ["https://www.googleapis.com/auth/spreadsheets"],
-    });
-    const sheets = google.sheets({ version: "v4", auth: authClient });
-    const res = await withRetry(() => sheets.spreadsheets.values.get({
-      spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-      range: "商品在庫!A:Z",
-    }));
-    const rows = res.data.values ?? [];
+    const rows = await getInventoryRows();
     const map: Record<string, InventoryData> = {};
     const order: string[] = [];
     rows.slice(1).forEach((r) => {
