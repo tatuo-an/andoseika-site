@@ -82,8 +82,11 @@ export async function GET() {
 
     try {
         const sheets = getSheets();
+        // 「注文」シートは運用上削除されている場合があるため、無くてもエラーにせず
+        // 空データとして扱う（大口注文のみでも一覧が表示できるように）。
+        const emptyValues = { data: { values: [] as string[][] } };
         const [singleRes, bulkRes, detailRes, userRes] = await Promise.all([
-            sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: "注文!A:K" }),
+            sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: "注文!A:K" }).catch(() => emptyValues),
             sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: "大口注文!A:L" }),
             sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: "大口注文明細!A:H" }),
             sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: "ユーザー!A:F" }),
