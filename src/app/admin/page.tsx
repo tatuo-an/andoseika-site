@@ -10,6 +10,7 @@ import { Product } from "@/types/microcms";
 import localProducts from "@/data/products.json";
 import { AdminPanel } from "@/components/admin/AdminPanel";
 import { AnnouncementsEditor } from "@/components/admin/AnnouncementsEditor";
+import { OrderNotificationBadge } from "@/components/admin/OrderNotificationBadge";
 import { SkipModeToggle } from "@/components/admin/SkipModeToggle";
 import { DeliveryScheduleEditor } from "@/components/admin/DeliveryScheduleEditor";
 import { withRetry } from "@/lib/sheetsRetry";
@@ -142,10 +143,11 @@ export default async function AdminPage() {
                     <div className="flex gap-3 mb-8">
                         <Link
                             href="/admin/orders"
-                            className="flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-bold rounded-lg hover:bg-primary/90 transition-colors shadow-sm"
+                            className="relative flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-bold rounded-lg hover:bg-primary/90 transition-colors shadow-sm"
                         >
                             <ShoppingBag className="w-4 h-4" />
                             注文管理
+                            <OrderNotificationBadge kind="orders" />
                         </Link>
                         <Link
                             href="/admin/customers"
@@ -163,10 +165,11 @@ export default async function AdminPage() {
                         </Link>
                         <Link
                             href="/admin/line-orders"
-                            className="flex items-center gap-2 px-4 py-2 bg-white border border-stone-200 text-stone-700 text-sm font-bold rounded-lg hover:bg-stone-50 transition-colors shadow-sm"
+                            className="relative flex items-center gap-2 px-4 py-2 bg-white border border-stone-200 text-stone-700 text-sm font-bold rounded-lg hover:bg-stone-50 transition-colors shadow-sm"
                         >
                             <MessageCircle className="w-4 h-4" />
                             LINE注文管理
+                            <OrderNotificationBadge kind="line-orders" />
                         </Link>
                         <Link
                             href="/admin/supporters"
