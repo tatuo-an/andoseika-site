@@ -1542,7 +1542,9 @@ function SortableGallerySlot({ url, onRemove }: { url: string; onRemove: () => v
     );
 }
 
-// ── ファミリーギャラリー（最大5枚・ドラッグ並び替え）────────────────
+// ── ファミリーギャラリー（最大10枚・ドラッグ並び替え）────────────────
+const MAX_GALLERY_IMAGES = 10;
+
 function FamilyGallery({ familyImages, onUpdate }: {
     familyImages: string[];
     onUpdate: (images: string[]) => void;
@@ -1575,7 +1577,7 @@ function FamilyGallery({ familyImages, onUpdate }: {
                 return;
             }
             const { url } = await res.json();
-            onUpdate([...familyImages, url].slice(0, 5));
+            onUpdate([...familyImages, url].slice(0, MAX_GALLERY_IMAGES));
         } catch (err) {
             alert(`アップロードエラー: ${err}`);
         } finally {
@@ -1584,7 +1586,7 @@ function FamilyGallery({ familyImages, onUpdate }: {
         }
     };
 
-    const emptyCount = Math.max(0, 5 - familyImages.length);
+    const emptyCount = Math.max(0, MAX_GALLERY_IMAGES - familyImages.length);
 
     return (
         <div className="flex items-center gap-2 px-4 py-2 border-b border-stone-100 bg-stone-50/40">
@@ -1618,7 +1620,7 @@ function FamilyGallery({ familyImages, onUpdate }: {
                     </button>
                 ))}
             </div>
-            <span className="text-xs text-stone-300">{familyImages.length}/5</span>
+            <span className="text-xs text-stone-300">{familyImages.length}/{MAX_GALLERY_IMAGES}</span>
             <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
         </div>
     );
