@@ -89,14 +89,18 @@ export async function GET() {
             sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: "注文!A:K" }).catch(() => emptyValues),
             sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: "大口注文!A:L" }),
             sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: "大口注文明細!A:H" }),
-            sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: "ユーザー!A:F" }),
+            // 「ユーザー」シートは「既存取引先リスト」に統合され削除済み（2026-08-07）。
+            // 列: A名前(会社名/個人名) B住所 C電話番号 D メール E LINE ID F登録日 G担当者名(法人のみ)
+            sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: "既存取引先リスト!A:G" }).catch(() => emptyValues),
         ]);
 
         const userRows = (userRes.data.values ?? []).slice(1);
         const userMap = new Map<string, LineUserInfo>();
         for (const r of userRows) {
-            if (!r[0]) continue;
-            userMap.set(r[0], { name: r[1] ?? "", address: r[2] ?? "", phone: r[3] ?? "", email: r[4] ?? "" });
+            const lineId = r[4];
+            if (!lineId) continue;
+            const name = r[6] || r[0] || "";
+            userMap.set(lineId, { name, address: r[1] ?? "", phone: r[2] ?? "", email: r[3] ?? "" });
         }
 
         const singleRows = (singleRes.data.values ?? []).slice(1).filter((r) => r[0]);
