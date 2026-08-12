@@ -12,6 +12,7 @@ const SHEET_ORDERS = "注文";
 const SHEET_PRODUCTS = "商品";
 const SHEET_BULK_HEAD = "大口注文";
 const SHEET_BULK_LINE = "大口注文明細";
+const SHEET_EXISTING_PARTNERS = "既存取引先リスト";
 
 const anthropic = process.env.ANTHROPIC_API_KEY
   ? new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
@@ -233,6 +234,29 @@ async function callClaudeForOrderParsing(
   }
 }
 
+type ExistingPartner = { name: string; address: string; staffName: string };
+
+// 既存取引先リストのLINE ID列（E列）をキーに完全一致で検索する。
+// グループIDを事前に登録しておけば、LINEグループ名を推測に使わず正式な取引先名を引き当てられる。
+async function matchPartnerByLineId(lineId: string): Promise<ExistingPartner | null> {
+  const sheets = getSheets();
+  const res = await sheets.spreadsheets.values.get({
+    spreadsheetId: SPREADSHEET_ID,
+    range: `${SHEET_EXISTING_PARTNERS}!A:G`,
+  });
+  const rows = res.data.values ?? [];
+  for (let i = 1; i < rows.length; i++) {
+    if (String(rows[i][4] || "").trim() === lineId) {
+      return {
+        name: String(rows[i][0] || ""),
+        address: String(rows[i][1] || ""),
+        staffName: String(rows[i][6] || ""),
+      };
+    }
+  }
+  return null;
+}
+
 async function getGroupName(groupId: string): Promise<string | null> {
   try {
     const res = await fetch(`https://api.line.me/v2/bot/group/${groupId}/summary`, {
@@ -259,9 +283,13 @@ async function finalizeAiOrder(data: { items: { name: string; quantity: number }
   const now = new Date().toISOString();
 
   if (source.groupId) {
-    // 法人（グループチャット経由）：正式な会社名は不明なため、LINEグループ名を取引先名として使う
-    // （安藤さんが後で正式名称に手動修正する前提。取得できない場合のみ仮名にフォールバック）
-    const groupName = (await getGroupName(source.groupId)) || "（AIボット・要確認）";
+    // 既存取引先リストにグループIDが事前登録されていれば、そちらの正式名称を優先して使う。
+    // 未登録の場合のみ、LINEグループ名を仮の取引先名として使い、安藤さんに手動確認を促す。
+    const partner = await matchPartnerByLineId(source.groupId);
+    const groupName = partner ? partner.name : (await getGroupName(source.groupId)) || "（AIボット・要確認）";
+    const note = partner
+      ? "AIボット経由の自動登録（既存取引先リストと照合済み: " + groupName + "）"
+      : "AIボット経由の自動登録（グループ名: " + groupName + "）。正式な取引先名か確認してください。";
     const receiptId = `BLK-AI-${Date.now()}`;
     await sheets.spreadsheets.values.append({
       spreadsheetId: SPREADSHEET_ID,
@@ -270,7 +298,7 @@ async function finalizeAiOrder(data: { items: { name: string; quantity: number }
       requestBody: {
         values: [[
           receiptId, now, source.groupId, groupName, "様", "LINE自動受付",
-          "", "", "AIボット経由の自動登録（グループ名: " + groupName + "）。正式な取引先名か確認してください。", "受付", "", "", "FALSE",
+          "", "", note, "受付", "", "", "FALSE",
         ]],
       },
     });
