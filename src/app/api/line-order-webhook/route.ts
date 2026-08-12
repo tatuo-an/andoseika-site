@@ -155,13 +155,26 @@ type ClaudeResult = {
   data: { items: { name: string; quantity: number }[]; deliveryDate?: string };
 };
 
+// 発送サイクルは「月曜12時締切→水曜仕入れ→木曜発送」。
+// 直近の木曜日を求めた上で、その締切（木曜の3日前＝月曜12時）を今が過ぎていれば
+// 1週間先の木曜日にずらす（例: 水曜に注文したら今週木曜には間に合わないので来週木曜になる）。
 function nextThursdayInfo(): { iso: string; label: string } {
   const now = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" }));
   const day = now.getDay(); // 0=日 ... 4=木
   let diff = 4 - day;
-  if (diff <= 0) diff += 7;
-  const d = new Date(now);
+  if (diff < 0) diff += 7;
+  let d = new Date(now);
   d.setDate(d.getDate() + diff);
+
+  const cutoff = new Date(d);
+  cutoff.setDate(cutoff.getDate() - 3); // 木曜の3日前＝月曜
+  cutoff.setHours(12, 0, 0, 0);
+
+  if (now >= cutoff) {
+    d = new Date(d);
+    d.setDate(d.getDate() + 7);
+  }
+
   const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   const label = `${d.getMonth() + 1}月${d.getDate()}日(木)`;
   return { iso, label };
