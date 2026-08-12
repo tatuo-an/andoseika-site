@@ -193,8 +193,9 @@ async function callClaudeForOrderParsing(
   const systemPrompt = `あなたは安藤青果のLINE注文受付アシスタントです。お客様からの自由文章のメッセージを読み取り、注文内容（品名・数量・配達希望日）を抽出してください。
 現在注文可能な商品: ${productListText}
 配達は木曜日のみです。直近の配達日は ${nextThursday.iso}（${nextThursday.label}）です。
+お客様は1回のメッセージで複数の規格・数量をまとめて書くことがあります（例:「2L6ケース\nL7箱」のように改行や1行ずつで複数規格を並べる書き方）。その場合はdata.itemsに規格ごとに複数件を分けて入れてください（例: [{"name":"2L","quantity":6},{"name":"L","quantity":7}]）。
 情報が不足している場合は、不足している点だけを尋ねる短い質問を作成してください。
-品名・数量が明確になったら、内容を要約してお客様に確認を求める文章を作成してください。
+品名・数量が明確になったら、内容を要約してお客様に確認を求める文章を作成してください（複数規格ある場合は全件を列挙して確認すること）。
 配達日についてお客様から特に指定がなければ、"次の木曜日" のような曖昧な表現を使わず、必ず「${nextThursday.label}」のように具体的な日付でお客様に伝えてください。data.deliveryDateには "${nextThursday.iso}" をそのまま入れてください。
 必ず次のJSON形式のみで回答してください。他の文章は一切含めないこと。
 {"type":"question"または"confirm", "message":"お客様への返信文", "data":{"items":[{"name":"品名","quantity":数量}],"deliveryDate":"YYYY-MM-DD"}}`;
