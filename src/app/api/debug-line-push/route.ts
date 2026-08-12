@@ -17,6 +17,11 @@ export async function GET(req: NextRequest) {
   const tokenPresent = !!process.env.LINE_CHANNEL_ACCESS_TOKEN;
   const tokenLength = process.env.LINE_CHANNEL_ACCESS_TOKEN?.length ?? 0;
 
+  const infoRes = await fetch("https://api.line.me/v2/bot/info", {
+    headers: { Authorization: `Bearer ${process.env.LINE_CHANNEL_ACCESS_TOKEN}` },
+  });
+  const infoBody = await infoRes.text();
+
   const res = await fetch("https://api.line.me/v2/bot/message/push", {
     method: "POST",
     headers: {
@@ -30,6 +35,8 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({
     tokenPresent,
     tokenLength,
+    botInfoStatus: infoRes.status,
+    botInfo: infoBody,
     status: res.status,
     ok: res.ok,
     body: bodyText,
