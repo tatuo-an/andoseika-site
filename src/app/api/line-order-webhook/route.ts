@@ -151,7 +151,7 @@ function matchSizeColumn(itemName: string, columns: ProductColumn[]): number {
 }
 
 type ClaudeResult = {
-  type: "question" | "confirm";
+  type: "question" | "confirm" | "ignore";
   message: string;
   data: { items: { name: string; quantity: number }[]; deliveryDate?: string };
 };
@@ -203,13 +203,17 @@ async function callClaudeForOrderParsing(
 お客様は1回のメッセージで複数の規格・数量をまとめて書くことがあります（例:「2L6ケース\nL7箱」のように改行や1行ずつで複数規格を並べる書き方）。その場合はdata.itemsに書かれた単位ごとに複数件を分けて入れてください（例: [{"name":"2L","quantity":6},{"name":"L","quantity":7}]）。
 数量が幅（レンジ）で示された場合は、quantityに幅の上限値（「20ケースから30ケース」なら30）を入れ、品名に幅の情報も残してください（例: name「5kg規格外小（20〜30ケースの幅あり、上限で仮登録）」）。
 
+■無関係なメッセージへの対応（重要）
+このLINEグループ・チャットには注文と関係ない雑談も流れます。「こんにちは」等の挨拶、お礼、雑談、注文内容と無関係な質問（配達に関係ない世間話など）には反応しないでください。この場合はtype:"ignore"、messageは空文字列で返し、data.itemsは空配列にしてください。すでに注文情報を集めている途中（これまでに分かっている内容がある）場合でも、今回のメッセージが注文と無関係なら、そのセッションの内容には触れずtype:"ignore"を返してください。
+迷った場合の判断基準：今回のメッセージ単体で「品名」「数量」「配達日」のいずれかを読み取れる、または進行中の注文についての返答（訂正・追加・確認への回答など）であればtype:"question"かtype:"confirm"。そうでなければtype:"ignore"。
+
 ■質問してよい場合
-質問してよいのは、品名・数量・規格のいずれも一切書かれていない、または配達日について読み取れる情報が全くない場合だけです。少しでも情報があれば、それをそのまま採用して確認（type:"confirm"）に進んでください。
+type:"question"にしてよいのは、注文しようとしていることは分かるが品名・数量・規格のいずれも一切書かれていない、または配達日について読み取れる情報が全くない場合だけです。少しでも情報があれば、それをそのまま採用して確認（type:"confirm"）に進んでください。
 品名・数量が明確になったら、内容を要約してお客様に確認を求める文章を作成してください（複数件ある場合は全件を列挙して確認すること）。
 配達日についてお客様から特に指定がなければ、"次の木曜日" のような曖昧な表現を使わず、必ず「${nextThursday.label}」のように具体的な日付でお客様に伝えてください。data.deliveryDateには "${nextThursday.iso}" をそのまま入れてください。
 
 必ず次のJSON形式のみで回答してください。他の文章は一切含めないこと。
-{"type":"question"または"confirm", "message":"お客様への返信文", "data":{"items":[{"name":"品名","quantity":数量}],"deliveryDate":"YYYY-MM-DD"}}`;
+{"type":"question"または"confirm"または"ignore", "message":"お客様への返信文（ignoreの場合は空文字列）", "data":{"items":[{"name":"品名","quantity":数量}],"deliveryDate":"YYYY-MM-DD"}}`;
 
   const userPrompt = `これまでに分かっている内容: ${JSON.stringify(sessionData || {})}\n今回のメッセージ: ${newText}`;
 
@@ -370,7 +374,12 @@ async function processIncomingMessage(event: LineEvent) {
 
   const aiResult = await callClaudeForOrderParsing(session.data, text);
   if (!aiResult) {
-    await pushLineMessage(sessionKey, "すみません、うまく読み取れませんでした。もう一度お願いします。");
+    // 解釈失敗時も無反応にする（雑談等で解釈できないケースが多いグループ内で、
+    // 毎回「読み取れませんでした」と返信するとノイズになるため）
+    return;
+  }
+
+  if (aiResult.type === "ignore") {
     return;
   }
 
