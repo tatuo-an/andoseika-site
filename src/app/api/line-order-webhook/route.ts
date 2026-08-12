@@ -43,7 +43,7 @@ type LineEvent = {
 };
 
 async function replyLineMessage(replyToken: string, text: string) {
-  await fetch("https://api.line.me/v2/bot/message/reply", {
+  const res = await fetch("https://api.line.me/v2/bot/message/reply", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -51,6 +51,10 @@ async function replyLineMessage(replyToken: string, text: string) {
     },
     body: JSON.stringify({ replyToken, messages: [{ type: "text", text }] }),
   });
+  if (!res.ok) {
+    const errText = await res.text().catch(() => "");
+    console.error(`[line-order-webhook] LINE reply failed (${res.status}): ${errText}`);
+  }
 }
 
 type AiSession = { row: number; status: string; data: Record<string, unknown> };
