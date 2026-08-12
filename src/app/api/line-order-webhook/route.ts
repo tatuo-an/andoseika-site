@@ -155,6 +155,18 @@ type ClaudeResult = {
   data: { items: { name: string; quantity: number }[]; deliveryDate?: string };
 };
 
+function nextThursdayInfo(): { iso: string; label: string } {
+  const now = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" }));
+  const day = now.getDay(); // 0=日 ... 4=木
+  let diff = 4 - day;
+  if (diff <= 0) diff += 7;
+  const d = new Date(now);
+  d.setDate(d.getDate() + diff);
+  const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  const label = `${d.getMonth() + 1}月${d.getDate()}日(木)`;
+  return { iso, label };
+}
+
 async function callClaudeForOrderParsing(
   sessionData: Record<string, unknown>,
   newText: string
@@ -163,12 +175,14 @@ async function callClaudeForOrderParsing(
 
   const columns = await getWeeklySummaryColumns();
   const productListText = columns.map((c) => `${c.name}（¥${c.price}）`).join("、");
+  const nextThursday = nextThursdayInfo();
 
   const systemPrompt = `あなたは安藤青果のLINE注文受付アシスタントです。お客様からの自由文章のメッセージを読み取り、注文内容（品名・数量・配達希望日）を抽出してください。
 現在注文可能な商品: ${productListText}
-配達は木曜日のみです。
+配達は木曜日のみです。直近の配達日は ${nextThursday.iso}（${nextThursday.label}）です。
 情報が不足している場合は、不足している点だけを尋ねる短い質問を作成してください。
-品名・数量が明確になったら、内容を要約してお客様に確認を求める文章を作成してください（配達日が未指定なら次の木曜日と仮定してよい）。
+品名・数量が明確になったら、内容を要約してお客様に確認を求める文章を作成してください。
+配達日についてお客様から特に指定がなければ、"次の木曜日" のような曖昧な表現を使わず、必ず「${nextThursday.label}」のように具体的な日付でお客様に伝えてください。data.deliveryDateには "${nextThursday.iso}" をそのまま入れてください。
 必ず次のJSON形式のみで回答してください。他の文章は一切含めないこと。
 {"type":"question"または"confirm", "message":"お客様への返信文", "data":{"items":[{"name":"品名","quantity":数量}],"deliveryDate":"YYYY-MM-DD"}}`;
 
