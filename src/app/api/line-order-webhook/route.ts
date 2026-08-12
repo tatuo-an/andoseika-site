@@ -61,6 +61,17 @@ async function pushLineMessage(to: string, text: string) {
   }
 }
 
+// 安藤さん本人へ「新しいAI注文が確定した」ことを通知する。
+// OWNER_LINE_USER_ID未設定の間は通知をスキップする（取得方法はHANDOFF.md参照）。
+async function notifyOwner(text: string) {
+  const ownerId = process.env.OWNER_LINE_USER_ID;
+  if (!ownerId) {
+    console.log("[line-order-webhook] OWNER_LINE_USER_ID未設定のため安藤さんへの通知をスキップ");
+    return;
+  }
+  await pushLineMessage(ownerId, text);
+}
+
 type AiSession = { row: number; status: string; data: Record<string, unknown> };
 
 async function getAiSession(key: string): Promise<AiSession | null> {
@@ -293,13 +304,17 @@ async function getGroupName(groupId: string): Promise<string | null> {
   }
 }
 
-async function finalizeAiOrder(data: { items: { name: string; quantity: number }[]; deliveryDate?: string }, source: { groupId?: string; userId?: string }) {
+async function finalizeAiOrder(data: { items: { name: string; quantity: number }[]; deliveryDate?: string }, source: { groupId?: string; userId?: string }): Promise<string | null> {
   const columns = await getWeeklySummaryColumns();
   const items = (data.items || []).map((it) => {
     const col = columns[matchSizeColumn(it.name, columns)];
     return { name: it.name, quantity: Number(it.quantity) || 0, price: col?.price || 0 };
   });
-  if (items.length === 0) return;
+  if (items.length === 0) return null;
+
+  // 数量の幅（レンジ）や規格が曖昧なまま仮登録された注文は、安藤さんへの通知で目立たせる
+  const needsReview = items.some((it) => /幅あり|仮登録|要確認/.test(it.name));
+  const itemsText = items.map((it) => `・${it.name} ${it.quantity}`).join("\n");
 
   const sheets = getSheets();
   const now = new Date().toISOString();
@@ -333,6 +348,13 @@ async function finalizeAiOrder(data: { items: { name: string; quantity: number }
       valueInputOption: "USER_ENTERED",
       requestBody: { values: lineRows },
     });
+
+    return (
+      (needsReview ? "【要確認】" : "") + "新しい注文が入りました（" + groupName + "）\n" +
+      itemsText + "\n" +
+      (data.deliveryDate ? "配達日: " + data.deliveryDate + "\n" : "") +
+      (needsReview ? "\n※数量や規格が曖昧なまま仮登録されています。管理画面で確認してください。" : "")
+    );
   } else {
     const orderId = `ORD-AI-${Date.now()}`;
     const rows = items.map((it) => [
@@ -345,6 +367,13 @@ async function finalizeAiOrder(data: { items: { name: string; quantity: number }
       valueInputOption: "USER_ENTERED",
       requestBody: { values: rows },
     });
+
+    return (
+      (needsReview ? "【要確認】" : "") + "新しい個人注文が入りました\n" +
+      itemsText + "\n" +
+      (data.deliveryDate ? "配達日: " + data.deliveryDate + "\n" : "") +
+      (needsReview ? "\n※数量や規格が曖昧なまま仮登録されています。管理画面で確認してください。" : "")
+    );
   }
 }
 
@@ -352,6 +381,14 @@ async function processIncomingMessage(event: LineEvent) {
   const sessionKey = event.source?.groupId || event.source?.userId || "";
   if (!sessionKey) return;
   const text = event.message?.text || "";
+
+  // 「ID」とだけ送ると、送信者本人のLINE userIdをそのまま返信する。
+  // 安藤さんのuserId（OWNER_LINE_USER_ID用）をグループ内からでも取得できるようにするための仕組み。
+  if (/^id$/i.test(text.trim())) {
+    const myUserId = event.source?.userId || "(取得できませんでした)";
+    await pushLineMessage(sessionKey, "あなたのLINE ID:\n" + myUserId);
+    return;
+  }
 
   if (event.source?.groupId) {
     try {
@@ -364,12 +401,19 @@ async function processIncomingMessage(event: LineEvent) {
   const session = (await getAiSession(sessionKey)) || { row: -1, status: "collecting", data: {} };
 
   if (session.status === "confirming" && /^(はい|ok|お願いします|うん|そうです)/i.test(text.trim())) {
-    await finalizeAiOrder(
+    const summary = await finalizeAiOrder(
       session.data as { items: { name: string; quantity: number }[]; deliveryDate?: string },
       event.source || {}
     );
     await saveAiSession(sessionKey, "done", {});
     await pushLineMessage(sessionKey, "ご注文を受け付けました。ありがとうございます！");
+    if (summary) {
+      try {
+        await notifyOwner(summary);
+      } catch (err) {
+        console.error("[line-order-webhook] notifyOwner failed", err);
+      }
+    }
     return;
   }
 
