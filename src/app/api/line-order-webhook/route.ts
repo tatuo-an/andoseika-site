@@ -195,6 +195,20 @@ async function callClaudeForOrderParsing(
   }
 }
 
+async function getGroupName(groupId: string): Promise<string | null> {
+  try {
+    const res = await fetch(`https://api.line.me/v2/bot/group/${groupId}/summary`, {
+      headers: { Authorization: `Bearer ${process.env.LINE_CHANNEL_ACCESS_TOKEN}` },
+    });
+    if (!res.ok) return null;
+    const json = (await res.json()) as { groupName?: string };
+    return json.groupName || null;
+  } catch (err) {
+    console.error("[line-order-webhook] getGroupName failed", err);
+    return null;
+  }
+}
+
 async function finalizeAiOrder(data: { items: { name: string; quantity: number }[]; deliveryDate?: string }, source: { groupId?: string; userId?: string }) {
   const columns = await getWeeklySummaryColumns();
   const items = (data.items || []).map((it) => {
@@ -207,7 +221,9 @@ async function finalizeAiOrder(data: { items: { name: string; quantity: number }
   const now = new Date().toISOString();
 
   if (source.groupId) {
-    // 法人（グループチャット経由）：取引先名が不明なため仮名で登録し、安藤さんの確認を前提とする
+    // 法人（グループチャット経由）：正式な会社名は不明なため、LINEグループ名を取引先名として使う
+    // （安藤さんが後で正式名称に手動修正する前提。取得できない場合のみ仮名にフォールバック）
+    const groupName = (await getGroupName(source.groupId)) || "（AIボット・要確認）";
     const receiptId = `BLK-AI-${Date.now()}`;
     await sheets.spreadsheets.values.append({
       spreadsheetId: SPREADSHEET_ID,
@@ -215,8 +231,8 @@ async function finalizeAiOrder(data: { items: { name: string; quantity: number }
       valueInputOption: "USER_ENTERED",
       requestBody: {
         values: [[
-          receiptId, now, "", "（AIボット・要確認）", "様", "LINE自動受付",
-          "", "", "AIボット経由の自動登録。取引先名を確認してください。", "受付", "", "", "FALSE",
+          receiptId, now, "", groupName, "様", "LINE自動受付",
+          "", "", "AIボット経由の自動登録（グループ名: " + groupName + "）。正式な取引先名か確認してください。", "受付", "", "", "FALSE",
         ]],
       },
     });
