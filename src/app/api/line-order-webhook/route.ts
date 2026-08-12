@@ -257,6 +257,23 @@ async function matchPartnerByLineId(lineId: string): Promise<ExistingPartner | n
   return null;
 }
 
+// 未登録のグループIDを既存取引先リストに自動追加する（名前はLINEグループ名を仮登録、
+// 正式な取引先名への修正は安藤さん/今村さんが手動で行う前提）
+async function ensurePartnerRowForGroup(groupId: string): Promise<void> {
+  const existing = await matchPartnerByLineId(groupId);
+  if (existing) return;
+  const groupName = (await getGroupName(groupId)) || "（グループ名取得失敗・要確認）";
+  const sheets = getSheets();
+  await sheets.spreadsheets.values.append({
+    spreadsheetId: SPREADSHEET_ID,
+    range: `${SHEET_EXISTING_PARTNERS}!A:G`,
+    valueInputOption: "USER_ENTERED",
+    requestBody: {
+      values: [[groupName, "", "", "", groupId, new Date().toISOString(), ""]],
+    },
+  });
+}
+
 async function getGroupName(groupId: string): Promise<string | null> {
   try {
     const res = await fetch(`https://api.line.me/v2/bot/group/${groupId}/summary`, {
@@ -331,6 +348,14 @@ async function processIncomingMessage(event: LineEvent) {
   if (!sessionKey) return;
   const text = event.message?.text || "";
 
+  if (event.source?.groupId) {
+    try {
+      await ensurePartnerRowForGroup(event.source.groupId);
+    } catch (err) {
+      console.error("[line-order-webhook] ensurePartnerRowForGroup failed", err);
+    }
+  }
+
   const session = (await getAiSession(sessionKey)) || { row: -1, status: "collecting", data: {} };
 
   if (session.status === "confirming" && /^(はい|ok|お願いします|うん|そうです)/i.test(text.trim())) {
@@ -380,6 +405,8 @@ export async function POST(req: NextRequest) {
     try {
       if (event.type === "message" && event.message?.type === "text") {
         await processIncomingMessage(event);
+      } else if (event.type === "join" && event.source?.groupId) {
+        await ensurePartnerRowForGroup(event.source.groupId);
       }
     } catch (err) {
       console.error("[line-order-webhook] event processing error", err);
