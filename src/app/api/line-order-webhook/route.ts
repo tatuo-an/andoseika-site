@@ -42,18 +42,21 @@ type LineEvent = {
   message?: { type: string; text?: string };
 };
 
-async function replyLineMessage(replyToken: string, text: string) {
-  const res = await fetch("https://api.line.me/v2/bot/message/reply", {
+// replyToken方式（api.line.me/.../reply）は有効期限が短く、Vercelのサーバーレス関数の
+// コールドスタート等でタイムアウトしやすいため、期限のないpush APIを使う
+// （replyより消費クォータの都合は悪いが、確実性を優先する）。
+async function pushLineMessage(to: string, text: string) {
+  const res = await fetch("https://api.line.me/v2/bot/message/push", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${process.env.LINE_CHANNEL_ACCESS_TOKEN}`,
     },
-    body: JSON.stringify({ replyToken, messages: [{ type: "text", text }] }),
+    body: JSON.stringify({ to, messages: [{ type: "text", text }] }),
   });
   if (!res.ok) {
     const errText = await res.text().catch(() => "");
-    console.error(`[line-order-webhook] LINE reply failed (${res.status}): ${errText}`);
+    console.error(`[line-order-webhook] LINE push failed (${res.status}): ${errText}`);
   }
 }
 
@@ -243,7 +246,7 @@ async function finalizeAiOrder(data: { items: { name: string; quantity: number }
 
 async function processIncomingMessage(event: LineEvent) {
   const sessionKey = event.source?.groupId || event.source?.userId || "";
-  if (!sessionKey || !event.replyToken) return;
+  if (!sessionKey) return;
   const text = event.message?.text || "";
 
   const session = (await getAiSession(sessionKey)) || { row: -1, status: "collecting", data: {} };
@@ -254,13 +257,13 @@ async function processIncomingMessage(event: LineEvent) {
       event.source || {}
     );
     await saveAiSession(sessionKey, "done", {});
-    await replyLineMessage(event.replyToken, "ご注文を受け付けました。ありがとうございます！");
+    await pushLineMessage(sessionKey, "ご注文を受け付けました。ありがとうございます！");
     return;
   }
 
   const aiResult = await callClaudeForOrderParsing(session.data, text);
   if (!aiResult) {
-    await replyLineMessage(event.replyToken, "すみません、うまく読み取れませんでした。もう一度お願いします。");
+    await pushLineMessage(sessionKey, "すみません、うまく読み取れませんでした。もう一度お願いします。");
     return;
   }
 
@@ -269,7 +272,7 @@ async function processIncomingMessage(event: LineEvent) {
   } else {
     await saveAiSession(sessionKey, "collecting", aiResult.data || session.data);
   }
-  await replyLineMessage(event.replyToken, aiResult.message);
+  await pushLineMessage(sessionKey, aiResult.message);
 }
 
 export async function POST(req: NextRequest) {
