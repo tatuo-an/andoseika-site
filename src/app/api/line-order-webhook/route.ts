@@ -259,7 +259,7 @@ async function finalizeAiOrder(data: { items: { name: string; quantity: number }
       valueInputOption: "USER_ENTERED",
       requestBody: {
         values: [[
-          receiptId, now, "", groupName, "様", "LINE自動受付",
+          receiptId, now, source.groupId, groupName, "様", "LINE自動受付",
           "", "", "AIボット経由の自動登録（グループ名: " + groupName + "）。正式な取引先名か確認してください。", "受付", "", "", "FALSE",
         ]],
       },
