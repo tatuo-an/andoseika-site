@@ -457,6 +457,9 @@ export async function POST(req: NextRequest) {
   // Vercelのサーバーレス関数は応答後に処理を継続できないため、ここでは同期的に処理する。
   for (const event of events) {
     try {
+      if (event.type === "join" || event.type === "leave" || event.type === "memberJoined" || event.type === "memberLeft") {
+        console.log(`[line-order-webhook] group event: type=${event.type} groupId=${event.source?.groupId || ""}`);
+      }
       if (event.type === "message" && event.message?.type === "text") {
         await processIncomingMessage(event);
       } else if (event.type === "join" && event.source?.groupId) {
