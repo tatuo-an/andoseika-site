@@ -445,6 +445,27 @@ export default async function Home() {
           </section>
         )}
 
+        {/* ── はちみつ入荷お知らせ登録 ── */}
+        <section className="py-4 bg-white border-y border-amber-100">
+          <div className="container mx-auto px-4 md:px-6">
+            <a
+              href="/newsletter.html"
+              className="flex items-center justify-between gap-3 rounded-2xl bg-amber-50 border border-amber-200 px-5 py-4 hover:bg-amber-100 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-amber-200/70 flex items-center justify-center shrink-0">
+                  <Leaf className="w-4 h-4 text-amber-700" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-stone-900">はちみつの入荷・予約のお知らせ（無料）</p>
+                  <p className="text-xs text-stone-500 mt-0.5">売り切れる前にメールでお知らせします</p>
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-amber-700 shrink-0" />
+            </a>
+          </div>
+        </section>
+
         {/* ── Season Calendar ── */}
         <section className="py-10 bg-stone-50">
           <div className="container mx-auto px-4 md:px-6">
