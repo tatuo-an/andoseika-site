@@ -271,7 +271,7 @@ export async function POST(req: NextRequest) {
   // 注文管理シートを1回読み込み
   const orderRes = await sheets.spreadsheets.values.get({
     spreadsheetId,
-    range: `${ORDER_SHEET}!A:P`,
+    range: `${ORDER_SHEET}!A:R`,
   });
   const orderRows = orderRes.data.values ?? [];
 
@@ -359,9 +359,13 @@ export async function POST(req: NextRequest) {
     const saleDate = normalizeDate(saleDateRaw, new Date().getFullYear());
     const saleMonth = normalizeMonth(saleDate);
 
+    // R列（発送方法）に「送料（クリックポスト）」等の明細名がそのまま入っている。
+    // 旧データ（R列導入前）向けに、念のため商品名からの抽出もフォールバックとして残す。
+    const shipMethodSource = String(row[17] ?? "").trim();
     let shipMethodRaw = "";
-    const shipMethodMatch = rawProductName.match(/送料[（(]([^）)]+)[）)]/);
+    const shipMethodMatch = (shipMethodSource || rawProductName).match(/送料[（(]([^）)]+)[）)]/);
     if (shipMethodMatch) shipMethodRaw = shipMethodMatch[1];
+    else if (shipMethodSource) shipMethodRaw = shipMethodSource.replace(/^送料\s*/, "");
     const shipMethod = normalizeShipMethod(shipMethodRaw);
 
     const fallbackYear = saleDate ? parseInt(saleDate.slice(0, 4), 10) : new Date().getFullYear();
