@@ -34,3 +34,8 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## AI秘書（Discord常駐）
+
+Discordにメッセージを送ると、Claude Codeが読んで返事を書く仕組みのキットを `tools/ai-hisho-discord/` に同梱しています。
+設置手順は [`tools/ai-hisho-discord/設置の進め方.md`](tools/ai-hisho-discord/設置の進め方.md) を参照してください。

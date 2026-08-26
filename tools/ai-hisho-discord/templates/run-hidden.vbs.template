@@ -1,0 +1,7 @@
+' Windows用: ブリッジを黒い画面（コマンドプロンプト）を出さずに起動するための補助ファイル。
+' タスクスケジューラの自動起動から、これを経由してnode bridge.mjsを呼ぶ。
+' {{BRIDGE_DIR}} は設置するAIが実際のフォルダの絶対パスに置き換える。
+
+Set WshShell = CreateObject("WScript.Shell")
+WshShell.CurrentDirectory = "{{BRIDGE_DIR}}"
+WshShell.Run "cmd /c node bridge.mjs >> ""{{BRIDGE_DIR}}\bridge.log"" 2>>&1", 0, False

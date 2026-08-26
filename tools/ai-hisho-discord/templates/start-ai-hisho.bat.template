@@ -1,0 +1,14 @@
+@echo off
+REM Windows用の起動バッチの雛形。
+REM {{BRIDGE_DIR}} は、設置するAIが実際のフォルダの絶対パス（例: C:\Users\あなたの名前\ai-hisho-kit）に
+REM 置き換えてから start-ai-hisho.bat として保存する。
+REM
+REM 使い方（AIが案内する）:
+REM 1. このファイルをダブルクリックすると、常駐ブリッジがそのウィンドウで動き始める
+REM    （動作確認用。ウィンドウを閉じると止まる）
+REM 2. 自動起動させたい場合は、このファイルへのショートカットを
+REM    「タスクスケジューラ」に登録する（SETUP_FOR_AI.md 手順6のWindows版を参照）
+
+cd /d "{{BRIDGE_DIR}}"
+node bridge.mjs
+pause

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Mac用の自動起動設定（launchd）の雛形。
+  {{NODE_PATH}} と {{BRIDGE_PATH}} と {{HOME}} は、設置するAIが実際の値に置き換えてから
+  ~/Library/LaunchAgents/com.ai-hisho.bridge.plist として保存し、
+  `launchctl load ~/Library/LaunchAgents/com.ai-hisho.bridge.plist` で読み込む。
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.ai-hisho.bridge</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>{{NODE_PATH}}</string>
+        <string>{{BRIDGE_PATH}}</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>{{BRIDGE_DIR}}</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>{{HOME}}/.local/bin:/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    </dict>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>KeepAlive</key>
+    <true/>
+
+    <key>StandardOutPath</key>
+    <string>{{HOME}}/Library/Logs/ai-hisho-bridge.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>{{HOME}}/Library/Logs/ai-hisho-bridge.error.log</string>
+
+    <key>ProcessType</key>
+    <string>Background</string>
+</dict>
+</plist>

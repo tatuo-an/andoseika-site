@@ -40,3 +40,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# claude code (端末ごとの個人設定はコミットしない)
+.claude/settings.local.json

@@ -1,0 +1,15 @@
+# 秘密情報・端末ごとの生成物は絶対にコミットしない
+# （トークン＝Botの合鍵。1度でも公開リポジトリに載ると失効させるまで危険）
+
+# 依存パッケージ
+node_modules/
+
+# 設置中に作る一時ファイル（SETUP_FOR_AI.md 手順2・手順5）
+token-temp.txt
+config-draft.json
+config.json
+bot-token
+
+# setup-helper.mjs が端末ごとに書き出すファイル（絶対パスを含む）
+run-hidden.vbs
+start-ai-hisho.bat

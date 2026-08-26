@@ -1,0 +1,11 @@
+{
+  "guildId": "サーバーのIDをここに（数字の羅列）",
+  "channelIds": ["常駐させるチャンネルのIDをここに（複数可）"],
+  "allowedUsers": [
+    { "id": "自分のDiscordユーザーID", "name": "呼んでほしい名前（任意）" }
+  ],
+  "secretaryName": "AI秘書に付けたい名前（例: みらい）",
+  "workdir": "作業させたいフォルダの絶対パス（例: /Users/あなたの名前/Desktop/ai-work）",
+  "timeoutMs": 300000,
+  "sessionId": "ここはAIが自動生成するのでそのままでよい"
+}

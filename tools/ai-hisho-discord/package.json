@@ -1,0 +1,14 @@
+{
+  "name": "ai-hisho-discord-jochu",
+  "version": "1.0.0",
+  "description": "DiscordとClaude Codeをつなぐブリッジ（AI秘書常駐キット）",
+  "type": "module",
+  "private": true,
+  "main": "bridge.mjs",
+  "scripts": {
+    "start": "node bridge.mjs"
+  },
+  "dependencies": {
+    "discord.js": "^14.16.3"
+  }
+}

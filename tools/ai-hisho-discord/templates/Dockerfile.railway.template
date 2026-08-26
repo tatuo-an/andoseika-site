@@ -1,0 +1,28 @@
+# Railway用Dockerfileの雛形（RAILWAY.md参照）
+#
+# このイメージには、AI秘書常駐キット一式とClaude Code CLIを入れる。
+# 起動時に、環境変数として渡された ANTHROPIC_API_KEY と DISCORD_BOT_TOKEN を使って動く。
+#
+# 注意（RAILWAY.mdにも明記）:
+# - Railway上のこのコンテナは、あなたの手元PCのファイルにはアクセスできない
+# - Claude定額プランの契約とは別に、ANTHROPIC_API_KEY の従量課金が発生する
+# - この雛形はキット制作時点では机上設計であり、実機デプロイでの動作確認はしていない
+
+FROM node:20-slim
+
+# Claude Code CLIをグローバルインストール
+RUN npm install -g @anthropic-ai/claude-code
+
+WORKDIR /app
+
+# キット一式をコピー
+COPY package.json ./
+RUN npm install --omit=dev
+COPY bridge.mjs ./
+
+# 設定ファイル(config.json)はビルド時にコピーせず、Railwayの「Volume」または
+# 起動スクリプトが環境変数から生成する想定（トークンをイメージに焼き込まないため）。
+COPY templates/railway-entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+
+ENTRYPOINT ["/app/entrypoint.sh"]

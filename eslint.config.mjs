@@ -7,6 +7,8 @@ const eslintConfig = defineConfig([
   ...nextTs,
   // Override default ignores of eslint-config-next.
   globalIgnores([
+    // AI秘書Discord常駐キット（配布物をそのまま同梱）はサイト側のlint対象外にする。
+    "tools/**",
     // Default ignores of eslint-config-next:
     ".next/**",
     "out/**",
