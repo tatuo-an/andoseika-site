@@ -17,6 +17,7 @@
 - [x] Worker サイズの実測（gzip 3.03MiB → 有料プラン必須と判明、2-6節参照）
 - [x] **GAS→サイトのLINE中継URL修正**（`ando-seika-gas`の`LINE通知.js`の`AI_ORDER_BOT_WEBHOOK_URL`を`ando-seika.vercel.app`→`ando-seika.com`に変更し、clasp push・deploy済み、稼働中）。これをやっていないとVercel Pause後にGAS経由のLINE注文botだけが気づかれずに止まっていた
 - [x] 動作確認チェックリスト（3-4節）にGAS連携・LINE連携の項目を追加済み
+- [x] **LINE公式アカウントのリッチメニューURL変更**（`ando-seika.vercel.app`→`ando-seika.com`、2026-08-28完了）。変更先の主要ページ（`/`・`/products`・`/mypage`・`/experience`・`/supporter`・`/guide`・`/contact`・`/newsletter.html`）がすべて200を返すことを確認済み。GASの中継URLと同じく、直していないとVercel Pause後に**公式LINEで一番押される導線だけが黙って死ぬ**箇所だった
 
 ### まだのこと（DNS切替前に必要）
 - [ ] Cloudflare有料プランへの加入（3MiB無料枠を超過するため）
@@ -180,6 +181,7 @@ DNS を切り替えても、以下は**手動で変えないと壊れる**。
 - LINE Developers … コールバックURL / Webhook URL
 - Stripe … Webhook エンドポイント（`/api/webhook`）
 - Vercel … **cron を停止する**（下記）
+- ~~**LINE公式アカウント … リッチメニューのリンクURL**~~ → **2026-08-28 対応済み**。LINE Official Account Manager 上で `ando-seika.com` に変更済みのため、DNS切替時の作業は不要。ドメインは切替後も変わらないため再変更も不要
 - **`ando-seika-gas`（別リポジトリ）… `LINE通知.js` の `AI_ORDER_BOT_WEBHOOK_URL`**（現在 `https://ando-seika.vercel.app/api/line-order-webhook` とハードコードされている）を **`https://ando-seika.com/api/line-order-webhook`** に書き換える。GASはLINEで届いたメッセージをこのURLへ署名付きで中継しており、直さないとVercel Pause後にGAS経由のLINE注文botだけが気づかれずに止まる。**Vercelを止める前に必ず変更・動作確認すること。**
 
 ---
