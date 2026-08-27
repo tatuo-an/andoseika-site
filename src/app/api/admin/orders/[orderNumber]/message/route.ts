@@ -76,7 +76,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ ord
         lineUserId = profileRow?.[7] ?? "";
       }
 
-      const baseUrl = process.env.NEXT_PUBLIC_URL || "https://andoseika.jp";
+      const baseUrl = process.env.NEXT_PUBLIC_URL || "https://ando-seika.com";
       let sentViaLine = false;
       if (lineUserId) {
         try {

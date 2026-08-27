@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
   const token = process.env.LINE_CHANNEL_ACCESS_TOKEN;
   if (!token) return NextResponse.json({ error: "LINE_CHANNEL_ACCESS_TOKEN not set" }, { status: 500 });
 
-  const baseUrl = process.env.NEXT_PUBLIC_URL ?? "https://andoseika.jp";
+  const baseUrl = process.env.NEXT_PUBLIC_URL ?? "https://ando-seika.com";
   const productUrl = productId ? `${baseUrl}/products/${productId}` : `${baseUrl}/products`;
 
   const deadlineLabel = deadline

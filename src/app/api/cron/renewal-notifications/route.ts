@@ -54,7 +54,7 @@ export async function GET(req: NextRequest) {
   const sheets = getSheets();
   const spreadsheetId = process.env.GOOGLE_SPREADSHEET_ID!;
   const today = todayJST();
-  const baseUrl = process.env.NEXT_PUBLIC_URL || "https://andoseika.jp";
+  const baseUrl = process.env.NEXT_PUBLIC_URL || "https://ando-seika.com";
 
   let scanned = 0;
   let sent30 = 0;

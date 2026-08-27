@@ -324,7 +324,7 @@ export async function POST(req: NextRequest) {
         // 2) LINE push を試みる
         if (lineUserId) {
           try {
-            const baseUrl = process.env.NEXT_PUBLIC_URL || "https://andoseika.jp";
+            const baseUrl = process.env.NEXT_PUBLIC_URL || "https://ando-seika.com";
             await sendOrderLineNotification({
               lineUserId,
               customerName: notifyName,
@@ -477,7 +477,7 @@ export async function POST(req: NextRequest) {
         let sentViaLine = false;
         if (lineUserId) {
           try {
-            const baseUrl = process.env.NEXT_PUBLIC_URL || "https://andoseika.jp";
+            const baseUrl = process.env.NEXT_PUBLIC_URL || "https://ando-seika.com";
             await sendOrderLineNotification({
               lineUserId,
               customerName: notifyName,

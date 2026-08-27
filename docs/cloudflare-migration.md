@@ -17,6 +17,7 @@
 - [x] Worker サイズの実測（gzip 3.03MiB → 有料プラン必須と判明、2-6節参照）
 - [x] **GAS→サイトのLINE中継URL修正**（`ando-seika-gas`の`LINE通知.js`の`AI_ORDER_BOT_WEBHOOK_URL`を`ando-seika.vercel.app`→`ando-seika.com`に変更し、clasp push・deploy済み、稼働中）。これをやっていないとVercel Pause後にGAS経由のLINE注文botだけが気づかれずに止まっていた
 - [x] 動作確認チェックリスト（3-4節）にGAS連携・LINE連携の項目を追加済み
+- [x] **GitHub Actions のデプロイ workflow 作成**（`.github/workflows/deploy-cloudflare.yml`、2026-08-28）。`main` への push で自動デプロイ＝今までのVercelと同じ「pushだけ」運用に戻る。有効化には GitHub Secrets への登録が2つ必要（3-3節のCI項参照）
 - [x] **LINE公式アカウントのリッチメニューURL変更**（`ando-seika.vercel.app`→`ando-seika.com`、2026-08-28完了）。変更先の主要ページ（`/`・`/products`・`/mypage`・`/experience`・`/supporter`・`/guide`・`/contact`・`/newsletter.html`）がすべて200を返すことを確認済み。GASの中継URLと同じく、直していないとVercel Pause後に**公式LINEで一番押される導線だけが黙って死ぬ**箇所だった
 
 ### まだのこと（DNS切替前に必要）
@@ -148,11 +149,43 @@ OpenNext の公式推奨。ただし `wsl --install` には**管理者権限と�
 導入後はリポジトリを WSL 側のファイルシステム（`~/andoseika-site`）に置くこと。
 `/mnt/c/...` 越しにビルドすると極端に遅くなる。
 
-#### CI（GitHub Actions）で実行する場合
+#### CI（GitHub Actions）で実行する場合 ★推奨・構築済み
 
+`.github/workflows/deploy-cloudflare.yml` を作成済み（2026-08-28）。
 ローカル OS に依存せず、PC の電源状態とも無関係にデプロイできる。
-Cloudflare API トークンを GitHub Secrets（`CLOUDFLARE_API_TOKEN`）に入れ、
-`main` への push で `npm ci && npm run cf:build && npm run cf:deploy` を回す。
+
+**発火条件**
+- `main` への push（`.md` だけの変更は除外）→ 今までの「pushだけで本番反映」と同じ体験
+- Actions タブからの手動実行（`workflow_dispatch`）
+
+**事前登録（1回だけ・本人操作）**
+
+1. Cloudflare ダッシュボード → My Profile → API Tokens → Create Token →
+   テンプレート「Edit Cloudflare Workers」を選び、**Workers R2 Storage: Edit を追加**する
+   （`cf:deploy` の populateCache が R2 に書き込むため。無いとデプロイが途中で失敗する）。
+   スコープは自アカウントに限定。
+2. GitHub リポジトリ → Settings → Secrets and variables → Actions → Secrets に登録:
+
+| Secret名 | 値 | 必須 |
+|---|---|---|
+| `CLOUDFLARE_API_TOKEN` | 上で発行したトークン | 必須 |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe の公開可能キー（Vercelの環境変数からコピー） | 必須（無いと決済ボタンが静かに壊れるため、workflow冒頭でチェックして落とす） |
+| `NEXT_PUBLIC_SURVEY_FORM_URL` | アンケートフォームURL | 任意 |
+
+サイトURL系（`NEXT_PUBLIC_SITE_URL` / `NEXT_PUBLIC_URL`）は秘密ではないので
+workflow 内に `https://ando-seika.com` を直書きしてある。
+
+**CI にサーバー系シークレット（Stripe秘密鍵・Google鍵など）は不要**。
+環境変数ゼロでの `cf:build` 成功を実測済み（2026-08-28）。それらは実行時に
+Worker の secret（3-2節）から読まれる。
+
+**タイミングの注意（重要）**: Vercel も `main` を監視しているため、
+`cloudflare-migration` を `main` にマージすると**両方にデプロイされる**。
+移行後のコードは Vercel 上では画像アップロードが壊れ（`getCloudflareContext` が例外）、
+Cloudflare 側では cron が動き始める（二重実行）。つまり **`main` へのマージ＝切替当日の操作**。
+それまでの workers.dev 検証デプロイは、ローカルで `wrangler login` 済みの端末から
+`npm run cf:build && npm run cf:deploy` を叩く（R2作成・secret投入でどのみちローカル認証が必要）。
+手動実行ボタン（workflow_dispatch）は workflow が `main` に入った後（＝マージ後）に表示される。
 
 ### 3-4. workers.dev で動作確認（DNSを切り替える前）
 

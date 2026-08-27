@@ -334,7 +334,7 @@ export async function POST(req: NextRequest) {
   // 通知送信
   const notificationLog: { channel: string; status: string; detail?: string }[] = [];
   if (shouldNotify) {
-    const baseUrl = process.env.NEXT_PUBLIC_URL || "https://andoseika.jp";
+    const baseUrl = process.env.NEXT_PUBLIC_URL || "https://ando-seika.com";
     const notifyName = (primary?.name || profile.displayName || "お客様").trim();
     const params = {
       customerName: notifyName,
