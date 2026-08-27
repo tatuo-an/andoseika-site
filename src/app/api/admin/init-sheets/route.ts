@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { google } from "googleapis";
+import { sheets as sheetsApi, auth as googleAuth } from "@googleapis/sheets";
 import { auth } from "@/auth";
 import { isAdmin } from "@/lib/admin";
 
@@ -11,17 +11,17 @@ const HEADERS: Record<string, string[]> = {
 };
 
 async function getSheets() {
-  const a = new google.auth.GoogleAuth({
+  const a = new googleAuth.GoogleAuth({
     credentials: {
       client_email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
       private_key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
     },
     scopes: ["https://www.googleapis.com/auth/spreadsheets"],
   });
-  return google.sheets({ version: "v4", auth: a });
+  return sheetsApi({ version: "v4", auth: a });
 }
 
-async function ensureSheetExists(sheets: ReturnType<typeof google.sheets>, id: string, sheetName: string) {
+async function ensureSheetExists(sheets: ReturnType<typeof sheetsApi>, id: string, sheetName: string) {
   const meta = await sheets.spreadsheets.get({ spreadsheetId: id });
   const exists = meta.data.sheets?.some((s) => s.properties?.title === sheetName);
   if (!exists) {
@@ -32,7 +32,7 @@ async function ensureSheetExists(sheets: ReturnType<typeof google.sheets>, id: s
   }
 }
 
-async function ensureHeader(sheets: ReturnType<typeof google.sheets>, id: string, sheetName: string, header: string[]) {
+async function ensureHeader(sheets: ReturnType<typeof sheetsApi>, id: string, sheetName: string, header: string[]) {
   await ensureSheetExists(sheets, id, sheetName);
   const res = await sheets.spreadsheets.values.get({ spreadsheetId: id, range: `${sheetName}!A1` });
   const firstCell = res.data.values?.[0]?.[0] ?? "";

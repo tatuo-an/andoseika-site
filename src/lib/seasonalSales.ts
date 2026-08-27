@@ -1,4 +1,4 @@
-import { google } from "googleapis";
+import { sheets as sheetsApi, auth as googleAuth } from "@googleapis/sheets";
 
 export type SeasonalSale = {
     name: string;
@@ -49,14 +49,14 @@ export function getActiveSeasonalSale(sales: SeasonalSale[], now: Date = new Dat
 // 「季節セール」シートを読み、現在有効なセール（名前・割引率）を返す（読み取り失敗時はnull＝影響なし）。
 export async function fetchActiveSeasonalSale(): Promise<SeasonalSale | null> {
     try {
-        const authClient = new google.auth.GoogleAuth({
+        const authClient = new googleAuth.GoogleAuth({
             credentials: {
                 client_email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
                 private_key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
             },
             scopes: ["https://www.googleapis.com/auth/spreadsheets.readonly"],
         });
-        const sheets = google.sheets({ version: "v4", auth: authClient });
+        const sheets = sheetsApi({ version: "v4", auth: authClient });
         const res = await sheets.spreadsheets.values.get({
             spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
             range: "季節セール!A:E",

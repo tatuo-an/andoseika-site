@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { put } from "@vercel/blob";
-import { google } from "googleapis";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
+import { sheets as sheetsApi, auth as googleAuth } from "@googleapis/sheets";
 import { auth } from "@/auth";
 
 export const runtime = "nodejs";
@@ -29,21 +29,29 @@ export async function POST(req: NextRequest) {
     if (!ext) {
       return NextResponse.json({ error: "画像ファイル（jpg/png/webp/gif）のみアップロードできます" }, { status: 400 });
     }
-    const filename = `complaints/${Date.now()}.${ext}`;
+    const key = `complaints/${Date.now()}.${ext}`;
 
-    const blob = await put(filename, file, {
-      access: "public",
-      token: process.env.COMPLAINT_READ_WRITE_TOKEN,
+    // R2 へ保存（旧 Vercel Blob の put 相当）
+    const { env } = getCloudflareContext();
+    await env.UPLOADS.put(key, file.stream(), {
+      httpMetadata: { contentType: file.type },
     });
+
+    // 公開URLは R2 のパブリックバケット経由。R2_PUBLIC_URL_BASE は末尾スラッシュ無しで設定する。
+    const base = (process.env.R2_PUBLIC_URL_BASE ?? "").replace(/\/$/, "");
+    if (!base) {
+      return NextResponse.json({ error: "R2_PUBLIC_URL_BASE が未設定です" }, { status: 500 });
+    }
+    const blob = { url: `${base}/${key}` };
 
     // シート記録（失敗しても URL は返す）
     try {
-      const sheetsAuth = new google.auth.JWT({
+      const sheetsAuth = new googleAuth.JWT({
         email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
         key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
         scopes: ["https://www.googleapis.com/auth/spreadsheets"],
       });
-      const sheets = google.sheets({ version: "v4", auth: sheetsAuth });
+      const sheets = sheetsApi({ version: "v4", auth: sheetsAuth });
       const uploadedAt = new Date().toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" });
       await sheets.spreadsheets.values.append({
         spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,

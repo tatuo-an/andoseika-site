@@ -6,7 +6,7 @@ import { client } from "@/lib/microcms";
 import { Product } from "@/types/microcms";
 import { Metadata } from "next";
 import localProducts from "@/data/products.json";
-import { google } from "googleapis";
+import { sheets as sheetsApi, auth as googleAuth } from "@googleapis/sheets";
 import { BADGE_COLORS, DEFAULT_BADGE_COLOR } from "@/lib/badges";
 import { FavoriteButton } from "@/components/products/FavoriteButton";
 import { isSaleActive, getEffectiveSalePercent, calcSalePrice } from "@/lib/sale";
@@ -93,14 +93,14 @@ export default async function ProductsPage() {
   let userTier = "free";
   if (userEmail) {
     try {
-      const authClient = new google.auth.GoogleAuth({
+      const authClient = new googleAuth.GoogleAuth({
         credentials: {
           client_email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
           private_key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
         },
         scopes: ["https://www.googleapis.com/auth/spreadsheets"],
       });
-      const sheets = google.sheets({ version: "v4", auth: authClient });
+      const sheets = sheetsApi({ version: "v4", auth: authClient });
       const res = await sheets.spreadsheets.values.get({
         spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
         range: "顧客マスタ!A:F",

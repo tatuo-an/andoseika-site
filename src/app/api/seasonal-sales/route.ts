@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { google } from "googleapis";
+import { sheets as sheetsApi, auth as googleAuth } from "@googleapis/sheets";
 import { auth } from "@/auth";
 import { isAdmin } from "@/lib/admin";
 import { DEFAULT_SEASONAL_SALES, type SeasonalSale } from "@/lib/seasonalSales";
@@ -11,14 +11,14 @@ const SHEET_NAME = "季節セール";
 // 列: A=セール名, B=開始日(MM-DD), C=終了日(MM-DD), D=割引率(%), E=有効(TRUE/FALSE)
 
 function getSheets() {
-    const authClient = new google.auth.GoogleAuth({
+    const authClient = new googleAuth.GoogleAuth({
         credentials: {
             client_email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
             private_key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
         },
         scopes: ["https://www.googleapis.com/auth/spreadsheets"],
     });
-    return google.sheets({ version: "v4", auth: authClient });
+    return sheetsApi({ version: "v4", auth: authClient });
 }
 
 function rowsToSales(rows: string[][]): SeasonalSale[] {

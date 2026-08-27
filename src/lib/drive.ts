@@ -1,7 +1,7 @@
-import { google } from "googleapis";
+import { drive as driveApi, auth as googleAuth } from "@googleapis/drive";
 
 // 認証情報のセットアップ
-const auth = new google.auth.GoogleAuth({
+const auth = new googleAuth.GoogleAuth({
     credentials: {
         client_email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
         private_key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
@@ -9,7 +9,7 @@ const auth = new google.auth.GoogleAuth({
     scopes: ["https://www.googleapis.com/auth/drive.readonly"],
 });
 
-const drive = google.drive({ version: "v3", auth });
+const drive = driveApi({ version: "v3", auth });
 
 export interface DriveFolder {
     id: string;

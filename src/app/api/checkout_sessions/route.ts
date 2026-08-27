@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
-import { google } from "googleapis";
+import { sheets as sheetsApi, auth as googleAuth } from "@googleapis/sheets";
 import { auth } from "@/auth";
 import { TIERS, getTier } from "@/lib/tiers";
 import { computeCartPricing, type InvItem, type ShippingRow } from "@/lib/pricing";
@@ -30,14 +30,14 @@ function getBaseUrl(req: NextRequest) {
 }
 
 function getSheets() {
-    const authClient = new google.auth.GoogleAuth({
+    const authClient = new googleAuth.GoogleAuth({
         credentials: {
             client_email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
             private_key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
         },
         scopes: ["https://www.googleapis.com/auth/spreadsheets"],
     });
-    return google.sheets({ version: "v4", auth: authClient });
+    return sheetsApi({ version: "v4", auth: authClient });
 }
 
 async function fetchInventory(): Promise<InvItem[]> {

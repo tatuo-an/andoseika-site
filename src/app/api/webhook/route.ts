@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
-import { google } from "googleapis";
+import { sheets as sheetsApi, auth as googleAuth } from "@googleapis/sheets";
 import { getTier } from "@/lib/tiers";
 import { sendOrderConfirmationEmail } from "@/lib/sendOrderEmail";
 import { sendOrderLineNotification } from "@/lib/sendOrderLine";
@@ -16,14 +16,14 @@ function generateOrderNumber(): string {
 }
 
 async function getSheets() {
-  const auth = new google.auth.GoogleAuth({
+  const auth = new googleAuth.GoogleAuth({
     credentials: {
       client_email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
       private_key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
     },
     scopes: ["https://www.googleapis.com/auth/spreadsheets"],
   });
-  return google.sheets({ version: "v4", auth });
+  return sheetsApi({ version: "v4", auth });
 }
 
 function todayJstDateString(): string {

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { google } from "googleapis";
+import { sheets as sheetsApi, auth as googleAuth } from "@googleapis/sheets";
 
 export const dynamic = "force-dynamic";
 
@@ -15,14 +15,14 @@ export type Partner = {
 
 export async function GET() {
   try {
-    const authClient = new google.auth.GoogleAuth({
+    const authClient = new googleAuth.GoogleAuth({
       credentials: {
         client_email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
         private_key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
       },
       scopes: ["https://www.googleapis.com/auth/spreadsheets.readonly"],
     });
-    const sheets = google.sheets({ version: "v4", auth: authClient });
+    const sheets = sheetsApi({ version: "v4", auth: authClient });
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
       range: "取引先!A2:H100",

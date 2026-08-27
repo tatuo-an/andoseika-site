@@ -1,8 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
 import { del } from "@vercel/blob";
-import { google } from "googleapis";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
+import { sheets as sheetsApi, auth as googleAuth } from "@googleapis/sheets";
 
 export const runtime = "nodejs";
+
+/**
+ * 画像1件を削除する。
+ * 移行期間中はシートに旧 Vercel Blob の URL と新 R2 の URL が混在するため、
+ * URL の形を見て振り分ける。R2 に完全移行したら Vercel 側の分岐は削除してよい。
+ */
+async function deleteImage(url: string): Promise<void> {
+  const base = (process.env.R2_PUBLIC_URL_BASE ?? "").replace(/\/$/, "");
+
+  if (base && url.startsWith(base + "/")) {
+    const key = url.slice(base.length + 1);
+    const { env } = getCloudflareContext();
+    await env.UPLOADS.delete(key).catch(() => null);
+    return;
+  }
+
+  // 旧 Vercel Blob の URL
+  await del(url, { token: process.env.COMPLAINT_READ_WRITE_TOKEN }).catch(() => null);
+}
 
 export async function GET(req: NextRequest) {
   const authHeader = req.headers.get("authorization");
@@ -10,13 +30,13 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const a = new google.auth.JWT({
+  const a = new googleAuth.JWT({
     email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
     key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
     scopes: ["https://www.googleapis.com/auth/spreadsheets"],
   });
 
-  const sheets = google.sheets({ version: "v4", auth: a });
+  const sheets = sheetsApi({ version: "v4", auth: a });
   const id = process.env.GOOGLE_SPREADSHEET_ID!;
 
   const res = await sheets.spreadsheets.values.get({
@@ -37,7 +57,7 @@ export async function GET(req: NextRequest) {
     const uploadedMs = new Date(uploadedAt).getTime();
     if (isNaN(uploadedMs)) continue;
     if (now - uploadedMs > ONE_MONTH) {
-      await del(blobUrl, { token: process.env.COMPLAINT_READ_WRITE_TOKEN }).catch(() => null);
+      await deleteImage(blobUrl);
       toDelete.push(i);
     }
   }

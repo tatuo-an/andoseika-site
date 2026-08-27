@@ -2,20 +2,20 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { auth } from "@/auth";
 import { TIERS, type TierKey } from "@/lib/tiers";
-import { google } from "googleapis";
+import { sheets as sheetsApi, auth as googleAuth } from "@googleapis/sheets";
 
 const PLAN_LIMITS: Record<string, number> = { minori: 10, partner: 5 };
 
 async function getActiveCount(plan: string, excludeEmail?: string): Promise<number> {
     try {
-        const authClient = new google.auth.GoogleAuth({
+        const authClient = new googleAuth.GoogleAuth({
             credentials: {
                 client_email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
                 private_key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
             },
             scopes: ["https://www.googleapis.com/auth/spreadsheets"],
         });
-        const sheets = google.sheets({ version: "v4", auth: authClient });
+        const sheets = sheetsApi({ version: "v4", auth: authClient });
         const res = await sheets.spreadsheets.values.get({
             spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
             range: "顧客マスタ!A:F",

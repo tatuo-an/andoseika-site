@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { google } from "googleapis";
+import { sheets as sheetsApi, auth as googleAuth } from "@googleapis/sheets";
 
 export const dynamic = "force-dynamic";
 
@@ -9,14 +9,14 @@ const SHEET_NAME = "お気に入り";
 // 列: A=メール, B=商品IDのカンマ区切り
 
 function getSheets() {
-    const authClient = new google.auth.GoogleAuth({
+    const authClient = new googleAuth.GoogleAuth({
         credentials: {
             client_email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
             private_key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
         },
         scopes: ["https://www.googleapis.com/auth/spreadsheets"],
     });
-    return google.sheets({ version: "v4", auth: authClient });
+    return sheetsApi({ version: "v4", auth: authClient });
 }
 
 async function ensureSheet(sheets: ReturnType<typeof getSheets>) {

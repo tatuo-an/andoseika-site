@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 import { client } from "@/lib/microcms";
 import type { Product } from "@/types/microcms";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://ando-seika.vercel.app";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://ando-seika.com";
 
 const staticPages: Array<{
   path: string;

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { google } from "googleapis";
+import { sheets as sheetsApi, auth as googleAuth } from "@googleapis/sheets";
 import { auth } from "@/auth";
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ orderNumber: string }> }) {
@@ -9,14 +9,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ ord
   const { orderNumber } = await params;
   const { reasonLabel, imageUrl } = await req.json().catch(() => ({})) as { reasonLabel?: string; imageUrl?: string };
 
-  const a = new google.auth.GoogleAuth({
+  const a = new googleAuth.GoogleAuth({
     credentials: {
       client_email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
       private_key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
     },
     scopes: ["https://www.googleapis.com/auth/spreadsheets"],
   });
-  const sheets = google.sheets({ version: "v4", auth: a });
+  const sheets = sheetsApi({ version: "v4", auth: a });
   const id = process.env.GOOGLE_SPREADSHEET_ID!;
 
   const res = await sheets.spreadsheets.values.get({ spreadsheetId: id, range: "注文管理!A:L" });

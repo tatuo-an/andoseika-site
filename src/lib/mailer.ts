@@ -1,13 +1,15 @@
-import nodemailer from "nodemailer";
 import { Resend } from "resend";
 
 /**
- * 統一メール送信ヘルパー。
+ * 統一メール送信ヘルパー（Cloudflare Workers 版）。
  *
- * 優先順位：
- *   1. GMAIL_USER + GMAIL_APP_PASSWORD が設定されていれば Gmail SMTP（Nodemailer）
- *   2. RESEND_API_KEY が設定されていれば Resend
- *   3. どちらも未設定なら何もしない（ベストエフォート）
+ * Vercel 時代は Gmail SMTP（Nodemailer）を優先していたが、Workers は生の TCP を
+ * 張れないため SMTP が使えない。送信経路は Resend の API 一本に統一する。
+ *
+ *   RESEND_API_KEY が設定されていれば Resend で送信、未設定なら何もしない（ベストエフォート）。
+ *
+ * 環境変数はモジュール評価時ではなく呼び出し時に読む
+ * （Workers ではモジュール評価の時点で env が未注入のことがあるため）。
  */
 
 type SendArgs = {
@@ -17,61 +19,48 @@ type SendArgs = {
   replyTo?: string;
 };
 
-const gmailUser = process.env.GMAIL_USER ?? "";
-const gmailPass = process.env.GMAIL_APP_PASSWORD ?? "";
-const resendKey = process.env.RESEND_API_KEY ?? "";
-
-const gmailTransporter = gmailUser && gmailPass
-  ? nodemailer.createTransport({
-      service: "gmail",
-      auth: { user: gmailUser, pass: gmailPass },
-    })
-  : null;
-
-const resend = !gmailTransporter && resendKey ? new Resend(resendKey) : null;
-
-export function isMailerConfigured(): boolean {
-  return !!gmailTransporter || !!resend;
-}
-
-export function activeMailerName(): string {
-  if (gmailTransporter) return "gmail";
-  if (resend) return "resend";
-  return "none";
-}
-
 const FROM_NAME = "安藤青果";
-const FROM_GMAIL = gmailUser;
-const FROM_RESEND = "onboarding@resend.dev";
+
+/** 送信元アドレス。独自ドメインを Resend で検証したら MAIL_FROM に設定する。 */
+function fromAddress(): string {
+  return process.env.MAIL_FROM || "onboarding@resend.dev";
+}
+
 /**
  * 返信先（Reply-To）の解決順：
  *   1. 関数呼び出し時の引数 replyTo
  *   2. 環境変数 MAIL_REPLY_TO
- *   3. GMAIL_USER（送信元と同じにするのが自然）
- *   4. ハードコードのフォールバック
+ *   3. ハードコードのフォールバック
  */
-const REPLY_TO_DEFAULT = process.env.MAIL_REPLY_TO || gmailUser || "imamura0510@gmail.com";
+function defaultReplyTo(): string {
+  return process.env.MAIL_REPLY_TO || "imamura0510@gmail.com";
+}
+
+let cached: Resend | null = null;
+function getResend(): Resend | null {
+  const key = process.env.RESEND_API_KEY ?? "";
+  if (!key) return null;
+  if (!cached) cached = new Resend(key);
+  return cached;
+}
+
+export function isMailerConfigured(): boolean {
+  return !!(process.env.RESEND_API_KEY ?? "");
+}
+
+export function activeMailerName(): string {
+  return isMailerConfigured() ? "resend" : "none";
+}
 
 export async function sendMail({ to, subject, html, replyTo }: SendArgs): Promise<void> {
-  if (gmailTransporter) {
-    await gmailTransporter.sendMail({
-      from: `"${FROM_NAME}" <${FROM_GMAIL}>`,
-      to,
-      subject,
-      html,
-      replyTo: replyTo ?? REPLY_TO_DEFAULT,
-    });
-    return;
-  }
-  if (resend) {
-    await resend.emails.send({
-      from: `${FROM_NAME} <${FROM_RESEND}>`,
-      replyTo: replyTo ?? REPLY_TO_DEFAULT,
-      to,
-      subject,
-      html,
-    });
-    return;
-  }
-  // 未設定なら何もしない
+  const resend = getResend();
+  if (!resend) return; // 未設定なら何もしない
+
+  await resend.emails.send({
+    from: `${FROM_NAME} <${fromAddress()}>`,
+    replyTo: replyTo ?? defaultReplyTo(),
+    to,
+    subject,
+    html,
+  });
 }

@@ -5,7 +5,7 @@ import { Footer } from "@/components/layout/Footer";
 import Link from "next/link";
 import Image from "next/image";
 import { ChevronLeft, Heart } from "lucide-react";
-import { google } from "googleapis";
+import { sheets as sheetsApi, auth as googleAuth } from "@googleapis/sheets";
 import { client } from "@/lib/microcms";
 import { Product } from "@/types/microcms";
 import localProducts from "@/data/products.json";
@@ -27,14 +27,14 @@ function toTaxIncluded(price: number, cost: number | null): number {
 }
 
 function getSheets() {
-    const authClient = new google.auth.GoogleAuth({
+    const authClient = new googleAuth.GoogleAuth({
         credentials: {
             client_email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
             private_key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
         },
         scopes: ["https://www.googleapis.com/auth/spreadsheets"],
     });
-    return google.sheets({ version: "v4", auth: authClient });
+    return sheetsApi({ version: "v4", auth: authClient });
 }
 
 async function getFavorites(email: string): Promise<string[]> {

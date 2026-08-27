@@ -1,7 +1,13 @@
 import { NextRequest } from "next/server";
 import OpenAI from "openai";
 
-const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+// Workers ではモジュール評価時に環境変数が読めないため、初回リクエスト時に生成する。
+// （ビルド時のページデータ収集でも APIキー未設定で落ちなくなる）
+let client: OpenAI | null = null;
+function getClient(): OpenAI {
+  if (!client) client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  return client;
+}
 
 const SYSTEM_PROMPT = `あなたは鳥取県倉吉市・北栄町の農家「安藤青果（&YOU）」のサポートチャットボットです。
 親しみやすく丁寧な口調で、お客様のご質問にお答えください。
@@ -49,7 +55,7 @@ export async function POST(req: NextRequest) {
     return new Response("メッセージが長すぎるか、形式が正しくありません。内容を短くして再度お試しください。", { status: 400 });
   }
 
-  const stream = await client.chat.completions.create({
+  const stream = await getClient().chat.completions.create({
     model: "gpt-4o-mini",
     max_tokens: 1024,
     stream: true,

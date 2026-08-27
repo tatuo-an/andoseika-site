@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { google } from "googleapis";
+import { sheets as sheetsApi, auth as googleAuth } from "@googleapis/sheets";
 import { auth } from "@/auth";
 
 export const dynamic = "force-dynamic";
@@ -7,14 +7,14 @@ export const dynamic = "force-dynamic";
 // 料理投稿シート: A=投稿ID, B=メール, C=表示名, D=商品名, E=投稿画像URL, F=本文, G=投稿日時, H=いいねメールリスト, I=保存メールリスト, J=ファミリー名, K=代表商品ID
 
 function getSheets() {
-  const a = new google.auth.GoogleAuth({
+  const a = new googleAuth.GoogleAuth({
     credentials: {
       client_email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
       private_key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
     },
     scopes: ["https://www.googleapis.com/auth/spreadsheets"],
   });
-  return google.sheets({ version: "v4", auth: a });
+  return sheetsApi({ version: "v4", auth: a });
 }
 
 const ID = process.env.GOOGLE_SPREADSHEET_ID!;

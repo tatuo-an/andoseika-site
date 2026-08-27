@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { isAdmin } from "@/lib/admin";
-import { google } from "googleapis";
+import { sheets as sheetsApi, auth as googleAuth } from "@googleapis/sheets";
 
 export const dynamic = "force-dynamic";
 
@@ -10,14 +10,14 @@ const SHEET_NAME = "商品在庫";
 // 列: A=商品ID, B=商品名, C=在庫数, D=販売価格, E=配送区分, F=非表示(1/""), G=未使用, H=次回出荷, I=バッジ(カンマ区切り), J=ファミリー, K=画像URL, L=ファミリーギャラリー画像(カンマ区切り), M=原価, N=利益率(%), O=クール便対応(1/""), P=商品説明, Q=クリックポスト最大同梱数(0=不可), R=オプション(ラベル:金額|...), S=セール割引率(%), T=セール開始日(YYYY-MM-DD), U=セール終了日(YYYY-MM-DD), V=発送モード(days/weekdays/""), W=発送値(daysなら "min-max"、weekdaysなら "月,木"), X=コンパクト最大同梱数(0=未設定/制限なし), Y=カテゴリ(root/leaf/honey/processed/other), Z=会員限定(1/""), AA=詳細情報JSON(特徴/保存方法/おすすめ/注意 等), AB=レスキュー便(1/""), AC=レスキュー期限(YYYY-MM-DD)
 
 function getSheets() {
-    const authClient = new google.auth.GoogleAuth({
+    const authClient = new googleAuth.GoogleAuth({
         credentials: {
             client_email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
             private_key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
         },
         scopes: ["https://www.googleapis.com/auth/spreadsheets"],
     });
-    return google.sheets({ version: "v4", auth: authClient });
+    return sheetsApi({ version: "v4", auth: authClient });
 }
 
 export async function GET() {

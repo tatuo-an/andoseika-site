@@ -13,7 +13,7 @@ import localProducts from "@/data/products.json";
 
 export const revalidate = 60;
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://ando-seika.vercel.app";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://ando-seika.com";
 const OG_IMAGE_URL = new URL("/images/hero/hero_sand_dunes.jpg", SITE_URL).toString();
 
 type InventoryData = {

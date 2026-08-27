@@ -1,0 +1,41 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "andoseika-site",
+  "account_id": "97f2412e9e8832ebb1bd91b2f50b6704",
+
+  // OpenNext が生成する worker.js をラップした自前エントリ（cron の scheduled ハンドラを足すため）
+  "main": "custom-worker.ts",
+  "compatibility_date": "2026-08-01",
+  // global_fetch_strictly_public は社内の全 Worker 共通（無いと Worker 間 fetch が 1042 で落ちる）
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+
+  "assets": {
+    "binding": "ASSETS",
+    "directory": ".open-next/assets"
+  },
+
+  "r2_buckets": [
+    {
+      // お問い合わせ画像アップロードの保存先（Vercel Blob からの移行先）
+      "binding": "UPLOADS",
+      "bucket_name": "andoseika-site-uploads"
+    },
+    {
+      // ISR（revalidate 指定ページ）のインクリメンタルキャッシュ
+      "binding": "NEXT_INC_CACHE_R2_BUCKET",
+      "bucket_name": "andoseika-site-cache"
+    }
+  ],
+
+  // Vercel Cron からの移設。Vercel も Cloudflare も UTC 基準なので式はそのまま。
+  "triggers": {
+    "crons": [
+      "0 2 * * *",
+      "0 3 * * *",
+      "0 0 * * *",
+      "0 0 * * 1"
+    ]
+  },
+
+  "observability": { "enabled": true }
+}

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { google } from "googleapis";
+import { drive as driveApi, auth as googleAuth } from "@googleapis/drive";
 
 export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
     }
 
     try {
-        const auth = new google.auth.GoogleAuth({
+        const auth = new googleAuth.GoogleAuth({
             credentials: {
                 client_email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
                 private_key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
             scopes: ["https://www.googleapis.com/auth/drive.readonly"],
         });
 
-        const drive = google.drive({ version: "v3", auth });
+        const drive = driveApi({ version: "v3", auth });
 
         const metadataResponse = await drive.files.get({
             fileId: fileId,

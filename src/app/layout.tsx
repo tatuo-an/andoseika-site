@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { Zen_Kaku_Gothic_New, Outfit } from "next/font/google";
 import "./globals.css";
 
-// 独自ドメイン取得後は Vercel の NEXT_PUBLIC_SITE_URL を設定するだけで全体を切り替える。
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://ando-seika.vercel.app";
+// 本番URLは ando-seika.com。環境変数 NEXT_PUBLIC_SITE_URL で上書きできる（未設定時は下記が既定）。
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://ando-seika.com";
 
 const zenKaku = Zen_Kaku_Gothic_New({
   weight: ["300", "400", "500", "700"],

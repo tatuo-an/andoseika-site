@@ -15,19 +15,19 @@ import { SkipModeToggle } from "@/components/admin/SkipModeToggle";
 import { DeliveryScheduleEditor } from "@/components/admin/DeliveryScheduleEditor";
 import { withRetry } from "@/lib/sheetsRetry";
 import { getInventoryRows } from "@/lib/inventorySheet";
-import { google } from "googleapis";
+import { sheets as sheetsApi, auth as googleAuth } from "@googleapis/sheets";
 
 export const dynamic = "force-dynamic";
 
 function getSheets() {
-    const authClient = new google.auth.GoogleAuth({
+    const authClient = new googleAuth.GoogleAuth({
         credentials: {
             client_email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
             private_key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
         },
         scopes: ["https://www.googleapis.com/auth/spreadsheets"],
     });
-    return google.sheets({ version: "v4", auth: authClient });
+    return sheetsApi({ version: "v4", auth: authClient });
 }
 
 async function getDeletedIds(): Promise<string[]> {

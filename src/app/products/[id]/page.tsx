@@ -10,7 +10,7 @@ import { ProductImageSlideshow } from "@/components/products/ProductImageSlidesh
 import { FavoriteButton } from "@/components/products/FavoriteButton";
 import localProducts from "@/data/products.json";
 import { Metadata } from "next";
-import { google } from "googleapis";
+import { sheets as sheetsApi, auth as googleAuth } from "@googleapis/sheets";
 import { BADGE_COLORS, DEFAULT_BADGE_COLOR } from "@/lib/badges";
 import { isSaleActive, getEffectiveSalePercent, calcSalePrice } from "@/lib/sale";
 import { fetchActiveSeasonalSale } from "@/lib/seasonalSales";
@@ -20,7 +20,7 @@ import { DETAIL_EXTRA_FIELDS, FOOD_LABEL_FIELDS, parseExtra } from "@/lib/extraD
 
 export const revalidate = 60;
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://ando-seika.vercel.app";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://ando-seika.com";
 
 type SheetRow = { id: string; name: string; stock: number; price: number | null; shipType: string; hidden: boolean; deleted: boolean; nextShipment: string; badges: string[]; family: string; imageUrl: string; familyImages: string[]; cost: number | null; profitRate: number | null; coolAvailable: boolean; description: string; clickpostMax: number; options: string; salePercent: number; saleStart: string; saleEnd: string; shipMode: string; shipValue: string; extraDescriptions: string };
 type VariationInfo = { id: string; label: string; price: number; priceTaxed: number; salePercent: number; saleStart: string; saleEnd: string; isSoldOut: boolean };
@@ -30,14 +30,14 @@ function absoluteUrl(pathOrUrl: string): string {
 }
 
 function getSheets() {
-    const authClient = new google.auth.GoogleAuth({
+    const authClient = new googleAuth.GoogleAuth({
         credentials: {
             client_email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
             private_key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
         },
         scopes: ["https://www.googleapis.com/auth/spreadsheets"],
     });
-    return google.sheets({ version: "v4", auth: authClient });
+    return sheetsApi({ version: "v4", auth: authClient });
 }
 
 // 追加送料計算用デフォルト（送料マスタが未取得の場合のフォールバック）

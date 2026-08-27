@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { google } from "googleapis";
+import { sheets as sheetsApi, auth as googleAuth } from "@googleapis/sheets";
 import { withRetry } from "@/lib/sheetsRetry";
 
 export const dynamic = "force-dynamic";
@@ -11,14 +11,14 @@ const SHEET_NAME = "顧客マスタ";
 // 旧形式 (A=メール, B=名前, C=郵便番号...) のデータは読み取り時に自動判別
 
 function getSheets() {
-    const auth = new google.auth.GoogleAuth({
+    const auth = new googleAuth.GoogleAuth({
         credentials: {
             client_email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
             private_key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
         },
         scopes: ["https://www.googleapis.com/auth/spreadsheets"],
     });
-    return google.sheets({ version: "v4", auth });
+    return sheetsApi({ version: "v4", auth });
 }
 
 type Address = {

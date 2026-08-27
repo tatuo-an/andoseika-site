@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { google } from "googleapis";
+import { sheets as sheetsApi, auth as googleAuth } from "@googleapis/sheets";
 import { auth } from "@/auth";
 import { isAdmin } from "@/lib/admin";
 
@@ -60,14 +60,14 @@ export async function POST(req: NextRequest) {
     return "";
   })();
 
-  const authClient = new google.auth.GoogleAuth({
+  const authClient = new googleAuth.GoogleAuth({
     credentials: {
       client_email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
       private_key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
     },
     scopes: ["https://www.googleapis.com/auth/spreadsheets"],
   });
-  const sheets = google.sheets({ version: "v4", auth: authClient });
+  const sheets = sheetsApi({ version: "v4", auth: authClient });
   const spreadsheetId = process.env.GOOGLE_SPREADSHEET_ID!;
   // append の自動テーブル境界判定が列ずれを起こすため、A列の最終行を取って明示的にupdateする
   const a = await sheets.spreadsheets.values.get({

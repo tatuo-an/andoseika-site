@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { google } from "googleapis";
+import { sheets as sheetsApi, auth as googleAuth } from "@googleapis/sheets";
 
 export const dynamic = "force-dynamic";
 
@@ -11,14 +11,14 @@ export async function POST(): Promise<NextResponse> {
   }
 
   try {
-    const authClient = new google.auth.GoogleAuth({
+    const authClient = new googleAuth.GoogleAuth({
       credentials: {
         client_email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
         private_key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
       },
       scopes: ["https://www.googleapis.com/auth/spreadsheets"],
     });
-    const sheets = google.sheets({ version: "v4", auth: authClient });
+    const sheets = sheetsApi({ version: "v4", auth: authClient });
     const SHEET = "顧客マスタ";
 
     // A=email, B=__profile__, C=display, D=birth, E=tier, F=tierExpiry, G=cancelRequestedAt
