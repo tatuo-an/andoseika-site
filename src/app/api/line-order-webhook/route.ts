@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { sheets as sheetsApi, auth as googleAuth } from "@googleapis/sheets";
+import { workersGoogleAuth } from "@/lib/googleAuth";
+import { googleFetch } from "@/lib/googleFetch";
 import Anthropic from "@anthropic-ai/sdk";
 
 export const dynamic = "force-dynamic";
@@ -19,14 +21,8 @@ const anthropic = process.env.ANTHROPIC_API_KEY
   : null;
 
 function getSheets() {
-  const auth = new googleAuth.GoogleAuth({
-    credentials: {
-      client_email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
-      private_key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-    },
-    scopes: ["https://www.googleapis.com/auth/spreadsheets"],
-  });
-  return sheetsApi({ version: "v4", auth });
+  const auth = workersGoogleAuth(["https://www.googleapis.com/auth/spreadsheets"]);
+  return sheetsApi({ version: "v4", auth, fetchImplementation: googleFetch });
 }
 
 function verifyLineSignature(rawBody: string, signature: string | null): boolean {

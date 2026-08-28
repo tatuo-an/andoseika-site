@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sheets as sheetsApi, auth as googleAuth } from "@googleapis/sheets";
+import { workersGoogleAuth } from "@/lib/googleAuth";
+import { googleFetch } from "@/lib/googleFetch";
 import { auth } from "@/auth";
 
 export const dynamic = "force-dynamic";
@@ -8,14 +10,8 @@ const POINTS_SHEET = "ポイント履歴";
 const SURVEY_POINTS = 200;
 
 function getSheets() {
-  const a = new googleAuth.GoogleAuth({
-    credentials: {
-      client_email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
-      private_key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-    },
-    scopes: ["https://www.googleapis.com/auth/spreadsheets"],
-  });
-  return sheetsApi({ version: "v4", auth: a });
+  const a = workersGoogleAuth(["https://www.googleapis.com/auth/spreadsheets"]);
+  return sheetsApi({ version: "v4", auth: a, fetchImplementation: googleFetch });
 }
 
 // 受取完了後アンケート回答フォームの最後に表示される合言葉を入力してもらい、

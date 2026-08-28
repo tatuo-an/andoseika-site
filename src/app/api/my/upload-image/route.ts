@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { sheets as sheetsApi, auth as googleAuth } from "@googleapis/sheets";
+import { workersGoogleAuth } from "@/lib/googleAuth";
+import { googleFetch } from "@/lib/googleFetch";
 import { auth } from "@/auth";
 
 export const runtime = "nodejs";
@@ -46,12 +48,8 @@ export async function POST(req: NextRequest) {
 
     // シート記録（失敗しても URL は返す）
     try {
-      const sheetsAuth = new googleAuth.JWT({
-        email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
-        key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-        scopes: ["https://www.googleapis.com/auth/spreadsheets"],
-      });
-      const sheets = sheetsApi({ version: "v4", auth: sheetsAuth });
+      const sheetsAuth = workersGoogleAuth(["https://www.googleapis.com/auth/spreadsheets"]);
+      const sheets = sheetsApi({ version: "v4", auth: sheetsAuth, fetchImplementation: googleFetch });
       const uploadedAt = new Date().toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" });
       await sheets.spreadsheets.values.append({
         spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,

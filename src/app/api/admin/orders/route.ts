@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { sheets as sheetsApi, auth as googleAuth } from "@googleapis/sheets";
+import { workersGoogleAuth } from "@/lib/googleAuth";
+import { googleFetch } from "@/lib/googleFetch";
 import { auth } from "@/auth";
 import { isAdmin } from "@/lib/admin";
 
@@ -36,14 +38,8 @@ export async function GET() {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const authClient = new googleAuth.GoogleAuth({
-    credentials: {
-      client_email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
-      private_key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-    },
-    scopes: ["https://www.googleapis.com/auth/spreadsheets"],
-  });
-  const sheets = sheetsApi({ version: "v4", auth: authClient });
+  const authClient = workersGoogleAuth(["https://www.googleapis.com/auth/spreadsheets"]);
+  const sheets = sheetsApi({ version: "v4", auth: authClient, fetchImplementation: googleFetch });
 
   // 注文管理シートと顧客マスタを並列取得（過去注文で Q列が空でも購入者名を補完するため）
   const [ordersRes, customersRes] = await Promise.all([

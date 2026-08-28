@@ -4,6 +4,8 @@ import { isAdmin } from "@/lib/admin";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { sheets as sheetsApi, auth as googleAuth } from "@googleapis/sheets";
+import { workersGoogleAuth } from "@/lib/googleAuth";
+import { googleFetch } from "@/lib/googleFetch";
 import Link from "next/link";
 import { ArrowLeft, User, MapPin } from "lucide-react";
 import { CopyButton } from "@/components/admin/CopyButton";
@@ -19,14 +21,8 @@ type Customer = {
 };
 
 async function getCustomers(): Promise<Customer[]> {
-  const authClient = new googleAuth.GoogleAuth({
-    credentials: {
-      client_email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
-      private_key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-    },
-    scopes: ["https://www.googleapis.com/auth/spreadsheets"],
-  });
-  const sheets = sheetsApi({ version: "v4", auth: authClient });
+  const authClient = workersGoogleAuth(["https://www.googleapis.com/auth/spreadsheets"]);
+  const sheets = sheetsApi({ version: "v4", auth: authClient, fetchImplementation: googleFetch });
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
     range: "顧客マスタ!A:K",

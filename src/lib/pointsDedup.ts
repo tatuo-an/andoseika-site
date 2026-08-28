@@ -1,16 +1,12 @@
 import { sheets as sheetsApi, auth as googleAuth } from "@googleapis/sheets";
 
+import { workersGoogleAuth } from "@/lib/googleAuth";
+import { googleFetch } from "@/lib/googleFetch";
 const POINTS_SHEET = "ポイント履歴";
 
 function getSheets() {
-  const a = new googleAuth.GoogleAuth({
-    credentials: {
-      client_email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
-      private_key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-    },
-    scopes: ["https://www.googleapis.com/auth/spreadsheets"],
-  });
-  return sheetsApi({ version: "v4", auth: a });
+  const a = workersGoogleAuth(["https://www.googleapis.com/auth/spreadsheets"]);
+  return sheetsApi({ version: "v4", auth: a, fetchImplementation: googleFetch });
 }
 
 // ログインボーナス・誕生日ボーナスのような「1日/1年に1回」のポイント付与を、

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { drive as driveApi, auth as googleAuth } from "@googleapis/drive";
 
+import { workersGoogleAuth } from "@/lib/googleAuth";
+import { googleFetch } from "@/lib/googleFetch";
 export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const fileId = searchParams.get("id");
@@ -10,15 +12,9 @@ export async function GET(request: NextRequest) {
     }
 
     try {
-        const auth = new googleAuth.GoogleAuth({
-            credentials: {
-                client_email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
-                private_key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-            },
-            scopes: ["https://www.googleapis.com/auth/drive.readonly"],
-        });
+        const auth = workersGoogleAuth(["https://www.googleapis.com/auth/drive.readonly"]);
 
-        const drive = driveApi({ version: "v3", auth });
+        const drive = driveApi({ version: "v3", auth, fetchImplementation: googleFetch });
 
         const metadataResponse = await drive.files.get({
             fileId: fileId,

@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { sheets as sheetsApi, auth as googleAuth } from "@googleapis/sheets";
+import { workersGoogleAuth } from "@/lib/googleAuth";
+import { googleFetch } from "@/lib/googleFetch";
 import { auth } from "@/auth";
 
 export const dynamic = "force-dynamic";
@@ -10,14 +12,8 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const authClient = new googleAuth.GoogleAuth({
-    credentials: {
-      client_email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
-      private_key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-    },
-    scopes: ["https://www.googleapis.com/auth/spreadsheets"],
-  });
-  const sheets = sheetsApi({ version: "v4", auth: authClient });
+  const authClient = workersGoogleAuth(["https://www.googleapis.com/auth/spreadsheets"]);
+  const sheets = sheetsApi({ version: "v4", auth: authClient, fetchImplementation: googleFetch });
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
     range: "注文管理!A:O",

@@ -237,6 +237,75 @@ Cloudflare にデプロイした時点で cron は動き始める。Vercel 側�
 `COMPLAINT_READ_WRITE_TOKEN` は**1ヶ月間は残しておく**（TTLが30日のため）。
 1ヶ月経てば旧URLは消えるので、その後 `@vercel/blob` 依存ごと削除してよい。
 
+### Google API が全部空で返るとき（gzip 問題）
+
+**症状**: ページは 200 で返るのに、商品一覧・在庫などが常に 0 件。
+`wrangler tail` のエラーが文字化けした意味不明な文字列になる。
+
+**原因**: `googleapis-common` は「ブラウザでなければ」必ず `Accept-Encoding: gzip` を付ける
+（`node_modules/googleapis-common/build/src/apirequest.js`）。
+一方 Cloudflare Workers は**呼び出し側が Accept-Encoding を明示した場合、自動展開せずそのまま通す**。
+結果、gzip のまま返ったバイト列をライブラリがテキストとして解釈して例外になる。
+エラーメッセージの先頭が `1f 8b 08`（gzip のマジックナンバー）になっていれば確定。
+
+**対処**: `src/lib/googleFetch.ts` の `googleFetch` を各クライアント生成時に
+`fetchImplementation` として渡す（`Accept-Encoding` を落として Workers の自動展開に任せる）。
+
+```ts
+sheetsApi({ version: "v4", auth, fetchImplementation: googleFetch })
+```
+
+**やってはいけない対処**:
+
+- `globalThis.fetch` の差し替え … gaxios は Workers 上で `window` が無いと **node-fetch** を選ぶため効かない
+  （`node_modules/gaxios/build/cjs/src/gaxios.js` の `#getFetch()`）
+- `globalThis.window` を定義して「ブラウザ扱い」にする … `Accept-Encoding` は付かなくなるが、
+  Next.js の SSR が「ブラウザで実行中」と誤認して広範囲に壊れる
+
+**新しく Google API を呼ぶコードを足すときは、必ず `fetchImplementation: googleFetch` を付けること。**
+付け忘れるとそのルートだけ静かに空を返す。
+
+### スプレッドシートの対応（名前が直感と逆）
+
+| 環境変数 | スプレッドシート名 | 中身 |
+|---|---|---|
+| `GOOGLE_SPREADSHEET_ID` | **安藤青果_注文台帳** | 商品在庫／注文管理／顧客マスタ／送料マスタ／ポイント履歴 ほか |
+| `GOOGLE_SALES_SPREADSHEET_ID` | **オンライン販売** | 売上データ／（予約）洗い・根付・メロン・梨／商品マスタ／販売先マスタ |
+| `LINE_ORDER_SPREADSHEET_ID` | LINE注文管理 | 大口注文／AIセッション／注文 ほか |
+
+「オンライン販売」という名前だがサイトのメインDBではなく**売上・出荷管理**の方なので注意。
+サイトのメインDBは「安藤青果_注文台帳」。
+
+なお `安藤青果_統合DB` と `市場 R8年` はサービスアカウントに共有されておらず読めない（＝サイトは使っていない）。
+
+**未作成のシート**: メインDBに「季節セール」シートが存在しない。
+`fetchActiveSeasonalDiscountPercent()` は catch しているため実害は出ていないが、
+季節セール機能を使う場合は作成が必要。
+
+### ビルドが EPERM で失敗するとき（Windows）
+
+`npm run cf:build` が次のエラーで落ちることがある。
+
+```
+Error: EPERM, Permission denied: \\?\C:\...\andoseika-site\.open-next
+  at Module.initOutputDir
+```
+
+原因は **`wrangler dev` の子プロセスが生き残って `.open-next/assets` を掴んでいる**こと。
+ターミナルで Ctrl+C しても、`node`（wrangler本体）と `workerd` が残ることがある。
+OpenNext はビルド開始時に `.open-next` を丸ごと削除するため、掴まれていると必ず失敗する。
+
+対処:
+
+```powershell
+Get-CimInstance Win32_Process -Filter "Name='node.exe' OR Name='workerd.exe'" |
+  Select-Object ProcessId, CommandLine
+# wrangler dev のものだけを Stop-Process -Id <PID> -Force
+Remove-Item -Recurse -Force .open-next
+```
+
+`wrangler dev` を使った後は、次のビルド前に残プロセスを確認する習慣にしておくと安全。
+
 ### ISR
 
 `revalidate` を使う4ルートは R2 インクリメンタルキャッシュのみ設定してある。

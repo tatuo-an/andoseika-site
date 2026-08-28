@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { sheets as sheetsApi, auth as googleAuth } from "@googleapis/sheets";
 
+import { workersGoogleAuth } from "@/lib/googleAuth";
+import { googleFetch } from "@/lib/googleFetch";
 export const dynamic = "force-dynamic";
 
 const SPREADSHEET_ID = process.env.GOOGLE_SPREADSHEET_ID!;
@@ -14,14 +16,8 @@ const EXPERIENCE_SEASONS: Record<string, number[]> = {
 // 列: A=予約ID, B=メール, C=名前, D=電話, E=体験名, F=日付, G=開始時刻, H=所要分, I=人数, J=ステータス, K=作成日時, L=料金
 
 function getSheets() {
-    const authClient = new googleAuth.GoogleAuth({
-        credentials: {
-            client_email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
-            private_key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-        },
-        scopes: ["https://www.googleapis.com/auth/spreadsheets"],
-    });
-    return sheetsApi({ version: "v4", auth: authClient });
+    const authClient = workersGoogleAuth(["https://www.googleapis.com/auth/spreadsheets"]);
+    return sheetsApi({ version: "v4", auth: authClient, fetchImplementation: googleFetch });
 }
 
 async function ensureSheet(sheets: ReturnType<typeof getSheets>) {

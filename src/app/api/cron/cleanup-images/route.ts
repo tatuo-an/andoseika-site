@@ -3,6 +3,8 @@ import { del } from "@vercel/blob";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { sheets as sheetsApi, auth as googleAuth } from "@googleapis/sheets";
 
+import { workersGoogleAuth } from "@/lib/googleAuth";
+import { googleFetch } from "@/lib/googleFetch";
 export const runtime = "nodejs";
 
 /**
@@ -30,13 +32,9 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const a = new googleAuth.JWT({
-    email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
-    key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-    scopes: ["https://www.googleapis.com/auth/spreadsheets"],
-  });
+  const a = workersGoogleAuth(["https://www.googleapis.com/auth/spreadsheets"]);
 
-  const sheets = sheetsApi({ version: "v4", auth: a });
+  const sheets = sheetsApi({ version: "v4", auth: a, fetchImplementation: googleFetch });
   const id = process.env.GOOGLE_SPREADSHEET_ID!;
 
   const res = await sheets.spreadsheets.values.get({

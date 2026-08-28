@@ -1,16 +1,12 @@
 import { sheets as sheetsApi, auth as googleAuth } from "@googleapis/sheets";
+import { workersGoogleAuth } from "@/lib/googleAuth";
+import { googleFetch } from "@/lib/googleFetch";
 import { unstable_cache } from "next/cache";
 import { withRetry } from "@/lib/sheetsRetry";
 
 function getSheetsClient() {
-    const authClient = new googleAuth.GoogleAuth({
-        credentials: {
-            client_email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
-            private_key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-        },
-        scopes: ["https://www.googleapis.com/auth/spreadsheets"],
-    });
-    return sheetsApi({ version: "v4", auth: authClient });
+    const authClient = workersGoogleAuth(["https://www.googleapis.com/auth/spreadsheets"]);
+    return sheetsApi({ version: "v4", auth: authClient, fetchImplementation: googleFetch });
 }
 
 // 「商品在庫」シートの全行(A〜AC列)。ページ遷移のたびに全ページが個別に

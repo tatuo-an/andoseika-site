@@ -1,15 +1,11 @@
 import { drive as driveApi, auth as googleAuth } from "@googleapis/drive";
 
+import { workersGoogleAuth } from "@/lib/googleAuth";
+import { googleFetch } from "@/lib/googleFetch";
 // 認証情報のセットアップ
-const auth = new googleAuth.GoogleAuth({
-    credentials: {
-        client_email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
-        private_key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-    },
-    scopes: ["https://www.googleapis.com/auth/drive.readonly"],
-});
+const auth = workersGoogleAuth(["https://www.googleapis.com/auth/drive.readonly"]);
 
-const drive = driveApi({ version: "v3", auth });
+const drive = driveApi({ version: "v3", auth, fetchImplementation: googleFetch });
 
 export interface DriveFolder {
     id: string;

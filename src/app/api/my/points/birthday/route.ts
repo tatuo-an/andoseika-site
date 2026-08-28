@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { sheets as sheetsApi, auth as googleAuth } from "@googleapis/sheets";
+import { workersGoogleAuth } from "@/lib/googleAuth";
+import { googleFetch } from "@/lib/googleFetch";
 import { auth } from "@/auth";
 import { getTier, TIERS } from "@/lib/tiers";
 import { claimOnceOrVoid } from "@/lib/pointsDedup";
@@ -9,14 +11,8 @@ export const dynamic = "force-dynamic";
 const PROFILE_SHEET = "顧客マスタ";
 
 function getSheets() {
-  const a = new googleAuth.GoogleAuth({
-    credentials: {
-      client_email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
-      private_key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-    },
-    scopes: ["https://www.googleapis.com/auth/spreadsheets"],
-  });
-  return sheetsApi({ version: "v4", auth: a });
+  const a = workersGoogleAuth(["https://www.googleapis.com/auth/spreadsheets"]);
+  return sheetsApi({ version: "v4", auth: a, fetchImplementation: googleFetch });
 }
 
 function todayMMDD(): string {

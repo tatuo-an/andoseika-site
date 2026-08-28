@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sheets as sheetsApi, auth as googleAuth } from "@googleapis/sheets";
+import { workersGoogleAuth } from "@/lib/googleAuth";
+import { googleFetch } from "@/lib/googleFetch";
 import { auth } from "@/auth";
 import { isAdmin } from "@/lib/admin";
 
@@ -12,14 +14,8 @@ const ORDER_SHEET = "注文管理";
 const SALES_TRANSFER_COL = 16; // P列（1始まり）
 
 function getSheets() {
-  const authClient = new googleAuth.GoogleAuth({
-    credentials: {
-      client_email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
-      private_key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-    },
-    scopes: ["https://www.googleapis.com/auth/spreadsheets"],
-  });
-  return sheetsApi({ version: "v4", auth: authClient });
+  const authClient = workersGoogleAuth(["https://www.googleapis.com/auth/spreadsheets"]);
+  return sheetsApi({ version: "v4", auth: authClient, fetchImplementation: googleFetch });
 }
 
 /** 商品名からキーワードで振り分け先シートを決定 */

@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { sheets as sheetsApi, auth as googleAuth } from "@googleapis/sheets";
+import { workersGoogleAuth } from "@/lib/googleAuth";
+import { googleFetch } from "@/lib/googleFetch";
 import { auth } from "@/auth";
 
 export async function POST(_: Request, { params }: { params: Promise<{ orderNumber: string }> }) {
@@ -7,14 +9,8 @@ export async function POST(_: Request, { params }: { params: Promise<{ orderNumb
   if (!session?.user?.email) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { orderNumber } = await params;
-  const a = new googleAuth.GoogleAuth({
-    credentials: {
-      client_email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
-      private_key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-    },
-    scopes: ["https://www.googleapis.com/auth/spreadsheets"],
-  });
-  const sheets = sheetsApi({ version: "v4", auth: a });
+  const a = workersGoogleAuth(["https://www.googleapis.com/auth/spreadsheets"]);
+  const sheets = sheetsApi({ version: "v4", auth: a, fetchImplementation: googleFetch });
   const id = process.env.GOOGLE_SPREADSHEET_ID!;
 
   const res = await sheets.spreadsheets.values.get({ spreadsheetId: id, range: "注文管理!A:L" });

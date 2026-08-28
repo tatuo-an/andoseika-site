@@ -11,6 +11,8 @@ import { FavoriteButton } from "@/components/products/FavoriteButton";
 import localProducts from "@/data/products.json";
 import { Metadata } from "next";
 import { sheets as sheetsApi, auth as googleAuth } from "@googleapis/sheets";
+import { workersGoogleAuth } from "@/lib/googleAuth";
+import { googleFetch } from "@/lib/googleFetch";
 import { BADGE_COLORS, DEFAULT_BADGE_COLOR } from "@/lib/badges";
 import { isSaleActive, getEffectiveSalePercent, calcSalePrice } from "@/lib/sale";
 import { fetchActiveSeasonalSale } from "@/lib/seasonalSales";
@@ -30,14 +32,8 @@ function absoluteUrl(pathOrUrl: string): string {
 }
 
 function getSheets() {
-    const authClient = new googleAuth.GoogleAuth({
-        credentials: {
-            client_email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
-            private_key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-        },
-        scopes: ["https://www.googleapis.com/auth/spreadsheets"],
-    });
-    return sheetsApi({ version: "v4", auth: authClient });
+    const authClient = workersGoogleAuth(["https://www.googleapis.com/auth/spreadsheets"]);
+    return sheetsApi({ version: "v4", auth: authClient, fetchImplementation: googleFetch });
 }
 
 // 追加送料計算用デフォルト（送料マスタが未取得の場合のフォールバック）

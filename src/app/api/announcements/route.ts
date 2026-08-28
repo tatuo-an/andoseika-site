@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sheets as sheetsApi, auth as googleAuth } from "@googleapis/sheets";
+import { workersGoogleAuth } from "@/lib/googleAuth";
+import { googleFetch } from "@/lib/googleFetch";
 import { auth } from "@/auth";
 import { isAdmin } from "@/lib/admin";
 
@@ -9,14 +11,8 @@ const SHEET = "お知らせ";
 // A=テキスト, B=リンク（任意）, C=公開（"1" or ""）
 
 function getSheets() {
-  const authClient = new googleAuth.GoogleAuth({
-    credentials: {
-      client_email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
-      private_key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-    },
-    scopes: ["https://www.googleapis.com/auth/spreadsheets"],
-  });
-  return sheetsApi({ version: "v4", auth: authClient });
+  const authClient = workersGoogleAuth(["https://www.googleapis.com/auth/spreadsheets"]);
+  return sheetsApi({ version: "v4", auth: authClient, fetchImplementation: googleFetch });
 }
 
 type Announcement = { text: string; link: string; active: boolean };
