@@ -29,13 +29,47 @@
       なお Resend SDK は fetch のみで Node 依存が無く、Workers 対応の追加作業は不要（確認済み）
 - [x] **LINE公式アカウントのリッチメニューURL変更**（`ando-seika.vercel.app`→`ando-seika.com`、2026-08-28完了）。変更先の主要ページ（`/`・`/products`・`/mypage`・`/experience`・`/supporter`・`/guide`・`/contact`・`/newsletter.html`）がすべて200を返すことを確認済み。GASの中継URLと同じく、直していないとVercel Pause後に**公式LINEで一番押される導線だけが黙って死ぬ**箇所だった
 
+### 済んだこと（2026-08-29 追記）
+- [x] Cloudflare Workers 有料プラン加入済み（3.03MiB で実際にデプロイが通っていることから確認）
+- [x] R2バケット2つ作成、`andoseika-site-uploads` は公開URL発行済み
+  （`R2_PUBLIC_URL_BASE = https://pub-24e3bf6c8acf438ebb505d327b503647.r2.dev`）
+- [x] シークレット投入済み（`NEXTAUTH_URL` は `https://ando-seika.com` で設定済み）
+- [x] workers.dev 上で実データ動作を確認（商品17件・在庫64件・メール到達・チャット応答）
+
 ### まだのこと（DNS切替前に必要）
-- [ ] Cloudflare有料プランへの加入（3MiB無料枠を超過するため）
-- [ ] R2バケット2つの作成、シークレット33個の投入（3-2節）
-- [ ] `NEXTAUTH_URL`を`https://ando-seika.com`に設定（**ここを間違えるとログインが壊れる**、Vercel側は`.vercel.app`のまま残っているので要注意）
-- [ ] workers.dev上での動作確認チェックリスト全項目（3-4節）
-- [ ] `rondo`（メール登録用の別Cloudflare Worker、`newsletter.html`から叩いている）がCORS/Refererでオリジンを制限していないか確認（未確認・優先度低め。ドメイン自体は変わらない予定なので影響は小さい見込み）
-- [ ] DNS切替、外部サービス（Google/LINE/Stripeの各種URL）の向き先変更（3-6節）、Vercel cron停止
+- [ ] **`OWNER_LINE_USER_ID` の取得と投入** … 公式ライン（@798zdpae）に安藤さん本人が「ID」とだけ送ると
+      Bot が userId を返す。未設定だと LINE大口注文が入っても**本人への通知が黙ってスキップされる**
+      （`notifyOwner()` が早期 return する実装）。Vercel 側には設定済みなので、入れないと機能が落ちる
+- [ ] **テストモードで決済を1件通す** … Stripe は Workers 向け設定を入れたが、
+      `/api/checkout_sessions/status` が例外を全て404に丸めるため外部から到達可否を判別できず**唯一の未検証箇所**
+- [ ] `rondo`（メール登録用の別Worker、`newsletter.html` から叩いている）が CORS/Referer で
+      オリジンを制限していないか確認（未確認・優先度低め。ドメインは変わらないため影響は小さい見込み）
+- [ ] DNS切替、外部サービス（Google/LINE/Stripe）の向き先変更（3-6節）、Vercel cron停止、`CRON_ENABLED=true`
+
+### 投入不要と判明したもの
+- `MICROCMS_WRITE_API_KEY` … microCMS に `products` / `contacts` エンドポイントが**存在しない**
+  （実在するのは `news` のみ。正しいキーで404、不正キーなら401 になることで確認）。
+  移行で壊れたのではなく**元からこの状態**
+- `STRIPE_WEBHOOK_SECRET` … 切替時に新しいエンドポイントを作ると新規発行される
+- `SURVEY_PASSWORD` / `NEXT_PUBLIC_SURVEY_FORM_URL` … アンケート機能を使っていなければ不要
+
+### 移行とは無関係に見つかった既存の問題（別件）
+
+どちらも移行で壊れたものではなく、Vercel 時代から続いている状態。切替とは切り離して対応してよい。
+
+1. **お問い合わせが microCMS に保存できていない**
+   `src/app/actions/contact.ts` は `endpoint: "contacts"` へ書き込むが、そのエンドポイントが存在しない。
+   コードが例外を握り潰すため気づかれていなかった。お問い合わせが届いているか要確認。
+
+2. **商品データは microCMS ではなくローカルJSONで動いている**
+   `products-list` は microCMS 取得に失敗すると `src/data/products.json` にフォールバックする。
+   本番（Vercel）も Cloudflare も同じ17件で、これはフォールバック側の値。
+
+3. **Vercel の cron が動いていなかった**
+   `CRON_SECRET` が全環境で未設定（＝呼ばれても401）、かつ Hobby プランの cron 本数上限（2本）に対し
+   `vercel.json` は4本定義。24時間のログに `/api/cron/*` の呼び出しが1件も無く、401も0件だった。
+   → **Cloudflare では4本とも動き始める**。今まで送られていなかった更新通知が急に飛ぶ可能性があるため、
+   `CRON_ENABLED=true` にする前に `wrangler tail` を見ながら手動発火して中身を確認すること。
 
 ### 引き継ぐ人へ
 このファイルの2節以降が実際の作業手順。3-6節「外部サービスの向き先変更」は**切替当日に忘れやすいので最優先で見ること**。GAS側の修正は上記の通り済んでいるので再対応不要。
