@@ -237,6 +237,44 @@ Cloudflare にデプロイした時点で cron は動き始める。Vercel 側�
 `COMPLAINT_READ_WRITE_TOKEN` は**1ヶ月間は残しておく**（TTLが30日のため）。
 1ヶ月経てば旧URLは消えるので、その後 `@vercel/blob` 依存ごと削除してよい。
 
+### Stripe を Workers で動かすための2点
+
+**1. HTTP クライアント**
+
+Stripe SDK は既定で Node の HTTP クライアントを選ぶ。v20 には `workerd` 用の
+export 条件があるが、バンドラが実際にどちらを解決したかは成果物から判別できなかったため、
+5箇所すべてで明示指定にしてある。
+
+```ts
+new Stripe(process.env.STRIPE_SECRET_KEY!, { httpClient: Stripe.createFetchHttpClient() })
+```
+
+`createFetchHttpClient` は Node 版・Worker 版どちらの実装にも存在するので、どちらが
+バンドルされても安全に動く。**新しく Stripe を生成するコードにも必ず付けること。**
+
+**2. Webhook の署名検証は非同期版を使う（重要）**
+
+同期版 `constructEvent()` は内部で Node の crypto を使うため Workers では失敗する。
+Stripe SDK 自身が `Use \`await constructEventAsync(...)\`` と案内する。
+
+```ts
+// NG（Workers では動かない）
+event = stripe.webhooks.constructEvent(body, sig, secret);
+// OK
+event = await stripe.webhooks.constructEventAsync(body, sig, secret);
+```
+
+これを直さないと**決済は成功するのに注文がシートに記録されず、確認メールも飛ばない**という
+最も気づきにくい壊れ方をする。
+
+**未検証の点（正直な記載）**: `/api/checkout_sessions/status` は例外を全て 404 に丸めるため、
+外部から叩いても「Stripe に到達したか」を判別できない。レイテンシ比較も分散が大きく決め手に
+ならなかった。**切替前に必ずテストモードで1件決済を通して確認すること**（3-4節のチェックリスト）。
+
+**確認済み**: LINE Webhook の署名検証で使う `crypto.createHmac` は Workers で動作する
+（不正署名を送って 401 が返ることを実測）。Node crypto でも HMAC/ハッシュ系は使えるが、
+`createSign` / `createVerify`（RSA署名）は使えない、と切り分けておくとよい。
+
 ### Google API が全部空で返るとき（gzip 問題）
 
 **症状**: ページは 200 で返るのに、商品一覧・在庫などが常に 0 件。

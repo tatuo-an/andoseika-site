@@ -127,7 +127,7 @@ function calcEstimatedDate(shipMode: string, shipValue: string): string {
 
 
 export async function POST(req: NextRequest) {
-  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { httpClient: Stripe.createFetchHttpClient() });
   const body = await req.text();
   const sig = req.headers.get("stripe-signature");
 
@@ -137,7 +137,9 @@ export async function POST(req: NextRequest) {
 
   let event: Stripe.Event;
   try {
-    event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET);
+    // Workers では同期版は使えない（内部で Node の crypto を使うため）。
+    // Stripe SDK 自身が "Use `await constructEventAsync(...)`" と案内する。
+    event = await stripe.webhooks.constructEventAsync(body, sig, process.env.STRIPE_WEBHOOK_SECRET);
   } catch (err) {
     console.error("[webhook] signature verification failed", err);
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });

@@ -43,7 +43,7 @@ const PLANS: Record<Exclude<TierKey, "free">, { name: string; description: strin
 type PlanKey = keyof typeof PLANS;
 
 const stripe = process.env.STRIPE_SECRET_KEY
-    ? new Stripe(process.env.STRIPE_SECRET_KEY)
+    ? new Stripe(process.env.STRIPE_SECRET_KEY, { httpClient: Stripe.createFetchHttpClient() })
     : null;
 
 function getBaseUrl(req: NextRequest) {
