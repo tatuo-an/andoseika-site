@@ -18,6 +18,9 @@
 - [x] **GAS→サイトのLINE中継URL修正**（`ando-seika-gas`の`LINE通知.js`の`AI_ORDER_BOT_WEBHOOK_URL`を`ando-seika.vercel.app`→`ando-seika.com`に変更し、clasp push・deploy済み、稼働中）。これをやっていないとVercel Pause後にGAS経由のLINE注文botだけが気づかれずに止まっていた
 - [x] 動作確認チェックリスト（3-4節）にGAS連携・LINE連携の項目を追加済み
 - [x] **GitHub Actions のデプロイ workflow 作成**（`.github/workflows/deploy-cloudflare.yml`、2026-08-28）。`main` への push で自動デプロイ＝今までのVercelと同じ「pushだけ」運用に戻る。有効化には GitHub Secrets への登録が2つ必要（3-3節のCI項参照）
+- [x] **チャット機能の移行完了**（2026-08-29）。`OPENAI_API_KEY` を投入し、workers.dev 上で
+      `/api/chat` にリクエストを送って日本語の応答が返ることを確認（モデルは gpt-4o-mini）。
+      ChatWidget は `src/app/layout.tsx` で全ページに表示されるため、未設定だと全ページで無反応になる
 - [x] **メール送信の移行完了**（2026-08-29）。Resend で `ando-seika.com` のドメイン検証（MX/SPF/DKIM の3レコードを Auto configure で追加）を済ませ、
       `noreply@ando-seika.com` からの実送信が届くことを確認済み。Worker には `RESEND_API_KEY` / `MAIL_FROM` / `MAIL_REPLY_TO` を投入済み。
       **注意**: Resend の API キーは作成時に対象ドメインを選ぶ。ドメイン登録より先にキーを作ると
