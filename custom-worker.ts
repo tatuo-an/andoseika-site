@@ -25,6 +25,14 @@ export default {
   fetch: handler.fetch,
 
   async scheduled(event: ScheduledEvent, env: Env, ctx: Ctx): Promise<void> {
+    // 実行ゲート。既存 Worker の POST_CRON_ENABLED と同じ考え方。
+    // 未設定なら動かさない（検証デプロイで顧客宛の通知が飛ぶのを防ぐため）。
+    // 本番切替時に  wrangler secret put CRON_ENABLED  で "true" を入れる。
+    if (env.CRON_ENABLED !== "true") {
+      console.log(`cron ${event.cron} はスキップ（CRON_ENABLED が true ではありません）`);
+      return;
+    }
+
     const path = CRON_ROUTES[event.cron];
     if (!path) {
       console.error(`未対応の cron 式: ${event.cron}`);
