@@ -18,6 +18,12 @@
 - [x] **GAS→サイトのLINE中継URL修正**（`ando-seika-gas`の`LINE通知.js`の`AI_ORDER_BOT_WEBHOOK_URL`を`ando-seika.vercel.app`→`ando-seika.com`に変更し、clasp push・deploy済み、稼働中）。これをやっていないとVercel Pause後にGAS経由のLINE注文botだけが気づかれずに止まっていた
 - [x] 動作確認チェックリスト（3-4節）にGAS連携・LINE連携の項目を追加済み
 - [x] **GitHub Actions のデプロイ workflow 作成**（`.github/workflows/deploy-cloudflare.yml`、2026-08-28）。`main` への push で自動デプロイ＝今までのVercelと同じ「pushだけ」運用に戻る。有効化には GitHub Secrets への登録が2つ必要（3-3節のCI項参照）
+- [x] **メール送信の移行完了**（2026-08-29）。Resend で `ando-seika.com` のドメイン検証（MX/SPF/DKIM の3レコードを Auto configure で追加）を済ませ、
+      `noreply@ando-seika.com` からの実送信が届くことを確認済み。Worker には `RESEND_API_KEY` / `MAIL_FROM` / `MAIL_REPLY_TO` を投入済み。
+      **注意**: Resend の API キーは作成時に対象ドメインを選ぶ。ドメイン登録より先にキーを作ると
+      `This API key is not authorized to send emails from ando-seika.com` で 403 になる（実際に踏んだ）。
+      **必ず「ドメイン登録 → キー発行」の順で行うこと。**
+      なお Resend SDK は fetch のみで Node 依存が無く、Workers 対応の追加作業は不要（確認済み）
 - [x] **LINE公式アカウントのリッチメニューURL変更**（`ando-seika.vercel.app`→`ando-seika.com`、2026-08-28完了）。変更先の主要ページ（`/`・`/products`・`/mypage`・`/experience`・`/supporter`・`/guide`・`/contact`・`/newsletter.html`）がすべて200を返すことを確認済み。GASの中継URLと同じく、直していないとVercel Pause後に**公式LINEで一番押される導線だけが黙って死ぬ**箇所だった
 
 ### まだのこと（DNS切替前に必要）
