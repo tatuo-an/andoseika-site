@@ -42,15 +42,34 @@ function pearPrefix(name: string): string {
 }
 
 // 梨専用のフルコード決定ルール（ando-seika-gas の CSV取込ロジックに準拠）。
-// 訳あり品は固定2kgパック（プレフィックス+"2"+WS/WM）、正品は商品名中の重量をそのまま使う。
+//
+// サイトの注文管理シートに入る商品名は「梨 小玉 新甘泉」「梨 中玉 新甘泉」のような表記で、
+// 「訳あり」や「2kg」という文字列は含まれない。以前は /訳あり/ にしかマッチせず、
+// 重量も読めないため全ての梨が I3（正品3kg）として転記されていた。
+// 玉サイズの表記（小玉/中玉/バラ）も訳あり品として扱う。
+//
+//   梨 小玉 新甘泉 -> I2WS （新甘泉 訳あり 小 2kg）
+//   梨 中玉 新甘泉 -> I2WM （新甘泉 訳あり 中 2kg）
+//   訳あり 5kg 新甘泉 バラ -> I5WB
 function pearFullCode(name: string): string {
   const prefix = pearPrefix(name);
   if (!prefix) return "";
-  if (/訳あり|わけあり/.test(name)) {
-    const size = /中/.test(name) ? "WM" : "WS"; // 小/中の指定がなければ小(WS)がデフォルト
-    return `${prefix}2${size}`;
-  }
+
   const kgMatch = name.match(/(\d+)\s*kg/i);
+
+  // 訳あり（＝玉サイズ指定のある選果外品）かどうか
+  if (/訳あり|わけあり|小玉|中玉|バラ/.test(name)) {
+    // 重量表記があればそれを使い、無ければ 2kg（訳あり品の標準パック）
+    const weight = kgMatch ? kgMatch[1] : "2";
+    // 商品マスタに存在する訳ありコードは 2kg が WS/WM/WB の3種、5kg は WB のみ。
+    // そのため 5kg 以上はバラ(WB)に寄せる（I5WS/I5WM はマスタに無く、
+    // 引き当てに失敗すると規格・重量・発送方法が空欄で転記されてしまう）。
+    const size = /バラ/.test(name) || Number(weight) >= 5
+      ? "WB"
+      : /中玉|中/.test(name) ? "WM" : "WS";
+    return `${prefix}${weight}${size}`;
+  }
+
   const weight = kgMatch ? kgMatch[1] : "3"; // 重量が読み取れなければ3kgデフォルト
   return `${prefix}${weight}`;
 }
