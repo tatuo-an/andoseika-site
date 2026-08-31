@@ -139,6 +139,37 @@ const FAQ_ITEMS = [
     },
 ];
 
+const PLAN_TABLE_HEADERS: {
+    key: "light" | "standard" | "full";
+    name: string;
+    price: string;
+    featured?: boolean;
+}[] = [
+    { key: "light", name: "ライト", price: "3万円" },
+    { key: "standard", name: "スタンダード", price: "5万円", featured: true },
+    { key: "full", name: "おまかせフル", price: "10万円" },
+];
+
+type PlanRow = { label: string; light: boolean; standard: boolean; full: boolean };
+
+const CAN_DO_ROWS: PlanRow[] = [
+    { label: "毎日の投稿代行（1日2投稿）", light: true, standard: true, full: true },
+    { label: "公式LINE配信", light: false, standard: true, full: true },
+    { label: "月1数字報告", light: false, standard: true, full: true },
+    { label: "コメント対応", light: false, standard: false, full: true },
+    { label: "キャンペーン企画", light: false, standard: false, full: true },
+];
+
+const TARGET_SNS_ROWS: PlanRow[] = [
+    { label: "Facebook", light: true, standard: true, full: true },
+    { label: "Instagram", light: true, standard: true, full: true },
+    { label: "Threads", light: true, standard: true, full: true },
+    { label: "X", light: false, standard: true, full: true },
+    { label: "YouTube", light: false, standard: true, full: true },
+    { label: "ブログ（noteなど）", light: false, standard: false, full: true },
+    { label: "TikTok・LinkedIn（ご希望で）", light: false, standard: false, full: true },
+];
+
 function BigCta({ label = "無料相談に申し込む" }: { label?: string }) {
     return (
         <div className="text-center">
@@ -169,6 +200,75 @@ function TextLinkCta({
                 {text}
                 <ArrowRight className="h-3.5 w-3.5" />
             </Link>
+        </div>
+    );
+}
+
+function PlanCompareTable({ title, rows }: { title: string; rows: PlanRow[] }) {
+    return (
+        <div className="max-w-md mx-auto overflow-hidden rounded-2xl border border-stone-200 bg-white">
+            <p className="border-b border-stone-200 bg-stone-50 px-3 py-2 text-sm font-bold text-stone-700">
+                {title}
+            </p>
+            <table className="w-full table-fixed border-collapse text-sm">
+                <thead>
+                    <tr>
+                        <th scope="col" className="w-[28%] p-1.5 md:p-2 text-left font-normal text-stone-400">
+                            {""}
+                        </th>
+                        {PLAN_TABLE_HEADERS.map((plan) => (
+                            <th
+                                key={plan.key}
+                                scope="col"
+                                className={`p-1.5 md:p-2 text-center align-bottom ${
+                                    plan.featured
+                                        ? "border-x-2 border-t-2 border-primary bg-primary/5"
+                                        : ""
+                                }`}
+                            >
+                                {plan.featured && (
+                                    <span className="mb-1 inline-block rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold text-white">
+                                        おすすめ
+                                    </span>
+                                )}
+                                <p
+                                    className={`font-bold leading-tight ${
+                                        plan.featured ? "text-primary" : "text-stone-700"
+                                    }`}
+                                >
+                                    {plan.name}
+                                </p>
+                                <p className="text-[11px] font-normal text-stone-500">{plan.price}</p>
+                            </th>
+                        ))}
+                    </tr>
+                </thead>
+                <tbody>
+                    {rows.map((row, i) => (
+                        <tr key={row.label} className="border-t border-stone-100">
+                            <th
+                                scope="row"
+                                className="p-1.5 md:p-2 text-left font-normal leading-snug text-stone-700"
+                            >
+                                {row.label}
+                            </th>
+                            <td className="p-1.5 md:p-2 text-center text-stone-700">
+                                {row.light ? "○" : <span className="text-stone-300">—</span>}
+                            </td>
+                            <td
+                                className={`p-1.5 md:p-2 text-center font-bold text-primary border-x-2 border-primary bg-primary/5 ${
+                                    i === rows.length - 1 ? "border-b-2" : ""
+                                }`}
+                            >
+                                {row.standard ? "○" : <span className="text-stone-300">—</span>}
+                            </td>
+                            <td className="p-1.5 md:p-2 text-center text-stone-700">
+                                {row.full ? "○" : <span className="text-stone-300">—</span>}
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
         </div>
     );
 }
@@ -532,43 +632,21 @@ export default function AiConsultingPage() {
 
                         <div className="grid md:grid-cols-3 gap-4">
                             <div className="bg-white rounded-2xl border border-stone-200 p-6">
-                                <p className="text-sm font-bold text-stone-500 mb-2">投稿代行のみ</p>
                                 <p className="text-sm font-bold text-stone-900 mb-1">ライト</p>
                                 <p className="text-2xl font-bold text-stone-900 mb-2">
                                     3<span className="text-sm font-normal text-stone-500 ml-1">万円（税込・月額）</span>
                                 </p>
-                                <p className="text-stone-700 text-sm leading-relaxed mb-3">
-                                    投稿代行のみ。写真を送っていただければ、あとは形にして投稿します。
-                                </p>
-                                <p className="text-sm text-stone-500">対応SNS</p>
-                                <p className="text-stone-700 text-sm leading-relaxed mb-2">
-                                    Facebook・Instagram・Threads（Meta3媒体）
-                                </p>
-                                <p className="text-sm text-stone-500">投稿頻度</p>
-                                <p className="text-stone-700 text-sm leading-relaxed">
-                                    毎日（1日2投稿が基本。同じ内容を3媒体へ展開）
-                                </p>
+                                <p className="text-stone-600 text-sm">投稿代行のみ</p>
                             </div>
                             <div className="bg-primary/5 rounded-2xl border-2 border-primary p-6 relative">
-                                <p className="text-sm font-bold text-primary mb-2">LINE配信＋月1報告つき</p>
-                                <span className="inline-block bg-primary text-white text-sm font-bold px-3 py-1 rounded-full mb-3">
+                                <span className="inline-block bg-primary text-white text-sm font-bold px-3 py-1 rounded-full mb-2">
                                     おすすめ
                                 </span>
-                                <p className="text-sm font-bold text-stone-900 mb-1">スタンダード</p>
+                                <p className="text-sm font-bold text-primary mb-1">スタンダード</p>
                                 <p className="text-2xl font-bold text-stone-900 mb-2">
                                     5<span className="text-sm font-normal text-stone-500 ml-1">万円（税込・月額）</span>
                                 </p>
-                                <p className="text-stone-700 text-sm leading-relaxed mb-3">
-                                    投稿代行に加えて、公式LINEの配信と月1回の数字報告まで行います。
-                                </p>
-                                <p className="text-sm text-stone-500">対応SNS</p>
-                                <p className="text-stone-700 text-sm leading-relaxed mb-2">
-                                    上記のMeta3媒体に加えて、X・YouTube（計5媒体）
-                                </p>
-                                <p className="text-sm text-stone-500">投稿頻度</p>
-                                <p className="text-stone-700 text-sm leading-relaxed mb-4">
-                                    毎日（1日2投稿が基本）＋公式LINE配信＋月1回の数字報告
-                                </p>
+                                <p className="text-stone-700 text-sm mb-4">LINE配信＋月1報告つき</p>
                                 <Link
                                     href="/contact/personal?subject=sns-line"
                                     className="inline-flex items-center justify-center w-full bg-primary hover:bg-primary-dark text-white font-bold py-2.5 px-4 rounded-full text-sm transition-all"
@@ -577,88 +655,21 @@ export default function AiConsultingPage() {
                                 </Link>
                             </div>
                             <div className="bg-white rounded-2xl border border-stone-200 p-6">
-                                <p className="text-sm font-bold text-stone-500 mb-2">企画・コメント対応まで全部</p>
                                 <p className="text-sm font-bold text-stone-900 mb-1">おまかせフル</p>
                                 <p className="text-2xl font-bold text-stone-900 mb-2">
                                     10
                                     <span className="text-sm font-normal text-stone-500 ml-1">万円（税込・月額）</span>
                                 </p>
-                                <p className="text-stone-700 text-sm leading-relaxed mb-3">
-                                    コメント対応やキャンペーンの企画まで、まるごとお任せいただけます。
-                                </p>
-                                <p className="text-sm text-stone-500">対応SNS</p>
-                                <p className="text-stone-700 text-sm leading-relaxed">
-                                    上記に加えてブログ（noteなど）。ご希望があればTikTok・LinkedInなどにも対応します。
-                                </p>
+                                <p className="text-stone-600 text-sm">企画・コメント対応まで全部</p>
                             </div>
                         </div>
 
-                        <p className="text-sm font-bold text-stone-500 text-center mt-10 mb-3">
+                        <p className="text-sm font-bold text-stone-500 text-center mt-10 mb-4">
                             プラン比較
                         </p>
-                        <div className="max-w-md mx-auto overflow-hidden rounded-2xl border border-stone-200 bg-white">
-                            <table className="w-full table-fixed border-collapse text-sm">
-                                <thead>
-                                    <tr className="bg-stone-50">
-                                        <th scope="col" className="w-[34%] p-2 md:p-3 text-left font-normal text-stone-500">
-                                            {""}
-                                        </th>
-                                        <th scope="col" className="p-2 md:p-3 text-center font-bold text-stone-700">
-                                            ライト
-                                        </th>
-                                        <th scope="col" className="p-2 md:p-3 text-center font-bold text-primary bg-primary/5">
-                                            スタンダード
-                                        </th>
-                                        <th scope="col" className="p-2 md:p-3 text-center font-bold text-stone-700">
-                                            おまかせフル
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr className="border-t border-stone-100">
-                                        <th
-                                            scope="row"
-                                            className="p-2 md:p-3 text-left font-normal text-stone-700"
-                                        >
-                                            対応SNS
-                                        </th>
-                                        <td className="p-2 md:p-3 text-center text-stone-700">Meta3つ</td>
-                                        <td className="p-2 md:p-3 text-center font-bold text-primary bg-primary/5">
-                                            +X・YouTube
-                                        </td>
-                                        <td className="p-2 md:p-3 text-center text-stone-700">+ブログ・希望SNS</td>
-                                    </tr>
-                                    {[
-                                        { label: "投稿代行", light: true, standard: true, full: true },
-                                        { label: "公式LINE配信", light: false, standard: true, full: true },
-                                        { label: "月1数字報告", light: false, standard: true, full: true },
-                                        {
-                                            label: "コメント対応・企画",
-                                            light: false,
-                                            standard: false,
-                                            full: true,
-                                        },
-                                    ].map((row) => (
-                                        <tr key={row.label} className="border-t border-stone-100">
-                                            <th
-                                                scope="row"
-                                                className="p-2 md:p-3 text-left font-normal text-stone-700"
-                                            >
-                                                {row.label}
-                                            </th>
-                                            <td className="p-2 md:p-3 text-center text-stone-700">
-                                                {row.light ? "○" : <span className="text-stone-300">—</span>}
-                                            </td>
-                                            <td className="p-2 md:p-3 text-center font-bold text-primary bg-primary/5">
-                                                {row.standard ? "○" : <span className="text-stone-300">—</span>}
-                                            </td>
-                                            <td className="p-2 md:p-3 text-center text-stone-700">
-                                                {row.full ? "○" : <span className="text-stone-300">—</span>}
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                        <div className="space-y-4">
+                            <PlanCompareTable title="できること" rows={CAN_DO_ROWS} />
+                            <PlanCompareTable title="対象SNS" rows={TARGET_SNS_ROWS} />
                         </div>
 
                         <p className="text-stone-600 text-sm mt-6 text-center">
@@ -825,7 +836,7 @@ export default function AiConsultingPage() {
                                 無料相談では、AIでの仕組み化もご相談いただけます。
                             </p>
                             <p className="text-stone-700 text-sm md:text-base leading-relaxed mb-6">
-                                鳥取の小さな青果卸を経営しながら、この4ヶ月で仕事の仕組みを80本以上作ってきました。作ったのに一度も使わなかった仕組みも7つあります。きれいな成功談だけでなく、実際にやったことをそのままお話しします。
+                                鳥取の小さな青果卸を経営しながら、実際に手を動かして作ってきた実例です。きれいな成功談だけでなく、うまくいかなかった話もそのままお伝えします。
                             </p>
 
                             <div className="grid grid-cols-3 gap-3 mb-6">
@@ -932,7 +943,7 @@ export default function AiConsultingPage() {
                         <div className="max-w-2xl mx-auto mt-10 space-y-5 text-stone-700 leading-relaxed">
                             <p>「見て終わり」で構いません。まずは知ってもらうためのものです。</p>
                             <p>
-                                その上で、自分のお店の話を聞いてほしいと思った方は、無料相談にお申し込みください。契約前提の話ではありません。今のSNSや仕事の悩みを聞かせてもらうだけでも大丈夫です。
+                                その上で、自分のお店の話を聞いてほしいと思った方は、無料相談にお申し込みください。今のSNSや仕事の悩みを聞かせてもらうだけでも大丈夫です。
                             </p>
                         </div>
                     </div>
