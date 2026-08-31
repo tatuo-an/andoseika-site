@@ -6,8 +6,9 @@ import { ArrowRight, ChevronRight, ShoppingBasket, Leaf, Heart, Building2, Packa
 import { CommunityScroller } from "@/components/community/CommunityScroller";
 import { client } from "@/lib/microcms";
 import { Product } from "@/types/microcms";
-import { google } from "googleapis";
-import { isSaleActive, calcSalePrice } from "@/lib/sale";
+import { getEffectiveSalePercent, calcSalePrice } from "@/lib/sale";
+import { fetchActiveSeasonalSale } from "@/lib/seasonalSales";
+import { getInventoryRows } from "@/lib/inventorySheet";
 import localProducts from "@/data/products.json";
 
 export const revalidate = 60;
@@ -27,7 +28,7 @@ function toTaxIncluded(price: number, cost: number | null): number {
   return Math.round(cost * 1.08 + others * 1.10);
 }
 
-async function getTopProducts(): Promise<{ id: string; name: string; image: string; price: number; onSale: boolean }[]> {
+async function getTopProducts(seasonalDiscountPercent: number): Promise<{ id: string; name: string; image: string; price: number; onSale: boolean }[]> {
   try {
     let products: Product[] = [];
     try {
@@ -37,19 +38,7 @@ async function getTopProducts(): Promise<{ id: string; name: string; image: stri
       products = localProducts as Product[];
     }
 
-    const authClient = new google.auth.GoogleAuth({
-      credentials: {
-        client_email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
-        private_key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-      },
-      scopes: ["https://www.googleapis.com/auth/spreadsheets"],
-    });
-    const sheets = google.sheets({ version: "v4", auth: authClient });
-    const res = await sheets.spreadsheets.values.get({
-      spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-      range: "商品在庫!A:Y",
-    });
-    const rows = res.data.values ?? [];
+    const rows = await getInventoryRows();
     const invMap: Record<string, InventoryData> = {};
     const order: string[] = [];
     rows.slice(1).forEach((r) => {
@@ -87,8 +76,9 @@ async function getTopProducts(): Promise<{ id: string; name: string; image: stri
       const rawPrice = inv.price ?? product?.price;
       if (!rawPrice) continue;
       const taxed = toTaxIncluded(rawPrice, inv.cost);
-      const onSale = isSaleActive(inv.salePercent, inv.saleStart, inv.saleEnd);
-      const finalPrice = onSale ? calcSalePrice(taxed, inv.salePercent) : taxed;
+      const pct = getEffectiveSalePercent(inv.salePercent, inv.saleStart, inv.saleEnd, seasonalDiscountPercent);
+      const onSale = pct > 0;
+      const finalPrice = onSale ? calcSalePrice(taxed, pct) : taxed;
       const image = inv.imageUrl || product?.image?.url || "";
       const name = inv.family || inv.variantName || product?.name || "";
       result.push({ id, name, image, price: finalPrice, onSale });
@@ -108,19 +98,7 @@ async function getPreorderProducts(): Promise<{ id: string; name: string; image:
     } catch {
       products = localProducts as Product[];
     }
-    const authClient = new google.auth.GoogleAuth({
-      credentials: {
-        client_email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
-        private_key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-      },
-      scopes: ["https://www.googleapis.com/auth/spreadsheets"],
-    });
-    const sheets = google.sheets({ version: "v4", auth: authClient });
-    const res = await sheets.spreadsheets.values.get({
-      spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-      range: "商品在庫!A:Y",
-    });
-    const rows = res.data.values ?? [];
+    const rows = await getInventoryRows();
     const productMap = Object.fromEntries(products.map((p) => [p.id, p]));
     const seenFamilies = new Set<string>();
     const result: { id: string; name: string; image: string; price: number | null }[] = [];
@@ -176,20 +154,8 @@ type RescueItem = { id: string; title: string; description: string; stock: numbe
 
 async function getRescueItems(): Promise<RescueItem[]> {
   try {
-    const { google: googleapis } = await import("googleapis");
-    const a = new googleapis.auth.GoogleAuth({
-      credentials: {
-        client_email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
-        private_key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-      },
-      scopes: ["https://www.googleapis.com/auth/spreadsheets"],
-    });
-    const sheets = googleapis.sheets({ version: "v4", auth: a });
-    const res = await sheets.spreadsheets.values.get({
-      spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-      range: "商品在庫!A:AC",
-    });
-    const rows = (res.data.values ?? []).slice(1).filter((r) => r[0] && r[27] === "1" && r[5] !== "1");
+    const allRows = await getInventoryRows();
+    const rows = allRows.slice(1).filter((r) => r[0] && r[27] === "1" && r[5] !== "1");
     // ファミリーごとに最初の1件をまとめてバナー化
     const seenFamilies = new Set<string>();
     const result: RescueItem[] = [];
@@ -217,7 +183,8 @@ async function getRescueItems(): Promise<RescueItem[]> {
 }
 
 export default async function Home() {
-  const [products, rescueItems, preorderProducts] = await Promise.all([getTopProducts(), getRescueItems(), getPreorderProducts()]);
+  const seasonalSale = await fetchActiveSeasonalSale();
+  const [products, rescueItems, preorderProducts] = await Promise.all([getTopProducts(seasonalSale?.discountPercent ?? 0), getRescueItems(), getPreorderProducts()]);
   const organizationJsonLd = {
     "@context": "https://schema.org",
     "@type": ["Organization", "LocalBusiness"],
@@ -282,6 +249,17 @@ export default async function Home() {
             </div>
           </div>
         </section>
+
+        {/* ── 季節セールバナー ── */}
+        {seasonalSale && (
+          <section className="bg-red-500 text-white">
+            <div className="container mx-auto px-4 md:px-6 py-2.5 text-center">
+              <p className="text-sm font-bold">
+                🎁 {seasonalSale.name}開催中！対象商品が{seasonalSale.discountPercent}%OFF
+              </p>
+            </div>
+          </section>
+        )}
 
         {/* ── Trust Strip ── */}
         <section className="bg-white border-b border-stone-200">
@@ -466,6 +444,27 @@ export default async function Home() {
             </div>
           </section>
         )}
+
+        {/* ── はちみつ入荷お知らせ登録 ── */}
+        <section className="py-4 bg-white border-y border-amber-100">
+          <div className="container mx-auto px-4 md:px-6">
+            <a
+              href="/newsletter.html"
+              className="flex items-center justify-between gap-3 rounded-2xl bg-amber-50 border border-amber-200 px-5 py-4 hover:bg-amber-100 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-amber-200/70 flex items-center justify-center shrink-0">
+                  <Leaf className="w-4 h-4 text-amber-700" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-stone-900">はちみつの入荷・予約のお知らせ（無料）</p>
+                  <p className="text-xs text-stone-500 mt-0.5">売り切れる前にメールでお知らせします</p>
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-amber-700 shrink-0" />
+            </a>
+          </div>
+        </section>
 
         {/* ── Season Calendar ── */}
         <section className="py-10 bg-stone-50">

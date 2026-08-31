@@ -3,6 +3,9 @@ import { google } from "googleapis";
 import { auth } from "@/auth";
 import { TIERS, getTier } from "@/lib/tiers";
 import { computeCartPricing, type InvItem, type ShippingRow } from "@/lib/pricing";
+import { getActiveSeasonalSale } from "@/lib/seasonalSales";
+import { getInventoryRows } from "@/lib/inventorySheet";
+import { withRetry } from "@/lib/sheetsRetry";
 
 export const dynamic = "force-dynamic";
 
@@ -23,12 +26,7 @@ function getSheets() {
 }
 
 async function fetchInventory(): Promise<InvItem[]> {
-    const sheets = getSheets();
-    const res = await sheets.spreadsheets.values.get({
-        spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-        range: "商品在庫!A:Z",
-    });
-    const rows = res.data.values ?? [];
+    const rows = await getInventoryRows();
     return rows.slice(1)
         .filter(r => r[0])
         .map((r) => ({
@@ -43,51 +41,86 @@ async function fetchInventory(): Promise<InvItem[]> {
             clickpostMax: r[16] !== undefined && r[16] !== "" ? parseInt(r[16], 10) : 0,
             options: r[17] ?? "",
             salePercent: r[18] !== undefined && r[18] !== "" ? parseInt(r[18], 10) : 0,
+            saleStart: r[19] ?? "",
+            saleEnd: r[20] ?? "",
             compactMax: r[23] !== undefined && r[23] !== "" ? parseInt(r[23], 10) : 0,
         }));
 }
 
+async function fetchSeasonalDiscountPercent(): Promise<number> {
+    try {
+        const sheets = getSheets();
+        const res = await sheets.spreadsheets.values.get({
+            spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
+            range: "季節セール!A:E",
+        });
+        const rows = (res.data.values ?? []).slice(1).filter((r) => r[0]);
+        const sales = rows.map((r) => ({
+            name: r[0] ?? "",
+            startDate: r[1] ?? "",
+            endDate: r[2] ?? "",
+            discountPercent: parseInt(r[3] ?? "0", 10) || 0,
+            enabled: r[4] === "TRUE",
+        }));
+        return getActiveSeasonalSale(sales)?.discountPercent ?? 0;
+    } catch {
+        return 0;
+    }
+}
+
 async function fetchShippingRows(): Promise<ShippingRow[]> {
-    const sheets = getSheets();
-    const res = await sheets.spreadsheets.values.get({
-        spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-        range: "送料マスタ!A:L",
-    });
-    const rows = res.data.values ?? [];
-    const toInt = (v: string | undefined) => (v === undefined || v === "" ? 0 : parseInt(v, 10) || 0);
-    return rows.slice(1).map((r) => ({
-        region: r[0] ?? "", prefectures: r[1] ?? "",
-        s60: toInt(r[2]), s80: toInt(r[3]), s100: toInt(r[4]), s120: toInt(r[5]),
-        s140: toInt(r[6]), s160: toInt(r[7]), s180: toInt(r[8]), s200: toInt(r[9]),
-        compact: toInt(r[10]), clickpost: toInt(r[11]),
-    }));
+    try {
+        const sheets = getSheets();
+        const res = await withRetry(() => sheets.spreadsheets.values.get({
+            spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
+            range: "送料マスタ!A:L",
+        }));
+        const rows = res.data.values ?? [];
+        const toInt = (v: string | undefined) => (v === undefined || v === "" ? 0 : parseInt(v, 10) || 0);
+        return rows.slice(1).map((r) => ({
+            region: r[0] ?? "", prefectures: r[1] ?? "",
+            s60: toInt(r[2]), s80: toInt(r[3]), s100: toInt(r[4]), s120: toInt(r[5]),
+            s140: toInt(r[6]), s160: toInt(r[7]), s180: toInt(r[8]), s200: toInt(r[9]),
+            compact: toInt(r[10]), clickpost: toInt(r[11]),
+        }));
+    } catch {
+        return [];
+    }
 }
 
 async function fetchTierDiscountRate(email: string): Promise<number> {
     if (!email) return 0;
-    const sheets = getSheets();
-    const res = await sheets.spreadsheets.values.get({
-        spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-        range: "顧客マスタ!A:F",
-    });
-    const rows = res.data.values ?? [];
-    const row = rows.find((r) => r[0] === email && r[1] === "__profile__");
-    const tier = row?.[4] ?? "";
-    const tierExpiry = row?.[5] ?? "";
-    const now = new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Tokyo" });
-    const activeTier = tier && tierExpiry && tierExpiry >= now ? getTier(tier) : "free";
-    return TIERS[activeTier].discountRate;
+    try {
+        const sheets = getSheets();
+        const res = await withRetry(() => sheets.spreadsheets.values.get({
+            spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
+            range: "顧客マスタ!A:F",
+        }));
+        const rows = res.data.values ?? [];
+        const row = rows.find((r) => r[0] === email && r[1] === "__profile__");
+        const tier = row?.[4] ?? "";
+        const tierExpiry = row?.[5] ?? "";
+        const now = new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Tokyo" });
+        const activeTier = tier && tierExpiry && tierExpiry >= now ? getTier(tier) : "free";
+        return TIERS[activeTier].discountRate;
+    } catch {
+        return 0;
+    }
 }
 
 async function fetchPointsBalance(email: string): Promise<number> {
     if (!email) return 0;
-    const sheets = getSheets();
-    const res = await sheets.spreadsheets.values.get({
-        spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-        range: "ポイント履歴!A:E",
-    });
-    const rows = (res.data.values ?? []).filter((r) => r[0] === email);
-    return rows.reduce((sum, r) => sum + (parseInt(r[3] ?? "0", 10) || 0), 0);
+    try {
+        const sheets = getSheets();
+        const res = await withRetry(() => sheets.spreadsheets.values.get({
+            spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
+            range: "ポイント履歴!A:E",
+        }));
+        const rows = (res.data.values ?? []).filter((r) => r[0] === email);
+        return rows.reduce((sum, r) => sum + (parseInt(r[3] ?? "0", 10) || 0), 0);
+    } catch {
+        return 0;
+    }
 }
 
 type CartItem = { quantity: number };
@@ -110,11 +143,12 @@ export async function POST(req: NextRequest) {
         const nextAuthSession = await auth();
         const userEmail = nextAuthSession?.user?.email ?? "";
 
-        const [inventory, shippingRows, tierDiscountRate, pointsBalance] = await Promise.all([
+        const [inventory, shippingRows, tierDiscountRate, pointsBalance, seasonalDiscountPercent] = await Promise.all([
             fetchInventory(),
             fetchShippingRows(),
             fetchTierDiscountRate(userEmail),
             fetchPointsBalance(userEmail),
+            fetchSeasonalDiscountPercent(),
         ]);
 
         const cartLines = Object.entries(cartDetails).map(([id, item]) => ({
@@ -132,6 +166,7 @@ export async function POST(req: NextRequest) {
             tierDiscountRate,
             pointsBalance,
             pointsToUse: pointsToUse ?? 0,
+            seasonalDiscountPercent,
         });
 
         return NextResponse.json({ pricing, pointsBalance });

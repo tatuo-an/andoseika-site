@@ -69,7 +69,7 @@ export async function sendOrderConfirmationEmail(params: OrderEmailParams) {
 
       <!-- サイトリンク -->
       <div style="text-align:center;margin-bottom:8px;">
-        <a href="https://ando-seika.vercel.app/mypage/orders"
+        <a href="https://ando-seika.com/mypage/orders"
            style="display:inline-block;background:#4a7c59;color:#fff;font-size:14px;font-weight:bold;padding:14px 32px;border-radius:100px;text-decoration:none;">
           注文履歴を確認する
         </a>

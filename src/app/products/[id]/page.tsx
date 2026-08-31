@@ -12,8 +12,10 @@ import localProducts from "@/data/products.json";
 import { Metadata } from "next";
 import { google } from "googleapis";
 import { BADGE_COLORS, DEFAULT_BADGE_COLOR } from "@/lib/badges";
-import { isSaleActive, calcSalePrice } from "@/lib/sale";
+import { isSaleActive, getEffectiveSalePercent, calcSalePrice } from "@/lib/sale";
+import { fetchActiveSeasonalSale } from "@/lib/seasonalSales";
 import { computeShipSchedule } from "@/lib/shipSchedule";
+import { getInventoryRows } from "@/lib/inventorySheet";
 import { DETAIL_EXTRA_FIELDS, FOOD_LABEL_FIELDS, parseExtra } from "@/lib/extraDescriptions";
 
 export const revalidate = 60;
@@ -110,12 +112,7 @@ async function getInventoryData(id: string): Promise<{
     familyRows: SheetRow[];
 }> {
     try {
-        const sheets = getSheets();
-        const res = await sheets.spreadsheets.values.get({
-            spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-            range: "商品在庫!A:AA",
-        });
-        const rows = res.data.values ?? [];
+        const rows = await getInventoryRows();
         const allRows: SheetRow[] = rows.slice(1).filter(r => r[0]).map(r => ({
             id: r[0],
             name: r[1] ?? "",
@@ -337,7 +334,8 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
 export default async function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
-    const [productDirect, invData] = await Promise.all([getProduct(id), getInventoryData(id)]);
+    const [productDirect, invData, seasonalSale] = await Promise.all([getProduct(id), getInventoryData(id), fetchActiveSeasonalSale()]);
+    const seasonalDiscountPercent = seasonalSale?.discountPercent ?? 0;
     const { stock, price: invPrice, name: invName, shipType, hidden, deleted, nextShipment, badges, familyRows, imageUrl: invImageUrl, familyImages, cost: invCost, coolAvailable: invCoolAvailable } = invData;
 
     const surcharges = await getShippingSurcharges(shipType);
@@ -397,8 +395,11 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
     const productDescription = (invData.description || product.description || FALLBACK_DESCRIPTION).trim();
     const basePrice = currentVariation?.price ?? invPrice ?? product.price;
     const normalTaxed = currentVariation?.priceTaxed ?? toTaxIncluded(basePrice, invCost);
-    const onSale = isSaleActive(invData.salePercent, invData.saleStart, invData.saleEnd);
-    const displayTaxed = onSale ? calcSalePrice(normalTaxed, invData.salePercent) : normalTaxed;
+    const effPct = getEffectiveSalePercent(invData.salePercent, invData.saleStart, invData.saleEnd, seasonalDiscountPercent);
+    const onSale = effPct > 0;
+    const isSeasonalSaleItem = onSale && !isSaleActive(invData.salePercent, invData.saleStart, invData.saleEnd);
+    const saleLabel = isSeasonalSaleItem && seasonalSale ? `${seasonalSale.name} ${effPct}% OFF` : `${effPct}% OFF`;
+    const displayTaxed = onSale ? calcSalePrice(normalTaxed, effPct) : normalTaxed;
     const productImageUrls = displayImages.map(absoluteUrl).filter(Boolean);
     const productJsonLd = basePrice > 0
         ? {
@@ -437,9 +438,9 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                     <div className="grid md:grid-cols-2 gap-0">
                         {/* Image slideshow */}
                         <div className="p-4 md:p-0 max-w-sm mx-auto md:max-w-none w-full relative">
-                            {isSaleActive(invData.salePercent, invData.saleStart, invData.saleEnd) && (
+                            {onSale && (
                                 <span className="absolute top-6 right-6 md:top-3 md:right-3 bg-red-500 text-white text-sm font-bold px-3 py-1.5 rounded-full shadow-lg z-20">
-                                    {invData.salePercent}% OFF
+                                    {saleLabel}
                                 </span>
                             )}
                             <ProductImageSlideshow images={displayImages} alt={invData.family || product.name} />
@@ -470,7 +471,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                                 <p className="text-2xl font-bold text-primary flex items-baseline gap-3 flex-wrap">
                                     {onSale && (
                                         <>
-                                            <span className="bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-full">{invData.salePercent}% OFF</span>
+                                            <span className="bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-full">{saleLabel}</span>
                                             <span className="text-base text-stone-400 line-through font-normal">¥{normalTaxed.toLocaleString()}</span>
                                         </>
                                     )}
@@ -509,8 +510,9 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                                     <div className="flex flex-wrap gap-2">
                                         {variations.map((v) => {
                                             const isSelected = v.id === id;
-                                            const vOnSale = isSaleActive(v.salePercent, v.saleStart, v.saleEnd);
-                                            const vDisplayPrice = vOnSale ? calcSalePrice(v.priceTaxed, v.salePercent) : v.priceTaxed;
+                                            const vEffPct = getEffectiveSalePercent(v.salePercent, v.saleStart, v.saleEnd, seasonalDiscountPercent);
+                                            const vOnSale = vEffPct > 0;
+                                            const vDisplayPrice = vOnSale ? calcSalePrice(v.priceTaxed, vEffPct) : v.priceTaxed;
                                             const totalLabel = totalContent(v.label);
                                             return (
                                                 <Link
@@ -638,7 +640,6 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                                     </div>
                                 ) : (
                                     (() => {
-                                        const onSale = isSaleActive(invData.salePercent, invData.saleStart, invData.saleEnd);
                                         return (
                                             <AddToCartButton
                                                 product={product}
@@ -651,7 +652,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                                                 coolAvailable={invCoolAvailable}
                                                 clickpostMax={invData.clickpostMax}
                                                 familyOptions={invData.options}
-                                                salePercent={onSale ? invData.salePercent : 0}
+                                                salePercent={onSale ? effPct : 0}
                                                 shipMode={invData.shipMode}
                                                 shipValue={invData.shipValue}
                                             />

@@ -3,7 +3,8 @@ import { google } from "googleapis";
 import { client } from "@/lib/microcms";
 import { Product } from "@/types/microcms";
 import localProducts from "@/data/products.json";
-import { isSaleActive, calcSalePrice } from "@/lib/sale";
+import { getEffectiveSalePercent, calcSalePrice } from "@/lib/sale";
+import { fetchActiveSeasonalDiscountPercent } from "@/lib/seasonalSales";
 
 export const dynamic = "force-dynamic";
 
@@ -26,6 +27,7 @@ function getSheets() {
 
 export async function GET() {
     try {
+        const seasonalDiscountPercent = await fetchActiveSeasonalDiscountPercent();
         const sheets = getSheets();
         const res = await sheets.spreadsheets.values.get({
             spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
@@ -75,13 +77,13 @@ export async function GET() {
                     const p = x.price ?? productMap[x.id]?.price;
                     if (!p) return 0;
                     const taxed = toTaxIncluded(p, x.cost);
-                    const active = isSaleActive(x.salePercent, x.saleStart, x.saleEnd);
-                    return active ? calcSalePrice(taxed, x.salePercent) : taxed;
+                    const pct = getEffectiveSalePercent(x.salePercent, x.saleStart, x.saleEnd, seasonalDiscountPercent);
+                    return pct > 0 ? calcSalePrice(taxed, pct) : taxed;
                 }).filter(Boolean);
                 const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
                 const rep = familyInvs.find(x => !(x.stock !== -1 && x.stock === 0)) ?? familyInvs[0];
                 const allSoldOut = familyInvs.every(x => x.stock !== -1 && x.stock === 0);
-                const repOnSale = isSaleActive(rep.salePercent, rep.saleStart, rep.saleEnd);
+                const repPct = getEffectiveSalePercent(rep.salePercent, rep.saleStart, rep.saleEnd, seasonalDiscountPercent);
                 const familyLimited = familyInvs.some(x => x.limitedOnly);
                 cards.push({
                     id: `family:${inv.family}`,
@@ -89,7 +91,7 @@ export async function GET() {
                     name: inv.family,
                     image: rep.familyImages[0] || rep.imageUrl || productMap[rep.id]?.image?.url || "",
                     displayPrice: minPrice,
-                    salePercent: repOnSale ? rep.salePercent : 0,
+                    salePercent: repPct,
                     isSoldOut: allSoldOut,
                     family: inv.family,
                     limitedOnly: familyLimited,
@@ -98,15 +100,15 @@ export async function GET() {
                 if (!product) continue;
                 const p = inv.price ?? product.price;
                 const taxed = toTaxIncluded(p, inv.cost);
-                const active = isSaleActive(inv.salePercent, inv.saleStart, inv.saleEnd);
-                const displayPrice = active ? calcSalePrice(taxed, inv.salePercent) : taxed;
+                const pct = getEffectiveSalePercent(inv.salePercent, inv.saleStart, inv.saleEnd, seasonalDiscountPercent);
+                const displayPrice = pct > 0 ? calcSalePrice(taxed, pct) : taxed;
                 cards.push({
                     id: inv.id,
                     href: `/products/${inv.id}`,
                     name: inv.name || product.name,
                     image: inv.imageUrl || product.image?.url || "",
                     displayPrice,
-                    salePercent: active ? inv.salePercent : 0,
+                    salePercent: pct,
                     isSoldOut: inv.stock !== -1 && inv.stock === 0,
                     family: "",
                     limitedOnly: inv.limitedOnly,

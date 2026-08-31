@@ -5,12 +5,14 @@ import type { NextConfig } from "next";
 const CSP = [
   "default-src 'self'",
   // 'unsafe-eval' は開発時のReactデバッグ機能に必要（本番のReactはevalを使わない）
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://platform.twitter.com https://*.twimg.com",
+  // challenges.cloudflare.com は /newsletter.html のbot対策(Cloudflare Turnstile)用
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://platform.twitter.com https://*.twimg.com https://challenges.cloudflare.com",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
-  "connect-src 'self' https://api.stripe.com https://m.stripe.network https://js.stripe.com https://syndication.twitter.com https://cdn.syndication.twimg.com",
-  "frame-src https://js.stripe.com https://checkout.stripe.com https://hooks.stripe.com https://www.youtube-nocookie.com https://www.youtube.com https://platform.twitter.com https://syndication.twitter.com",
+  // rondo.ando-seika.workers.dev は /newsletter.html のメール登録送信先(Rondo)
+  "connect-src 'self' https://api.stripe.com https://m.stripe.network https://js.stripe.com https://syndication.twitter.com https://cdn.syndication.twimg.com https://rondo.ando-seika.workers.dev",
+  "frame-src https://js.stripe.com https://checkout.stripe.com https://hooks.stripe.com https://www.youtube-nocookie.com https://www.youtube.com https://platform.twitter.com https://syndication.twitter.com https://challenges.cloudflare.com",
   "form-action 'self'",
   "frame-ancestors 'none'",
   "base-uri 'self'",

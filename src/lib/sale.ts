@@ -17,3 +17,20 @@ export function isSaleActive(salePercent: number, saleStart: string, saleEnd: st
 export function calcSalePrice(originalPrice: number, salePercent: number): number {
     return Math.ceil(originalPrice * (1 - salePercent / 100));
 }
+
+/**
+ * 商品個別のセール設定が有効な場合はそちらを優先する（割引率の大小に関わらず）。
+ * 個別セールが設定されていない・期間外の場合にのみ、季節セールの割引率を適用する。
+ * （二重値引きにはせず、必ずどちらか一方の割引率のみが適用される）
+ */
+export function getEffectiveSalePercent(
+    productSalePercent: number,
+    saleStart: string,
+    saleEnd: string,
+    seasonalDiscountPercent: number,
+    now: Date = new Date()
+): number {
+    const productActive = isSaleActive(productSalePercent, saleStart, saleEnd, now);
+    if (productActive) return productSalePercent;
+    return seasonalDiscountPercent;
+}

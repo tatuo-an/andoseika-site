@@ -4,12 +4,17 @@ import { isAdmin } from "@/lib/admin";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import Link from "next/link";
-import { ShoppingBag, Users, Package, MessageCircle, Heart } from "lucide-react";
+import { ShoppingBag, Users, Package, MessageCircle, Heart, Tag } from "lucide-react";
 import { client } from "@/lib/microcms";
 import { Product } from "@/types/microcms";
 import localProducts from "@/data/products.json";
 import { AdminPanel } from "@/components/admin/AdminPanel";
 import { AnnouncementsEditor } from "@/components/admin/AnnouncementsEditor";
+import { OrderNotificationBadge } from "@/components/admin/OrderNotificationBadge";
+import { SkipModeToggle } from "@/components/admin/SkipModeToggle";
+import { DeliveryScheduleEditor } from "@/components/admin/DeliveryScheduleEditor";
+import { withRetry } from "@/lib/sheetsRetry";
+import { getInventoryRows } from "@/lib/inventorySheet";
 import { google } from "googleapis";
 
 export const dynamic = "force-dynamic";
@@ -25,28 +30,30 @@ function getSheets() {
     return google.sheets({ version: "v4", auth: authClient });
 }
 
-async function getInventory(): Promise<{ items: ReturnType<typeof mapRow>[]; deletedIds: string[] }> {
+async function getDeletedIds(): Promise<string[]> {
     try {
         const sheets = getSheets();
-        const [dataRes, deletedRes] = await Promise.all([
-            sheets.spreadsheets.values.get({
-                spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-                range: "商品在庫!A:AB",
-            }),
-            sheets.spreadsheets.values.get({
-                spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
-                range: "商品在庫!K1",
-            }),
-        ]);
-        const rows = dataRes.data.values ?? [];
-        const items = rows.slice(1)
-            .filter((r) => r[0])
-            .map(mapRow);
-        const deletedIds: string[] = deletedRes.data.values?.[0]?.[0]
+        const deletedRes = await withRetry(() => sheets.spreadsheets.values.get({
+            spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
+            range: "商品在庫!K1",
+        }));
+        return deletedRes.data.values?.[0]?.[0]
             ? deletedRes.data.values[0][0].split(",").map((s: string) => s.trim()).filter(Boolean)
             : [];
-        return { items, deletedIds };
-    } catch { return { items: [], deletedIds: [] }; }
+    } catch { return []; }
+}
+
+async function getInventory(): Promise<{ items: ReturnType<typeof mapRow>[]; deletedIds: string[] }> {
+    // 削除済みID(K1セル)の取得に失敗しても、商品本体データまで巻き添えで
+    // 空にしないよう、それぞれ独立して失敗を吸収する。
+    const [rows, deletedIds] = await Promise.all([
+        getInventoryRows().catch(() => [] as string[][]),
+        getDeletedIds(),
+    ]);
+    const items = rows.slice(1)
+        .filter((r) => r[0])
+        .map(mapRow);
+    return { items, deletedIds };
 }
 
 function mapRow(r: string[]) {
@@ -91,10 +98,10 @@ function toInt(v: string | undefined) {
 async function getShipping() {
     try {
         const sheets = getSheets();
-        const res = await sheets.spreadsheets.values.get({
+        const res = await withRetry(() => sheets.spreadsheets.values.get({
             spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
             range: "送料マスタ!A:L",
-        });
+        }));
         const rows = res.data.values ?? [];
         return rows.slice(1).map((r) => ({
             region: r[0] ?? "",
@@ -136,10 +143,11 @@ export default async function AdminPage() {
                     <div className="flex gap-3 mb-8">
                         <Link
                             href="/admin/orders"
-                            className="flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-bold rounded-lg hover:bg-primary/90 transition-colors shadow-sm"
+                            className="relative flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-bold rounded-lg hover:bg-primary/90 transition-colors shadow-sm"
                         >
                             <ShoppingBag className="w-4 h-4" />
                             注文管理
+                            <OrderNotificationBadge kind="orders" />
                         </Link>
                         <Link
                             href="/admin/customers"
@@ -157,10 +165,11 @@ export default async function AdminPage() {
                         </Link>
                         <Link
                             href="/admin/line-orders"
-                            className="flex items-center gap-2 px-4 py-2 bg-white border border-stone-200 text-stone-700 text-sm font-bold rounded-lg hover:bg-stone-50 transition-colors shadow-sm"
+                            className="relative flex items-center gap-2 px-4 py-2 bg-white border border-stone-200 text-stone-700 text-sm font-bold rounded-lg hover:bg-stone-50 transition-colors shadow-sm"
                         >
                             <MessageCircle className="w-4 h-4" />
                             LINE注文管理
+                            <OrderNotificationBadge kind="line-orders" />
                         </Link>
                         <Link
                             href="/admin/supporters"
@@ -169,6 +178,17 @@ export default async function AdminPage() {
                             <Heart className="w-4 h-4" />
                             サポーター管理
                         </Link>
+                        <Link
+                            href="/admin/seasonal-sales"
+                            className="flex items-center gap-2 px-4 py-2 bg-white border border-stone-200 text-stone-700 text-sm font-bold rounded-lg hover:bg-stone-50 transition-colors shadow-sm"
+                        >
+                            <Tag className="w-4 h-4" />
+                            季節セール管理
+                        </Link>
+                    </div>
+                    <div className="mb-6 space-y-3">
+                        <SkipModeToggle />
+                        <DeliveryScheduleEditor />
                     </div>
                     <AnnouncementsEditor />
                     <AdminPanel

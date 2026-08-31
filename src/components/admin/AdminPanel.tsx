@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { Check, Loader2, Plus, Trash2, GripVertical, Eye, EyeOff, Copy, ChevronDown, ChevronRight, Camera, ChevronUp, CopyPlus } from "lucide-react";
+import { Check, Loader2, Plus, Trash2, GripVertical, Eye, EyeOff, Copy, ChevronDown, ChevronRight, Camera, ChevronUp, CopyPlus, X, ChevronLeft } from "lucide-react";
 import { Product } from "@/types/microcms";
 import {
     DndContext,
@@ -1516,7 +1516,7 @@ function FamilyDescription({ description, family, variations, category, badges, 
 }
 
 // ── ギャラリースロット（ドラッグ可能） ──────────────────────────
-function SortableGallerySlot({ url, onRemove }: { url: string; onRemove: () => void }) {
+function SortableGallerySlot({ url, onRemove, onPreview }: { url: string; onRemove: () => void; onPreview: () => void }) {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: url });
     const style = {
         transform: CSS.Transform.toString(transform),
@@ -1526,10 +1526,22 @@ function SortableGallerySlot({ url, onRemove }: { url: string; onRemove: () => v
     };
     return (
         <div ref={setNodeRef} style={style} className="relative flex-shrink-0 touch-none">
+            {/*
+                ドラッグ（並び替え）とクリック（拡大）を同じ要素で兼ねる。
+                PointerSensor の activationConstraint が distance:5 なので、
+                指を動かさない単純なクリックではドラッグが始まらず onClick だけが発火する。
+            */}
             <div
                 {...attributes}
                 {...listeners}
-                className="w-10 h-10 rounded-lg border border-stone-200 overflow-hidden cursor-grab active:cursor-grabbing"
+                onClick={onPreview}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onPreview(); }
+                }}
+                title="クリックで拡大 / ドラッグで並び替え"
+                className="w-10 h-10 rounded-lg border border-stone-200 overflow-hidden cursor-grab active:cursor-grabbing hover:border-primary/60 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors"
             >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={url} alt="" className="w-full h-full object-cover pointer-events-none" />
@@ -1542,12 +1554,92 @@ function SortableGallerySlot({ url, onRemove }: { url: string; onRemove: () => v
     );
 }
 
-// ── ファミリーギャラリー（最大5枚・ドラッグ並び替え）────────────────
+// ── 画像の拡大プレビュー ────────────────────────────────────
+function ImagePreviewModal({ images, index, onClose, onNavigate }: {
+    images: string[];
+    index: number;
+    onClose: () => void;
+    onNavigate: (nextIndex: number) => void;
+}) {
+    // Esc で閉じる／左右キーで送る。開いている間は背面のスクロールを止める。
+    useEffect(() => {
+        const onKey = (e: KeyboardEvent) => {
+            if (e.key === "Escape") onClose();
+            else if (e.key === "ArrowRight") onNavigate((index + 1) % images.length);
+            else if (e.key === "ArrowLeft") onNavigate((index - 1 + images.length) % images.length);
+        };
+        window.addEventListener("keydown", onKey);
+        const prevOverflow = document.body.style.overflow;
+        document.body.style.overflow = "hidden";
+        return () => {
+            window.removeEventListener("keydown", onKey);
+            document.body.style.overflow = prevOverflow;
+        };
+    }, [index, images.length, onClose, onNavigate]);
+
+    const url = images[index];
+    if (!url) return null;
+
+    return (
+        <div
+            className="fixed inset-0 z-[300] bg-black/80 flex items-center justify-center p-4"
+            onClick={onClose}
+            role="dialog"
+            aria-modal="true"
+            aria-label="画像プレビュー"
+        >
+            <button
+                onClick={onClose}
+                aria-label="閉じる"
+                className="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/90 hover:bg-white text-stone-700 flex items-center justify-center shadow"
+            >
+                <X className="w-5 h-5" />
+            </button>
+
+            {images.length > 1 && (
+                <>
+                    <button
+                        onClick={(e) => { e.stopPropagation(); onNavigate((index - 1 + images.length) % images.length); }}
+                        aria-label="前の画像"
+                        className="absolute left-3 md:left-6 w-10 h-10 rounded-full bg-white/85 hover:bg-white text-stone-700 flex items-center justify-center shadow"
+                    >
+                        <ChevronLeft className="w-6 h-6" />
+                    </button>
+                    <button
+                        onClick={(e) => { e.stopPropagation(); onNavigate((index + 1) % images.length); }}
+                        aria-label="次の画像"
+                        className="absolute right-3 md:right-6 w-10 h-10 rounded-full bg-white/85 hover:bg-white text-stone-700 flex items-center justify-center shadow"
+                    >
+                        <ChevronRight className="w-6 h-6" />
+                    </button>
+                </>
+            )}
+
+            {/* 画像そのものをクリックしても閉じないようにする */}
+            <div className="flex flex-col items-center gap-3" onClick={(e) => e.stopPropagation()}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                    src={url}
+                    alt=""
+                    className="max-w-[92vw] max-h-[80vh] object-contain rounded-lg shadow-2xl bg-white"
+                />
+                <div className="text-white/90 text-xs tabular-nums">
+                    {index + 1} / {images.length}
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// ── ファミリーギャラリー（最大10枚・ドラッグ並び替え）────────────────
+const MAX_GALLERY_IMAGES = 10;
+
 function FamilyGallery({ familyImages, onUpdate }: {
     familyImages: string[];
     onUpdate: (images: string[]) => void;
 }) {
     const [uploading, setUploading] = useState(false);
+    const [previewIndex, setPreviewIndex] = useState<number | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const gallerySensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
@@ -1575,7 +1667,7 @@ function FamilyGallery({ familyImages, onUpdate }: {
                 return;
             }
             const { url } = await res.json();
-            onUpdate([...familyImages, url].slice(0, 5));
+            onUpdate([...familyImages, url].slice(0, MAX_GALLERY_IMAGES));
         } catch (err) {
             alert(`アップロードエラー: ${err}`);
         } finally {
@@ -1584,7 +1676,7 @@ function FamilyGallery({ familyImages, onUpdate }: {
         }
     };
 
-    const emptyCount = Math.max(0, 5 - familyImages.length);
+    const emptyCount = Math.max(0, MAX_GALLERY_IMAGES - familyImages.length);
 
     return (
         <div className="flex items-center gap-2 px-4 py-2 border-b border-stone-100 bg-stone-50/40">
@@ -1597,6 +1689,7 @@ function FamilyGallery({ familyImages, onUpdate }: {
                                 key={url}
                                 url={url}
                                 onRemove={() => onUpdate(familyImages.filter((_, idx) => idx !== i))}
+                                onPreview={() => setPreviewIndex(i)}
                             />
                         ))}
                     </SortableContext>
@@ -1618,8 +1711,17 @@ function FamilyGallery({ familyImages, onUpdate }: {
                     </button>
                 ))}
             </div>
-            <span className="text-xs text-stone-300">{familyImages.length}/5</span>
+            <span className="text-xs text-stone-300">{familyImages.length}/{MAX_GALLERY_IMAGES}</span>
             <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+
+            {previewIndex !== null && (
+                <ImagePreviewModal
+                    images={familyImages}
+                    index={previewIndex}
+                    onClose={() => setPreviewIndex(null)}
+                    onNavigate={setPreviewIndex}
+                />
+            )}
         </div>
     );
 }

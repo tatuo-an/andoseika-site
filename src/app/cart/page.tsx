@@ -48,11 +48,12 @@ function findRegionRow(prefecture: string, rows: ShippingRow[]): ShippingRow | n
 function findBaseRow(rows: ShippingRow[]): ShippingRow | null {
     return rows.length ? rows[rows.length - 1] : null;
 }
+// 「150g x3」のように商品名に個数指定(x3, ×3)が含まれる場合は、その個数分を重量に乗算する。
 function extractWeightG(name: string): number {
-    const kg = name.match(/(\d+(?:\.\d+)?)\s*kg/i);
-    if (kg) return parseFloat(kg[1]) * 1000;
-    const g = name.match(/(\d+(?:\.\d+)?)\s*g(?!l)/i);
-    if (g) return parseFloat(g[1]);
+    const kg = name.match(/(\d+(?:\.\d+)?)\s*kg(?:\s*[x×]\s*(\d+))?/i);
+    if (kg) return parseFloat(kg[1]) * 1000 * (kg[2] ? parseInt(kg[2], 10) : 1);
+    const g = name.match(/(\d+(?:\.\d+)?)\s*g(?!l)(?:\s*[x×]\s*(\d+))?/i);
+    if (g) return parseFloat(g[1]) * (g[2] ? parseInt(g[2], 10) : 1);
     return 0;
 }
 function weightToShipSize(totalG: number): string {
@@ -214,9 +215,11 @@ export default function CartPage() {
         if (totalWeightG <= 0) return null;
         const family = [...cartFamilies][0];
         const variants = inventory.filter(v => v.family === family);
-        const match = variants.find(v => extractWeightG(v.name) === totalWeightG && v.price !== null);
+        // 該当重量の候補が複数ある場合はどれが正しいか判別できないため、マッチさせない（安全側）
+        const candidates = variants.filter(v => extractWeightG(v.name) === totalWeightG && v.price !== null);
+        if (candidates.length !== 1) return null;
         if (variants.length === 1 && cartItems.length === 1 && cartItems[0].quantity === 1) return null;
-        return match ?? null;
+        return candidates[0];
     })();
     const matchedInv = matchedVariant ? inventory.find(v => v.id === matchedVariant.id) : null;
     const matchedIsCompact = matchedInv?.shipType === "compact";
@@ -274,7 +277,6 @@ export default function CartPage() {
     // 計算結果（preview）をそのまま表示に使う。preview 読み込み中は 0 表示。
     const itemsBodyShown = preview?.itemsBodyShown ?? 0;
     const shipFeeShown = preview?.shipFeeShown ?? 0;
-    const profitShown = preview?.profitShown ?? 0;
     const surchargeTaxed = preview?.surchargeTaxed ?? 0;
     const coolFeeTaxed = preview?.coolFeeTaxed ?? 0;
     const optionsAdjustmentTaxed = preview?.optionsAdjustmentTaxed ?? 0;
@@ -464,7 +466,11 @@ export default function CartPage() {
                                     </div>
                                     <div className="flex-1 space-y-1">
                                         <h3 className="font-bold text-stone-900">{item.name}</h3>
-                                        <p className="text-sm text-stone-500">¥{display.toLocaleString()}</p>
+                                        {preview ? (
+                                            <p className="text-sm text-stone-500">¥{display.toLocaleString()}</p>
+                                        ) : (
+                                            <p className="text-sm text-stone-400 animate-pulse">価格を計算中…</p>
+                                        )}
                                         <div className="flex items-center gap-3 pt-2">
                                             <div className="flex items-center border border-stone-200 rounded-full">
                                                 <button onClick={() => decrementItem(item.id)} className="p-1 hover:bg-stone-100 rounded-l-full">
@@ -709,22 +715,27 @@ export default function CartPage() {
 
                     {/* 合計 */}
                     <div className="bg-white rounded-2xl shadow-sm p-6 mb-6 space-y-2 text-sm">
-                        <div className="bg-stone-100/60 rounded-lg p-3 space-y-1">
-                            <p className="text-stone-500 font-medium text-xs mb-1">内訳</p>
-                            <div className="flex justify-between text-stone-600"><span>商品本体価格</span><span>¥{itemsBodyShown.toLocaleString()}</span></div>
-                            {shipFeeShown > 0 && <div className="flex justify-between text-stone-600"><span>送料({shipTypeLabel(effectiveShipType)})</span><span>¥{shipFeeShown.toLocaleString()}</span></div>}
-                            {profitShown > 0 && <div className="flex justify-between text-stone-600"><span>サービス料</span><span>¥{profitShown.toLocaleString()}</span></div>}
-                        </div>
-                        {tierDiscountAmount > 0 && <div className="flex justify-between text-emerald-600 font-medium"><span>🌿 {tierName}割引（{Math.round(tierDiscountRate * 100)}%OFF・セール品除く）</span><span>−¥{tierDiscountAmount.toLocaleString()}</span></div>}
-                        {saleDiscountTaxed > 0 && <div className="flex justify-between text-red-500 font-medium"><span>セール割引</span><span>−¥{saleDiscountTaxed.toLocaleString()}</span></div>}
-                        {effectivePointsToUse > 0 && <div className="flex justify-between text-yellow-600 font-medium"><span>⭐ ポイント割引</span><span>−¥{effectivePointsToUse.toLocaleString()}</span></div>}
-                        {optionsAdjustmentTaxed !== 0 && <div className={`flex justify-between ${optionsAdjustmentTaxed < 0 ? "text-emerald-600" : "text-orange-600"} font-medium`}><span>オプション調整</span><span>{optionsAdjustmentTaxed > 0 ? "+" : "−"}¥{Math.abs(optionsAdjustmentTaxed).toLocaleString()}</span></div>}
-                        {isExtraRegion && surchargeTaxed > 0 && <div className="flex justify-between text-orange-600"><span>追加送料({regionRow!.region})</span><span>+¥{surchargeTaxed.toLocaleString()}</span></div>}
-                        {coolFeeTaxed > 0 && <div className="flex justify-between text-blue-600"><span>❄ クール便</span><span>+¥{coolFeeTaxed.toLocaleString()}</span></div>}
-                        <div className="flex items-center justify-between text-lg font-bold text-stone-900 border-t border-stone-200 pt-3 mt-3">
-                            <span>お支払い合計</span>
-                            <span>¥{grandTotal.toLocaleString()}<span className="text-xs font-normal text-stone-500 ml-1">(税込)</span></span>
-                        </div>
+                        {!preview ? (
+                            <div className="text-stone-400 animate-pulse py-2">金額を計算中…</div>
+                        ) : (
+                            <>
+                                <div className="bg-stone-100/60 rounded-lg p-3 space-y-1">
+                                    <p className="text-stone-500 font-medium text-xs mb-1">内訳</p>
+                                    <div className="flex justify-between text-stone-600"><span>商品本体価格</span><span>¥{itemsBodyShown.toLocaleString()}</span></div>
+                                    {shipFeeShown > 0 && <div className="flex justify-between text-stone-600"><span>送料({shipTypeLabel(effectiveShipType)})</span><span>¥{shipFeeShown.toLocaleString()}</span></div>}
+                                </div>
+                                {tierDiscountAmount > 0 && <div className="flex justify-between text-emerald-600 font-medium"><span>🌿 {tierName}割引（{Math.round(tierDiscountRate * 100)}%OFF・セール品除く）</span><span>−¥{tierDiscountAmount.toLocaleString()}</span></div>}
+                                {saleDiscountTaxed > 0 && <div className="flex justify-between text-red-500 font-medium"><span>セール割引</span><span>−¥{saleDiscountTaxed.toLocaleString()}</span></div>}
+                                {effectivePointsToUse > 0 && <div className="flex justify-between text-yellow-600 font-medium"><span>⭐ ポイント割引</span><span>−¥{effectivePointsToUse.toLocaleString()}</span></div>}
+                                {optionsAdjustmentTaxed !== 0 && <div className={`flex justify-between ${optionsAdjustmentTaxed < 0 ? "text-emerald-600" : "text-orange-600"} font-medium`}><span>オプション調整</span><span>{optionsAdjustmentTaxed > 0 ? "+" : "−"}¥{Math.abs(optionsAdjustmentTaxed).toLocaleString()}</span></div>}
+                                {isExtraRegion && surchargeTaxed > 0 && <div className="flex justify-between text-orange-600"><span>追加送料({regionRow!.region})</span><span>+¥{surchargeTaxed.toLocaleString()}</span></div>}
+                                {coolFeeTaxed > 0 && <div className="flex justify-between text-blue-600"><span>❄ クール便</span><span>+¥{coolFeeTaxed.toLocaleString()}</span></div>}
+                                <div className="flex items-center justify-between text-lg font-bold text-stone-900 border-t border-stone-200 pt-3 mt-3">
+                                    <span>お支払い合計</span>
+                                    <span>¥{grandTotal.toLocaleString()}<span className="text-xs font-normal text-stone-500 ml-1">(税込)</span></span>
+                                </div>
+                            </>
+                        )}
                     </div>
 
                     {skipMode && (

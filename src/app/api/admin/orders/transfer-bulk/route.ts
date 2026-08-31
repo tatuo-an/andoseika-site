@@ -18,11 +18,60 @@ function getSheets() {
   return google.sheets({ version: "v4", auth: authClient });
 }
 
+const PEAR_SHEET = "（予約）梨";
+const PEAR_EXTRA_HEADERS = ["転記日", "売上No"];
+
+// 梨（新甘泉・二十世紀）注文の判定。王秋・あたごは現時点未対応のため対象に含めない。
+function isPearOrder(name: string): boolean {
+  if (!/梨|なし/.test(name)) return false;
+  return /新甘泉|しんかんせん|二十世紀|20世紀|にじっせいき/.test(name);
+}
+
 function classifySheet(productName: string): string {
   if (productName.includes("洗い")) return "（予約）洗い";
   if (productName.includes("根付き")) return "（予約）根付";
   if (productName.includes("メロン")) return "（予約）メロン";
+  if (isPearOrder(productName)) return PEAR_SHEET;
   return "売上データ";
+}
+
+function pearPrefix(name: string): string {
+  if (/新甘泉|しんかんせん/.test(name)) return "I";
+  if (/二十世紀|20世紀|にじっせいき/.test(name)) return "J";
+  return "";
+}
+
+// 梨専用のフルコード決定ルール（ando-seika-gas の CSV取込ロジックに準拠）。
+//
+// サイトの注文管理シートに入る商品名は「梨 小玉 新甘泉」「梨 中玉 新甘泉」のような表記で、
+// 「訳あり」や「2kg」という文字列は含まれない。以前は /訳あり/ にしかマッチせず、
+// 重量も読めないため全ての梨が I3（正品3kg）として転記されていた。
+// 玉サイズの表記（小玉/中玉/バラ）も訳あり品として扱う。
+//
+//   梨 小玉 新甘泉 -> I2WS （新甘泉 訳あり 小 2kg）
+//   梨 中玉 新甘泉 -> I2WM （新甘泉 訳あり 中 2kg）
+//   訳あり 5kg 新甘泉 バラ -> I5WB
+function pearFullCode(name: string): string {
+  const prefix = pearPrefix(name);
+  if (!prefix) return "";
+
+  const kgMatch = name.match(/(\d+)\s*kg/i);
+
+  // 訳あり（＝玉サイズ指定のある選果外品）かどうか
+  if (/訳あり|わけあり|小玉|中玉|バラ/.test(name)) {
+    // 重量表記があればそれを使い、無ければ 2kg（訳あり品の標準パック）
+    const weight = kgMatch ? kgMatch[1] : "2";
+    // 商品マスタに存在する訳ありコードは 2kg が WS/WM/WB の3種、5kg は WB のみ。
+    // そのため 5kg 以上はバラ(WB)に寄せる（I5WS/I5WM はマスタに無く、
+    // 引き当てに失敗すると規格・重量・発送方法が空欄で転記されてしまう）。
+    const size = /バラ/.test(name) || Number(weight) >= 5
+      ? "WB"
+      : /中玉|中/.test(name) ? "WM" : "WS";
+    return `${prefix}${weight}${size}`;
+  }
+
+  const weight = kgMatch ? kgMatch[1] : "3"; // 重量が読み取れなければ3kgデフォルト
+  return `${prefix}${weight}`;
 }
 
 function matchToFullCode(name: string): string {
@@ -271,7 +320,7 @@ export async function POST(req: NextRequest) {
   // 注文管理シートを1回読み込み
   const orderRes = await sheets.spreadsheets.values.get({
     spreadsheetId,
-    range: `${ORDER_SHEET}!A:P`,
+    range: `${ORDER_SHEET}!A:R`,
   });
   const orderRows = orderRes.data.values ?? [];
 
@@ -320,6 +369,97 @@ export async function POST(req: NextRequest) {
     return { row, no };
   }
 
+  // 「（予約）梨」シートのヘッダーを確保する。存在しない/空の場合は
+  // 「売上データ」と同じ列構成＋「転記日」「売上No」を末尾に加えて新規作成する。
+  let pearHeadersCache: string[] | null = null;
+  async function ensurePearHeaders(): Promise<string[]> {
+    if (pearHeadersCache) return pearHeadersCache;
+    const existing = await sheets.spreadsheets.values.get({
+      spreadsheetId: salesSheetId,
+      range: `${PEAR_SHEET}!1:1`,
+    }).catch(() => null);
+    const existingHeaders = (existing?.data.values?.[0] ?? []).map((v) => String(v)).filter(Boolean);
+    if (existingHeaders.length > 0) {
+      pearHeadersCache = existingHeaders;
+      return existingHeaders;
+    }
+
+    const salesHeadersRes = await sheets.spreadsheets.values.get({
+      spreadsheetId: salesSheetId,
+      range: "売上データ!1:1",
+    });
+    const salesHeaders = (salesHeadersRes.data.values?.[0] ?? []).map((v) => String(v));
+    const newHeaders = [...salesHeaders, ...PEAR_EXTRA_HEADERS];
+
+    try {
+      await sheets.spreadsheets.batchUpdate({
+        spreadsheetId: salesSheetId,
+        requestBody: { requests: [{ addSheet: { properties: { title: PEAR_SHEET } } }] },
+      });
+    } catch {
+      // シートが既に存在する場合はエラーになるが無視してよい
+    }
+    await sheets.spreadsheets.values.update({
+      spreadsheetId: salesSheetId,
+      range: `${PEAR_SHEET}!A1:${columnIndexToLetter(newHeaders.length)}1`,
+      valueInputOption: "USER_ENTERED",
+      requestBody: { values: [newHeaders] },
+    });
+    pearHeadersCache = newHeaders;
+    return newHeaders;
+  }
+
+  // 予約No（N0001形式）と次の書き込み行をキャッシュしながら採番する。
+  let pearNextRow: number | null = null;
+  let pearNextNoNum: number | null = null;
+  async function getNextPearRowAndNo(): Promise<{ row: number; no: string }> {
+    if (pearNextRow === null || pearNextNoNum === null) {
+      const colA = await sheets.spreadsheets.values.get({
+        spreadsheetId: salesSheetId,
+        range: `${PEAR_SHEET}!A:A`,
+      }).catch(() => null);
+      const rows = colA?.data.values ?? [];
+      pearNextRow = rows.length + 1;
+      let maxN = 0;
+      for (const r of rows.slice(1)) {
+        const m = String(r[0] ?? "").match(/^N(\d+)$/);
+        if (m) {
+          const n = parseInt(m[1], 10);
+          if (n > maxN) maxN = n;
+        }
+      }
+      pearNextNoNum = maxN + 1;
+    }
+    const row = pearNextRow;
+    const no = `N${String(pearNextNoNum).padStart(4, "0")}`;
+    pearNextRow += 1;
+    pearNextNoNum += 1;
+    return { row, no };
+  }
+
+  // 「（予約）梨」シート内に同じ注文番号の行が既にないか確認する（重複防止）。
+  // バッチ内で複数件処理する場合に備え、一度読み込んだ結果はSetにキャッシュして使い回す。
+  let pearExistingOrderNumbers: Set<string> | null = null;
+  async function pearOrderAlreadyExists(headers: string[], orderNumberToCheck: string): Promise<boolean> {
+    if (pearExistingOrderNumbers === null) {
+      const colIdx = headers.indexOf("注文番号");
+      pearExistingOrderNumbers = new Set();
+      if (colIdx >= 0) {
+        const colLetter = columnIndexToLetter(colIdx + 1);
+        const res = await sheets.spreadsheets.values.get({
+          spreadsheetId: salesSheetId,
+          range: `${PEAR_SHEET}!${colLetter}:${colLetter}`,
+        }).catch(() => null);
+        const values = res?.data.values ?? [];
+        for (const r of values.slice(1)) {
+          const v = String(r[0] ?? "").trim();
+          if (v) pearExistingOrderNumbers.add(v);
+        }
+      }
+    }
+    return pearExistingOrderNumbers.has(orderNumberToCheck);
+  }
+
   const results: BulkResult[] = [];
   const ts = new Date().toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" });
   const logUpdates: { range: string; values: string[][] }[] = [];
@@ -358,13 +498,91 @@ export async function POST(req: NextRequest) {
     const saleDateRaw = createdAt.split(/[ \t]/)[0];
     const saleDate = normalizeDate(saleDateRaw, new Date().getFullYear());
     const saleMonth = normalizeMonth(saleDate);
+    const fallbackYear = saleDate ? parseInt(saleDate.slice(0, 4), 10) : new Date().getFullYear();
 
+    // 梨（新甘泉・二十世紀）専用の振り分け（ando-seika-gas の CSV取込ロジックに準拠）。
+    // 通常品とはフルコード決定・No採番・発送方法の取得元が異なるため別処理にしている。
+    if (targetSheet === PEAR_SHEET) {
+      const pearHeaders = await ensurePearHeaders();
+
+      const alreadyRegistered = await pearOrderAlreadyExists(pearHeaders, orderNumber);
+      if (alreadyRegistered && !force) {
+        results.push({ orderNumber, status: "skipped", message: `${PEAR_SHEET}に登録済み` });
+        continue;
+      }
+
+      const fullCode = pearFullCode(rawProductName);
+      const masterEntry = fullCode && productMaster[fullCode] ? productMaster[fullCode] : null;
+      const productName = masterEntry?.["商品名"] || cleanedName;
+      const categoryVal = masterEntry?.["商品カテゴリ"] || "";
+      const specVal = masterEntry?.["規格表示"] || "";
+      const weightVal = masterEntry?.["重量kg"] || "";
+      const shipMethodFromMaster = masterEntry?.["発送方法"] || "";
+
+      // 数量に応じた箱サイズ自動アップグレードは未実装のため、仕様の代替案どおり
+      // 数量分を1件（数量1）ずつの行に分けて登録する（発送方法は商品マスタの値をそのまま使う）。
+      const unitAmount = qty > 0 ? Math.round(amount / qty) : amount;
+      const unitCount = Math.max(1, qty);
+      let transferError: string | null = null;
+
+      for (let i = 0; i < unitCount; i++) {
+        const { row: nextRow, no: nextNo } = await getNextPearRowAndNo();
+        const weightDisplay = specVal || (weightVal ? `${weightVal}kg` : "");
+        const contentWithNo = weightDisplay
+          ? `${nextNo} ${productName} ${weightDisplay}`
+          : `${nextNo} ${productName}`;
+
+        const valueMap: Record<string, string | number> = {
+          "No": nextNo, "No.": nextNo,
+          "販売日": saleDate, "販売月": saleMonth, "販売先コード": custCode, "販売先名": custName, "販売先": custName,
+          "フルコード": fullCode, "商品カテゴリ": categoryVal, "商品名": productName, "規格表示": specVal, "重量kg": weightVal, "内容品": contentWithNo,
+          "数量": 1, "販売価格": unitAmount, "発送予定日": "", "発送月": "", "発送方法": shipMethodFromMaster,
+          "時間指定": desiredTime, "購入者名": customerName, "入力者": "サイト", "備考": `[CSV:${orderNumber}]`,
+          "登録タイムスタンプ": ts, "注文番号": orderNumber, "受注番号": sessionId, "取込元": custName,
+          "郵便番号": zip, "都道府県": pref, "市区町村": cityVal, "町・番地": streetVal, "建物名": "",
+          "配送先住所": fullAddress, "電話番号": phone,
+          "配送希望日": desiredDate ? normalizeDate(desiredDate, fallbackYear) : "",
+          "ステータス": "予約中",
+          "転記日": "", "売上No": "",
+        };
+        const newRow = pearHeaders.map((h) => valueMap[h] ?? "");
+
+        try {
+          await sheets.spreadsheets.values.update({
+            spreadsheetId: salesSheetId,
+            range: `${PEAR_SHEET}!A${nextRow}:${columnIndexToLetter(pearHeaders.length)}${nextRow}`,
+            valueInputOption: "USER_ENTERED",
+            requestBody: { values: [newRow] },
+          });
+        } catch (err) {
+          console.error(`[bulk-transfer] ${orderNumber} 失敗（梨・${i + 1}/${unitCount}件目）`, err);
+          transferError = String(err);
+          break;
+        }
+      }
+
+      if (transferError) {
+        results.push({ orderNumber, status: "error", message: transferError });
+      } else {
+        const transferLog = `転記済 ${ts.split(" ")[0]} ${PEAR_SHEET}`;
+        logUpdates.push({
+          range: `${ORDER_SHEET}!P${rowIndex + 1}:P${rowIndex + 1}`,
+          values: [[transferLog]],
+        });
+        results.push({ orderNumber, status: "transferred", targetSheet: PEAR_SHEET, productName, qty, amount });
+      }
+      continue;
+    }
+
+    // R列（発送方法）に「送料（クリックポスト）」等の明細名がそのまま入っている。
+    // 旧データ（R列導入前）向けに、念のため商品名からの抽出もフォールバックとして残す。
+    const shipMethodSource = String(row[17] ?? "").trim();
     let shipMethodRaw = "";
-    const shipMethodMatch = rawProductName.match(/送料[（(]([^）)]+)[）)]/);
+    const shipMethodMatch = (shipMethodSource || rawProductName).match(/送料[（(]([^）)]+)[）)]/);
     if (shipMethodMatch) shipMethodRaw = shipMethodMatch[1];
+    else if (shipMethodSource) shipMethodRaw = shipMethodSource.replace(/^送料\s*/, "");
     const shipMethod = normalizeShipMethod(shipMethodRaw);
 
-    const fallbackYear = saleDate ? parseInt(saleDate.slice(0, 4), 10) : new Date().getFullYear();
     const shipDate = normalizeDate(estimatedDate || desiredDate, fallbackYear);
     const shipMonth = normalizeMonth(shipDate);
 

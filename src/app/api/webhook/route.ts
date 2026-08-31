@@ -61,7 +61,7 @@ async function appendToOrderSheet(values: string[][]) {
   const nextRow = (a.data.values?.length ?? 0) + 1;
   await sheets.spreadsheets.values.update({
     spreadsheetId,
-    range: `注文管理!A${nextRow}:Q${nextRow + values.length - 1}`,
+    range: `注文管理!A${nextRow}:R${nextRow + values.length - 1}`,
     valueInputOption: "USER_ENTERED",
     requestBody: { values },
   });
@@ -272,6 +272,11 @@ export async function POST(req: NextRequest) {
       .map((item) => item.description ?? "")
       .filter((desc) => desc && !isFeeLine(desc))
       .join(", ");
+    // 発送方法は「送料」行の明細名（例:「送料（クリックポスト）」）に含まれているが、
+    // 上記フィルタで商品名からは除外されるため、売上シート転記用に別途保持しておく。
+    const shipMethodLabel = lineItems.data
+      .map((item) => item.description ?? "")
+      .find((desc) => /^送料/.test(desc.trim())) ?? "";
 
     // 購入者名（Apple Pay 等の海外順を正規化）
     const buyerName = name ? normalizeJapaneseName(name) : "";
@@ -283,11 +288,11 @@ export async function POST(req: NextRequest) {
       // 注文管理: A=注文番号, B=作成日時, C=送り先氏名, D=メール, E=電話, F=住所,
       //           G=商品名, H=金額, I=ステータス, J=セッションID, K=希望配達日,
       //           L=希望時間帯, M=問題内容, N=受取完了日時, O=お届け予定日,
-      //           P=売上転記履歴, Q=購入者氏名
+      //           P=売上転記履歴, Q=購入者氏名, R=発送方法
       await appendToOrderSheet([[
         orderNumber, now, shippingName || buyerName, email, phone, address,
         productNames, amount, orderStatus, sessionId, desiredDate, desiredTime,
-        "", "", estimatedDate, "", buyerName,
+        "", "", estimatedDate, "", buyerName, shipMethodLabel,
       ]]);
       console.log("[webhook] order recorded:", orderNumber, sessionId, "status:", orderStatus);
 

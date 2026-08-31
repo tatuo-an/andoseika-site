@@ -3,6 +3,8 @@
 // 価格・原価・利益率・セール率・オプション金額は必ずサーバーで取得した商品在庫（inventory）から参照し、
 // クライアントから送られてくる価格情報は一切使用しない。
 
+import { getEffectiveSalePercent } from "@/lib/sale";
+
 export type ShippingRow = {
     region: string; prefectures: string;
     s60: number; s80: number; s100: number; s120: number;
@@ -23,6 +25,8 @@ export type InvItem = {
     profitRate?: number | null;
     options?: string;
     salePercent?: number;
+    saleStart?: string; // YYYY-MM-DD
+    saleEnd?: string;   // YYYY-MM-DD
 };
 
 export type OptionEntry = { label: string; amount: number };
@@ -53,11 +57,14 @@ export function findBaseRow(rows: ShippingRow[]): ShippingRow | null {
     return rows.length ? rows[rows.length - 1] : null;
 }
 
+// 「150g x3」のように商品名に個数指定(x3, ×3)が含まれる場合は、その個数分を重量に乗算する。
+// これを無視すると、3本セット商品が同ファミリー内の単品(150g)と重量が一致してしまい、
+// 誤って単品バリエーションの価格で計算される不具合につながる。
 export function extractWeightG(name: string): number {
-    const kg = name.match(/(\d+(?:\.\d+)?)\s*kg/i);
-    if (kg) return parseFloat(kg[1]) * 1000;
-    const g = name.match(/(\d+(?:\.\d+)?)\s*g(?!l)/i);
-    if (g) return parseFloat(g[1]);
+    const kg = name.match(/(\d+(?:\.\d+)?)\s*kg(?:\s*[x×]\s*(\d+))?/i);
+    if (kg) return parseFloat(kg[1]) * 1000 * (kg[2] ? parseInt(kg[2], 10) : 1);
+    const g = name.match(/(\d+(?:\.\d+)?)\s*g(?!l)(?:\s*[x×]\s*(\d+))?/i);
+    if (g) return parseFloat(g[1]) * (g[2] ? parseInt(g[2], 10) : 1);
     return 0;
 }
 
@@ -144,16 +151,18 @@ export function computeCartPricing(params: {
     tierDiscountRate: number;
     pointsBalance: number;
     pointsToUse: number;
+    seasonalDiscountPercent?: number; // 現在有効な季節セールの割引率（商品個別セールとは二重取りせず高い方を採用）
 }): PricingResult {
-    const { cartLines, inventory, shippingRows, prefecture, selectedOptionKeys, coolRequested, tierDiscountRate, pointsBalance, pointsToUse } = params;
+    const { cartLines, inventory, shippingRows, prefecture, selectedOptionKeys, coolRequested, tierDiscountRate, pointsBalance, pointsToUse, seasonalDiscountPercent = 0 } = params;
 
     const cartItems = cartLines
         .map(line => {
             const inv = inventory.find(v => v.id === line.id);
             if (!inv || inv.price === null) return null;
-            return { ...inv, price: inv.price, quantity: Math.max(1, Math.floor(line.quantity)) };
+            const effectivePercent = getEffectiveSalePercent(inv.salePercent ?? 0, inv.saleStart ?? "", inv.saleEnd ?? "", seasonalDiscountPercent);
+            return { ...inv, price: inv.price, quantity: Math.max(1, Math.floor(line.quantity)), salePercent: effectivePercent };
         })
-        .filter((x): x is InvItem & { price: number; quantity: number } => x !== null);
+        .filter((x): x is InvItem & { price: number; quantity: number; salePercent: number } => x !== null);
 
     const regionRow = prefecture ? findRegionRow(prefecture, shippingRows) : null;
     const baseRow = findBaseRow(shippingRows);
@@ -170,9 +179,11 @@ export function computeCartPricing(params: {
         if (totalWeightG <= 0) return null;
         const family = [...cartFamilies][0];
         const variants = inventory.filter(v => v.family === family);
-        const match = variants.find(v => extractWeightG(v.name) === totalWeightG && v.price !== null);
+        // 該当重量の候補が複数ある場合はどれが正しいか判別できないため、マッチさせない（安全側）
+        const candidates = variants.filter(v => extractWeightG(v.name) === totalWeightG && v.price !== null);
+        if (candidates.length !== 1) return null;
         if (variants.length === 1 && cartItems.length === 1 && cartItems[0].quantity === 1) return null;
-        return match ?? null;
+        return candidates[0];
     })();
     const matchedIsCompact = matchedVariant?.shipType === "compact";
 

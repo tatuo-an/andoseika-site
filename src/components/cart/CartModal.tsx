@@ -32,11 +32,12 @@ function findBaseRow(rows: ShippingRow[]): ShippingRow | null {
 }
 
 // 商品名から重量(g)を抽出
+// 「150g x3」のように商品名に個数指定(x3, ×3)が含まれる場合は、その個数分を重量に乗算する。
 function extractWeightG(name: string): number {
-    const kg = name.match(/(\d+(?:\.\d+)?)\s*kg/i);
-    if (kg) return parseFloat(kg[1]) * 1000;
-    const g = name.match(/(\d+(?:\.\d+)?)\s*g(?!l)/i); // "g"のみ (glは除外)
-    if (g) return parseFloat(g[1]);
+    const kg = name.match(/(\d+(?:\.\d+)?)\s*kg(?:\s*[x×]\s*(\d+))?/i);
+    if (kg) return parseFloat(kg[1]) * 1000 * (kg[2] ? parseInt(kg[2], 10) : 1);
+    const g = name.match(/(\d+(?:\.\d+)?)\s*g(?!l)(?:\s*[x×]\s*(\d+))?/i); // "g"のみ (glは除外)
+    if (g) return parseFloat(g[1]) * (g[2] ? parseInt(g[2], 10) : 1);
     return 0;
 }
 
@@ -199,11 +200,13 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
         if (totalWeightG <= 0) return null;
         const family = [...cartFamilies][0];
         const variants = inventory.filter(v => v.family === family);
-        const match = variants.find(v => extractWeightG(v.name) === totalWeightG && v.price !== null);
+        // 該当重量の候補が複数ある場合はどれが正しいか判別できないため、マッチさせない（安全側）
+        const candidates = variants.filter(v => extractWeightG(v.name) === totalWeightG && v.price !== null);
+        if (candidates.length !== 1) return null;
         // バリエーションが1つだけのファミリーでは、合計重量がそのバリエーションと一致するときのみマッチ扱いだが、
         // 「ファミリーに同じ重量の他バリエーションが無い場合」はマッチ不要なのでスキップ
         if (variants.length === 1 && cartItems.length === 1 && cartItems[0].quantity === 1) return null;
-        return match ?? null;
+        return candidates[0];
     })();
 
     // 単体×nでマッチした場合はそのバリエーションの配送区分を優先する
@@ -347,7 +350,11 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                                 </div>
                                 <div className="flex-1 space-y-1">
                                     <h3 className="font-bold text-stone-900">{item.name}</h3>
-                                    <p className="text-sm text-stone-500">¥{itemDisplayPrice(item.id).toLocaleString()}</p>
+                                    {preview ? (
+                                        <p className="text-sm text-stone-500">¥{itemDisplayPrice(item.id).toLocaleString()}</p>
+                                    ) : (
+                                        <p className="text-sm text-stone-400 animate-pulse">価格を計算中…</p>
+                                    )}
                                     <div className="flex items-center gap-3 pt-2">
                                         <div className="flex items-center border border-stone-200 rounded-full">
                                             <button onClick={() => decrementItem(item.id)} className="p-1 hover:bg-stone-100 rounded-l-full">
@@ -372,7 +379,12 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                 {cartCount! > 0 && (
                     <div className="p-6 border-t border-stone-100 bg-stone-50 space-y-3">
                         {/* 内訳表示 */}
-                        {addressLoaded && (() => {
+                        {addressLoaded && !preview && (
+                            <div className="text-sm text-stone-400 animate-pulse py-2">
+                                金額を計算中…
+                            </div>
+                        )}
+                        {addressLoaded && preview && (() => {
                             // 単品購入時価格の合計（税込・セール反映）
                             const singlePurchaseTotal = cartItems.reduce((sum, item) => {
                                 return sum + itemDisplayPrice(item.id) * item.quantity;
@@ -409,12 +421,6 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                                             <div className="flex justify-between text-stone-600">
                                                 <span>送料（{shipTypeLabel(effectiveShipType)}）</span>
                                                 <span>¥{shipFeeShown.toLocaleString()}</span>
-                                            </div>
-                                        )}
-                                        {profitShown > 0 && (
-                                            <div className="flex justify-between text-stone-600">
-                                                <span>サービス料</span>
-                                                <span>¥{profitShown.toLocaleString()}</span>
                                             </div>
                                         )}
                                     </div>
@@ -512,7 +518,11 @@ export function CartModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
 
                         <div className="flex items-center justify-between text-lg font-bold text-stone-900 border-t border-stone-200 pt-3">
                             <span>お支払い合計</span>
-                            <span>¥{grandTotal.toLocaleString()}<span className="text-xs font-normal text-stone-500 ml-1">（税込）</span></span>
+                            {preview ? (
+                                <span>¥{grandTotal.toLocaleString()}<span className="text-xs font-normal text-stone-500 ml-1">（税込）</span></span>
+                            ) : (
+                                <span className="text-sm font-normal text-stone-400 animate-pulse">計算中…</span>
+                            )}
                         </div>
 
                         <Link
