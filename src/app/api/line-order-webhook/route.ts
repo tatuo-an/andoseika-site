@@ -405,7 +405,7 @@ async function processIncomingMessage(event: LineEvent) {
 
   const session = (await getAiSession(sessionKey)) || { row: -1, status: "collecting", data: {} };
 
-  if (session.status === "confirming" && /^(はい|ok|お願いします|うん|そうです)/i.test(text.trim())) {
+  if (session.status === "confirming" && /^(はい|ok|お願いします|うん|そうです|了解|オッケー|おっけー|大丈夫|よろしく)/i.test(text.trim())) {
     const summary = await finalizeAiOrder(
       session.data as { items: { name: string; quantity: number }[]; deliveryDate?: string },
       event.source || {}
