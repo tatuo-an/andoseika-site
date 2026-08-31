@@ -114,6 +114,10 @@ const FAQ_ITEMS = [
         a: "月額プランは3ヶ月を1つの区切りとしています。3ヶ月経過したあとは、いつでも解約いただけます。",
     },
     {
+        q: "買い切りの場合、納品後の費用はかかりますか",
+        a: "毎月の費用はかかりません。不具合対応や修正のご依頼があった場合だけ、都度お見積りで別途料金をいただきます。",
+    },
+    {
         q: "写真はスマホで撮ったものでいいですか",
         a: "はい。スマホで撮った写真を送っていただければ十分です。",
     },
@@ -511,47 +515,14 @@ export default function AiConsultingPage() {
                             </Link>
                         </div>
 
-                        <p className="text-stone-700 text-sm mb-4 text-center">
-                            相談のあとは、次の4段階から選べます。
+                        <p className="text-stone-700 text-sm mb-2 text-center">
+                            相談のあとは、月額プランからお選びいただけます。
+                        </p>
+                        <p className="text-stone-900 text-sm font-bold mb-4 text-center">
+                            初期構築費は不要です（月額に含まれています）。
                         </p>
 
-                        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-                            <div className="bg-white rounded-2xl border border-stone-200 p-6">
-                                <p className="text-sm font-bold text-stone-500 mb-2">最初の土台づくり</p>
-                                <p className="text-sm font-bold text-stone-900 mb-1">初期構築</p>
-                                <p className="text-2xl font-bold text-stone-900 mb-2">
-                                    10
-                                    <span className="text-sm font-normal text-stone-500 ml-1">
-                                        万円（税込・買い切り）
-                                    </span>
-                                </p>
-                                <p className="text-stone-700 text-sm leading-relaxed mb-4">
-                                    SNSアカウント設計と公式LINE構築を一式で行います。ここまでは1回きりの費用です。
-                                </p>
-
-                                <p className="text-sm font-bold text-stone-500 mb-2">含まれるもの</p>
-                                <ul className="space-y-1.5 mb-4">
-                                    {[
-                                        "SNSアカウントの設計・プロフィール文づくり",
-                                        "公式LINEの開設・あいさつ配信・リッチメニュー",
-                                        "毎日の投稿が自動で回る仕組みの構築",
-                                        "店頭のLINE登録案内の作成",
-                                        "初週の投稿づくり",
-                                    ].map((text) => (
-                                        <li
-                                            key={text}
-                                            className="flex items-start gap-2 text-stone-700 text-sm leading-relaxed"
-                                        >
-                                            <span className="text-stone-400 flex-shrink-0">・</span>
-                                            <span>{text}</span>
-                                        </li>
-                                    ))}
-                                </ul>
-
-                                <p className="text-stone-600 text-sm leading-relaxed border-t border-stone-100 pt-3">
-                                    作った仕組みは、解約後もお店に残ります。
-                                </p>
-                            </div>
+                        <div className="grid md:grid-cols-3 gap-4">
                             <div className="bg-white rounded-2xl border border-stone-200 p-6">
                                 <p className="text-sm font-bold text-stone-500 mb-2">投稿代行のみ</p>
                                 <p className="text-sm font-bold text-stone-900 mb-1">ライト</p>
@@ -652,6 +623,59 @@ export default function AiConsultingPage() {
                         <p className="text-stone-600 text-sm mt-6 text-center">
                             最初にご協力いただくお店には、モニター特別条件をご用意しています。
                         </p>
+
+                        {/* 買い切り「初期構築おまかせパック」: 月額プランとは別枠 */}
+                        <div className="max-w-2xl mx-auto mt-14 pt-10 border-t border-stone-300">
+                            <p className="text-center text-sm font-bold text-stone-500 mb-2">
+                                月額契約はせず、仕組みだけ作ってほしい方へ
+                            </p>
+                            <h3 className="text-center text-xl font-bold text-stone-900 font-heading mb-6">
+                                初期構築おまかせパック
+                            </h3>
+
+                            <div className="bg-white rounded-2xl border border-stone-200 p-6 md:p-8">
+                                <p className="text-2xl font-bold text-stone-900 mb-2">
+                                    10
+                                    <span className="text-sm font-normal text-stone-500 ml-1">
+                                        万円（税込・買い切り）
+                                    </span>
+                                </p>
+                                <p className="text-stone-700 text-sm leading-relaxed mb-4">
+                                    SNSアカウント設計と公式LINE構築を一式で仕上げて納品します。月額契約は不要です。
+                                </p>
+
+                                <p className="text-sm font-bold text-stone-500 mb-2">含まれるもの</p>
+                                <ul className="space-y-1.5 mb-4">
+                                    {[
+                                        "SNSアカウントの設計・プロフィール文づくり",
+                                        "公式LINEの開設・あいさつ配信・リッチメニュー",
+                                        "毎日の投稿が自動で回る仕組みの構築",
+                                        "店頭のLINE登録案内の作成",
+                                        "初週の投稿づくり",
+                                    ].map((text) => (
+                                        <li
+                                            key={text}
+                                            className="flex items-start gap-2 text-stone-700 text-sm leading-relaxed"
+                                        >
+                                            <span className="text-stone-400 flex-shrink-0">・</span>
+                                            <span>{text}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+
+                                <div className="border-t border-stone-100 pt-3 space-y-2">
+                                    <p className="text-stone-600 text-sm leading-relaxed">
+                                        作った仕組みは、納品後もずっとお店のものです。
+                                    </p>
+                                    <p className="text-stone-600 text-sm leading-relaxed">
+                                        納品後の不具合対応・修正のご依頼は、都度お見積り（別途料金）になります。
+                                    </p>
+                                    <p className="text-stone-600 text-sm leading-relaxed">
+                                        あとから月3万円の運用サポート（ライトプラン）を追加することもできます。
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </section>
 
