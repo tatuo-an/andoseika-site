@@ -114,6 +114,10 @@ const FAQ_ITEMS = [
         a: "月額プランは3ヶ月を1つの区切りとしています。3ヶ月経過したあとは、いつでも解約いただけます。",
     },
     {
+        q: "SNSアカウントを持っていなくても頼めますか",
+        a: "はい。新規開設からお受けします。その場合のみ初期設定費＋3万円をいただきます。開設直後のアカウントは慎重に扱う必要があるため、最初の1週間はこちらが手動で丁寧に運用します。",
+    },
+    {
         q: "買い切りの場合、納品後の費用はかかりますか",
         a: "毎月の費用はかかりません。不具合対応や修正のご依頼があった場合だけ、都度お見積りで別途料金をいただきます。",
     },
@@ -408,10 +412,11 @@ export default function AiConsultingPage() {
                         <div className="max-w-sm mx-auto mt-10">
                             <div className="rounded-2xl overflow-hidden border border-stone-200 shadow-sm">
                                 <Image
-                                    src="/images/experience/beekeeping.jpg"
-                                    alt="実際に養蜂をしている安藤本人。鳥取県北栄町の巣箱にて。"
+                                    src="/images/ai/ando-beekeeping.jpg"
+                                    alt="実際に養蜂をしている安藤本人。巣板を持ち上げているところ。"
                                     width={1280}
                                     height={1280}
+                                    sizes="384px"
                                     className="w-full h-auto"
                                 />
                             </div>
@@ -518,8 +523,11 @@ export default function AiConsultingPage() {
                         <p className="text-stone-700 text-sm mb-2 text-center">
                             相談のあとは、月額プランからお選びいただけます。
                         </p>
-                        <p className="text-stone-900 text-sm font-bold mb-4 text-center">
-                            初期構築費は不要です（月額に含まれています）。
+                        <p className="text-stone-900 text-sm font-bold mb-1 text-center">
+                            SNSアカウントをすでにお持ちの場合、初期構築費は不要です（月額に含まれています）。
+                        </p>
+                        <p className="text-stone-600 text-sm mb-4 text-center">
+                            新規でアカウント開設が必要な場合のみ、初期設定費＋3万円をいただきます（アカウント開設と、安全に育てるための初週の手動運用まで込み）。
                         </p>
 
                         <div className="grid md:grid-cols-3 gap-4">
@@ -529,8 +537,16 @@ export default function AiConsultingPage() {
                                 <p className="text-2xl font-bold text-stone-900 mb-2">
                                     3<span className="text-sm font-normal text-stone-500 ml-1">万円（税込・月額）</span>
                                 </p>
-                                <p className="text-stone-700 text-sm leading-relaxed">
+                                <p className="text-stone-700 text-sm leading-relaxed mb-3">
                                     投稿代行のみ。写真を送っていただければ、あとは形にして投稿します。
+                                </p>
+                                <p className="text-sm text-stone-500">対応SNS</p>
+                                <p className="text-stone-700 text-sm leading-relaxed mb-2">
+                                    Facebook・Instagram・Threads（Meta3媒体）
+                                </p>
+                                <p className="text-sm text-stone-500">投稿頻度</p>
+                                <p className="text-stone-700 text-sm leading-relaxed">
+                                    毎日（1日2投稿が基本。同じ内容を3媒体へ展開）
                                 </p>
                             </div>
                             <div className="bg-primary/5 rounded-2xl border-2 border-primary p-6 relative">
@@ -542,8 +558,16 @@ export default function AiConsultingPage() {
                                 <p className="text-2xl font-bold text-stone-900 mb-2">
                                     5<span className="text-sm font-normal text-stone-500 ml-1">万円（税込・月額）</span>
                                 </p>
-                                <p className="text-stone-700 text-sm leading-relaxed mb-4">
+                                <p className="text-stone-700 text-sm leading-relaxed mb-3">
                                     投稿代行に加えて、公式LINEの配信と月1回の数字報告まで行います。
+                                </p>
+                                <p className="text-sm text-stone-500">対応SNS</p>
+                                <p className="text-stone-700 text-sm leading-relaxed mb-2">
+                                    上記のMeta3媒体に加えて、X・YouTube（計5媒体）
+                                </p>
+                                <p className="text-sm text-stone-500">投稿頻度</p>
+                                <p className="text-stone-700 text-sm leading-relaxed mb-4">
+                                    毎日（1日2投稿が基本）＋公式LINE配信＋月1回の数字報告
                                 </p>
                                 <Link
                                     href="/contact/personal?subject=sns-line"
@@ -559,8 +583,12 @@ export default function AiConsultingPage() {
                                     10
                                     <span className="text-sm font-normal text-stone-500 ml-1">万円（税込・月額）</span>
                                 </p>
-                                <p className="text-stone-700 text-sm leading-relaxed">
+                                <p className="text-stone-700 text-sm leading-relaxed mb-3">
                                     コメント対応やキャンペーンの企画まで、まるごとお任せいただけます。
+                                </p>
+                                <p className="text-sm text-stone-500">対応SNS</p>
+                                <p className="text-stone-700 text-sm leading-relaxed">
+                                    上記に加えてブログ（noteなど）。ご希望があればTikTok・LinkedInなどにも対応します。
                                 </p>
                             </div>
                         </div>
@@ -587,6 +615,19 @@ export default function AiConsultingPage() {
                                     </tr>
                                 </thead>
                                 <tbody>
+                                    <tr className="border-t border-stone-100">
+                                        <th
+                                            scope="row"
+                                            className="p-2 md:p-3 text-left font-normal text-stone-700"
+                                        >
+                                            対応SNS
+                                        </th>
+                                        <td className="p-2 md:p-3 text-center text-stone-700">Meta3つ</td>
+                                        <td className="p-2 md:p-3 text-center font-bold text-primary bg-primary/5">
+                                            +X・YouTube
+                                        </td>
+                                        <td className="p-2 md:p-3 text-center text-stone-700">+ブログ・希望SNS</td>
+                                    </tr>
                                     {[
                                         { label: "投稿代行", light: true, standard: true, full: true },
                                         { label: "公式LINE配信", light: false, standard: true, full: true },
