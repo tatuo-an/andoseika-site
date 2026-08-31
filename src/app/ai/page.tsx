@@ -119,7 +119,7 @@ const FAQ_ITEMS = [
     },
     {
         q: "買い切りの場合、納品後の費用はかかりますか",
-        a: "毎月の費用はかかりません。不具合対応や修正のご依頼があった場合だけ、都度お見積りで別途料金をいただきます。",
+        a: "当社への毎月の支払いはありません。仕組みを動かすAIツールの利用料（月3,000円ほど）だけ、お店でのご契約が必要です。不具合対応や修正のご依頼があった場合は、都度お見積りで別途料金をいただきます。",
     },
     {
         q: "写真はスマホで撮ったものでいいですか",
@@ -718,6 +718,9 @@ export default function AiConsultingPage() {
                                 <div className="border-t border-stone-100 pt-3 space-y-2">
                                     <p className="text-stone-600 text-sm leading-relaxed">
                                         作った仕組みは、納品後もずっとお店のものです。
+                                    </p>
+                                    <p className="text-stone-600 text-sm leading-relaxed">
+                                        ※仕組みを動かすためのAIツールの利用料（月3,000円ほど・お店でのご契約）が別途かかります。いちばん安いプランで足りる設計にし、契約のお手伝いもこちらでやります。
                                     </p>
                                     <p className="text-stone-600 text-sm leading-relaxed">
                                         納品後の不具合対応・修正のご依頼は、都度お見積り（別途料金）になります。
