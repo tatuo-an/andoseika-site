@@ -1,5 +1,6 @@
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { MobileStickyCta } from "@/components/ai/MobileStickyCta";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -14,9 +15,25 @@ import {
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-    title: "SNS運用代行・公式LINE構築 AND U｜安藤青果",
+    title: {
+        absolute:
+            "SNS運用代行・公式LINE構築 AND U｜写真を送るだけ、あとはこちらで回します",
+    },
     description:
-        "写真を送るだけ。SNSと公式LINEの運用を、鳥取で農業と養蜂をやる安藤自身が毎日回している仕組みで代行します。AND U（アンドユー）の無料相談で、今の状況をお聞かせください。",
+        "鳥取の店舗向けSNS運用代行・公式LINE構築。写真を送るだけで、投稿とLINE配信をこちらが毎日回します。実測29.2万表示の実績あり。AND U（アンドユー）の無料相談で、今の状況をお聞かせください。",
+    openGraph: {
+        title: "SNS運用代行・公式LINE構築 AND U｜写真を送るだけ、あとはこちらで回します",
+        description:
+            "鳥取の店舗向けSNS運用代行・公式LINE構築。写真を送るだけで、投稿とLINE配信をこちらが毎日回します。実測29.2万表示の実績あり。",
+        images: [
+            {
+                url: "/images/about/founders.jpg",
+                width: 1024,
+                height: 1024,
+                alt: "AND U運営責任者 安藤匡志",
+            },
+        ],
+    },
 };
 
 const LECTURE_PLAYLIST_URL =
@@ -246,6 +263,7 @@ export default function AiConsultingPage() {
                         </div>
                     </div>
                 </section>
+                <div id="hero-end-sentinel" />
 
                 {/* 2. 悩み共感（店主の生活の言葉） */}
                 <section className="py-16 md:py-20 bg-white">
@@ -507,8 +525,31 @@ export default function AiConsultingPage() {
                                         万円（税込・買い切り）
                                     </span>
                                 </p>
-                                <p className="text-stone-700 text-sm leading-relaxed">
+                                <p className="text-stone-700 text-sm leading-relaxed mb-4">
                                     SNSアカウント設計と公式LINE構築を一式で行います。ここまでは1回きりの費用です。
+                                </p>
+
+                                <p className="text-sm font-bold text-stone-500 mb-2">含まれるもの</p>
+                                <ul className="space-y-1.5 mb-4">
+                                    {[
+                                        "SNSアカウントの設計・プロフィール文づくり",
+                                        "公式LINEの開設・あいさつ配信・リッチメニュー",
+                                        "毎日の投稿が自動で回る仕組みの構築",
+                                        "店頭のLINE登録案内の作成",
+                                        "初週の投稿づくり",
+                                    ].map((text) => (
+                                        <li
+                                            key={text}
+                                            className="flex items-start gap-2 text-stone-700 text-sm leading-relaxed"
+                                        >
+                                            <span className="text-stone-400 flex-shrink-0">・</span>
+                                            <span>{text}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+
+                                <p className="text-stone-600 text-sm leading-relaxed border-t border-stone-100 pt-3">
+                                    作った仕組みは、解約後もお店に残ります。
                                 </p>
                             </div>
                             <div className="bg-white rounded-2xl border border-stone-200 p-6">
@@ -901,7 +942,9 @@ export default function AiConsultingPage() {
                 </section>
             </main>
 
+            <div id="footer-sentinel" />
             <Footer />
+            <MobileStickyCta />
         </div>
     );
 }
