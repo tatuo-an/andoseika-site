@@ -239,6 +239,9 @@ export default function AiConsultingPage() {
                                         <p className="text-sm text-stone-500 mt-1">Threads最高記録</p>
                                     </div>
                                 </div>
+                                <p className="text-stone-600 text-sm text-center mt-3">
+                                    この運用を、あなたのお店の分まで代行します。
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -548,6 +551,61 @@ export default function AiConsultingPage() {
                                     コメント対応やキャンペーンの企画まで、まるごとお任せいただけます。
                                 </p>
                             </div>
+                        </div>
+
+                        <p className="text-sm font-bold text-stone-500 text-center mt-10 mb-3">
+                            プラン比較
+                        </p>
+                        <div className="max-w-md mx-auto overflow-hidden rounded-2xl border border-stone-200 bg-white">
+                            <table className="w-full table-fixed border-collapse text-sm">
+                                <thead>
+                                    <tr className="bg-stone-50">
+                                        <th scope="col" className="w-[34%] p-2 md:p-3 text-left font-normal text-stone-500">
+                                            {""}
+                                        </th>
+                                        <th scope="col" className="p-2 md:p-3 text-center font-bold text-stone-700">
+                                            ライト
+                                        </th>
+                                        <th scope="col" className="p-2 md:p-3 text-center font-bold text-primary bg-primary/5">
+                                            スタンダード
+                                        </th>
+                                        <th scope="col" className="p-2 md:p-3 text-center font-bold text-stone-700">
+                                            おまかせフル
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {[
+                                        { label: "投稿代行", light: true, standard: true, full: true },
+                                        { label: "公式LINE配信", light: false, standard: true, full: true },
+                                        { label: "月1数字報告", light: false, standard: true, full: true },
+                                        {
+                                            label: "コメント対応・企画",
+                                            light: false,
+                                            standard: false,
+                                            full: true,
+                                        },
+                                    ].map((row) => (
+                                        <tr key={row.label} className="border-t border-stone-100">
+                                            <th
+                                                scope="row"
+                                                className="p-2 md:p-3 text-left font-normal text-stone-700"
+                                            >
+                                                {row.label}
+                                            </th>
+                                            <td className="p-2 md:p-3 text-center text-stone-700">
+                                                {row.light ? "○" : <span className="text-stone-300">—</span>}
+                                            </td>
+                                            <td className="p-2 md:p-3 text-center font-bold text-primary bg-primary/5">
+                                                {row.standard ? "○" : <span className="text-stone-300">—</span>}
+                                            </td>
+                                            <td className="p-2 md:p-3 text-center text-stone-700">
+                                                {row.full ? "○" : <span className="text-stone-300">—</span>}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
                         </div>
 
                         <p className="text-stone-600 text-sm mt-6 text-center">
