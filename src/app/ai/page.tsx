@@ -232,7 +232,7 @@ function PlanCompareTable({ title, rows }: { title: string; rows: PlanRow[] }) {
                                     </span>
                                 )}
                                 <p
-                                    className={`font-bold leading-tight ${
+                                    className={`text-xs sm:text-sm whitespace-nowrap tracking-tight font-bold leading-tight ${
                                         plan.featured ? "text-primary" : "text-stone-700"
                                     }`}
                                 >
