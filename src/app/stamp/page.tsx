@@ -40,7 +40,7 @@ export const metadata: Metadata = {
 // 依頼主のお子さんの写真を使った作例（9スタイル分・制作済み）は、
 // 石村さんの掲載許可が下り次第 true にする。切り替え方法: この1行の値を true に変更するだけ。
 // false の間は、蜂・クマムシなど自社スタンプの作例で「作れる雰囲気」だけを見せる。
-const ORDER_SAMPLE_CONSENT_GRANTED = false;
+const ORDER_SAMPLE_CONSENT_GRANTED = true;
 
 const LINE_ADD_FRIEND_URL = "https://lin.ee/WfeFzfF";
 const ORDER_FORM_URL =
