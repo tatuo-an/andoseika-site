@@ -40,6 +40,24 @@ function getSheets() {
     return google.sheets({ version: "v4", auth: authClient });
 }
 
+/**
+ * 在庫数だけを商品IDごとに引ける表。
+ * 値が空欄の行は「無制限」を意味するため null にして、在庫チェックの対象外にする。
+ */
+async function fetchStockMap(): Promise<Map<string, number | null>> {
+    const rows = await getInventoryRows();
+    const map = new Map<string, number | null>();
+    for (const r of rows.slice(1)) {
+        const id = (r[0] ?? "").trim();
+        if (!id) continue;
+        const raw = (r[2] ?? "").trim();
+        if (raw === "") { map.set(id, null); continue; }
+        const n = Number.parseInt(raw, 10);
+        map.set(id, Number.isFinite(n) ? n : null);
+    }
+    return map;
+}
+
 async function fetchInventory(): Promise<InvItem[]> {
     const rows = await getInventoryRows();
     return rows.slice(1)
@@ -175,6 +193,30 @@ export async function POST(req: NextRequest) {
         const unknownItem = cartLines.find((line) => !inventory.some((v) => v.id === line.id && v.price !== null));
         if (unknownItem) {
             return NextResponse.json({ error: "商品情報が見つかりませんでした。カートを更新して再度お試しください。" }, { status: 400 });
+        }
+
+        // 在庫が足りない注文は決済を作らせない。
+        // 決済後に在庫を減らす webhook 側の処理と対になっており、売り越しを防ぐためのもの。
+        // 在庫数が空欄＝無制限の商品は対象外。
+        const stockMap = await fetchStockMap();
+        const shortages = cartLines
+            .map((line) => ({ line, available: stockMap.get(line.id) }))
+            .filter((x): x is { line: (typeof cartLines)[number]; available: number } =>
+                typeof x.available === "number" && x.available < x.line.quantity);
+        if (shortages.length > 0) {
+            const detail = shortages
+                .map((x) => {
+                    const name = inventory.find((v) => v.id === x.line.id)?.name ?? x.line.id;
+                    return name + "（ご注文 " + x.line.quantity + " / 在庫 " + x.available + "）";
+                })
+                .join("、");
+            return NextResponse.json(
+                {
+                    error: "申し訳ありません。在庫が不足している商品があります: " + detail + "。カートの数量をご確認ください。",
+                    shortages: shortages.map((x) => ({ id: x.line.id, requested: x.line.quantity, available: x.available })),
+                },
+                { status: 409 },
+            );
         }
 
         const pricing = computeCartPricing({
@@ -321,7 +363,12 @@ export async function POST(req: NextRequest) {
 
         // 配送先住所が事前指定されている場合は Stripe 側で再入力させない
         const sessionParams: Stripe.Checkout.SessionCreateParams = {
-            payment_method_types: ["card"] as Stripe.Checkout.SessionCreateParams["payment_method_types"],
+            // payment_method_types を指定すると Stripe ダッシュボードの設定より優先され、
+            // ダッシュボードで有効にした手段（PayPay など）が決済画面に出てこない。
+            // 指定を外して、通貨・地域に応じた自動選択に任せる。
+            // JPY では card / link / paypay の3つに絞られることを実測で確認済み
+            // （bancontact や kakao_pay などの海外向けは対象通貨でないため出ない）。
+            // 手段を増やすときはダッシュボード側の操作だけで済む。
             ...(stripeCustomerId
                 ? { customer: stripeCustomerId }
                 : userEmail

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { parseCartItems, adjustStock } from "@/lib/stock";
 import { google } from "googleapis";
 import { auth } from "@/auth";
 import { isAdmin } from "@/lib/admin";
@@ -52,6 +53,18 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ ord
       ],
     },
   });
+
+  // 購入時に減らした在庫を戻す。
+  // 返金は成立しているので、在庫の書き戻しに失敗しても処理は止めない
+  // （在庫は管理画面から直せる）。
+  try {
+    const items = parseCartItems(checkoutSession.metadata?.cartItems ?? undefined);
+    const stockResult = await adjustStock(items, "increment");
+    console.log("[refund] 在庫を戻した:", stockResult.updated, "件",
+      stockResult.skipped.length ? "スキップ: " + stockResult.skipped.join(", ") : "");
+  } catch (stockErr) {
+    console.error("[refund] 在庫の戻しに失敗（返金は完了済み）", stockErr);
+  }
 
   return NextResponse.json({ ok: true, refundId: refund.id });
 }

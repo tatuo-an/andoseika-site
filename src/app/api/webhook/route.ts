@@ -4,6 +4,7 @@ import { google } from "googleapis";
 import { getTier } from "@/lib/tiers";
 import { sendOrderConfirmationEmail } from "@/lib/sendOrderEmail";
 import { sendOrderLineNotification } from "@/lib/sendOrderLine";
+import { parseCartItems, adjustStock } from "@/lib/stock";
 
 export const dynamic = "force-dynamic";
 
@@ -165,6 +166,19 @@ export async function POST(req: NextRequest) {
       }
     } catch (dupErr) {
       console.error("[webhook] duplicate check failed, proceeding cautiously", dupErr);
+    }
+
+    // 在庫を減らす。上の重複チェックを通過した時点で「この注文の初回処理」であることが
+    // 保証されているため、Stripe の再配信で二重に減ることはない。
+    // 在庫更新に失敗しても決済自体は成立しているので注文処理は止めない
+    // （在庫は管理画面から直せるが、注文が記録されないほうが被害が大きいため）。
+    try {
+      const items = parseCartItems((session.metadata ?? {}).cartItems);
+      const stockResult = await adjustStock(items, "decrement");
+      console.log("[webhook] 在庫を減算:", stockResult.updated, "件",
+        stockResult.skipped.length ? "スキップ: " + stockResult.skipped.join(", ") : "");
+    } catch (stockErr) {
+      console.error("[webhook] 在庫の減算に失敗（注文処理は続行）", stockErr);
     }
 
     const now = new Date().toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" });
