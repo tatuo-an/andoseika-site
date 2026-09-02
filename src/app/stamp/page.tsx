@@ -37,7 +37,8 @@ export const metadata: Metadata = {
     },
 };
 
-// 依頼主のお子さんの写真を使った作例は、石村さんの掲載許可が下り次第 true にする。
+// 依頼主のお子さんの写真を使った作例（9スタイル分・制作済み）は、
+// 石村さんの掲載許可が下り次第 true にする。切り替え方法: この1行の値を true に変更するだけ。
 // false の間は、蜂・クマムシなど自社スタンプの作例で「作れる雰囲気」だけを見せる。
 const ORDER_SAMPLE_CONSENT_GRANTED = false;
 
@@ -60,11 +61,15 @@ type OrderStyle = {
 };
 
 const ORDER_STYLES: OrderStyle[] = [
-    { id: "suisai", name: "水彩タッチ", desc: "やさしい絵本のような雰囲気" },
+    { id: "suisai", name: "水彩・手描き", desc: "やさしい絵本のような雰囲気" },
     { id: "amecomi", name: "アメコミ風", desc: "元気いっぱい、ポップな仕上がり" },
     { id: "showa", name: "昭和レトロ", desc: "どこか懐かしい、味のある一枚" },
     { id: "shonen-manga", name: "少年マンガ風", desc: "動きのある、勢いのある線" },
-    { id: "senga-bw", name: "線画モノクロ", desc: "シンプルで飽きのこない一枚" },
+    { id: "senga-bw", name: "線画・白黒", desc: "シンプルで飽きのこない一枚" },
+    { id: "moe", name: "萌え系", desc: "大きな瞳とやわらかい色合い" },
+    { id: "kaodeka", name: "顔デカ似顔絵", desc: "頭を大きく、特徴をぎゅっと似顔絵に" },
+    { id: "doubutsu", name: "動物化", desc: "本人そっくりの動物キャラに変身" },
+    { id: "yurukawa", name: "ゆるカワ", desc: "線も色数も少ない、脱力系の一枚" },
 ];
 
 const PRICE_ROWS: {
@@ -232,23 +237,30 @@ function OrderSampleGrid() {
                     </div>
                 </div>
                 <p className="text-center text-stone-500 text-xs mt-4">
-                    5つのタッチ（水彩・アメコミ風・昭和レトロ・少年マンガ風・線画）は、実際のご依頼写真での作例が公開できるようになり次第、ここに追加します。
+                    9つのタッチ（水彩・手描き／アメコミ／昭和レトロ／少年漫画／線画・白黒／萌え系／顔デカ似顔絵／動物化／ゆるカワ）は、実際のご依頼写真での作例が公開できるようになり次第、ここに追加します。
                 </p>
             </div>
         );
     }
 
     return (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 max-w-5xl mx-auto">
+        <div className="grid grid-cols-3 md:grid-cols-5 gap-4 max-w-5xl mx-auto">
             {ORDER_STYLES.map((style) => (
                 <div key={style.id} className="bg-white rounded-2xl border border-stone-200 overflow-hidden">
-                    <div className="p-3">
+                    <div className="relative p-3">
                         <Image
-                            src={`/images/stamp/orders/${style.id}/sample-a.png`}
+                            src={`/images/stamp/styles/${style.id}/01.png`}
                             alt={`${style.name}の作例`}
                             width={320}
                             height={320}
                             className="w-full h-auto"
+                        />
+                        <Image
+                            src={`/images/stamp/styles/${style.id}/08.png`}
+                            alt={`${style.name}の作例（2枚目）`}
+                            width={320}
+                            height={320}
+                            className="absolute bottom-1 right-1 w-1/3 h-auto rounded-lg border-2 border-white shadow"
                         />
                     </div>
                     <div className="px-3 pb-3">
@@ -395,10 +407,10 @@ export default function StampPage() {
                     <div className="container mx-auto px-4 md:px-6 max-w-5xl">
                         <div className="text-center mb-8">
                             <h2 className="text-2xl md:text-3xl font-bold text-stone-900 font-heading mb-4">
-                                タッチは5種類、選べます
+                                タッチは9種類、選べます
                             </h2>
                             <p className="text-stone-700 leading-relaxed max-w-2xl mx-auto">
-                                やさしい水彩から、元気なアメコミ風、懐かしい昭和レトロまで。
+                                やさしい水彩から、元気なアメコミ風、懐かしい昭和レトロ、動物キャラ化まで。
                                 お子さんやペットの雰囲気に合わせて選んでいただけます。
                             </p>
                         </div>
