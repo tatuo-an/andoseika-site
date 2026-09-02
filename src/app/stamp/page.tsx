@@ -139,6 +139,63 @@ const FAQ_ITEMS = [
     },
 ];
 
+const LINE_OFFICIAL_ID = "@500ngbml";
+
+function LineOfficialCard({ showRichMenu = false }: { showRichMenu?: boolean }) {
+    return (
+        <div className="bg-white rounded-2xl border border-stone-200 shadow-sm p-5 md:p-6 max-w-xl mx-auto">
+            <div className="flex flex-col md:flex-row items-center gap-5 md:gap-6">
+                <Link
+                    href={LINE_ADD_FRIEND_URL}
+                    className="flex-shrink-0 order-2 md:order-1"
+                    aria-label="公式LINEのQRコードから友だち追加"
+                >
+                    <Image
+                        src="/images/stamp/line-qr.png"
+                        alt="公式LINE友だち追加QRコード"
+                        width={160}
+                        height={160}
+                        className="w-24 h-24 md:w-40 md:h-40"
+                    />
+                </Link>
+                <div className="order-1 md:order-2 flex-1 text-center md:text-left space-y-3">
+                    <p className="text-stone-700 text-sm leading-relaxed">
+                        友だち追加すると、作例と料金がすぐ届きます
+                    </p>
+                    <Link href={LINE_ADD_FRIEND_URL} className="inline-block">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                            src="https://scdn.line-apps.com/n/line_add_friends/btn/ja.png"
+                            alt="友だち追加"
+                            className="h-10 md:h-9 w-auto mx-auto md:mx-0"
+                        />
+                    </Link>
+                    <p className="text-stone-500 text-xs">
+                        LINEでID検索する場合:{" "}
+                        <span className="font-bold text-stone-800 text-sm select-all">
+                            {LINE_OFFICIAL_ID}
+                        </span>
+                    </p>
+                </div>
+            </div>
+            {showRichMenu && (
+                <div className="mt-5 pt-5 border-t border-stone-100 text-center">
+                    <p className="text-stone-500 text-xs mb-2">
+                        登録するとこんなメニューが使えます
+                    </p>
+                    <Image
+                        src="/images/stamp/richmenu-v3.png"
+                        alt="公式LINEのリッチメニュー画面"
+                        width={480}
+                        height={324}
+                        className="w-full max-w-xs mx-auto h-auto rounded-lg border border-stone-200"
+                    />
+                </div>
+            )}
+        </div>
+    );
+}
+
 function BigCta({ label = "公式LINEを友だち追加する" }: { label?: string }) {
     return (
         <Link
@@ -257,6 +314,13 @@ export default function StampPage() {
                     </div>
                 </section>
                 <div id="hero-end-sentinel" />
+
+                {/* 1.5 公式LINE導線（ヒーロー直下） */}
+                <section className="py-10 md:py-14 bg-white border-b border-stone-100">
+                    <div className="container mx-auto px-4 md:px-6">
+                        <LineOfficialCard showRichMenu />
+                    </div>
+                </section>
 
                 {/* 2. 共感 */}
                 <section className="py-16 md:py-20 bg-white">
@@ -507,6 +571,10 @@ export default function StampPage() {
                             <span className="inline-flex items-center gap-1">
                                 <Clock3 className="h-4 w-4" /> 審査まで数日〜1週間
                             </span>
+                        </div>
+
+                        <div className="mt-10">
+                            <LineOfficialCard />
                         </div>
                     </div>
                 </section>
