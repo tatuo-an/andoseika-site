@@ -141,6 +141,9 @@ async function getWeeklySummaryColumns(): Promise<ProductColumn[]> {
 
 function matchSizeColumn(itemName: string, columns: ProductColumn[]): number {
   const name = itemName || "";
+  // 「規格外」は正規品とは別の特価扱いのため、通常グレード（小/大/優等）の単価と
+  // 混同してはいけない。商品リストに規格外専用の価格が無い限りは価格0（要手動確認）とする。
+  if (name.indexOf("規格外") >= 0) return -1;
   for (let i = 0; i < columns.length; i++) {
     if (name.indexOf(columns[i].name) >= 0) return i;
   }
@@ -232,7 +235,13 @@ type:"question"にしてよいのは、注文しようとしていることは�
 必ず次のJSON形式のみで回答してください。他の文章は一切含めないこと。
 {"type":"question"または"confirm"または"ignore", "message":"お客様への返信文（ignoreの場合は空文字列）", "data":{"items":[{"name":"品名","quantity":数量}],"deliveryDate":"YYYY-MM-DD"}}`;
 
-  const userPrompt = `これまでに分かっている内容: ${JSON.stringify(sessionData || {})}\n今回のメッセージ: ${newText}`;
+  // 配達日は木曜固定で毎回サーバー側が計算するため、古いセッションに残った
+  // deliveryDateをそのままClaudeに渡すと、それを鵜呑みにして日付がずれる事故につながる。
+  // プロンプトには渡さず、常にnextThursdayの指示のみに従わせる。
+  const sessionDataForPrompt = Object.assign({}, sessionData || {});
+  delete (sessionDataForPrompt as Record<string, unknown>).deliveryDate;
+
+  const userPrompt = `これまでに分かっている内容: ${JSON.stringify(sessionDataForPrompt)}\n今回のメッセージ: ${newText}`;
 
   try {
     const res = await anthropic.messages.create({
@@ -248,7 +257,11 @@ type:"question"にしてよいのは、注文しようとしていることは�
       .trim();
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) return null;
-    return JSON.parse(jsonMatch[0]) as ClaudeResult;
+    const parsed = JSON.parse(jsonMatch[0]) as ClaudeResult;
+    // 配達日はAIの出力を信用せず、常にサーバー計算値で上書きする（木曜固定・締切ロジックは
+    // ここでしか正しく計算できないため、AIが古い値を引きずるリスクを構造的に排除する）。
+    if (parsed.data) parsed.data.deliveryDate = nextThursday.iso;
+    return parsed;
   } catch (err) {
     console.error("[line-order-webhook] Claude API error", err);
     return null;
