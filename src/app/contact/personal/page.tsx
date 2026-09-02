@@ -15,6 +15,23 @@ export default async function PersonalContactPage({
 }) {
     const resolvedSearchParams = await searchParams;
     const isAiConsulting = resolvedSearchParams.subject === "ai-consulting";
+    const isSnsLine = resolvedSearchParams.subject === "sns-line";
+
+    const heading = isSnsLine
+        ? "SNS運用代行・公式LINE構築 無料相談 お申し込み"
+        : isAiConsulting
+            ? "AI仕組み化の無料相談 お申し込み"
+            : "個人のお客様 お問い合わせ";
+    const description = isSnsLine
+        ? "SNS運用代行・公式LINE構築の無料相談です。今のSNS・公式LINEの状況を、下の欄にそのままご記入ください。"
+        : isAiConsulting
+            ? "AIを使った業務仕組み化の無料相談です。今の仕事の悩みを、下の欄にそのままご記入ください。"
+            : "商品や体験に関するご質問など、お気軽にお問い合わせください。";
+    const defaultMessage = isSnsLine
+        ? "【SNS運用代行・公式LINE構築（AND U）の無料相談を希望します】\n\n店舗名：\n業種：\n今のSNS・公式LINEの状況：\n"
+        : isAiConsulting
+            ? "【AI仕組み化の無料相談を希望します】\n\n会社名：\n今困っている仕事：\n"
+            : undefined;
 
     return (
         <div className="min-h-screen flex flex-col font-sans bg-stone-50">
@@ -24,18 +41,16 @@ export default async function PersonalContactPage({
                 <div className="max-w-2xl mx-auto">
                     <div className="text-center mb-12">
                         <h1 className="text-3xl font-bold text-stone-900 mb-4 font-heading">
-                            {isAiConsulting ? "AI仕組み化の無料相談 お申し込み" : "個人のお客様 お問い合わせ"}
+                            {heading}
                         </h1>
                         <p className="text-stone-600">
-                            {isAiConsulting
-                                ? "AIを使った業務仕組み化の無料相談です。今の仕事の悩みを、下の欄にそのままご記入ください。"
-                                : "商品や体験に関するご質問など、お気軽にお問い合わせください。"}
+                            {description}
                         </p>
                     </div>
 
                     <PersonalContactForm
-                        defaultType={isAiConsulting ? "other" : undefined}
-                        defaultMessage={isAiConsulting ? "【AI仕組み化の無料相談を希望します】\n\n会社名：\n今困っている仕事：\n" : undefined}
+                        defaultType={isSnsLine || isAiConsulting ? "other" : undefined}
+                        defaultMessage={defaultMessage}
                     />
                 </div>
             </main>
