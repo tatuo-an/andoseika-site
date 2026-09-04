@@ -21,11 +21,11 @@ export const metadata: Metadata = {
         absolute: "あんどーのスタンプ＆SNS工房｜写真から、世界に1つのLINEスタンプ",
     },
     description:
-        "お子さん・ご家族・ペットの写真から、オリジナルのLINEスタンプを作ります。写真を送っていただくだけ。静止8個2,000円〜（LINEストアでのご購入は別途必要です）。鳥取で農業と養蜂をやっている安藤が、1件ずつ丁寧に作ります。",
+        "お子さん・ご家族・ペットの写真から、オリジナルのLINEスタンプを作ります。写真を送っていただくだけ。おためし静止8個1,000円〜（LINEストアでのご購入は別途必要です）。鳥取で農業と養蜂をやっている安藤が、1件ずつ丁寧に作ります。",
     openGraph: {
         title: "あんどーのスタンプ＆SNS工房｜写真から、世界に1つのLINEスタンプ",
         description:
-            "お子さん・ご家族・ペットの写真から、オリジナルのLINEスタンプを作ります。写真を送っていただくだけ。静止8個2,000円〜。",
+            "お子さん・ご家族・ペットの写真から、オリジナルのLINEスタンプを作ります。写真を送っていただくだけ。おためし静止8個1,000円〜。",
         images: [
             {
                 url: "/images/stamp/hero-bg.png",
@@ -72,25 +72,38 @@ const ORDER_STYLES: OrderStyle[] = [
     { id: "yurukawa", name: "ゆるカワ", desc: "線も色数も少ない、脱力系の一枚" },
 ];
 
+const TRIAL_PLAN = {
+    price: "1,000円",
+    points: [
+        "静止スタンプ8個",
+        "タッチは「ゆるカワ」固定（他8タッチは選べません）",
+        "セリフは定番8種の固定（おはよう／おやすみ／ありがとう／お疲れ様です／よろしくお願いします／OK！／がんばって／帰るよ）",
+        "修正なし・お一人1回限り",
+    ],
+};
+
 const PRICE_ROWS: {
     type: string;
     counts: { count: string; price: string }[];
+    bonus: string;
 }[] = [
     {
-        type: "静止スタンプ",
+        type: "静止スタンプ（カスタム）",
         counts: [
             { count: "8個", price: "2,000円" },
             { count: "16個", price: "3,000円" },
             { count: "24個", price: "4,000円" },
         ],
+        bonus: "おまけ：LINEアイコン用の丸画像1枚＋おうちで印刷できるシール台紙PDF",
     },
     {
-        type: "動くスタンプ",
+        type: "動くスタンプ（カスタム）",
         counts: [
             { count: "8個", price: "3,500円" },
             { count: "16個", price: "5,000円" },
             { count: "24個", price: "6,500円" },
         ],
+        bonus: "おまけ：LINEアイコン用の丸画像1枚＋シール台紙PDF＋トーク背景画像1枚",
     },
 ];
 
@@ -149,6 +162,10 @@ const FAQ_ITEMS = [
     {
         q: "複数パターンをまとめて頼むと安くなりますか",
         a: "はい。きょうだい分・パパ用ママ用など、2パターン目以降は1パターンにつき500円引きになります。まとめての依頼はフォームでそのまま選べます。",
+    },
+    {
+        q: "おためし1,000円と2,000円のカスタムは何が違いますか",
+        a: "おためし（1,000円）はタッチが「ゆるカワ」固定、セリフも定番8種の固定で、修正はできません。おまけ（アイコン画像・シール台紙）も付きません。まずは雰囲気を確かめたい方向けの、お一人1回限りのプランです。2,000円のカスタムはタッチ9種から選べて、セリフも自由に決められ、修正1回付き、おまけも付きます。",
     },
 ];
 
@@ -315,7 +332,7 @@ export default function StampPage() {
                                 写真を送っていただくだけ。あとはこちらで仕上げます。
                             </p>
                             <div className="flex flex-wrap items-center justify-center gap-2">
-                                {["写真を送るだけ", "静止8個2,000円〜", "審査対応込み"].map((tag) => (
+                                {["写真を送るだけ", "おためし静止8個1,000円〜", "審査対応込み"].map((tag) => (
                                     <span
                                         key={tag}
                                         className="inline-flex items-center rounded-full border border-stone-300 bg-white/90 px-3 py-1 text-sm font-medium text-stone-700"
@@ -435,6 +452,23 @@ export default function StampPage() {
                             </h2>
                         </div>
 
+                        <div className="bg-white rounded-2xl border-2 border-primary/40 overflow-hidden mb-4">
+                            <p className="bg-primary/10 px-4 py-2 font-bold text-stone-700 text-sm border-b border-primary/20">
+                                おためし（初回限定・お一人1回）
+                            </p>
+                            <div className="p-4 md:p-5">
+                                <p className="text-primary font-bold text-xl md:text-2xl">{TRIAL_PLAN.price}</p>
+                                <ul className="mt-3 space-y-1.5">
+                                    {TRIAL_PLAN.points.map((point) => (
+                                        <li key={point} className="flex items-start gap-2 text-stone-600 text-sm leading-relaxed">
+                                            <Check className="h-4 w-4 text-stone-400 flex-shrink-0 mt-0.5" />
+                                            <span>{point}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        </div>
+
                         <div className="space-y-4">
                             {PRICE_ROWS.map((row) => (
                                 <div key={row.type} className="bg-white rounded-2xl border border-stone-200 overflow-hidden">
@@ -449,6 +483,9 @@ export default function StampPage() {
                                             </div>
                                         ))}
                                     </div>
+                                    <p className="px-4 py-3 text-stone-600 text-xs md:text-sm leading-relaxed border-t border-stone-100 bg-stone-50">
+                                        {row.bonus}
+                                    </p>
                                 </div>
                             ))}
                         </div>
