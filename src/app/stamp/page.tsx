@@ -581,8 +581,26 @@ export default function StampPage() {
                             <div>
                                 <p className="font-bold text-stone-900">安藤</p>
                                 <p className="text-sm text-stone-600">
-                                    鳥取で農業と養蜂をやっています。自分の蜂スタンプも、この仕組みで作って売っています。
+                                    鳥取で農業と養蜂をやっています。Xはフォロワー1.5万人、Threadsでは蜂の投稿が1万いいねを超えることもあります。自分の蜂スタンプもこの仕組みで作って売っていて、注文いただいた分は1件ずつ私が仕上げています。
                                 </p>
+                                <div className="mt-2 flex flex-col sm:flex-row gap-x-4 gap-y-1">
+                                    <a
+                                        href="https://www.threads.com/@tacchan_nooen"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-xs text-primary underline underline-offset-2"
+                                    >
+                                        Threadsで蜂の投稿を見る
+                                    </a>
+                                    <a
+                                        href={LINE_STORE_AUTHOR_URL}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-xs text-primary underline underline-offset-2"
+                                    >
+                                        LINEストアで販売中のスタンプを見る
+                                    </a>
+                                </div>
                             </div>
                         </div>
                         <p className="text-stone-600 text-sm leading-relaxed mt-6">
@@ -639,33 +657,6 @@ export default function StampPage() {
                     </div>
                 </section>
 
-                {/* 10. 作っている人（控えめな補足欄） */}
-                <section className="py-10 bg-stone-50">
-                    <div className="container mx-auto px-4 md:px-6 max-w-2xl">
-                        <h3 className="text-sm font-bold text-stone-500 mb-2">作っている人</h3>
-                        <p className="text-sm text-stone-600 leading-relaxed">
-                            鳥取で農業と養蜂をやっている安藤です。Xはフォロワー1.5万人、Threadsでは蜂の投稿が1万いいねを超えることもあります。スタンプは1件ずつ、私が仕上げています。
-                        </p>
-                        <div className="mt-3 flex flex-col sm:flex-row gap-x-6 gap-y-1 text-sm">
-                            <a
-                                href="https://www.threads.com/@tacchan_nooen"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-primary underline underline-offset-2"
-                            >
-                                Threadsで蜂の投稿を見る
-                            </a>
-                            <a
-                                href={LINE_STORE_AUTHOR_URL}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-primary underline underline-offset-2"
-                            >
-                                LINEストアで販売中のスタンプを見る
-                            </a>
-                        </div>
-                    </div>
-                </section>
             </main>
 
             <div id="footer-sentinel" />
