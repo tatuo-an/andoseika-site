@@ -1,14 +1,18 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
 import Link from "next/link";
 import { X } from "lucide-react";
 
 export function GuestBanner() {
+  const pathname = usePathname();
   const { status } = useSession();
   const [closed, setClosed] = useState(false);
 
+  // /stamp（LINEスタンプLP）はCTAを1種類に絞るため出さない
+  if (pathname?.startsWith("/stamp")) return null;
   if (status === "loading" || status === "authenticated" || closed) return null;
 
   return (

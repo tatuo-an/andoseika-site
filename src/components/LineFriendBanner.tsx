@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
@@ -8,6 +9,7 @@ const LINE_FRIEND_URL = "https://lin.ee/xzQv9l5";
 const DISMISS_KEY = "lineFriendBannerDismissed_v1";
 
 export function LineFriendBanner() {
+  const pathname = usePathname();
   const { status } = useSession();
   const [isLineUser, setIsLineUser] = useState<boolean | null>(null);
   const [closed, setClosed] = useState(false);
@@ -34,6 +36,8 @@ export function LineFriendBanner() {
     }
   }
 
+  // /stamp（LINEスタンプLP）は導線を公式LINE1本に絞るため、別アカウントへのバナーを出さない
+  if (pathname?.startsWith("/stamp")) return null;
   if (status !== "authenticated" || !isLineUser || closed) return null;
 
   return (

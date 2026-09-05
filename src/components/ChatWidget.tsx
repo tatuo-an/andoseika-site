@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 import { X, Send, Loader2 } from "lucide-react";
 import Image from "next/image";
@@ -11,6 +12,7 @@ type Message = {
 };
 
 export function ChatWidget() {
+  const pathname = usePathname();
   const { status } = useSession();
   const isLoggedIn = status === "authenticated";
   const [open, setOpen] = useState(false);
@@ -103,6 +105,9 @@ export function ChatWidget() {
       sendMessage();
     }
   }
+
+  // /stamp（LINEスタンプLP）はCTAを公式LINE1本に絞るため表示しない
+  if (pathname?.startsWith("/stamp")) return null;
 
   return (
     <>
