@@ -12,7 +12,7 @@ export function GuestBanner() {
   const [closed, setClosed] = useState(false);
 
   // /stamp（LINEスタンプLP）はCTAを1種類に絞るため出さない
-  if (pathname?.startsWith("/stamp")) return null;
+  if (pathname?.startsWith("/stamp") || pathname?.startsWith("/ai")) return null;
   if (status === "loading" || status === "authenticated" || closed) return null;
 
   return (
