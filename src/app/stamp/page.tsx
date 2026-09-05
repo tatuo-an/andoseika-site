@@ -165,7 +165,7 @@ const PLANS: {
 const HONEST = [
     {
         t: "完成したあと、LINEストアでのご購入が別に必要です",
-        d: "静止スタンプ190円〜、動くスタンプ250円ほど。LINEが決めている価格で、うちの収入にはなりません。ご家族で使う場合は、使う方おひとりずつのご購入が必要です。",
+        d: "静止スタンプ190円〜、動くスタンプ250円。LINEが決めている価格で、制作料金とは別立てです。ご家族で使う場合は、使う方おひとりずつのご購入が必要です。",
     },
     {
         t: "LINEの審査に数日〜1週間かかります",
@@ -177,7 +177,7 @@ const HONEST = [
     },
     {
         t: "写真はご家族・ご自身・ペットのものだけでお願いします",
-        d: "お子さんの写真は保護者の方からお送りください。お預かりした写真はスタンプ制作にだけ使い、納品から30日を目安に削除します。第三者へお渡しすることはありません。作例としてお見せしたい場合は、その都度あらためて許可をいただきます。",
+        d: "お子さんの写真は保護者の方からお送りください。お預かりした写真はスタンプ制作にだけ使い、納品から30日以内に削除します。第三者へお渡しすることはありません。作例としてお見せしたい場合は、その都度あらためて許可をいただきます。",
     },
 ];
 
@@ -188,7 +188,7 @@ const FAQ: { q: string; a: string }[] = [
     },
     {
         q: "送った写真は、どう扱われますか",
-        a: "スタンプ制作にだけ使い、納品から30日を目安に削除します。ご依頼主さま以外の第三者へお渡しすることはありません。作例として他のお客さまにお見せしたい場合は、その都度あらためて許可をいただいてからにします。",
+        a: "スタンプ制作にだけ使い、納品から30日以内に削除します。ご依頼主さま以外の第三者へお渡しすることはありません。作例として他のお客さまにお見せしたい場合は、その都度あらためて許可をいただいてからにします。",
     },
     {
         q: "知らない人に見られたり、買われたりしませんか",
@@ -465,6 +465,8 @@ export default function StampPage() {
                         <p className="mt-6 text-[16px] leading-[1.8]">
                             <Link
                                 href={LINE_STORE_AUTHOR_URL}
+                                target="_blank"
+                                rel="noopener noreferrer"
                                 className="inline-flex min-h-11 items-center underline decoration-[#F2A900] decoration-2 underline-offset-4 hover:text-[#6B5E52] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2B2118]"
                             >
                                 LINEストアの作者ページを見る
@@ -476,12 +478,16 @@ export default function StampPage() {
                             <span className="mt-2 flex flex-wrap gap-x-6">
                                 <Link
                                     href={X_URL}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
                                     className="inline-flex min-h-11 items-center text-[#2B2118] underline decoration-[#F2A900] decoration-2 underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2B2118]"
                                 >
                                     Xのアカウントを見る
                                 </Link>
                                 <Link
                                     href={THREADS_URL}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
                                     className="inline-flex min-h-11 items-center text-[#2B2118] underline decoration-[#F2A900] decoration-2 underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2B2118]"
                                 >
                                     Threadsのアカウントを見る
@@ -687,12 +693,16 @@ export default function StampPage() {
                             <p className="mt-6 flex flex-col gap-2 text-[16px] leading-[1.8]">
                                 <Link
                                     href={THREADS_URL}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
                                     className="inline-flex min-h-11 items-center underline decoration-[#F2A900] decoration-2 underline-offset-4 hover:text-[#6B5E52] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2B2118]"
                                 >
                                     Threadsを見る
                                 </Link>
                                 <Link
                                     href={LINE_STORE_AUTHOR_URL}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
                                     className="inline-flex min-h-11 items-center underline decoration-[#F2A900] decoration-2 underline-offset-4 hover:text-[#6B5E52] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2B2118]"
                                 >
                                     LINEストアの作者ページを見る
@@ -739,7 +749,7 @@ export default function StampPage() {
                 <section className="px-4 pb-16 md:px-8 md:pb-24">
                     <div className="mx-auto max-w-3xl text-[13px] leading-[1.8] text-[#6B5E52]">
                         <p>
-                            お送りいただく写真は、ご家族・ご自身・ペットのものに限らせてください。お子さんの写真は、保護者の方からお送りください。お預かりした写真はスタンプ制作にだけ使い、納品から30日を目安に削除します。
+                            お送りいただく写真は、ご家族・ご自身・ペットのものに限らせてください。お子さんの写真は、保護者の方からお送りください。お預かりした写真はスタンプ制作にだけ使い、納品から30日以内に削除します。
                         </p>
                         <p className="mt-4">
                             無料でお見せする1個をご覧いただくところまでは、費用はかかりません。キャンセルもここまでは自由です。費用がかかるのは、個数を決めて制作に入ってからで、制作開始後のキャンセルはお受けできません。お支払いは、完成品をご確認いただいたあと、LINEへの申請前です（前払い）。現金・PayPay・銀行振込・楽天ペイに対応しています。万一LINE側の審査に通らなかった場合は、全額返金または作り直しで対応します。
