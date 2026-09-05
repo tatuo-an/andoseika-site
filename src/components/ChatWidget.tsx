@@ -107,7 +107,7 @@ export function ChatWidget() {
   }
 
   // /stamp（LINEスタンプLP）はCTAを公式LINE1本に絞るため表示しない
-  if (pathname?.startsWith("/stamp") || pathname?.startsWith("/ai")) return null;
+  if (pathname?.startsWith("/stamp")) return null;
 
   return (
     <>
