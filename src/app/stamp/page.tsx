@@ -472,7 +472,7 @@ export default function StampPage() {
                         </p>
 
                         <p className="mt-8 border-t border-[#EADFCF] pt-8 text-[16px] leading-[1.8] text-[#6B5E52] md:text-[20px]">
-                            Xのフォロワーは1.5万人（2026年9月時点）。Threadsでは、蜂の投稿が1万いいねを超えたことがあります。
+                            Xのフォロワーは1.3万人（2026年9月時点）。Threadsでは、蜂の投稿が1万いいねを超えたことがあります。
                             <span className="mt-2 flex flex-wrap gap-x-6">
                                 <Link
                                     href={X_URL}

@@ -37,7 +37,7 @@ export function LineFriendBanner() {
   }
 
   // /stamp（LINEスタンプLP）は導線を公式LINE1本に絞るため、別アカウントへのバナーを出さない
-  if (pathname?.startsWith("/stamp")) return null;
+  if (pathname?.startsWith("/stamp") || pathname?.startsWith("/ai")) return null;
   if (status !== "authenticated" || !isLineUser || closed) return null;
 
   return (
