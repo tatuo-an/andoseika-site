@@ -16,6 +16,8 @@ const staticPages: Array<{
   { path: "/supporter", changeFrequency: "monthly", priority: 0.7 },
   { path: "/community", changeFrequency: "weekly", priority: 0.6 },
   { path: "/guide", changeFrequency: "monthly", priority: 0.6 },
+  { path: "/castles", changeFrequency: "monthly", priority: 0.5 },
+  { path: "/castles/book", changeFrequency: "monthly", priority: 0.4 },
   { path: "/business", changeFrequency: "monthly", priority: 0.6 },
   { path: "/partners", changeFrequency: "monthly", priority: 0.6 },
   { path: "/news", changeFrequency: "monthly", priority: 0.5 },

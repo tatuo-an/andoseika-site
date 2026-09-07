@@ -1,0 +1,146 @@
+/* ===== 全国の城 図鑑（/castles）: 本のような紙面 ===== */
+.castles-root {
+  --paper: #f7f3ea;
+  --ink: #2b2620;
+  --ink-soft: #6b6157;
+  --rule: #d9cfbf;
+  --accent: #8b2f2f; /* 朱 */
+  --accent-soft: #f1e4e0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-castles-serif), "Hiragino Mincho ProN", "Yu Mincho", serif;
+  line-height: 1.9;
+  min-height: 100vh;
+}
+.castles-root a { color: var(--accent); text-decoration: none; }
+.castles-root a:hover { text-decoration: underline; }
+
+.castles-nav {
+  position: sticky; top: 0; z-index: 30;
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  padding: 0.6rem 1.25rem;
+  background: rgba(247, 243, 234, 0.92); backdrop-filter: blur(6px);
+  border-bottom: 1px solid var(--rule);
+  font-size: 0.85rem;
+}
+.castles-nav__brand { font-weight: 700; letter-spacing: 0.12em; color: var(--ink); }
+.castles-nav__links { display: flex; gap: 1.1rem; }
+.castles-nav__links a { color: var(--ink-soft); }
+
+.castles-container { max-width: 52rem; margin: 0 auto; padding: 2.5rem 1.25rem 5rem; }
+
+/* --- 表紙 --- */
+.castles-cover { text-align: center; padding: 4rem 1rem 3rem; border-bottom: 1px solid var(--rule); margin-bottom: 3rem; }
+.castles-cover__kicker { letter-spacing: 0.35em; color: var(--accent); font-size: 0.8rem; margin-bottom: 1rem; }
+.castles-cover h1 { font-size: clamp(2.2rem, 6vw, 3.6rem); letter-spacing: 0.18em; font-weight: 700; line-height: 1.3; margin: 0 0 1rem; }
+.castles-cover__sub { color: var(--ink-soft); font-size: 1rem; letter-spacing: 0.1em; }
+.castles-cover__stats { display: flex; justify-content: center; gap: 2rem; margin-top: 2rem; flex-wrap: wrap; }
+.castles-cover__stats div { text-align: center; }
+.castles-cover__stats strong { display: block; font-size: 1.8rem; color: var(--accent); }
+.castles-cover__stats span { font-size: 0.8rem; color: var(--ink-soft); }
+.castles-cover__actions { margin-top: 2rem; display: flex; gap: 0.8rem; justify-content: center; flex-wrap: wrap; }
+.castles-btn { display: inline-block; padding: 0.55rem 1.3rem; border: 1px solid var(--accent); border-radius: 999px; font-size: 0.9rem; }
+.castles-btn--fill { background: var(--accent); color: #fff !important; }
+
+/* --- はじめに・凡例 --- */
+.castles-intro h2, .castles-toc h2 { font-size: 1.15rem; letter-spacing: 0.15em; border-left: 4px solid var(--accent); padding-left: 0.7rem; margin: 2.5rem 0 1rem; }
+.castles-intro p { margin: 0 0 1rem; }
+.castles-legend { display: grid; gap: 0.8rem; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); margin: 1rem 0 2rem; }
+.castles-legend div { background: #fff; border: 1px solid var(--rule); border-radius: 0.5rem; padding: 0.9rem 1rem; font-size: 0.85rem; }
+.castles-legend strong { display: block; color: var(--accent); margin-bottom: 0.2rem; font-size: 0.95rem; }
+.castles-note { font-size: 0.85rem; color: var(--ink-soft); background: var(--accent-soft); border-radius: 0.5rem; padding: 0.9rem 1rem; }
+
+/* --- 目次 --- */
+.castles-toc__chapter { margin: 2rem 0 1.2rem; }
+.castles-toc__chapter-head { display: flex; align-items: baseline; gap: 0.8rem; border-bottom: 2px solid var(--ink); padding-bottom: 0.3rem; margin-bottom: 0.8rem; }
+.castles-toc__chapter-head h3 { font-size: 1.3rem; letter-spacing: 0.1em; margin: 0; }
+.castles-toc__chapter-head span { font-size: 0.75rem; color: var(--ink-soft); letter-spacing: 0.15em; }
+.castles-toc__chapter-desc { font-size: 0.85rem; color: var(--ink-soft); margin: 0 0 1rem; }
+.castles-toc__pref { margin: 0.6rem 0; }
+.castles-toc__pref-name { font-size: 0.8rem; color: var(--ink-soft); letter-spacing: 0.1em; margin: 0 0 0.2rem; }
+.castles-toc__pref-name small { margin-left: 0.5rem; opacity: 0.7; }
+.castles-toc ol { list-style: none; margin: 0; padding: 0; }
+.castles-toc li a { display: flex; align-items: baseline; gap: 0.6rem; padding: 0.35rem 0.2rem; color: var(--ink); border-bottom: 1px dotted var(--rule); }
+.castles-toc li a:hover { background: #fff; text-decoration: none; }
+.castles-toc__name { font-weight: 700; }
+.castles-toc__spec { font-size: 0.8rem; color: var(--ink-soft); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.castles-toc__page { font-variant-numeric: tabular-nums; font-size: 0.85rem; color: var(--ink-soft); }
+@media (max-width: 640px) { .castles-toc__spec { display: none; } }
+
+/* --- 1城1ページ --- */
+.castle-page { background: #fff; border: 1px solid var(--rule); border-radius: 0.75rem; padding: 2rem 1.5rem 2.5rem; margin: 0 0 3rem; box-shadow: 0 1px 2px rgba(0,0,0,0.03); }
+@media (min-width: 768px) { .castle-page { padding: 2.75rem 3rem 3rem; } }
+.castle-page__running { display: flex; justify-content: space-between; gap: 1rem; font-size: 0.75rem; color: var(--ink-soft); letter-spacing: 0.12em; border-bottom: 1px solid var(--rule); padding-bottom: 0.5rem; margin-bottom: 1.8rem; }
+.castle-page__chapter { color: var(--accent); font-weight: 700; }
+.castle-page__no { font-variant-numeric: tabular-nums; }
+.castle-page__title { margin-bottom: 1.5rem; }
+.castle-page__reading { font-size: 0.85rem; color: var(--ink-soft); letter-spacing: 0.2em; margin: 0; }
+.castle-page__title h1 { font-size: clamp(1.9rem, 5vw, 2.6rem); letter-spacing: 0.12em; font-weight: 700; margin: 0.1rem 0 0.4rem; line-height: 1.3; }
+.castle-page__aliases { font-size: 0.85rem; color: var(--ink-soft); margin: 0; }
+.castle-page__summary { font-size: 1.05rem; line-height: 2; margin: 1.5rem 0; padding-left: 1rem; border-left: 3px solid var(--accent); }
+
+.castle-spec { display: grid; grid-template-columns: 1fr; gap: 0; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); margin: 1.5rem 0 2rem; font-size: 0.9rem; }
+.castle-spec div { display: grid; grid-template-columns: 9.5rem 1fr; gap: 1rem; padding: 0.55rem 0; border-bottom: 1px dotted var(--rule); }
+.castle-spec div:last-child { border-bottom: 0; }
+.castle-spec dt { color: var(--ink-soft); font-size: 0.8rem; letter-spacing: 0.08em; }
+.castle-spec dd { margin: 0; }
+@media (max-width: 480px) { .castle-spec div { grid-template-columns: 1fr; gap: 0.1rem; } }
+
+.castle-figure { margin: 0; }
+.castle-figure__frame { background: #eee7d8; border-radius: 0.4rem; overflow: hidden; aspect-ratio: 3 / 2; display: flex; align-items: center; justify-content: center; }
+.castle-figure__frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.castle-figure--hero .castle-figure__frame { aspect-ratio: 16 / 10; }
+.castle-figure__placeholder { text-align: center; color: var(--ink-soft); font-size: 0.85rem; padding: 1rem; }
+.castle-figure__placeholder small { display: block; font-size: 0.75rem; opacity: 0.8; margin-top: 0.3rem; }
+.castle-figure figcaption { display: flex; justify-content: space-between; gap: 0.8rem; font-size: 0.75rem; color: var(--ink-soft); margin-top: 0.4rem; }
+.castle-figure figcaption a { color: var(--ink-soft); white-space: nowrap; }
+.castle-gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 1rem; margin: 0 0 2rem; }
+
+.castle-section { margin: 2.2rem 0 0; }
+.castle-section h2 { font-size: 1.05rem; letter-spacing: 0.18em; color: var(--accent); border-bottom: 1px solid var(--rule); padding-bottom: 0.3rem; margin: 0 0 1rem; }
+.castle-section p { margin: 0 0 1rem; text-align: justify; }
+
+.castle-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+.castle-table th { text-align: left; font-weight: 700; font-size: 0.75rem; color: var(--ink-soft); letter-spacing: 0.1em; border-bottom: 1px solid var(--ink); padding: 0.3rem 0.5rem; }
+.castle-table td { padding: 0.45rem 0.5rem; border-bottom: 1px dotted var(--rule); vertical-align: top; }
+.castle-table .nowrap { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.castle-table tr td:last-child { color: var(--ink-soft); font-size: 0.82rem; }
+
+.castle-timeline { list-style: none; margin: 0; padding: 0; }
+.castle-timeline li { display: grid; grid-template-columns: 10rem 1fr; gap: 0.8rem; padding: 0.4rem 0; border-bottom: 1px dotted var(--rule); font-size: 0.9rem; }
+.castle-timeline__year { font-variant-numeric: tabular-nums; font-weight: 700; }
+.castle-timeline__year small { display: block; font-weight: 400; color: var(--ink-soft); font-size: 0.75rem; }
+@media (max-width: 480px) { .castle-timeline li { grid-template-columns: 1fr; gap: 0.1rem; } }
+
+.castle-refs ul { margin: 0; padding-left: 1.2rem; font-size: 0.85rem; }
+.castle-page__back { margin: 2.5rem 0 0; font-size: 0.9rem; }
+
+.castle-pager { display: flex; justify-content: space-between; gap: 1rem; margin: -1.5rem 0 3rem; font-size: 0.9rem; }
+.castle-pager a { display: inline-flex; flex-direction: column; color: var(--ink); }
+.castle-pager small { color: var(--ink-soft); font-size: 0.7rem; letter-spacing: 0.1em; }
+.castle-pager .next { text-align: right; margin-left: auto; }
+
+/* 本（連続表示）モードの章扉 */
+.castles-chapter { margin: 4rem 0 2rem; text-align: center; padding: 3rem 1rem; border-top: 3px double var(--ink); border-bottom: 3px double var(--ink); }
+.castles-chapter small { display: block; letter-spacing: 0.3em; color: var(--accent); font-size: 0.75rem; margin-bottom: 0.6rem; }
+.castles-chapter h2 { font-size: 2rem; letter-spacing: 0.2em; margin: 0 0 0.8rem; }
+.castles-chapter p { color: var(--ink-soft); font-size: 0.9rem; max-width: 36rem; margin: 0 auto; }
+.castles-pref-head { font-size: 0.85rem; letter-spacing: 0.2em; color: var(--ink-soft); margin: 2.5rem 0 1rem; display: flex; align-items: center; gap: 0.8rem; }
+.castles-pref-head::after { content: ""; flex: 1; height: 1px; background: var(--rule); }
+
+/* --- 印刷（本として出力） --- */
+@media print {
+  .castles-root { background: #fff; }
+  .castles-nav, .castle-page__back, .castle-pager, .castles-cover__actions, .castles-print-hide { display: none !important; }
+  .castles-container { max-width: none; padding: 0; }
+  .castle-page { border: 0; box-shadow: none; border-radius: 0; padding: 0 0 1rem; margin: 0; page-break-after: always; break-after: page; }
+  .castles-chapter { page-break-before: always; break-before: page; page-break-after: always; break-after: page; border: 0; padding-top: 40vh; }
+  .castles-cover { page-break-after: always; break-after: page; border: 0; padding-top: 30vh; }
+  .castles-toc { page-break-after: always; break-after: page; }
+  .castle-figure__frame { aspect-ratio: auto; }
+  .castle-figure__frame img { height: auto; max-height: 11cm; object-fit: contain; }
+  .castle-gallery { grid-template-columns: 1fr 1fr; }
+  .castle-section, .castle-table, .castle-timeline li { break-inside: avoid-page; }
+  a { color: inherit !important; }
+  @page { size: A4; margin: 16mm 14mm; }
+}
