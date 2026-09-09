@@ -1,13 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createHash, timingSafeEqual } from "node:crypto";
 import { SHIIRE_GROUP_ID } from "@/lib/line-group-policy";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
+const PUSH_KEY_SHA256 = "ca144f466f0a07488dd2999a685b46a049cea429631ef4dbf6410709f94a52e0";
+
+function hasValidPushKey(authorization: string) {
+  if (!authorization.startsWith("Bearer ")) return false;
+  const actual = createHash("sha256").update(authorization.slice(7)).digest();
+  const expected = Buffer.from(PUSH_KEY_SHA256, "hex");
+  return actual.length === expected.length && timingSafeEqual(actual, expected);
+}
+
 export async function POST(req: NextRequest) {
-  const expected = process.env.LINE_GROUP_PUSH_KEY;
   const authorization = req.headers.get("authorization") ?? "";
-  if (!expected || authorization !== `Bearer ${expected}`) {
+  if (!hasValidPushKey(authorization)) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
 
