@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { google } from "googleapis";
+import { isNegiReminderExcluded } from "@/lib/line-group-policy";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -33,6 +34,15 @@ async function pushLineMessage(to: string, text: string) {
     return false;
   }
   return true;
+}
+
+async function getLineGroupName(groupId: string) {
+  const res = await fetch(`https://api.line.me/v2/bot/group/${groupId}/summary`, {
+    headers: { Authorization: `Bearer ${process.env.LINE_CHANNEL_ACCESS_TOKEN}` },
+  });
+  if (!res.ok) return null;
+  const data = await res.json().catch(() => null) as { groupName?: string } | null;
+  return data?.groupName ?? null;
 }
 
 // 今週の月曜0時（JST）を返す
@@ -70,6 +80,13 @@ export async function GET(req: NextRequest) {
   for (let i = 1; i < rows.length; i++) {
     const key = rows[i][0];
     if (!key || !key.startsWith("C")) continue; // グループのみ対象（個人はGAS側のリマインドが担当）
+
+    const groupName = await getLineGroupName(key);
+    if (isNegiReminderExcluded(key, groupName)) {
+      skipped++;
+      results.push({ key, action: "skipped (excluded group)" });
+      continue;
+    }
 
     const status = rows[i][1] || "";
     const updatedAt = rows[i][3] ? new Date(rows[i][3]) : null;
