@@ -6,11 +6,20 @@ export const dynamic = "force-dynamic";
 
 const SPREADSHEET_ID = process.env.GOOGLE_SPREADSHEET_ID!;
 const SHEET_NAME = "体験予約";
-// 体験ごとの予約受付月（1〜12）。ここに無い体験名は月の制限なし。
-const EXPERIENCE_SEASONS: Record<string, number[]> = {
-    "養蜂体験": [5, 6, 7, 8, 9, 10],
-    "芋掘り体験": [10, 11, 12],
+// 体験ごとの予約受付期間（MM-DD、年をまたがない前提）。複数区間を指定すると期間中の休業をくり抜ける。
+// ここに無い体験名は期間の制限なし。
+type SeasonRange = { start: string; end: string };
+const EXPERIENCE_SEASONS: Record<string, SeasonRange[]> = {
+    "養蜂体験": [
+        { start: "04-15", end: "06-30" },
+        { start: "09-01", end: "11-30" },
+    ], // 4月中旬〜11月末、7-8月は休業
+    "芋掘り体験": [{ start: "10-01", end: "12-31" }],
 };
+
+function isWithinSeason(mmdd: string, ranges: SeasonRange[]): boolean {
+    return ranges.some((r) => mmdd >= r.start && mmdd <= r.end);
+}
 // 列: A=予約ID, B=メール, C=名前, D=電話, E=体験名, F=日付, G=開始時刻, H=所要分, I=人数, J=ステータス, K=作成日時, L=料金
 
 function getSheets() {
@@ -99,10 +108,10 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "必須項目が不足しています" }, { status: 400 });
     }
 
-    const allowedMonths = EXPERIENCE_SEASONS[experienceName];
-    if (allowedMonths) {
-        const month = parseInt(date.slice(5, 7), 10);
-        if (!allowedMonths.includes(month)) {
+    const allowedRanges = EXPERIENCE_SEASONS[experienceName];
+    if (allowedRanges) {
+        const mmdd = date.slice(5, 10); // "MM-DD"
+        if (!isWithinSeason(mmdd, allowedRanges)) {
             return NextResponse.json({ error: "この体験は現在予約受付期間外です" }, { status: 400 });
         }
     }

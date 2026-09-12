@@ -507,7 +507,7 @@ export default async function Home() {
                 <div className="absolute inset-0 flex flex-col justify-center px-8">
                   <p className="text-white/70 text-xs font-bold tracking-widest uppercase mb-1">Experience</p>
                   <p className="text-white text-xl md:text-2xl font-bold leading-snug drop-shadow">畑で、体を動かす日。</p>
-                  <p className="text-white/80 text-sm mt-2">養蜂体験（5〜10月）・芋掘り体験（10〜12月）。事前予約必須</p>
+                  <p className="text-white/80 text-sm mt-2">養蜂体験（4月中旬〜11月末、7・8月休業）・芋掘り体験（10〜12月）。事前予約必須</p>
                   <span className="mt-4 inline-flex items-center gap-1 text-white text-sm font-bold">
                     予約する <ChevronRight className="w-4 h-4" />
                   </span>

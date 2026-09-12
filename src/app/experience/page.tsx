@@ -88,7 +88,7 @@ export default function ExperiencePage() {
                         </div>
                         <div className="space-y-6">
                             <div className="inline-block px-4 py-1 bg-yellow-100 text-yellow-800 font-bold rounded-full text-sm">
-                                5月〜10月限定
+                                4月中旬〜11月末限定（7・8月は休業）
                             </div>
                             <h2 className="text-3xl font-bold text-stone-900">ミツバチの世界をのぞく養蜂体験</h2>
                             <p className="text-stone-600 leading-relaxed">
@@ -119,7 +119,15 @@ export default function ExperiencePage() {
                                 <p className="text-xs text-stone-500 mt-2">防護服レンタル・蜂蜜試食込 / 1回最大4名程度</p>
                             </div>
 
-                            <BookingButton experienceName="養蜂体験" durationMin={60} seasonMonths={[5, 6, 7, 8, 9, 10]} seasonLabel="5月〜10月" />
+                            <BookingButton
+                                experienceName="養蜂体験"
+                                durationMin={60}
+                                seasonRanges={[
+                                    { start: "04-15", end: "06-30" },
+                                    { start: "09-01", end: "11-30" },
+                                ]}
+                                seasonLabel="4月中旬〜11月末（7・8月休業）"
+                            />
                         </div>
                     </div>
 
@@ -214,7 +222,12 @@ export default function ExperiencePage() {
                                 <p className="text-xs text-stone-500 mt-2">道具レンタル込み</p>
                             </div>
 
-                            <BookingButton experienceName="芋掘り体験" durationMin={90} seasonMonths={[10, 11, 12]} seasonLabel="10月〜12月" />
+                            <BookingButton
+                                experienceName="芋掘り体験"
+                                durationMin={90}
+                                seasonRanges={[{ start: "10-01", end: "12-31" }]}
+                                seasonLabel="10月〜12月"
+                            />
                         </div>
                         <div className="order-1 md:order-2 relative aspect-square w-full rounded-2xl overflow-hidden bg-stone-100 shadow-lg">
                             <Image

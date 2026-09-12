@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { BookingCalendar } from "./BookingCalendar";
+import { BookingCalendar, type SeasonRange } from "./BookingCalendar";
 
-export function BookingButton({ experienceName, durationMin, seasonMonths, seasonLabel }: {
+export function BookingButton({ experienceName, durationMin, seasonRanges, seasonLabel }: {
     experienceName: string;
     durationMin: number;
-    seasonMonths?: number[];
+    seasonRanges?: SeasonRange[];
     seasonLabel?: string;
 }) {
     const [open, setOpen] = useState(false);
@@ -23,7 +23,7 @@ export function BookingButton({ experienceName, durationMin, seasonMonths, seaso
                 onClose={() => setOpen(false)}
                 experienceName={experienceName}
                 durationMin={durationMin}
-                seasonMonths={seasonMonths}
+                seasonRanges={seasonRanges}
                 seasonLabel={seasonLabel}
             />
         </>

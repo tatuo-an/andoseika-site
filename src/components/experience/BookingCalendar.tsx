@@ -36,20 +36,27 @@ function toTimeStr(min: number) {
 
 type ExistingBooking = { date: string; startTime: string };
 type Step = "calendar" | "form" | "success" | "error";
+export type SeasonRange = { start: string; end: string }; // MM-DD形式、年をまたがない前提
+
+// 日付がいずれかの受付期間（MM-DD範囲）に入っているか判定する。
+function isWithinSeason(d: Date, ranges: SeasonRange[]): boolean {
+    const mmdd = `${(d.getMonth() + 1).toString().padStart(2, "0")}-${d.getDate().toString().padStart(2, "0")}`;
+    return ranges.some((r) => mmdd >= r.start && mmdd <= r.end);
+}
 
 export function BookingCalendar({
     isOpen,
     onClose,
     experienceName,
     durationMin,
-    seasonMonths,
+    seasonRanges,
     seasonLabel,
 }: {
     isOpen: boolean;
     onClose: () => void;
     experienceName: string;
     durationMin: number;
-    seasonMonths?: number[]; // 予約可能な月（例: [10, 11, 12]）。未指定なら通年予約可
+    seasonRanges?: SeasonRange[]; // 予約可能な期間（例: [{start:"10-01",end:"12-31"}]）。未指定なら通年予約可
     seasonLabel?: string; // 表示用の期間ラベル（例: "10月〜12月"）
 }) {
     const [weekOffset, setWeekOffset] = useState(0);
@@ -200,7 +207,7 @@ export function BookingCalendar({
                                         <th className="border-b border-stone-200 p-2 text-xs text-stone-400 w-16 text-left">時間</th>
                                         {dates.map((d, i) => {
                                             const isWeekend = d.getDay() === 0 || d.getDay() === 6;
-                                            const outOfSeason = !!seasonMonths && !seasonMonths.includes(d.getMonth() + 1);
+                                            const outOfSeason = !!seasonRanges && !isWithinSeason(d, seasonRanges);
                                             return (
                                                 <th key={i} className={`border-b border-stone-200 p-2 text-xs font-medium ${outOfSeason ? "text-stone-300" : isWeekend ? "text-red-500" : "text-stone-700"}`}>
                                                     <div>{d.getMonth() + 1}/{d.getDate()}</div>
@@ -219,7 +226,7 @@ export function BookingCalendar({
                                             {dates.map((d, i) => {
                                                 const dateStr = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, "0")}-${d.getDate().toString().padStart(2, "0")}`;
                                                 const isSelected = selectedDate === dateStr && selectedSlot === slot.startMin;
-                                                const outOfSeason = !!seasonMonths && !seasonMonths.includes(d.getMonth() + 1);
+                                                const outOfSeason = !!seasonRanges && !isWithinSeason(d, seasonRanges);
                                                 const booked = isBooked(dateStr, slot.startMin);
                                                 const unavailable = booked || outOfSeason;
                                                 return (
