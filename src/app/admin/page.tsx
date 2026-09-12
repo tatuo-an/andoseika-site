@@ -4,7 +4,7 @@ import { isAdmin } from "@/lib/admin";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import Link from "next/link";
-import { ShoppingBag, Users, Package, MessageCircle, Heart, Tag } from "lucide-react";
+import { ShoppingBag, Users, Package, MessageCircle, Heart, Tag, CalendarDays } from "lucide-react";
 import { client } from "@/lib/microcms";
 import { Product } from "@/types/microcms";
 import localProducts from "@/data/products.json";
@@ -184,6 +184,13 @@ export default async function AdminPage() {
                         >
                             <Tag className="w-4 h-4" />
                             季節セール管理
+                        </Link>
+                        <Link
+                            href="/admin/bookings"
+                            className="flex items-center gap-2 px-4 py-2 bg-white border border-stone-200 text-stone-700 text-sm font-bold rounded-lg hover:bg-stone-50 transition-colors shadow-sm"
+                        >
+                            <CalendarDays className="w-4 h-4" />
+                            体験予約管理
                         </Link>
                     </div>
                     <div className="mb-6 space-y-3">
