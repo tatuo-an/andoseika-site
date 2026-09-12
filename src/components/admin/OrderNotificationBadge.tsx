@@ -5,8 +5,11 @@ import { useEffect, useState } from "react";
 type Props = {
     // "orders": HP（Stripe決済）の注文管理。ステータスが "paid"（未発送）の件数を新着として表示。
     // "line-orders": LINE直接注文。ステータス未入力（空欄）の件数を新着として表示。
-    kind: "orders" | "line-orders";
+    // "bookings": 体験予約。作成から24時間以内の確定予約の件数を新着として表示。
+    kind: "orders" | "line-orders" | "bookings";
 };
+
+const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
 export function OrderNotificationBadge({ kind }: Props) {
     const [count, setCount] = useState(0);
@@ -16,14 +19,23 @@ export function OrderNotificationBadge({ kind }: Props) {
 
         async function load() {
             try {
-                const endpoint = kind === "orders" ? "/api/admin/orders" : "/api/admin/line-orders";
+                const endpoint = kind === "orders" ? "/api/admin/orders"
+                    : kind === "line-orders" ? "/api/admin/line-orders"
+                    : "/api/admin/bookings";
                 const res = await fetch(endpoint);
                 const data = await res.json();
                 if (cancelled) return;
-                const orders: { status: string }[] = data.orders ?? [];
-                const n = kind === "orders"
-                    ? orders.filter((o) => o.status === "paid").length
-                    : orders.filter((o) => !o.status?.trim()).length;
+                let n = 0;
+                if (kind === "bookings") {
+                    const bookings: { status: string; createdAt: string }[] = data.bookings ?? [];
+                    const cutoff = Date.now() - ONE_DAY_MS;
+                    n = bookings.filter((b) => b.status !== "cancelled" && new Date(b.createdAt).getTime() >= cutoff).length;
+                } else {
+                    const orders: { status: string }[] = data.orders ?? [];
+                    n = kind === "orders"
+                        ? orders.filter((o) => o.status === "paid").length
+                        : orders.filter((o) => !o.status?.trim()).length;
+                }
                 setCount(n);
             } catch {
                 // 取得失敗時はバッジを増やさない（既存表示を維持）

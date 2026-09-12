@@ -140,10 +140,10 @@ export default async function AdminPage() {
             <main className="flex-1 py-16">
                 <div className="container mx-auto px-4 md:px-6 max-w-5xl">
                     <h1 className="text-3xl font-bold text-stone-900 mb-2">管理画面</h1>
-                    <div className="flex gap-3 mb-8">
+                    <div className="flex flex-wrap gap-3 mb-8">
                         <Link
                             href="/admin/orders"
-                            className="relative flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-bold rounded-lg hover:bg-primary/90 transition-colors shadow-sm"
+                            className="relative flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-bold rounded-lg hover:bg-primary/90 transition-colors shadow-sm whitespace-nowrap"
                         >
                             <ShoppingBag className="w-4 h-4" />
                             注文管理
@@ -151,21 +151,21 @@ export default async function AdminPage() {
                         </Link>
                         <Link
                             href="/admin/customers"
-                            className="flex items-center gap-2 px-4 py-2 bg-white border border-stone-200 text-stone-700 text-sm font-bold rounded-lg hover:bg-stone-50 transition-colors shadow-sm"
+                            className="flex items-center gap-2 px-4 py-2 bg-white border border-stone-200 text-stone-700 text-sm font-bold rounded-lg hover:bg-stone-50 transition-colors shadow-sm whitespace-nowrap"
                         >
                             <Users className="w-4 h-4" />
                             顧客一覧
                         </Link>
                         <Link
                             href="/admin/deliveries"
-                            className="flex items-center gap-2 px-4 py-2 bg-white border border-stone-200 text-stone-700 text-sm font-bold rounded-lg hover:bg-stone-50 transition-colors shadow-sm"
+                            className="flex items-center gap-2 px-4 py-2 bg-white border border-stone-200 text-stone-700 text-sm font-bold rounded-lg hover:bg-stone-50 transition-colors shadow-sm whitespace-nowrap"
                         >
                             <Package className="w-4 h-4" />
                             詰め合わせ発送
                         </Link>
                         <Link
                             href="/admin/line-orders"
-                            className="relative flex items-center gap-2 px-4 py-2 bg-white border border-stone-200 text-stone-700 text-sm font-bold rounded-lg hover:bg-stone-50 transition-colors shadow-sm"
+                            className="relative flex items-center gap-2 px-4 py-2 bg-white border border-stone-200 text-stone-700 text-sm font-bold rounded-lg hover:bg-stone-50 transition-colors shadow-sm whitespace-nowrap"
                         >
                             <MessageCircle className="w-4 h-4" />
                             LINE注文管理
@@ -173,24 +173,25 @@ export default async function AdminPage() {
                         </Link>
                         <Link
                             href="/admin/supporters"
-                            className="flex items-center gap-2 px-4 py-2 bg-white border border-stone-200 text-stone-700 text-sm font-bold rounded-lg hover:bg-stone-50 transition-colors shadow-sm"
+                            className="flex items-center gap-2 px-4 py-2 bg-white border border-stone-200 text-stone-700 text-sm font-bold rounded-lg hover:bg-stone-50 transition-colors shadow-sm whitespace-nowrap"
                         >
                             <Heart className="w-4 h-4" />
                             サポーター管理
                         </Link>
                         <Link
                             href="/admin/seasonal-sales"
-                            className="flex items-center gap-2 px-4 py-2 bg-white border border-stone-200 text-stone-700 text-sm font-bold rounded-lg hover:bg-stone-50 transition-colors shadow-sm"
+                            className="flex items-center gap-2 px-4 py-2 bg-white border border-stone-200 text-stone-700 text-sm font-bold rounded-lg hover:bg-stone-50 transition-colors shadow-sm whitespace-nowrap"
                         >
                             <Tag className="w-4 h-4" />
                             季節セール管理
                         </Link>
                         <Link
                             href="/admin/bookings"
-                            className="flex items-center gap-2 px-4 py-2 bg-white border border-stone-200 text-stone-700 text-sm font-bold rounded-lg hover:bg-stone-50 transition-colors shadow-sm"
+                            className="relative flex items-center gap-2 px-4 py-2 bg-white border border-stone-200 text-stone-700 text-sm font-bold rounded-lg hover:bg-stone-50 transition-colors shadow-sm whitespace-nowrap"
                         >
                             <CalendarDays className="w-4 h-4" />
                             体験予約管理
+                            <OrderNotificationBadge kind="bookings" />
                         </Link>
                     </div>
                     <div className="mb-6 space-y-3">
