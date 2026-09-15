@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { google } from "googleapis";
 import Anthropic from "@anthropic-ai/sdk";
+import { SHIIRE_GROUP_ID } from "@/lib/line-group-policy";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -398,6 +399,11 @@ async function finalizeAiOrder(data: { items: { name: string; quantity: number }
 async function processIncomingMessage(event: LineEvent) {
   const sessionKey = event.source?.groupId || event.source?.userId || "";
   if (!sessionKey) return;
+
+  // 仕入れ・出荷の連絡専用グループでは、変更連絡を注文と誤認しないよう
+  // 注文AIの解析・確認返信をすべて停止する。内部連絡のpush送信機能は別経路なので残る。
+  if (event.source?.groupId === SHIIRE_GROUP_ID) return;
+
   const text = event.message?.text || "";
 
   // 「ID」とだけ送ると、送信者本人のLINE userIdをそのまま返信する。
