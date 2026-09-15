@@ -383,9 +383,13 @@ async function finalizeAiOrder(data: { items: { name: string; quantity: number }
       (needsReview ? "\n※数量や規格が曖昧なまま仮登録されています。管理画面で確認してください。" : "")
     );
   } else {
+    // 個別LINEでも、既存取引先リストのLINE IDと一致すれば登録済みの名前を使う。
+    // 未登録の場合だけ従来どおり要確認名で保存する。
+    const partner = source.userId ? await matchPartnerByLineId(source.userId) : null;
+    const customerName = partner?.name || "（AIボット・要確認）";
     const orderId = `ORD-AI-${Date.now()}`;
     const rows = items.map((it) => [
-      orderId, source.userId || "", "（AIボット・要確認）", it.name, it.quantity, it.price,
+      orderId, source.userId || "", customerName, it.name, it.quantity, it.price,
       it.price * it.quantity, "受付", now, data.deliveryDate || "", "", "LINE個人(AI)", "FALSE",
     ]);
     await sheets.spreadsheets.values.append({
@@ -396,7 +400,7 @@ async function finalizeAiOrder(data: { items: { name: string; quantity: number }
     });
 
     return (
-      (needsReview ? "【要確認】" : "") + "新しい個人注文が入りました\n" +
+      (needsReview ? "【要確認】" : "") + "新しい個人注文が入りました（" + customerName + "）\n" +
       itemsText + "\n" +
       (data.deliveryDate ? "配達日: " + data.deliveryDate + "\n" : "") +
       (needsReview ? "\n※数量や規格が曖昧なまま仮登録されています。管理画面で確認してください。" : "")
