@@ -216,6 +216,7 @@ async function callClaudeForOrderParsing(
 
 ■品名・数量の扱い方
 品名は、こちらが用意した商品リストと照合したり、リストにあるものに置き換えたりしないでください。お客様が書いた表現（規格・サイズ・「規格外小」「5kg」「ケース」「箱」などを含む）をできるだけそのままdata.itemsのnameに入れてください。
+「規格外小10kg」「10キロお願いします」のように、kg・キロが重量として書かれ、箱・ケース・個・本・袋・セット・つなどの注文個数が別に書かれていない場合、数字は商品の重量です。quantityは1にしてください。重量10kgをquantity:10としないでください。
 お客様は1回のメッセージで複数の規格・数量をまとめて書くことがあります（例:「2L6ケース\nL7箱」のように改行や1行ずつで複数規格を並べる書き方）。その場合はdata.itemsに書かれた単位ごとに複数件を分けて入れてください（例: [{"name":"2L","quantity":6},{"name":"L","quantity":7}]）。
 数量が幅（レンジ）で示された場合は、quantityに幅の上限値（「20ケースから30ケース」なら30）を入れ、品名に幅の情報も残してください（例: name「5kg規格外小（20〜30ケースの幅あり、上限で仮登録）」）。
 
@@ -259,6 +260,13 @@ type:"question"にしてよいのは、注文しようとしていることは�
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) return null;
     const parsed = JSON.parse(jsonMatch[0]) as ClaudeResult;
+    // 「10kg」「10キロ」の10は重量であり注文個数ではない。
+    // AIが数量10と返しても、本文に別の個数単位がなければ1件に補正する。
+    const hasWeight = /\d+(?:\.\d+)?\s*(?:kg|キロ)/i.test(newText);
+    const hasExplicitCount = /\d+(?:\.\d+)?\s*(?:ケース|箱|個|本|袋|セット|つ)/.test(newText);
+    if (hasWeight && !hasExplicitCount && parsed.data?.items) {
+      parsed.data.items = parsed.data.items.map((item) => ({ ...item, quantity: 1 }));
+    }
     // 配達日はAIの出力を信用せず、常にサーバー計算値で上書きする（木曜固定・締切ロジックは
     // ここでしか正しく計算できないため、AIが古い値を引きずるリスクを構造的に排除する）。
     if (parsed.data) parsed.data.deliveryDate = nextThursday.iso;
