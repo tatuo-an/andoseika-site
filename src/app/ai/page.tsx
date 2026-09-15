@@ -1,3 +1,4 @@
+import { AiTimeSupport } from "@/components/ai/AiTimeSupport";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { MobileStickyCta } from "@/components/ai/MobileStickyCta";
@@ -546,7 +547,7 @@ export default function AiConsultingPage() {
                                 写真を送るだけ。あとはこちらで回します。
                             </h2>
                             <p className="text-stone-700 leading-relaxed">
-                                SNS投稿代行と公式LINE構築、この2つに絞ってやっています。
+                                SNS投稿代行と公式LINE構築を中心に、仕事の仕組みづくりもお手伝いしています。
                             </p>
                         </div>
 
@@ -834,46 +835,7 @@ export default function AiConsultingPage() {
                 {/* 8. 無料相談の中身（AIでの仕組み化）＋動画講義 全10回 */}
                 <section id="lecture" className="py-16 md:py-20 bg-white scroll-mt-16">
                     <div className="container mx-auto px-4 md:px-6 max-w-3xl">
-                        <details className="bg-stone-50 rounded-2xl border border-stone-100 p-6 md:p-10 mb-8">
-                            <summary className="font-bold text-stone-900 cursor-pointer list-none flex items-center justify-between gap-2">
-                                <span>無料相談では、AIでの仕組み化もご相談いただけます。</span>
-                                <span className="shrink-0 text-xs font-normal text-stone-500">タップで詳しく ▼</span>
-                            </summary>
-                            <p className="text-stone-700 text-sm md:text-base leading-relaxed mb-6 mt-4">
-                                鳥取の小さな青果卸を経営しながら、実際に手を動かして作ってきた実例です。きれいな成功談だけでなく、うまくいかなかった話もそのままお伝えします。
-                            </p>
-
-                            <div className="grid grid-cols-3 gap-3 mb-6">
-                                <div className="bg-white rounded-xl p-3 md:p-4 text-center border border-stone-200">
-                                    <p className="text-xl md:text-2xl font-bold text-primary font-heading">
-                                        4ヶ月
-                                    </p>
-                                    <p className="text-sm text-stone-500 mt-1">で仕組み80本以上</p>
-                                </div>
-                                <div className="bg-white rounded-xl p-3 md:p-4 text-center border border-stone-200">
-                                    <p className="text-xl md:text-2xl font-bold text-primary font-heading">
-                                        1日
-                                    </p>
-                                    <p className="text-sm text-stone-500 mt-1">で社内総点検</p>
-                                </div>
-                                <div className="bg-white rounded-xl p-3 md:p-4 text-center border border-stone-200">
-                                    <p className="text-xl md:text-2xl font-bold text-primary font-heading">7つ</p>
-                                    <p className="text-sm text-stone-500 mt-1">は作って使わなかった</p>
-                                </div>
-                            </div>
-
-                            <p className="text-stone-700 text-sm leading-relaxed mb-4">
-                                やり方は、現場の仕事を棚卸しして、任せられる仕事を見極め、小さく始めるロードマップをつくる。この3つだけです。業種は問いません。
-                            </p>
-                            <p className="text-stone-500 text-sm leading-relaxed">
-                                ※AIでの仕組み化・伴走支援の料金は、会社の規模やご相談内容によって変わるため、無料相談の中でお伝えします（上のSNS運用代行の料金表とは別です）。
-                            </p>
-                        </details>
-
-                        <TextLinkCta
-                            text="AIでの仕組み化についても、この場で相談できます"
-                            href="/contact/personal?subject=ai-consulting"
-                        />
+                        <AiTimeSupport />
 
                         <div className="text-center mt-14 mb-8">
                             <h2 className="text-2xl md:text-3xl font-bold text-stone-900 font-heading mb-6">
