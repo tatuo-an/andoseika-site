@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { google } from "googleapis";
+import {
+    sendBookingEmailNotification,
+    sendBookingLineNotification,
+} from "@/lib/sendBookingNotification";
 
 export const dynamic = "force-dynamic";
 
@@ -143,6 +147,41 @@ export async function POST(req: NextRequest) {
                 values: [[id, email, name || userName, phone ?? "", experienceName, date, startTime, durationMin, headcount, "confirmed", createdAt, price ?? ""]],
             },
         });
+
+        // 予約完了メッセージはLINE優先、LINE未連携・送信失敗時は実メールへ送る。
+        // 通知失敗で予約自体を失敗扱いにはしない。
+        try {
+            let sentViaLine = false;
+            let lineUserId = "";
+            try {
+                const customerRes = await sheets.spreadsheets.values.get({
+                    spreadsheetId: SPREADSHEET_ID,
+                    range: "顧客マスタ!A:H",
+                });
+                const customerRows = customerRes.data.values ?? [];
+                const profileRow = customerRows.find((r) => r[0] === email && r[1] === "__profile__");
+                lineUserId = profileRow?.[7] ?? "";
+            } catch (lookupErr) {
+                console.error("[bookings POST] LINE userId lookup failed", lookupErr);
+            }
+
+            if (lineUserId) {
+                try {
+                    await sendBookingLineNotification(lineUserId, { startTime });
+                    sentViaLine = true;
+                    console.log("[bookings POST] LINE confirmation sent", id);
+                } catch (lineErr) {
+                    console.error("[bookings POST] LINE confirmation failed", lineErr);
+                }
+            }
+
+            if (!sentViaLine) {
+                const sentViaEmail = await sendBookingEmailNotification(email, { startTime });
+                if (sentViaEmail) console.log("[bookings POST] email confirmation sent", id);
+            }
+        } catch (notifyErr) {
+            console.error("[bookings POST] confirmation notification failed", notifyErr);
+        }
 
         return NextResponse.json({ success: true, id });
     } catch (err) {
