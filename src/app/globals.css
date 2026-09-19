@@ -52,8 +52,32 @@ body {
   animation: flying-bee-bob 560ms ease-in-out infinite;
 }
 
+@keyframes flying-bee-swarm {
+  0% {
+    opacity: 0;
+    transform: translate3d(var(--start-x), var(--start-y), 0) scale(0.2) rotate(0deg);
+  }
+  12% { opacity: 1; }
+  50% {
+    opacity: 1;
+    transform: translate3d(var(--mid-x), var(--mid-y), 0) scale(1) rotate(var(--swarm-half-spin));
+  }
+  88% { opacity: 1; }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--end-x), var(--end-y), 0) scale(0.72) rotate(var(--swarm-spin));
+  }
+}
+
+.flying-bee__swarm {
+  opacity: 0;
+  will-change: transform, opacity;
+  animation: flying-bee-swarm var(--swarm-duration) cubic-bezier(0.22, 0.8, 0.32, 1) var(--swarm-delay) forwards;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .flying-bee { display: none; }
+  .flying-bee,
+  .flying-bee__swarm { display: none; }
 }
 
 
