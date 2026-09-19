@@ -10,6 +10,7 @@ import { getEffectiveSalePercent, calcSalePrice } from "@/lib/sale";
 import { fetchActiveSeasonalSale } from "@/lib/seasonalSales";
 import { getInventoryRows } from "@/lib/inventorySheet";
 import localProducts from "@/data/products.json";
+import { FlyingBee } from "@/components/home/FlyingBee";
 
 export const revalidate = 60;
 
@@ -205,6 +206,8 @@ export default async function Home() {
   return (
     <div className="min-h-screen flex flex-col font-sans bg-stone-50">
       <Header />
+      {/* テスト中は終了日時を指定せず、常時飛ばす。正式運用時は activeUntil を指定する。 */}
+      <FlyingBee />
 
       <main className="flex-1">
         <script
