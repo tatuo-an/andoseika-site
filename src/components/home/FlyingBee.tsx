@@ -29,6 +29,43 @@ type SwarmBee = {
   spin: number;
 };
 
+type BeeThemeName = "normal" | "spring" | "halloween" | "christmas" | "new-year";
+
+type BeeTheme = {
+  name: BeeThemeName;
+  label: string;
+  src: string;
+};
+
+const BEE_THEMES: Record<BeeThemeName, BeeTheme> = {
+  normal: { name: "normal", label: "通常", src: "/images/bee/flying-bee-v3.png" },
+  spring: { name: "spring", label: "桜", src: "/images/bee/flying-bee-spring.png" },
+  halloween: { name: "halloween", label: "ハロウィン", src: "/images/bee/flying-bee-halloween.png" },
+  christmas: { name: "christmas", label: "クリスマス", src: "/images/bee/flying-bee-christmas.png" },
+  "new-year": { name: "new-year", label: "お正月", src: "/images/bee/flying-bee-new-year.png" },
+};
+
+function getJapanMonthDay(date = new Date()) {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Tokyo",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(date);
+  const month = parts.find((part) => part.type === "month")?.value ?? "01";
+  const day = parts.find((part) => part.type === "day")?.value ?? "01";
+  return `${month}-${day}`;
+}
+
+function getSeasonalBeeTheme(date = new Date()): BeeTheme {
+  const monthDay = getJapanMonthDay(date);
+
+  if (monthDay >= "12-26" || monthDay <= "01-07") return BEE_THEMES["new-year"];
+  if (monthDay >= "03-20" && monthDay <= "04-10") return BEE_THEMES.spring;
+  if (monthDay >= "10-20" && monthDay <= "10-31") return BEE_THEMES.halloween;
+  if (monthDay >= "12-01" && monthDay <= "12-25") return BEE_THEMES.christmas;
+  return BEE_THEMES.normal;
+}
+
 const BEE_SIZE = 72;
 
 export function FlyingBee({ activeUntil }: FlyingBeeProps) {
@@ -40,6 +77,7 @@ export function FlyingBee({ activeUntil }: FlyingBeeProps) {
     rotation: 0,
   });
   const [swarm, setSwarm] = useState<SwarmBee[]>([]);
+  const [theme, setTheme] = useState<BeeTheme>(BEE_THEMES.normal);
   const positionRef = useRef({ x: -BEE_SIZE, y: 140 });
   const swarmTimerRef = useRef<number | undefined>(undefined);
 
@@ -51,6 +89,28 @@ export function FlyingBee({ activeUntil }: FlyingBeeProps) {
     const timer = window.setInterval(update, 60_000);
     return () => window.clearInterval(timer);
   }, [activeUntil]);
+
+  useEffect(() => {
+    const previewName =
+      process.env.NODE_ENV === "development"
+        ? new URLSearchParams(window.location.search).get("beeTheme")
+        : null;
+    const previewTheme = previewName && previewName in BEE_THEMES
+      ? BEE_THEMES[previewName as BeeThemeName]
+      : null;
+    if (previewTheme) {
+      const previewTimer = window.setTimeout(() => setTheme(previewTheme), 0);
+      return () => window.clearTimeout(previewTimer);
+    }
+
+    const updateTheme = () => setTheme(getSeasonalBeeTheme());
+    const initialTimer = window.setTimeout(updateTheme, 0);
+    const timer = window.setInterval(updateTheme, 60 * 60 * 1_000);
+    return () => {
+      window.clearTimeout(initialTimer);
+      window.clearInterval(timer);
+    };
+  }, []);
 
   useEffect(() => {
     if (!active) return;
@@ -131,7 +191,7 @@ export function FlyingBee({ activeUntil }: FlyingBeeProps) {
     <>
       <button
         type="button"
-        aria-label="蜂をたくさん呼ぶ"
+        aria-label={`${theme.label}の蜂をたくさん呼ぶ`}
         className="flying-bee fixed left-0 top-0 z-[45] h-[58px] w-[58px] cursor-pointer border-0 bg-transparent p-0 md:h-[72px] md:w-[72px]"
         style={{
           transform: `translate3d(${flight.x}px, ${flight.y}px, 0) rotate(${flight.rotation}deg)`,
@@ -141,7 +201,7 @@ export function FlyingBee({ activeUntil }: FlyingBeeProps) {
       >
         <span className="flying-bee__bob relative block h-full w-full">
           <Image
-            src="/images/bee/flying-bee-v3.png"
+            src={theme.src}
             alt=""
             fill
             sizes="72px"
@@ -171,7 +231,7 @@ export function FlyingBee({ activeUntil }: FlyingBeeProps) {
           return (
             <span key={bee.id} className="flying-bee__swarm fixed left-0 top-0" style={style}>
               <Image
-                src="/images/bee/flying-bee-v3.png"
+                src={theme.src}
                 alt=""
                 fill
                 sizes="72px"
