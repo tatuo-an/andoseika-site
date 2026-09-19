@@ -81,7 +81,7 @@ export function FlyingBee({ activeUntil }: FlyingBeeProps) {
     >
       <div className="flying-bee__bob relative h-full w-full">
         <Image
-          src="/images/bee/flying-bee-v2.png"
+          src="/images/bee/flying-bee-v3.png"
           alt=""
           fill
           sizes="72px"
