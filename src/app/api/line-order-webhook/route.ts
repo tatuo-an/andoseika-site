@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { google } from "googleapis";
 import Anthropic from "@anthropic-ai/sdk";
-import { SHIIRE_GROUP_ID } from "@/lib/line-group-policy";
+import { KOUGA_GROUP_ID, SHIIRE_GROUP_ID } from "@/lib/line-group-policy";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -194,6 +194,18 @@ function nextThursdayInfo(): { iso: string; label: string } {
   const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   const label = `${d.getMonth() + 1}月${d.getDate()}日(木)`;
   return { iso, label };
+}
+
+// 幸雅グループは白ネギの定期配送先で、必要なのはケース数だけ。
+// 「2ケース」「3箱」のような記載から数量だけを確定する。
+function parseKougaCaseCount(text: string): number | null {
+  const match = text.match(/([0-9０-９]+(?:[.．][0-9０-９]+)?)\s*(?:ケース|ｹｰｽ|箱)/i);
+  if (!match) return null;
+  const normalized = match[1]
+    .replace(/[０-９]/g, (ch) => String.fromCharCode(ch.charCodeAt(0) - 0xfee0))
+    .replace("．", ".");
+  const quantity = Number(normalized);
+  return Number.isFinite(quantity) && quantity > 0 ? quantity : null;
 }
 
 async function callClaudeForOrderParsing(
@@ -432,6 +444,28 @@ async function processIncomingMessage(event: LineEvent) {
     } catch (err) {
       console.error("[line-order-webhook] ensurePartnerRowForGroup failed", err);
     }
+  }
+
+  // 幸雅は毎週木曜発送が確定しているため、ケース数が読めたら聞き返さず即時登録する。
+  // ケース数がないメッセージには反応しない。
+  if (event.source?.groupId === KOUGA_GROUP_ID) {
+    const quantity = parseKougaCaseCount(text);
+    if (quantity === null) return;
+    const delivery = nextThursdayInfo();
+    const summary = await finalizeAiOrder(
+      { items: [{ name: "白ネギ", quantity }], deliveryDate: delivery.iso },
+      event.source
+    );
+    await saveAiSession(sessionKey, "done", {});
+    await pushLineMessage(sessionKey, `白ネギ ${quantity}ケースで受け付けました。`);
+    if (summary) {
+      try {
+        await notifyOwner(summary);
+      } catch (err) {
+        console.error("[line-order-webhook] notifyOwner failed", err);
+      }
+    }
+    return;
   }
 
   const session = (await getAiSession(sessionKey)) || { row: -1, status: "collecting", data: {} };
