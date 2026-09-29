@@ -2,7 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { google } from "googleapis";
 import Anthropic from "@anthropic-ai/sdk";
-import { KOUGA_GROUP_ID, SHIIRE_GROUP_ID } from "@/lib/line-group-policy";
+import { KOUGA_GROUP_ID } from "@/lib/line-group-policy";
+import {
+  shouldRunLineGroupAutoReply,
+  shouldSendAdminPromptImmediately,
+} from "@/lib/line-group-auto-reply";
+import {
+  ensureLineGroupAutoReplySetting,
+  markLineGroupAdminPromptSent,
+} from "@/lib/line-group-auto-reply-store";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -47,7 +55,7 @@ type LineEvent = {
 // replyToken方式（api.line.me/.../reply）は有効期限が短く、Vercelのサーバーレス関数の
 // コールドスタート等でタイムアウトしやすいため、期限のないpush APIを使う
 // （replyより消費クォータの都合は悪いが、確実性を優先する）。
-async function pushLineMessage(to: string, text: string) {
+async function pushLineMessage(to: string, text: string): Promise<boolean> {
   const res = await fetch("https://api.line.me/v2/bot/message/push", {
     method: "POST",
     headers: {
@@ -59,18 +67,20 @@ async function pushLineMessage(to: string, text: string) {
   if (!res.ok) {
     const errText = await res.text().catch(() => "");
     console.error(`[line-order-webhook] LINE push failed (${res.status}): ${errText}`);
+    return false;
   }
+  return true;
 }
 
 // 安藤さん本人へ「新しいAI注文が確定した」ことを通知する。
 // OWNER_LINE_USER_ID未設定の間は通知をスキップする（取得方法はHANDOFF.md参照）。
-async function notifyOwner(text: string) {
+async function notifyOwner(text: string): Promise<boolean> {
   const ownerId = process.env.OWNER_LINE_USER_ID;
   if (!ownerId) {
     console.log("[line-order-webhook] OWNER_LINE_USER_ID未設定のため安藤さんへの通知をスキップ");
-    return;
+    return false;
   }
-  await pushLineMessage(ownerId, text);
+  return pushLineMessage(ownerId, text);
 }
 
 type AiSession = { row: number; status: string; data: Record<string, unknown> };
@@ -314,10 +324,10 @@ async function matchPartnerByLineId(lineId: string): Promise<ExistingPartner | n
 
 // 未登録のグループIDを既存取引先リストに自動追加する（名前はLINEグループ名を仮登録、
 // 正式な取引先名への修正は安藤さん/今村さんが手動で行う前提）
-async function ensurePartnerRowForGroup(groupId: string): Promise<void> {
+async function ensurePartnerRowForGroup(groupId: string, knownGroupName?: string): Promise<void> {
   const existing = await matchPartnerByLineId(groupId);
   if (existing) return;
-  const groupName = (await getGroupName(groupId)) || "（グループ名取得失敗・要確認）";
+  const groupName = knownGroupName || (await getGroupName(groupId)) || "（グループ名取得失敗・要確認）";
   const sheets = getSheets();
   await sheets.spreadsheets.values.append({
     spreadsheetId: SPREADSHEET_ID,
@@ -341,6 +351,32 @@ async function getGroupName(groupId: string): Promise<string | null> {
     console.error("[line-order-webhook] getGroupName failed", err);
     return null;
   }
+}
+
+async function initializeGroupAutoReply(groupId: string): Promise<boolean> {
+  const currentGroupName = await getGroupName(groupId);
+  const displayName = currentGroupName || "（グループ名取得失敗・要確認）";
+  try {
+    await ensurePartnerRowForGroup(groupId, displayName);
+  } catch (err) {
+    console.error("[line-order-webhook] ensurePartnerRowForGroup failed", err);
+  }
+
+  const result = await ensureLineGroupAutoReplySetting(groupId, currentGroupName);
+  if (
+    result.firstPromptRequired &&
+    shouldSendAdminPromptImmediately(process.env.LINE_GROUP_ADMIN_PROMPT_MODE)
+  ) {
+    const sent = await notifyOwner(
+      "【設定確認】このグループで自動応答を使いますか？\n" +
+      `グループ名: ${displayName}\n` +
+      `グループID: ${groupId}\n` +
+      "LINE注文管理画面の「グループ自動応答設定」でONまたはOFFを選んでください。\n" +
+      "未設定の間は自動応答しません。"
+    );
+    if (sent) await markLineGroupAdminPromptSent(groupId);
+  }
+  return shouldRunLineGroupAutoReply(result.setting.state);
 }
 
 async function finalizeAiOrder(data: { items: { name: string; quantity: number }[]; deliveryDate?: string }, source: { groupId?: string; userId?: string }): Promise<string | null> {
@@ -424,9 +460,12 @@ async function processIncomingMessage(event: LineEvent) {
   const sessionKey = event.source?.groupId || event.source?.userId || "";
   if (!sessionKey) return;
 
-  // 仕入れ・出荷の連絡専用グループでは、変更連絡を注文と誤認しないよう
-  // 注文AIの解析・確認返信をすべて停止する。内部連絡のpush送信機能は別経路なので残る。
-  if (event.source?.groupId === SHIIRE_GROUP_ID) return;
+  // グループは安定したgroupId単位で設定する。未設定・確認中・OFFはすべて
+  // fail-closedで停止し、注文解析・ID返信を含め一切の返信を行わない。
+  if (event.source?.groupId) {
+    const enabled = await initializeGroupAutoReply(event.source.groupId);
+    if (!enabled) return;
+  }
 
   const text = event.message?.text || "";
 
@@ -436,14 +475,6 @@ async function processIncomingMessage(event: LineEvent) {
     const myUserId = event.source?.userId || "(取得できませんでした)";
     await pushLineMessage(sessionKey, "あなたのLINE ID:\n" + myUserId);
     return;
-  }
-
-  if (event.source?.groupId) {
-    try {
-      await ensurePartnerRowForGroup(event.source.groupId);
-    } catch (err) {
-      console.error("[line-order-webhook] ensurePartnerRowForGroup failed", err);
-    }
   }
 
   // 幸雅は毎週木曜発送が確定しているため、ケース数が読めたら聞き返さず即時登録する。
@@ -533,7 +564,7 @@ export async function POST(req: NextRequest) {
       if (event.type === "message" && event.message?.type === "text") {
         await processIncomingMessage(event);
       } else if (event.type === "join" && event.source?.groupId) {
-        await ensurePartnerRowForGroup(event.source.groupId);
+        await initializeGroupAutoReply(event.source.groupId);
       }
     } catch (err) {
       console.error("[line-order-webhook] event processing error", err);

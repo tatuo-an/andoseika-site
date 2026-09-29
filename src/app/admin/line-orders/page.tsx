@@ -6,6 +6,7 @@ import { Footer } from "@/components/layout/Footer";
 import Link from "next/link";
 import { ArrowLeft, FileSpreadsheet } from "lucide-react";
 import { LineOrdersClient } from "./LineOrdersClient";
+import { LineGroupAutoReplySettings } from "./LineGroupAutoReplySettings";
 
 export const dynamic = "force-dynamic";
 
@@ -34,6 +35,7 @@ export default async function LineOrdersPage() {
                         スプレッドシート
                     </a>
                 </div>
+                <LineGroupAutoReplySettings />
                 <LineOrdersClient />
             </main>
             <Footer />
