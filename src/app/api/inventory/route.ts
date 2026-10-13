@@ -21,6 +21,10 @@ function getSheets() {
 }
 
 export async function GET() {
+    const session = await auth();
+    if (!isAdmin(session?.user?.email)) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
     try {
         const sheets = getSheets();
         const res = await sheets.spreadsheets.values.get({
