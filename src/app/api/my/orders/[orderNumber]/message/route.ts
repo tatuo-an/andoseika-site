@@ -68,6 +68,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ or
   const sheets = getSheets();
   const id = process.env.GOOGLE_SPREADSHEET_ID!;
 
+  // メッセージの時刻や注文番号を知っているだけでは、他人の注文を操作できない。
+  const orderRes = await sheets.spreadsheets.values.get({ spreadsheetId: id, range: "注文管理!A:D" });
+  const order = (orderRes.data.values ?? []).find((r) => r[0] === orderNumber);
+  if (!order) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (order[3] !== session.user.email) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
   const res = await sheets.spreadsheets.values.get({ spreadsheetId: id, range: "注文メッセージ!A:E" });
   const rows = (res.data.values ?? []) as string[][];
   const rowIndex = rows.findIndex((r) => r[0] === orderNumber && r[1] === "user" && r[4] === sentAt);
