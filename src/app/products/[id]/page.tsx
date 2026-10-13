@@ -7,6 +7,7 @@ import { client } from "@/lib/microcms";
 import { Product } from "@/types/microcms";
 import { AddToCartButton } from "@/components/products/AddToCartButton";
 import { ProductImageSlideshow } from "@/components/products/ProductImageSlideshow";
+import { ProductReviews } from "@/components/products/ProductReviews";
 import { FavoriteButton } from "@/components/products/FavoriteButton";
 import localProducts from "@/data/products.json";
 import { Metadata } from "next";
@@ -664,6 +665,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                     </div>
                 </div>
             </div>
+                <ProductReviews productId={id} />
             </main>
             <Footer />
         </div>

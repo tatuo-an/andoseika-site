@@ -157,6 +157,12 @@ export default async function AdminPage() {
                             顧客一覧
                         </Link>
                         <Link
+                            href="/admin/reviews"
+                            className="flex items-center gap-2 px-4 py-2 bg-white border border-stone-200 text-stone-700 text-sm font-bold rounded-lg hover:bg-stone-50 transition-colors shadow-sm whitespace-nowrap"
+                        >
+                            商品レビュー
+                        </Link>
+                        <Link
                             href="/admin/deliveries"
                             className="flex items-center gap-2 px-4 py-2 bg-white border border-stone-200 text-stone-700 text-sm font-bold rounded-lg hover:bg-stone-50 transition-colors shadow-sm whitespace-nowrap"
                         >
