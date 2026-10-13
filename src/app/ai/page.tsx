@@ -47,8 +47,8 @@ export default function AiPage() {
       <section className="hero" id="top">
         <div className="hero-text">
           <p className="eyebrow">鳥取の会社・お店の方へ</p>
-          <h1><span className="ib">ホームページもLINEも、</span><br /><span className="ib">頼み先を<span className="mk">ひとつに。</span></span></h1>
-          <p className="hero-lead">毎月の管理費は払っているのに、直したい所は、ずっとそのまま。そんなパソコンまわりの仕事を、作るところから、そのあとの手直しまで引き受けます。</p>
+          <h1><span className="ib">そのホームページ、</span><br /><span className="ib"><span className="mk">動いていますか？</span></span></h1>
+          <p className="hero-lead">管理費は毎月払っているのに、直したい所はそのまま。ホームページも、ネットショップも、公式LINEも。窓口をひとつにして、作ったあとの管理まで月1万〜3万円でお受けします。</p>
           <div className="hero-proof">
             <p className="hero-proof-title">実際にやった仕事</p>
             <ul className="hero-proof-list">
@@ -85,7 +85,7 @@ export default function AiPage() {
           <li>営業時間や値段を直したいだけなのに、頼むたびに別の料金がかかる</li>
           <li>ホームページ・予約・LINE・ネットショップで、頼み先も支払いもばらばら</li>
         </ul>
-        <p className="worry-close">保守料として毎月3万円、5万円。年にすると、まとまった金額です。そういう話を、地元のお店からよく聞きます。</p>
+        <p className="worry-close">ホームページ、ネットショップ、公式LINE。それぞれの会社に、月1万〜5万円ずつ払っていませんか。年にすると、まとまった金額です。</p>
         <p className="worry-close">うちは、作ったあとの更新・手直しを<span className="mk">月1万〜3万円</span>でお受けします。どこまで含むかは、見積もりに書いてお渡しします。ホームページもLINEも予約もネットショップも、窓口は安藤ひとつです。</p>
         </div>
       </section>
@@ -281,7 +281,7 @@ export default function AiPage() {
             <p className="work-stamp">公開済み</p>
             <p className="work-client">個人の方</p>
             <h3>会員だけが見られる、城めぐりの記録サイト。</h3>
-            <p className="work-body">ログインした人だけが見られる形で、城めぐりの記録サイトを作りました。行った城の記録と写真をまとめられます。御城印を探すページもあります。公式サイトの新着は1時間に1回自動で確かめて、スマホへ通知します。手元の写真や旅の履歴を取り込む場所もあります。</p>
+            <p className="work-body">ログインした人だけが見られる形で、城めぐりの記録サイトを作りました。行った城の記録と写真をまとめられます。御城印を探すページもあります。公式サイトの新着を定期的に確かめる機能と、スマホで通知を受け取る設定もあります。手元の写真や旅の履歴を取り込む場所もあります。</p>
             <p className="members-chip"><span className="members-lock" aria-hidden="true" />ログインした人だけ</p>
             <div className="castle-shots">
               <figure className="browser-shot castle-lead"><img src="/images/ai/matome/castle_visits.jpg" width="860" height="766" alt="城と訪問記録の画面" loading="lazy" /><figcaption>城と訪問の記録</figcaption></figure>
@@ -420,20 +420,47 @@ export default function AiPage() {
 
       <section className="price" id="price">
         <div className="section-heading"><p className="section-label" aria-hidden="true">PRICE</p><h2>料金について</h2></div>
-        <p className="price-lead">金額は、<span className="mk">内容を聞いてから</span>決めます。下の表は、作るときの費用の目安です。列ごとに、含む作業の範囲は違います。</p>
+        <p className="price-lead">金額は、<span className="mk">内容を聞いてから</span>決めます。目安は次のとおりです。</p>
+        <h3 className="price-step">作るとき（1回だけ）</h3>
+        <p className="price-scope">下の表は、作るときの費用の目安です。列ごとに、含む作業の範囲は違います。</p>
         <div className="table-scroll">
           <table className="market-table">
             <thead><tr><th scope="col">頼むもの</th><th scope="col">フリーランスの場合（目安）</th><th scope="col">制作会社の場合（目安）</th><th scope="col"><span className="price-brand" aria-hidden="true">{BRAND}</span>うちの場合</th></tr></thead>
             <tbody>
               <tr><td data-label="頼むもの">ホームページの制作</td><td data-label="フリーランスの場合（目安）">10万〜60万円</td><td data-label="制作会社の場合（目安）">50万〜150万円</td><td data-label="うちの場合"><strong>3万〜5万円</strong></td></tr>
-              <tr><td data-label="頼むもの">LINE公式アカウントの構築</td><td data-label="フリーランスの場合（目安）">10万〜30万円</td><td data-label="制作会社の場合（目安）">50万〜150万円</td><td data-label="うちの場合"><strong>3万〜10万円</strong></td></tr>
+              <tr><td data-label="頼むもの">LINE公式アカウントの構築</td><td data-label="フリーランスの場合（目安）">10万〜30万円</td><td data-label="制作会社の場合（目安）">50万〜150万円</td><td data-label="うちの場合"><strong>3万〜5万円</strong></td></tr>
             </tbody>
           </table>
         </div>
-        <p className="price-maintenance"><strong>作ったあとの更新・手直しは、月1万〜3万円です。</strong>含む作業と回数は、見積もりに書きます。</p>
-        <p className="price-note">フリーランスと制作会社の金額は、公開されている記事から拾った目安です（2026年10月。atsoho.com、imitsu.jp）。内容や規模で変わるので、同じ条件で比べたものではありません。うちの金額は税込の案で、内容を聞いてから決めます。</p>
-        <p className="price-lead price-separate">ネットショップと予約の仕組みは、内容を聞いて見積もります。SNSの投稿は、月3万円（税込）からです。</p>
-        <p className="price-sns-more"><Link href="/ai/sns">SNSの投稿の料金をくわしく見る</Link></p>
+        <p className="price-note">フリーランスと制作会社の金額は、公開されている記事から拾った目安です（2026年10月。atsoho.com、imitsu.jp）。内容や規模で変わるので、同じ条件で比べたものではありません。うちの金額は税込の目安で、内容を聞いてから決めます。</p>
+        <div className="price-pack">
+          <p className="price-pack-tag">まとめて頼むなら</p>
+          <h3 className="price-pack-name">オールインパック</h3>
+          <div className="price-pack-body">
+            <p className="price-pack-amount"><strong>10万円</strong></p>
+            <ul className="price-pack-list">
+              <li>ホームページの制作</li>
+              <li>小さなネットショップ</li>
+              <li>LINE公式アカウントの構築</li>
+            </ul>
+          </div>
+          <p className="price-pack-scope">3つをまとめて作ります。小さなお店向けの内容で、ページ数や商品の数は、見積もりに書いてお渡しします。</p>
+          <p className="price-pack-note">SNSの運用は入りません（下の、毎月の料金です）。</p>
+        </div>
+        <h3 className="price-step">毎月かかるもの</h3>
+        <div className="price-monthly">
+          <div className="price-monthly-item">
+            <h4 className="price-monthly-name">作ったあとの更新・手直し</h4>
+            <p className="price-monthly-amount"><strong>月1万〜3万円</strong></p>
+            <p>更新、控え（バックアップ）の確認、文章や写真の差し替え。含む作業と回数は、見積もりに書きます。</p>
+          </div>
+          <div className="price-monthly-item">
+            <h4 className="price-monthly-name">SNSの運用代行</h4>
+            <p className="price-monthly-amount"><strong>月3万〜10万円</strong></p>
+            <p>写真を送ってもらえば、文章づくりから投稿まで。投稿の本数と内容で決まります。</p>
+          </div>
+        </div>
+        <p className="price-lead price-separate">予約の仕組みと、ネットショップだけのご依頼は、内容を聞いて見積もります。</p>
       </section>
 
       <aside className="cta-band">
