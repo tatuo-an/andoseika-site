@@ -1,992 +1,482 @@
-import { AiTimeSupport } from "@/components/ai/AiTimeSupport";
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
-import { MobileStickyCta } from "@/components/ai/MobileStickyCta";
-import Image from "next/image";
+/* eslint-disable @next/next/no-img-element */
+import type { Metadata } from "next";
 import Link from "next/link";
-import {
-    ArrowRight,
-    Camera,
-    Check,
-    MessageCircle,
-    PlayCircle,
-    Phone,
-    CheckCircle2,
-} from "lucide-react";
-import { Metadata } from "next";
+import { FlyingBee } from "@/components/home/FlyingBee";
+import "./andu-lp.css";
+
+// 下書きの仮表示（確認中のカード・お客さまの声の枠・下書きの帯）。公開する版では false のまま
+const SHOW_DRAFT = false;
+
+// 屋号（決まったら、ここの2行だけ直せば、ページ全体と題名が変わる）
+const BRAND = "AND U";
+const BRAND_SUB = "願いが叶う";
+
+const title = `ホームページもLINEも、頼み先をひとつに｜${BRAND}`;
+const description = "鳥取の会社・お店の方へ。ホームページ・予約の仕組み・LINE公式アカウント・SNSの投稿・小さなネットショップを、作るところから手直しまで、ひとつの窓口で引き受けます。まずは60分の無料相談から。";
 
 export const metadata: Metadata = {
-    title: {
-        absolute:
-            "SNS運用代行・公式LINE構築 AND U｜写真を送るだけ、あとはこちらで回します",
-    },
-    description:
-        "鳥取の店舗向けSNS運用代行・公式LINE構築。写真を送るだけで、投稿とLINE配信をこちらが毎日回します。実測29.2万表示の実績あり。AND U（アンドユー）の無料相談で、今の状況をお聞かせください。",
-    openGraph: {
-        title: "SNS運用代行・公式LINE構築 AND U｜写真を送るだけ、あとはこちらで回します",
-        description:
-            "鳥取の店舗向けSNS運用代行・公式LINE構築。写真を送るだけで、投稿とLINE配信をこちらが毎日回します。実測29.2万表示の実績あり。",
-        images: [
-            {
-                url: "/images/about/founders.jpg",
-                width: 1024,
-                height: 1024,
-                alt: "AND U運営責任者 安藤匡志",
-            },
-        ],
-    },
+  title: { absolute: title },
+  description,
+  openGraph: {
+    title,
+    description,
+    images: [{
+      url: "/images/ai/ando-beekeeping.jpg",
+      alt: "巣板を持つ安藤",
+    }],
+  },
 };
 
-const LECTURE_PLAYLIST_URL =
-    "https://www.youtube.com/playlist?list=PLROQFcuDUc6U";
+export default function AiPage() {
+  return (
+    <div className="andu-lp">
+      {SHOW_DRAFT && (<p className="draft-note">下書きです（未公開）。屋号・料金・「確認中」の所は、確認のうえ確定します。</p>)}
 
-const LECTURE_VIDEOS: { title: string; youtubeId: string }[] = [
-    {
-        title: "地方の中小企業がAIを導入する前にやること｜仕組み化診断",
-        youtubeId: "6JpXlc3bswQ",
-    },
-    {
-        title: "毎朝の発信をAIで自動化した仕組み｜ネタ1つ出口4つ",
-        youtubeId: "h9fN6wL74m8",
-    },
-    {
-        title: "経理をAIで半自動化した実例｜仕訳・採算・帳簿点検",
-        youtubeId: "Sjf_RqeOf9Q",
-    },
-    {
-        title: "AI導入の最初の一週間｜紙に1つ書き出すだけ",
-        youtubeId: "a65M6BFtZ4c",
-    },
-    {
-        title: "仕入れと廃棄を見える化した話｜勘から数字へ",
-        youtubeId: "Y-hOqWcvXLc",
-    },
-    {
-        title: "毎朝の会議をAIとやる仕組み｜台帳と日誌で回す",
-        youtubeId: "nw3DXT_VJwk",
-    },
-    {
-        title: "AI導入で失敗する3つのパターン｜自社の反省録",
-        youtubeId: "oa_zmCN2b9c",
-    },
-    {
-        title: "AIの道具代は結局いくら？｜缶コーヒー数本分の実例",
-        youtubeId: "mYRqAoJs4jU",
-    },
-    {
-        title: "請求書づくりをAIで半自動化した話｜LINE注文の仕組み",
-        youtubeId: "r6eWJvozBRw",
-    },
-    {
-        title: "仕組み化診断から伴走支援まで｜全10回まとめ",
-        youtubeId: "nerm49aKmx8",
-    },
-];
+      <header className="site-header">
+        <p className="brand"><span className="brand-name">{BRAND}</span><span className="brand-sub">{BRAND_SUB}</span></p>
+        <nav className="header-nav" aria-label="ページ内の案内">
+          <a href="#services">頼めること</a>
+          <a href="#works">実際にやった仕事</a>
+          <a href="#price">料金</a>
+        </nav>
+        <a className="header-cta" href="https://lin.ee/WfeFzfF" target="_blank" rel="noopener noreferrer">LINEで無料相談</a>
+      </header>
 
-const [FIRST_LECTURE_VIDEO, ...REST_LECTURE_VIDEOS] = LECTURE_VIDEOS;
+      <main>
 
-const HERO_TAGS = ["鳥取の店舗向け", "写真を送るだけ", "SNS投稿とLINE配信まで"];
-
-const WORRY_ITEMS = [
-    "営業が終わってから、今日の投稿を考える気力が残っていない",
-    "何を書けば読まれるのか、正直よく分からない",
-    "フォロワーは増えたのに、お店に来る人は増えていない",
-    "写真は撮っているのに、投稿しないまま溜まっていく",
-];
-
-const PLAN_STEPS = [
-    {
-        step: "STEP 1",
-        text: "無料相談（60分）。今の状態と、任せたい範囲を聞かせてください。",
-    },
-    {
-        step: "STEP 2",
-        text: "初期構築（2週間目安）。SNSアカウントの設計と、公式LINEの土台をつくります。",
-    },
-    {
-        step: "STEP 3",
-        text: "月額運用スタート。あとは写真を送っていただくだけの毎日になります。",
-    },
-];
-
-const FAQ_ITEMS = [
-    {
-        q: "契約の縛りはありますか",
-        a: "月額プランは3ヶ月を1つの区切りとしています。3ヶ月経過したあとは、いつでも解約いただけます。",
-    },
-    {
-        q: "SNSアカウントを持っていなくても頼めますか",
-        a: "はい。新規開設からお受けします。その場合のみ初期設定費＋3万円をいただきます。開設直後のアカウントは慎重に扱う必要があるため、最初の1週間はこちらが手動で丁寧に運用します。",
-    },
-    {
-        q: "買い切りの場合、納品後の費用はかかりますか",
-        a: "当社への毎月の支払いはありません。仕組みを動かすAIツールの利用料（月3,000円ほど）だけ、お店でのご契約が必要です。不具合対応や修正のご依頼があった場合は、都度お見積りで別途料金をいただきます。",
-    },
-    {
-        q: "写真はスマホで撮ったものでいいですか",
-        a: "はい。スマホで撮った写真を送っていただければ十分です。",
-    },
-    {
-        q: "効果はいつから出ますか",
-        a: "正直にお伝えすると、この事業は始まったばかりで、長期の実績はまだこれから作るところです。目安として2〜3ヶ月は見てください。毎月の数字報告で、経過はすべてそのままお見せします。",
-    },
-    {
-        q: "解約したら、SNSアカウントや公式LINEはどうなりますか",
-        a: "すべてお店のものとしてお渡しします。当方が持ち続けることはありません。",
-    },
-    {
-        q: "対応地域はどこまでですか",
-        a: "鳥取近隣のお店を優先していますが、オンラインでのやり取りで全国どこからでもご相談いただけます。",
-    },
-];
-
-const PLAN_TABLE_HEADERS: {
-    key: "light" | "standard" | "full";
-    name: string;
-    price: string;
-    featured?: boolean;
-}[] = [
-    { key: "light", name: "ライト", price: "3万円" },
-    { key: "standard", name: "スタンダード", price: "5万円", featured: true },
-    { key: "full", name: "おまかせフル", price: "10万円" },
-];
-
-type PlanRow = { label: string; light: boolean; standard: boolean; full: boolean };
-
-const CAN_DO_ROWS: PlanRow[] = [
-    { label: "毎日の投稿代行（1日2投稿）", light: true, standard: true, full: true },
-    { label: "公式LINE配信", light: false, standard: true, full: true },
-    { label: "月1数字報告", light: false, standard: true, full: true },
-    { label: "コメント対応", light: false, standard: false, full: true },
-    { label: "キャンペーン企画", light: false, standard: false, full: true },
-];
-
-const TARGET_SNS_ROWS: PlanRow[] = [
-    { label: "Facebook", light: true, standard: true, full: true },
-    { label: "Instagram", light: true, standard: true, full: true },
-    { label: "Threads", light: true, standard: true, full: true },
-    { label: "X", light: false, standard: true, full: true },
-    { label: "YouTube", light: false, standard: true, full: true },
-    { label: "ブログ（noteなど）", light: false, standard: false, full: true },
-    { label: "TikTok・LinkedIn（ご希望で）", light: false, standard: false, full: true },
-];
-
-function BigCta({ label = "無料相談に申し込む" }: { label?: string }) {
-    return (
-        <div className="text-center">
-            <Link
-                href="/contact/personal?subject=sns-line"
-                className="inline-flex items-center bg-primary hover:bg-primary-dark text-white font-bold py-3.5 px-8 rounded-full transition-all transform hover:scale-105 shadow-lg"
-            >
-                {label}
-                <ArrowRight className="ml-2 h-4 w-4" />
-            </Link>
+      <section className="hero" id="top">
+        <div className="hero-text">
+          <p className="eyebrow">鳥取の会社・お店の方へ</p>
+          <h1><span className="ib">ホームページもLINEも、</span><br /><span className="ib">頼み先を<span className="mk">ひとつに。</span></span></h1>
+          <p className="hero-lead">毎月の管理費は払っているのに、直したい所は、ずっとそのまま。そんなパソコンまわりの仕事を、作るところから、そのあとの手直しまで引き受けます。</p>
+          <div className="hero-proof">
+            <p className="hero-proof-title">実際にやった仕事</p>
+            <ul className="hero-proof-list">
+              <li>すくすく助産院さまの予約を、LINEのやり取りから予約のページへ</li>
+              <li>ら～めん樹さまのSNSの投稿を、お店の代わりに</li>
+              <li>車屋さんのLINEと、車の紹介サイトを作成</li>
+              <li>うち自身のホームページとネット販売を、自分で作って運営</li>
+            </ul>
+            <p className="hero-proof-more"><a href="#works">くわしく見る</a></p>
+          </div>
+          <ul className="hero-badges"><li>相談は無料</li><li>60分</li><li>売り込みなし</li></ul>
+          <p className="cta-wrap hero-cta-sp"><a className="cta" href="https://lin.ee/WfeFzfF" target="_blank" rel="noopener noreferrer">LINEで無料相談する（60分）</a></p>
         </div>
-    );
-}
-
-function TextLinkCta({
-    text,
-    href = "/contact/personal?subject=sns-line",
-}: {
-    text: string;
-    href?: string;
-}) {
-    return (
-        <div className="text-center">
-            <Link
-                href={href}
-                className="inline-flex items-center gap-1 text-sm font-bold text-stone-800 hover:text-primary transition-colors"
-            >
-                {text}
-                <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
+        <div className="hero-visual">
+          <span className="hero-watermark" aria-hidden="true">{BRAND}</span>
+          <figure className="hero-photo"><img src="/images/ai/ando-beekeeping.jpg" alt="巣板を持つ安藤" fetchPriority="high" /><figcaption className="hero-who">窓口は、安藤 匡志です。</figcaption></figure>
+          <span className="bee" aria-hidden="true"><img src="/images/bee/flying-bee-v3.png" alt="" aria-hidden="true" width="384" height="384" /></span>
         </div>
-    );
-}
+      </section>
 
-function PlanCompareTable({ title, rows }: { title: string; rows: PlanRow[] }) {
-    return (
-        <div className="max-w-md mx-auto overflow-hidden rounded-2xl border border-stone-200 bg-white">
-            <p className="border-b border-stone-200 bg-stone-50 px-3 py-2 text-sm font-bold text-stone-700">
-                {title}
-            </p>
-            <table className="w-full table-fixed border-collapse text-sm">
-                <thead>
-                    <tr>
-                        <th scope="col" className="w-[28%] p-1.5 md:p-2 text-left font-normal text-stone-400">
-                            {""}
-                        </th>
-                        {PLAN_TABLE_HEADERS.map((plan) => (
-                            <th
-                                key={plan.key}
-                                scope="col"
-                                className={`p-1.5 md:p-2 text-center align-bottom ${
-                                    plan.featured
-                                        ? "border-x-2 border-t-2 border-primary bg-primary/5"
-                                        : ""
-                                }`}
-                            >
-                                {plan.featured && (
-                                    <span className="mb-1 inline-block rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold text-white">
-                                        おすすめ
-                                    </span>
-                                )}
-                                <p
-                                    className={`text-xs sm:text-sm whitespace-nowrap tracking-tight font-bold leading-tight ${
-                                        plan.featured ? "text-primary" : "text-stone-700"
-                                    }`}
-                                >
-                                    {plan.name}
-                                </p>
-                                <p className="text-[11px] font-normal text-stone-500">{plan.price}</p>
-                            </th>
-                        ))}
-                    </tr>
-                </thead>
-                <tbody>
-                    {rows.map((row, i) => (
-                        <tr key={row.label} className="border-t border-stone-100">
-                            <th
-                                scope="row"
-                                className="p-1.5 md:p-2 text-left font-normal leading-snug text-stone-700"
-                            >
-                                {row.label}
-                            </th>
-                            <td className="p-1.5 md:p-2 text-center text-stone-700">
-                                {row.light ? "○" : <span className="text-stone-300">—</span>}
-                            </td>
-                            <td
-                                className={`p-1.5 md:p-2 text-center font-bold text-primary border-x-2 border-primary bg-primary/5 ${
-                                    i === rows.length - 1 ? "border-b-2" : ""
-                                }`}
-                            >
-                                {row.standard ? "○" : <span className="text-stone-300">—</span>}
-                            </td>
-                            <td className="p-1.5 md:p-2 text-center text-stone-700">
-                                {row.full ? "○" : <span className="text-stone-300">—</span>}
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
+      <aside className="cta-band hero-contact">
+          <p className="cta-band-title">友だち追加のあと、「相談したい」とひとこと送ってください。</p>
+          <p className="cta-wrap"><a className="cta" href="https://lin.ee/WfeFzfF" target="_blank" rel="noopener noreferrer">LINEで無料相談する（60分）</a></p>
+          <p className="cta-sub">電話でも大丈夫です　<a className="tel" href="tel:07084348124">070-8434-8124</a><span className="tel-hours">月〜土 9:00〜18:00（日曜・祝日は休み）</span></p>
+          <p className="cta-note">日にちと方法は、そのあと相談して決めます。</p>
+      </aside>
+
+      <section className="worries" id="worries">
+        <div className="worry-panel">
+        <div className="section-heading"><p className="section-label" aria-hidden="true">TROUBLE</p><h2>毎月の管理費、<br /><span className="ib">何に払っているか</span><span className="ib">分かりますか</span></h2></div>
+        <ul className="worry-list">
+          <li>ホームページの保守料や管理費を、毎月・毎年払い続けている</li>
+          <li>でも、何をしてもらっているのか、はっきり分からない</li>
+          <li>営業時間や値段を直したいだけなのに、頼むたびに別の料金がかかる</li>
+          <li>ホームページ・予約・LINE・ネットショップで、頼み先も支払いもばらばら</li>
+        </ul>
+        <p className="worry-close">保守料として毎月3万円、5万円。年にすると、まとまった金額です。そういう話を、地元のお店からよく聞きます。</p>
+        <p className="worry-close">うちは、作ったあとの更新・手直しを<span className="mk">月1万〜3万円</span>でお受けします。どこまで含むかは、見積もりに書いてお渡しします。ホームページもLINEも予約もネットショップも、窓口は安藤ひとつです。</p>
         </div>
-    );
-}
+      </section>
 
-export default function AiConsultingPage() {
-    return (
-        <div className="min-h-screen flex flex-col font-sans bg-stone-50">
-            <Header />
+      <div className="solution-ribbon"><p><span className="ib">それ、<span className="mk">まとめて</span></span><span className="ib">おまかせください。</span></p></div>
 
-            <main className="flex-1">
-                {/* 1. ヒーロー（なぜ：思想＋CTA／写真は右カラム・md以上で2カラム） */}
-                <section className="relative py-16 md:py-24 bg-stone-100 overflow-hidden">
-                    <div className="absolute inset-0 opacity-5 bg-[radial-gradient(#444_1px,transparent_1px)] [background-size:16px_16px]"></div>
-                    <div className="container mx-auto px-4 md:px-6 relative z-10">
-                        <div className="max-w-5xl mx-auto grid md:grid-cols-2 md:gap-14 items-center">
-                            {/* 左: コピー＋CTA */}
-                            <div className="text-center md:text-left space-y-5">
-                                <span className="text-stone-500 font-bold tracking-widest uppercase text-sm">
-                                    AND U — SNS運用代行 × 公式LINE構築
-                                </span>
-                                <h1 className="text-3xl md:text-4xl font-bold text-stone-900 leading-[1.2] font-heading">
-                                    いいものを作っているのに、知られていない。
-                                    <br className="hidden md:block" />
-                                    それが一番もったいないと思っています。
-                                </h1>
-
-                                <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
-                                    {HERO_TAGS.map((tag) => (
-                                        <span
-                                            key={tag}
-                                            className="inline-flex items-center rounded-full border border-stone-300 bg-white px-3 py-1 text-sm font-medium text-stone-600"
-                                        >
-                                            {tag}
-                                        </span>
-                                    ))}
-                                </div>
-
-                                <p className="text-stone-700 text-base md:text-lg leading-relaxed">
-                                    写真を送るだけ。SNSと公式LINEは、ぜんぶこちらで回します。
-                                </p>
-                                <p className="text-stone-600 text-sm leading-relaxed">
-                                    安藤（ANDO）の名前には、最初から「AND」が入っています。あなたのお店と、一緒に。それでAND
-                                    Uです。
-                                </p>
-
-                                <div className="pt-2">
-                                    <div className="flex justify-center md:justify-start">
-                                        <Link
-                                            href="/contact/personal?subject=sns-line"
-                                            className="inline-flex items-center bg-primary hover:bg-primary-dark text-white font-bold py-4 px-8 rounded-full transition-all transform hover:scale-105 shadow-lg"
-                                        >
-                                            無料相談に申し込む
-                                            <ArrowRight className="ml-2 h-5 w-5" />
-                                        </Link>
-                                    </div>
-                                    <p className="text-stone-600 text-sm mt-3">
-                                        60分・オンライン可・売り込みはしません
-                                    </p>
-                                </div>
-                            </div>
-
-                            {/* 右: 顔写真＋実績のちいさな予告（md以上）／モバイルはCTAの下に積む */}
-                            <div className="mt-10 md:mt-0">
-                                <div className="flex items-center gap-4 bg-white rounded-2xl p-4 border border-stone-200 shadow-sm">
-                                    <div className="relative w-20 h-20 rounded-full overflow-hidden flex-shrink-0 bg-stone-100">
-                                        <Image
-                                            src="/images/about/founders.jpg"
-                                            alt="AND U運営責任者 安藤匡志"
-                                            fill
-                                            priority
-                                            className="object-cover"
-                                        />
-                                    </div>
-                                    <div>
-                                        <p className="font-bold text-stone-900">安藤 匡志</p>
-                                        <p className="text-sm text-stone-600">
-                                            養蜂家 / 鳥取の青果卸「安藤青果」運営責任者
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <div className="mt-4 grid grid-cols-2 gap-3">
-                                    <div className="bg-white rounded-2xl p-4 text-center border border-stone-200 shadow-sm">
-                                        <p className="font-heading font-bold text-primary text-2xl">
-                                            13,923<span className="text-sm text-stone-700 ml-0.5">人</span>
-                                        </p>
-                                        <p className="text-sm text-stone-500 mt-1">Xフォロワー</p>
-                                    </div>
-                                    <div className="bg-white rounded-2xl p-4 text-center border border-stone-200 shadow-sm">
-                                        <p className="font-heading font-bold text-primary text-2xl">
-                                            1.4万<span className="text-sm text-stone-700 ml-0.5">いいね</span>
-                                        </p>
-                                        <p className="text-sm text-stone-500 mt-1">Threads最高記録</p>
-                                    </div>
-                                </div>
-                                <p className="text-stone-600 text-sm text-center mt-3">
-                                    この運用を、あなたのお店の分まで代行します。
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-                <div id="hero-end-sentinel" />
-
-                {/* 2. 悩み共感（店主の生活の言葉） */}
-                <section className="py-16 md:py-20 bg-white">
-                    <div className="container mx-auto px-4 md:px-6 max-w-3xl">
-                        <div className="text-center mb-8">
-                            <h2 className="text-2xl md:text-3xl font-bold text-stone-900 font-heading">
-                                こんな夜、ありませんか。
-                            </h2>
-                        </div>
-
-                        <ul className="grid gap-3 md:grid-cols-2">
-                            {WORRY_ITEMS.map((item) => (
-                                <li
-                                    key={item}
-                                    className="flex items-start gap-3 bg-stone-50 border border-stone-100 rounded-2xl p-4 md:p-5 text-stone-700 text-base leading-relaxed"
-                                >
-                                    <Check className="h-5 w-5 text-stone-400 flex-shrink-0 mt-0.5" />
-                                    <span>{item}</span>
-                                </li>
-                            ))}
-                        </ul>
-
-                        <p className="text-stone-700 leading-relaxed mt-8 text-center">
-                            どれか一つでも当てはまるなら、この先を読んでください。
-                        </p>
-                    </div>
-                </section>
-
-                {/* 3. 証拠（なに：実演販売。実物のスクショと数字を1本のカードに一体化） */}
-                <section className="py-16 md:py-20 bg-stone-50">
-                    <div className="container mx-auto px-4 md:px-6 max-w-2xl">
-                        <div className="text-center mb-8">
-                            <h2 className="text-2xl md:text-3xl font-bold text-stone-900 font-heading mb-6">
-                                まず、自分の店で毎日やっています。
-                            </h2>
-                            <p className="text-stone-700 leading-relaxed text-left md:text-center">
-                                デモではなく実物です。鳥取で農業と養蜂をやっている当方自身が、閉店後の1時間をスマホとにらめっこせずに過ごせる毎日を、先に体験しています。
-                            </p>
-                        </div>
-
-                        {/* 実物その1: Xでバズった投稿。スクショ→実測値を一体化 */}
-                        <div className="mx-auto max-w-md bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden">
-                            <div className="p-6 md:p-8 flex justify-center bg-stone-50">
-                                <div className="w-full rounded-2xl border-[6px] border-stone-900 shadow-xl overflow-hidden bg-stone-900">
-                                    <div className="rounded-xl overflow-hidden bg-white">
-                                        <Image
-                                            src="/images/ai/x-viral-post.png"
-                                            alt="実際のX投稿のスクリーンショット。表示回数29.2万件・リポスト367件・いいね2,000件・ブックマーク229件と表示されている。"
-                                            width={1300}
-                                            height={570}
-                                            className="w-full h-auto"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="p-6 md:p-8 border-t border-stone-100">
-                                <p className="text-center text-sm text-stone-500 mb-4">
-                                    実際の投稿（2026年7月・X）
-                                </p>
-                                <p className="text-center text-stone-900 font-bold text-lg">
-                                    表示29.2万件・いいね2,000件・リポスト367件
-                                </p>
-                                <p className="text-stone-700 text-sm md:text-base mt-4 leading-relaxed text-center">
-                                    同じ投稿へのリプライも、表示5.2万件・いいね1,031件まで伸びました。1本の話から、こういう反応が生まれます。
-                                </p>
-                            </div>
-                        </div>
-
-                        {/* 実物その2: Threadsでバズった投稿。739人の解説つき */}
-                        <div className="mx-auto max-w-md bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden mt-8">
-                            <div className="p-6 md:p-8 flex justify-center bg-stone-50">
-                                <div className="w-[220px] rounded-2xl border-[6px] border-stone-900 shadow-xl overflow-hidden bg-stone-900">
-                                    <div className="rounded-xl overflow-hidden bg-white">
-                                        <Image
-                                            src="/images/ai/threads-14000-likes.png"
-                                            alt="実際のThreads投稿のスクリーンショット。いいね1.4万件・コメント157件・リポスト271件と表示されている。"
-                                            width={520}
-                                            height={565}
-                                            className="w-full h-auto"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="p-6 md:p-8 border-t border-stone-100">
-                                <p className="text-center text-sm text-stone-500 mb-4">
-                                    実際の投稿（2026年8月・Threads）
-                                </p>
-                                <p className="text-center text-stone-900 font-bold text-lg">
-                                    いいね1.4万件・コメント157件・リポスト271件
-                                </p>
-                                <p className="text-center text-stone-600 text-sm mt-1">
-                                    1本の投稿で、ここまで反応がありました。
-                                </p>
-
-                                <div className="border-t border-stone-100 mt-6 pt-6 text-center">
-                                    <p className="text-stone-600 text-sm mb-2">
-                                        この投稿を出したとき、Threadsのフォロワーは
-                                    </p>
-                                    <p className="font-heading font-bold text-primary text-4xl md:text-5xl">
-                                        739<span className="text-lg text-stone-800 ml-1">人</span>
-                                    </p>
-                                    <p className="text-stone-700 text-sm md:text-base mt-4 leading-relaxed">
-                                        フォロワーが少なくても、中身と仕組みがあれば届きます。「うちはフォロワーがいないから」で終わらせなくて大丈夫です。
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* 実物その3: Xプロフィール。実測13,923人（画面表示は1.3万）を実物で裏づけ */}
-                        <div className="mx-auto max-w-md bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden mt-8">
-                            <div className="p-6 md:p-8 flex justify-center bg-stone-50">
-                                <div className="w-full rounded-2xl border-[6px] border-stone-900 shadow-xl overflow-hidden bg-stone-900">
-                                    <div className="rounded-xl overflow-hidden bg-white">
-                                        <Image
-                                            src="/images/ai/x-profile.png"
-                                            alt="実際のXプロフィール画面のスクリーンショット。認証バッジ付きアカウントで、1.3万フォロワーと表示されている。"
-                                            width={1214}
-                                            height={943}
-                                            className="w-full h-auto"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="p-6 md:p-8 border-t border-stone-100 text-center">
-                                <p className="font-heading font-bold text-primary text-4xl md:text-5xl">
-                                    13,923<span className="text-lg text-stone-800 ml-1">人</span>
-                                </p>
-                                <p className="text-stone-600 text-sm mt-2">
-                                    X（旧Twitter）のフォロワー・2026年8月時点
-                                </p>
-                            </div>
-                        </div>
-
-                        {/* 養蜂の実写（本人が現場をやっている証拠） */}
-                        <div className="max-w-sm mx-auto mt-10">
-                            <div className="rounded-2xl overflow-hidden border border-stone-200 shadow-sm">
-                                <Image
-                                    src="/images/ai/ando-beekeeping.jpg"
-                                    alt="実際に養蜂をしている安藤本人。巣板を持ち上げているところ。"
-                                    width={1280}
-                                    height={1280}
-                                    sizes="384px"
-                                    className="w-full h-auto"
-                                />
-                            </div>
-                            <p className="text-center text-sm text-stone-500 mt-2">
-                                SNSも、この畑と巣箱を回しながらやっています。
-                            </p>
-                        </div>
-
-                        <p className="text-stone-700 leading-relaxed mt-10 text-left md:text-center max-w-xl mx-auto">
-                            現在、地元のラーメン店と美容室のSNS運用を実際に担当しています。
-                        </p>
-
-                        {/* 差し込み予定: クライアント実績データ（本人確認済みの実数字が出たら追記。未検証の間は空欄のまま）
-                            例: ○○様（ラーメン店）フォロワー数◯人→◯人／LINE登録者◯人 等。実額・保証表現は禁止 */}
-
-                        <p className="text-center text-stone-500 text-sm mt-8">
-                            やり方は、無料相談のときにそのままお見せします。
-                        </p>
-                    </div>
-                </section>
-
-                {/* 4. 何をするか（どうやって） */}
-                <section className="py-16 md:py-20 bg-white">
-                    <div className="container mx-auto px-4 md:px-6 max-w-4xl">
-                        <div className="text-center mb-8 max-w-2xl mx-auto">
-                            <h2 className="text-2xl md:text-3xl font-bold text-stone-900 font-heading mb-6">
-                                写真を送るだけ。あとはこちらで回します。
-                            </h2>
-                            <p className="text-stone-700 leading-relaxed">
-                                SNS投稿代行と公式LINE構築を中心に、仕事の仕組みづくりもお手伝いしています。
-                            </p>
-                        </div>
-
-                        <div className="grid md:grid-cols-2 gap-4">
-                            <div className="bg-stone-50 rounded-2xl p-6 md:p-8 border border-stone-100">
-                                <div className="w-10 h-10 bg-stone-200 rounded-full flex items-center justify-center text-stone-700 mb-4">
-                                    <Camera className="h-5 w-5" />
-                                </div>
-                                <h3 className="font-bold text-stone-900 mb-3">SNS投稿代行</h3>
-                                <p className="text-sm text-stone-500 mb-1">困り事</p>
-                                <p className="text-stone-700 text-sm leading-relaxed mb-3">
-                                    投稿する時間も、文章を考える余力もない
-                                </p>
-                                <p className="text-sm text-stone-500 mb-1">任せられる実作業</p>
-                                <p className="text-stone-700 text-sm leading-relaxed">
-                                    写真を受け取ってから、文章づくり・投稿までこちらで
-                                </p>
-                            </div>
-                            <div className="bg-stone-50 rounded-2xl p-6 md:p-8 border border-stone-100">
-                                <div className="w-10 h-10 bg-stone-200 rounded-full flex items-center justify-center text-stone-700 mb-4">
-                                    <MessageCircle className="h-5 w-5" />
-                                </div>
-                                <h3 className="font-bold text-stone-900 mb-3">公式LINE構築</h3>
-                                <p className="text-sm text-stone-500 mb-1">困り事</p>
-                                <p className="text-stone-700 text-sm leading-relaxed mb-3">
-                                    フォロワーが増えても、来店やリピートにつながらない
-                                </p>
-                                <p className="text-sm text-stone-500 mb-1">任せられる実作業</p>
-                                <p className="text-stone-700 text-sm leading-relaxed">
-                                    公式LINEの設計から、登録してもらう導線、配信まで
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="mt-8 py-8 border-t border-b border-stone-200 text-center">
-                            <p className="font-heading text-lg md:text-xl text-stone-900 leading-relaxed">
-                                フォロワーは、<strong>SNS会社のもの</strong>です。
-                                <br />
-                                LINEの友だちは、<strong>あなたのお店のもの</strong>です。
-                            </p>
-                        </div>
-                    </div>
-                </section>
-
-                {/* 5. 料金 */}
-                <section className="py-16 md:py-20 bg-stone-100">
-                    <div className="container mx-auto px-4 md:px-6 max-w-5xl">
-                        <div className="text-center mb-8 max-w-2xl mx-auto">
-                            <h2 className="text-2xl md:text-3xl font-bold text-stone-900 font-heading">
-                                料金は、まずは無料相談から。
-                            </h2>
-                        </div>
-
-                        <div className="max-w-2xl mx-auto bg-white rounded-2xl border border-stone-200 shadow-sm p-6 md:p-8 mb-10">
-                            <p className="text-sm text-stone-500 tracking-wide mb-2">
-                                まずはここから・全員の入口
-                            </p>
-                            <h3 className="font-bold text-stone-900 mb-1">無料相談</h3>
-                            <p className="text-2xl font-bold text-stone-900 mb-3">
-                                無料<span className="text-sm font-normal text-stone-500">（60分）</span>
-                            </p>
-                            <p className="text-stone-700 text-sm leading-relaxed mb-5">
-                                今のSNSと、目指したいお店の状態を聞かせてください。話した結果、力になれないと分かることもあります。それでも構いません。
-                            </p>
-                            <Link
-                                href="/contact/personal?subject=sns-line"
-                                className="inline-flex items-center justify-center w-full bg-primary hover:bg-primary-dark text-white font-bold py-3.5 px-6 rounded-full transition-all"
-                            >
-                                無料相談に申し込む
-                                <ArrowRight className="ml-2 h-4 w-4" />
-                            </Link>
-                        </div>
-
-                        <p className="text-stone-700 text-sm mb-2 text-center">
-                            相談のあとは、月額プランからお選びいただけます。
-                        </p>
-                        <p className="text-stone-900 text-sm font-bold mb-1 text-center">
-                            SNSアカウントをすでにお持ちの場合、初期構築費は不要です（月額に含まれています）。
-                        </p>
-                        <p className="text-stone-600 text-sm mb-4 text-center">
-                            新規でアカウント開設が必要な場合のみ、初期設定費＋3万円をいただきます（アカウント開設と、安全に育てるための初週の手動運用まで込み）。
-                        </p>
-
-                        <div className="grid md:grid-cols-3 gap-4">
-                            <div className="bg-white rounded-2xl border border-stone-200 p-6">
-                                <p className="text-sm font-bold text-stone-900 mb-1">ライト</p>
-                                <p className="text-2xl font-bold text-stone-900 mb-2">
-                                    3<span className="text-sm font-normal text-stone-500 ml-1">万円（税込・月額）</span>
-                                </p>
-                                <p className="text-stone-600 text-sm">投稿代行のみ</p>
-                            </div>
-                            <div className="bg-primary/5 rounded-2xl border-2 border-primary p-6 relative">
-                                <span className="inline-block bg-primary text-white text-sm font-bold px-3 py-1 rounded-full mb-2">
-                                    おすすめ
-                                </span>
-                                <p className="text-sm font-bold text-primary mb-1">スタンダード</p>
-                                <p className="text-2xl font-bold text-stone-900 mb-2">
-                                    5<span className="text-sm font-normal text-stone-500 ml-1">万円（税込・月額）</span>
-                                </p>
-                                <p className="text-stone-700 text-sm mb-4">LINE配信＋月1報告つき</p>
-                                <Link
-                                    href="/contact/personal?subject=sns-line"
-                                    className="inline-flex items-center justify-center w-full bg-primary hover:bg-primary-dark text-white font-bold py-2.5 px-4 rounded-full text-sm transition-all"
-                                >
-                                    このプランで申し込む
-                                </Link>
-                            </div>
-                            <div className="bg-white rounded-2xl border border-stone-200 p-6">
-                                <p className="text-sm font-bold text-stone-900 mb-1">おまかせフル</p>
-                                <p className="text-2xl font-bold text-stone-900 mb-2">
-                                    10
-                                    <span className="text-sm font-normal text-stone-500 ml-1">万円（税込・月額）</span>
-                                </p>
-                                <p className="text-stone-600 text-sm">企画・コメント対応まで全部</p>
-                            </div>
-                        </div>
-
-                        <p className="text-sm font-bold text-stone-500 text-center mt-10 mb-4">
-                            プラン比較
-                        </p>
-                        <div className="space-y-4">
-                            <PlanCompareTable title="できること" rows={CAN_DO_ROWS} />
-                            <PlanCompareTable title="対象SNS" rows={TARGET_SNS_ROWS} />
-                        </div>
-
-                        <p className="text-stone-600 text-sm mt-6 text-center">
-                            最初にご協力いただくお店には、モニター特別条件をご用意しています。
-                        </p>
-
-                        {/* 買い切り「初期構築おまかせパック」: 月額プランとは別枠 */}
-                        <div className="max-w-2xl mx-auto mt-14 pt-10 border-t border-stone-300">
-                            <p className="text-center text-sm font-bold text-stone-500 mb-2">
-                                月額契約はせず、仕組みだけ作ってほしい方へ
-                            </p>
-                            <h3 className="text-center text-xl font-bold text-stone-900 font-heading mb-6">
-                                初期構築おまかせパック
-                            </h3>
-
-                            <div className="bg-white rounded-2xl border border-stone-200 p-6 md:p-8">
-                                <p className="text-2xl font-bold text-stone-900 mb-2">
-                                    10
-                                    <span className="text-sm font-normal text-stone-500 ml-1">
-                                        万円（税込・買い切り）
-                                    </span>
-                                </p>
-                                <p className="text-stone-700 text-sm leading-relaxed mb-4">
-                                    SNSアカウント設計と公式LINE構築を一式で仕上げて納品します。月額契約は不要です。
-                                </p>
-
-                                <p className="text-sm font-bold text-stone-500 mb-2">含まれるもの</p>
-                                <ul className="space-y-1.5 mb-4">
-                                    {[
-                                        "SNSアカウントの設計・プロフィール文づくり",
-                                        "公式LINEの開設・あいさつ配信・リッチメニュー",
-                                        "毎日の投稿が自動で回る仕組みの構築",
-                                        "店頭のLINE登録案内の作成",
-                                        "初週の投稿づくり",
-                                    ].map((text) => (
-                                        <li
-                                            key={text}
-                                            className="flex items-start gap-2 text-stone-700 text-sm leading-relaxed"
-                                        >
-                                            <span className="text-stone-400 flex-shrink-0">・</span>
-                                            <span>{text}</span>
-                                        </li>
-                                    ))}
-                                </ul>
-
-                                <div className="border-t border-stone-100 pt-3 space-y-2">
-                                    <p className="text-stone-600 text-sm leading-relaxed">
-                                        作った仕組みは、納品後もずっとお店のものです。
-                                    </p>
-                                    <p className="text-stone-600 text-sm leading-relaxed">
-                                        ※仕組みを動かすためのAIツールの利用料（月3,000円ほど・お店でのご契約）が別途かかります。いちばん安いプランで足りる設計にし、契約のお手伝いもこちらでやります。
-                                    </p>
-                                    <p className="text-stone-600 text-sm leading-relaxed">
-                                        納品後の不具合対応・修正のご依頼は、都度お見積り（別途料金）になります。
-                                    </p>
-                                    <p className="text-stone-600 text-sm leading-relaxed">
-                                        あとから月3万円の運用サポート（ライトプラン）を追加することもできます。
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                {/* 6. 正直告白 */}
-                <section className="py-16 md:py-20 bg-white">
-                    <div className="container mx-auto px-4 md:px-6 max-w-4xl">
-                        <div className="text-center mb-8 max-w-2xl mx-auto">
-                            <h2 className="text-2xl md:text-3xl font-bold text-stone-900 font-heading mb-6">
-                                正直に言うと、どのお店にも向くわけではありません。
-                            </h2>
-                            <p className="text-stone-700 leading-relaxed">
-                                合うお店と、合わないお店があります。ここは飾らずに書きます。
-                            </p>
-                        </div>
-
-                        <div className="grid md:grid-cols-2 gap-4">
-                            <div className="bg-stone-50 rounded-2xl border border-stone-100 overflow-hidden">
-                                <div className="px-5 py-3 border-b border-stone-200 font-bold text-stone-900 text-sm">
-                                    向いていると思うお店
-                                </div>
-                                <ul className="p-5 space-y-3">
-                                    {[
-                                        "写真は撮れるけど、文章と投稿が続かない",
-                                        "SNSを増やすだけでなく、来店につながる形にしたい",
-                                        "公式LINEを育てて、お店自身の資産にしたい",
-                                        "効果が出るまで2〜3ヶ月かかることを許容できる",
-                                    ].map((text) => (
-                                        <li
-                                            key={text}
-                                            className="flex items-start gap-2 text-stone-700 text-sm leading-relaxed"
-                                        >
-                                            <span className="text-stone-400 font-bold flex-shrink-0">○</span>
-                                            <span>{text}</span>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                            <div className="bg-stone-50 rounded-2xl border border-stone-100 overflow-hidden">
-                                <div className="px-5 py-3 border-b border-stone-200 font-bold text-stone-900 text-sm">
-                                    向いていないと思うお店
-                                </div>
-                                <ul className="p-5 space-y-3">
-                                    {[
-                                        "今すぐ売上が倍になる魔法を求めている",
-                                        "写真を一枚も送れない（現場の材料がない）",
-                                        "発信の内容・言葉づかいを一切変えたくない",
-                                        "月1回のやり取りすら負担に感じる",
-                                    ].map((text) => (
-                                        <li
-                                            key={text}
-                                            className="flex items-start gap-2 text-stone-700 text-sm leading-relaxed"
-                                        >
-                                            <span className="text-stone-400 font-bold flex-shrink-0">△</span>
-                                            <span>{text}</span>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        </div>
-
-                        <TextLinkCta
-                            text="自分の店が向いているか、無料相談で聞いてみる"
-                        />
-
-                        <p className="text-stone-700 leading-relaxed mt-6 text-left md:text-center max-w-2xl mx-auto">
-                            当てはまらないと思ったら、無理に申し込む必要はありません。相談だけ受けて、合わないと分かって帰っていただいて構いません。
-                        </p>
-                    </div>
-                </section>
-
-                {/* 7. 進め方 */}
-                <section className="py-16 md:py-20 bg-stone-50">
-                    <div className="container mx-auto px-4 md:px-6 max-w-2xl">
-                        <div className="text-center mb-8">
-                            <h2 className="text-2xl md:text-3xl font-bold text-stone-900 font-heading">
-                                始め方は3ステップです。
-                            </h2>
-                        </div>
-
-                        <ol className="bg-white rounded-2xl border border-stone-200 shadow-sm p-6 md:p-8">
-                            {PLAN_STEPS.map((item, i) => (
-                                <li key={item.step} className="relative pl-14 pb-8 last:pb-0">
-                                    {i !== PLAN_STEPS.length - 1 && (
-                                        <span className="absolute left-5 top-10 bottom-0 w-px bg-stone-300" />
-                                    )}
-                                    <span className="absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-full bg-stone-900 text-white text-sm font-bold">
-                                        {i + 1}
-                                    </span>
-                                    <p className="text-sm font-bold text-stone-500 mb-1">{item.step}</p>
-                                    <p className="text-stone-700 text-base leading-relaxed">{item.text}</p>
-                                </li>
-                            ))}
-                        </ol>
-
-                        <div className="mt-8">
-                            <BigCta label="この内容で無料相談を申し込む" />
-                        </div>
-                    </div>
-                </section>
-
-                {/* 8. 無料相談の中身（AIでの仕組み化）＋動画講義 全10回 */}
-                <section id="lecture" className="py-16 md:py-20 bg-white scroll-mt-16">
-                    <div className="container mx-auto px-4 md:px-6 max-w-3xl">
-                        <AiTimeSupport />
-
-                        <div className="text-center mt-14 mb-8">
-                            <h2 className="text-2xl md:text-3xl font-bold text-stone-900 font-heading mb-6">
-                                動画講義 全10回（無料・各3〜4分）
-                            </h2>
-                            <p className="text-stone-700 leading-relaxed">
-                                仕組み化診断のやり方と、自社での実例を、10本のショート講義にまとめました。
-                                第1回はこの場で見られます。
-                            </p>
-                        </div>
-
-                        <div className="bg-white rounded-2xl overflow-hidden border border-stone-200 shadow-sm">
-                            <div className="relative aspect-video bg-stone-200">
-                                <iframe
-                                    src={`https://www.youtube-nocookie.com/embed/${FIRST_LECTURE_VIDEO.youtubeId}`}
-                                    title={FIRST_LECTURE_VIDEO.title}
-                                    className="absolute inset-0 w-full h-full"
-                                    loading="lazy"
-                                    allowFullScreen
-                                />
-                            </div>
-                            <div className="p-5">
-                                <p className="text-sm text-stone-500 font-bold mb-1">第1回</p>
-                                <h3 className="font-bold text-stone-900">{FIRST_LECTURE_VIDEO.title}</h3>
-                            </div>
-                        </div>
-
-                        <details className="mt-6 bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden group">
-                            <summary className="cursor-pointer list-none flex items-center justify-between p-4 md:p-5 font-bold text-stone-900 hover:bg-stone-50 transition-colors">
-                                <span>第2回〜第10回を見る（9本）</span>
-                                <span className="text-stone-500 text-sm group-open:hidden">開く ▼</span>
-                                <span className="text-stone-500 text-sm hidden group-open:inline">閉じる ▲</span>
-                            </summary>
-                            <ol className="divide-y divide-stone-100 border-t border-stone-100">
-                                {REST_LECTURE_VIDEOS.map((video, index) => (
-                                    <li key={video.youtubeId}>
-                                        <a
-                                            href={`https://www.youtube.com/watch?v=${video.youtubeId}`}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="flex items-center gap-4 p-4 md:p-5 hover:bg-stone-50 transition-colors"
-                                        >
-                                            <span className="flex-shrink-0 w-8 h-8 rounded-full bg-stone-200 text-stone-700 font-bold text-sm flex items-center justify-center">
-                                                {index + 2}
-                                            </span>
-                                            <span className="flex-1 text-stone-800 text-sm md:text-base">
-                                                {video.title}
-                                            </span>
-                                            <PlayCircle className="h-5 w-5 text-stone-400 flex-shrink-0" />
-                                        </a>
-                                    </li>
-                                ))}
-                            </ol>
-                        </details>
-
-                        <div className="text-center mt-6">
-                            <a
-                                href={LECTURE_PLAYLIST_URL}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center font-bold text-stone-800 hover:text-stone-600"
-                            >
-                                ▶ 全10回をまとめて見る
-                            </a>
-                        </div>
-
-                        <div className="mt-6">
-                            <TextLinkCta text="動画を見て、話を聞いてみたくなったら" />
-                        </div>
-
-                        <div className="max-w-2xl mx-auto mt-10 space-y-5 text-stone-700 leading-relaxed">
-                            <p>「見て終わり」で構いません。まずは知ってもらうためのものです。</p>
-                            <p>
-                                その上で、自分のお店の話を聞いてほしいと思った方は、無料相談にお申し込みください。今のSNSや仕事の悩みを聞かせてもらうだけでも大丈夫です。
-                            </p>
-                        </div>
-                    </div>
-                </section>
-
-                {/* 9. FAQ */}
-                <section className="py-16 md:py-20 bg-stone-50">
-                    <div className="container mx-auto px-4 md:px-6 max-w-2xl">
-                        <div className="text-center mb-8">
-                            <h2 className="text-2xl md:text-3xl font-bold text-stone-900 font-heading">
-                                よくある質問
-                            </h2>
-                        </div>
-
-                        <div className="space-y-6">
-                            {FAQ_ITEMS.map((item) => (
-                                <div key={item.q}>
-                                    <p className="font-bold text-stone-900 mb-2">
-                                        <span className="text-stone-500 mr-1">Q.</span>
-                                        {item.q}
-                                    </p>
-                                    <p className="text-stone-700 text-sm leading-relaxed pl-5">
-                                        <span className="text-stone-500 mr-1">A.</span>
-                                        {item.a}
-                                    </p>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </section>
-
-                {/* 10. 最終CTA */}
-                <section className="py-16 md:py-20 bg-primary text-white">
-                    <div className="container mx-auto px-4 md:px-6 text-center max-w-2xl">
-                        <h2 className="text-2xl md:text-3xl font-bold mb-6 font-heading">
-                            気になった方は、ご連絡ください
-                        </h2>
-                        <p className="text-base md:text-lg mb-10 opacity-90 leading-relaxed">
-                            スマホからのメッセージでも、電話でも構いません。
-                            まずは今のSNSや仕事の悩みを聞かせてください。
-                        </p>
-
-                        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                            <Link
-                                href="/contact/personal?subject=sns-line"
-                                className="inline-flex items-center bg-white text-primary font-bold py-4 px-10 rounded-full transition-all transform hover:scale-105 shadow-lg"
-                            >
-                                無料相談に申し込む
-                                <ArrowRight className="ml-2 h-5 w-5" />
-                            </Link>
-                        </div>
-
-                        <div className="mt-8 inline-flex items-center gap-2 text-sm opacity-90">
-                            <Phone className="h-4 w-4" />
-                            <span>070-8434-8124（月〜土 9:00〜18:00・日祝休）</span>
-                        </div>
-
-                        <div className="mt-10 flex items-center justify-center gap-2 text-sm opacity-80">
-                            <CheckCircle2 className="h-4 w-4" />
-                            <span>契約前提ではありません。まずはお話をお聞かせください。</span>
-                        </div>
-
-                        <div className="mt-6">
-                            <Link
-                                href="/contact/personal?subject=ai-consulting"
-                                className="text-sm opacity-75 underline underline-offset-2"
-                            >
-                                AIでの社内の仕組み化について相談したい方はこちら
-                            </Link>
-                        </div>
-                    </div>
-                </section>
-            </main>
-
-            <div id="footer-sentinel" />
-            <Footer />
-            <MobileStickyCta />
+      <section className="change" id="change">
+        <div className="section-heading"><p className="section-label" aria-hidden="true">SOLUTION</p><h2>困ったら、ここに1本。<br />そう言える相手ができます</h2></div>
+        <div className="bundle" aria-hidden="true">
+          <span className="bundle-in">ホームページ</span>
+          <span className="bundle-in">LINE・SNS</span>
+          <span className="bundle-in">予約</span>
+          <span className="bundle-in">ネットショップ</span>
+          <svg className="bundle-lines" viewBox="0 0 240 192" preserveAspectRatio="none" focusable="false" aria-hidden="true"><path d="M0 24 C110 24 105 96 160 96 M0 72 C110 72 110 96 160 96 M0 120 C110 120 110 96 160 96 M0 168 C110 168 105 96 160 96 M160 96 H232 M224 88 L232 96 L224 104"/><circle cx="160" cy="96" r="3"/></svg>
+          <svg className="bundle-lines-mobile" viewBox="0 0 320 64" preserveAspectRatio="none" focusable="false" aria-hidden="true"><path d="M80 0 V16 Q80 30 100 30 H140 Q160 30 160 48 M240 0 V16 Q240 30 220 30 H180 Q160 30 160 48 M160 48 V62" /><circle cx="160" cy="58" r="4" /></svg><span className="bundle-out">窓口はひとつ</span>
         </div>
-    );
+        <div className="hero-menu">
+          <p className="hero-menu-title">頼めること</p>
+          <ul className="hero-menu-list">
+            <li>ホームページ</li>
+            <li>予約の仕組み</li>
+            <li><span className="menu-label">LINE公式</span><span className="menu-label">アカウント</span></li>
+            <li>SNSの投稿</li>
+            <li><span className="menu-label">小さな</span><span className="menu-label">ネットショップ</span></li>
+            <li><span className="menu-label">作ったあとの</span><span className="menu-label">更新・手直し</span></li>
+          </ul>
+        </div>
+        <ol className="change-list">
+          <li>
+            <p className="before">頼み先がいくつもある</p>
+            <span className="change-arrow" aria-hidden="true">↓</span><p className="after"><span className="mk">窓口はひとつ</span>。「これ、どこに聞けばいい？」がなくなります。</p>
+          </li>
+          <li>
+            <p className="before">直したいのに、止まったまま</p>
+            <span className="change-arrow" aria-hidden="true">↓</span><p className="after">営業時間や値段の差し替えを、<span className="mk">いつもの言葉で</span>頼めます。</p>
+          </li>
+          <li>
+            <p className="before">毎月の管理費が、何の分か分からない</p>
+            <span className="change-arrow" aria-hidden="true">↓</span><p className="after">見積もりに<span className="mk">含むもの・含まないもの</span>を書いてお渡しします。</p>
+          </li>
+        </ol>
+      </section>
+
+<section className="works" id="works">
+        <div className="section-heading"><p className="section-label" aria-hidden="true">WORKS</p><h2>実際にやった仕事</h2></div>
+        <p className="works-lead">地元のお店や事業所で、実際にお受けした仕事です。</p>
+        <div className="work-list">
+
+          <article className="work work-main">
+            <p className="work-record">仕事の記録 / 01</p>
+            <p className="work-stamp">公開済み<span className="work-date">2026年9月</span></p>
+            <p className="work-client">すくすく助産院さま</p>
+            <h3>LINEで1件ずつ受けていた予約を、予約のページに。</h3>
+            <dl className="work-flow">
+              <dt>前</dt>
+              <dd>予約は公式LINEで、1件ずつやり取りしていました。毎月の受付開始も手作業でした。</dd>
+              <dt>やったこと</dt>
+              <dd>ホームページに予約ボタンを置き、既製の予約サービスで受付のページを作りました。公式LINEのメニューからも、予約のページへ行けるようにしました。</dd>
+              <dt>今</dt>
+              <dd>1日1組の枠は、予約が1件入ると自動で満席になります。毎月決まった日時に、翌月分の受付が自動で開きます。</dd>
+            </dl>
+            <div className="mini-flow booking-flow"><span className="diagram-box">ホームページ</span><span className="flow-arrow" aria-hidden="true">→</span><span className="diagram-box">予約のページ</span><span className="flow-arrow" aria-hidden="true">←</span><span className="diagram-box">公式LINE</span></div>
+            <div className="work-shots">
+              <figure className="phone-shot"><img src="/images/ai/matome/real_stores.jpg" alt="すくすく助産院さまの予約ページの画面" width="860" height="1720" loading="lazy" /><figcaption>予約のページ</figcaption></figure>
+              <figure className="phone-shot"><img src="/images/ai/matome/real_sukusuku_top.jpg" alt="すくすく助産院さまのホームページをスマホで見た画面" width="860" height="1720" loading="lazy" /><figcaption>ホームページの予約ボタン</figcaption></figure>
+            </div>
+            {SHOW_DRAFT && (<p className="voice-slot todo" data-draft="voice">（お客さまの言葉は、ご本人の了承をいただいてから、ここに載せます）</p>)}
+          </article>
+
+          <article className="work">
+            <p className="work-record">仕事の記録 / 02</p>
+            <p className="work-stamp">担当中</p>
+            <p className="work-client">ら～めん樹さま（倉吉市）</p>
+            <h3>SNSの投稿を、お店の代わりに。</h3>
+            <p className="work-body">Threadsの運用を担当しています。美容室のSNSの運用もお受けしています。</p>
+            <div className="work-shots">
+              <figure className="phone-shot"><img src="/images/ai/matome/threads_ramen.jpg" alt="ら～めん樹さまのThreadsのプロフィール画面" width="860" height="1520" loading="lazy" /><figcaption>プロフィール</figcaption></figure>
+              <figure className="phone-shot"><img src="/images/ai/matome/real_threads_post.jpg" alt="ら～めん樹さまのThreadsの投稿の画面" width="860" height="1600" loading="lazy" /><figcaption>はじめての投稿</figcaption></figure>
+            </div>
+            {SHOW_DRAFT && (<p className="voice-slot todo" data-draft="voice">（お客さまの言葉は、ご本人の了承をいただいてから、ここに載せます）</p>)}
+          </article>
+
+          <article className="work">
+            <p className="work-record">仕事の記録 / 03</p>
+            <p className="work-stamp">公開済み</p>
+            <p className="work-client">車屋さん（まさ｜中古車紹介）</p>
+            <h3>LINEの窓口と、車の紹介サイトを作成。</h3>
+            <p className="work-body">LINE公式アカウントを整え、友だち追加のあいさつと、「紹介中の車」「購入相談」「相談の流れ」の3つのメニューを作りました。紹介中の車を載せるサイトも作り、LINEからそのまま見られるようにしています。</p>
+            <div className="work-shots">
+              <figure className="phone-shot"><img src="/images/ai/matome/real_line_car.jpg" alt="車屋さんのLINE公式アカウントの画面" width="869" height="1702" loading="lazy" /><figcaption>LINE公式アカウント（実際の画面）</figcaption></figure>
+              <figure className="phone-shot"><img src="/images/ai/matome/real_car.jpg" alt="車の紹介サイトをスマホで見た画面" width="860" height="1720" loading="lazy" /><figcaption>車の紹介サイト（実際の画面）</figcaption></figure>
+            </div>
+            {SHOW_DRAFT && (<p className="voice-slot todo" data-draft="voice">（お客さまの言葉は、ご本人の了承をいただいてから、ここに載せます）</p>)}
+          </article>
+
+          <article className="work work-timecard">
+            <p className="work-record">仕事の記録 / 04</p>
+            <p className="work-stamp">導入済み</p>
+            <p className="work-client">一般社団法人 結夢（ドリーム）さま</p>
+            <h3>手入力だったタイムカードを、写真を撮るだけに。</h3>
+            <p className="work-body">就労支援の事業所さんで、事務の仕事を楽にするお手伝いをしました。これまで手で入力していたタイムカードは、写真を撮るだけで表に反映されます。時間の合計と金額の計算まで、自動で出ます。</p>
+            <figure className="work-diagram">
+              <div className="timecard-comparison">
+                <div className="timecard-panel">
+                  <p className="timecard-title">紙のタイムカード</p>
+                  <div className="timecard-stack">
+                    <div className="timecard-paper timecard-back" aria-hidden="true"><span className="timecard-tab">Aさん</span></div>
+                    <div className="timecard-paper timecard-back" aria-hidden="true"><span className="timecard-tab">Bさん</span></div>
+                    <div className="timecard-paper timecard-back" aria-hidden="true"><span className="timecard-tab">Cさん</span></div>
+                    <div className="timecard-paper timecard-back" aria-hidden="true"><span className="timecard-tab">Dさん</span></div>
+                    <div className="timecard-paper timecard-back" aria-hidden="true" />
+                    <div className="timecard-paper timecard-front">
+                    <p className="timecard-paper-heading">タイムカード</p>
+                    <table className="timecard-table" aria-label="紙のタイムカードの見本">
+                      <thead><tr><th scope="col">日</th><th scope="col">出勤</th><th scope="col">退勤</th></tr></thead>
+                      <tbody><tr><td>1</td><td>9:00</td><td>17:00</td></tr><tr><td>2</td><td>9:05</td><td>17:10</td></tr><tr><td>3</td><td>8:55</td><td>16:50</td></tr><tr><td>4</td><td>9:00</td><td>17:00</td></tr></tbody>
+                    </table>
+                    </div>
+                  </div>
+                </div>
+                <div className="timecard-transfer"><span className="timecard-camera" aria-hidden="true" /><span>写真を撮る</span><span className="timecard-arrow" aria-hidden="true">→</span></div>
+                <div className="timecard-panel">
+                  <p className="timecard-title">表に反映・自動で計算</p>
+                  <div className="timecard-sheet">
+                    <p className="sheet-title">勤務の集計（見本）</p>
+                    <div className="sheet-columns" aria-hidden="true"><span /><span>A</span><span>B</span><span>C</span><span>D</span><span>E</span></div>
+                    <table className="summary-table" aria-label="勤務時間と金額の集計の見本">
+                      <colgroup><col className="sheet-index" /><col /><col /><col className="sheet-hours" /><col /><col className="sheet-amount" /></colgroup>
+                      <thead><tr><td className="sheet-row-number" aria-hidden="true">1</td><th scope="col">名前</th><th scope="col">出勤</th><th scope="col">時間</th><th scope="col">単価</th><th scope="col">金額</th></tr></thead>
+                      <tbody>
+                        <tr><td className="sheet-row-number" aria-hidden="true">2</td><th scope="row">Aさん</th><td>20日</td><td>80時間</td><td>500円</td><td>40,000円</td></tr>
+                        <tr><td className="sheet-row-number" aria-hidden="true">3</td><th scope="row">Bさん</th><td>18日</td><td>72時間</td><td>500円</td><td>36,000円</td></tr>
+                        <tr><td className="sheet-row-number" aria-hidden="true">4</td><th scope="row">Cさん</th><td>22日</td><td>88時間</td><td>500円</td><td>44,000円</td></tr>
+                        <tr><td className="sheet-row-number" aria-hidden="true">5</td><th scope="row">Dさん</th><td>15日</td><td>60時間</td><td>500円</td><td>30,000円</td></tr>
+                      </tbody>
+                      <tfoot><tr><td className="sheet-row-number" aria-hidden="true">6</td><th scope="row">合計</th><td /><td>300時間</td><td /><td>150,000円</td></tr></tfoot>
+                    </table>
+                  </div>
+                  <p className="sheet-calculation"><span>自動で計算</span></p>
+                </div>
+              </div>
+              <figcaption className="work-caption">イメージです（見本のデータ）。</figcaption>
+            </figure>
+            {SHOW_DRAFT && (<p className="voice-slot todo" data-draft="voice">（お客さまの言葉は、ご本人の了承をいただいてから、ここに載せます）</p>)}
+          </article>
+
+          <article className="work">
+            <p className="work-record">仕事の記録 / 05</p>
+            <p className="work-stamp">運営中</p>
+            <p className="work-client">うち自身のお店（AND YOU 安藤青果）</p>
+            <h3>ホームページとネット販売を、自分で作って運営。</h3>
+            <p className="work-body">はちみつや野菜を売っている、うち自身のホームページです。商品のページも注文の受付も、自分で作って動かしています。飲食店や小売店からの、業務用の問い合わせフォームもあります。業種・欲しい商品・使う量などを、選ぶだけで送れる形です。毎日のSNSも自分で続けていて、Xのフォロワーは1.3万人です。</p>
+            <div className="work-shots shop-shots">
+              <figure className="browser-shot shop-desktop"><img src="/images/ai/matome/site_home_pc.jpg" alt="安藤青果のホームページをパソコンで見た画面" width="1280" height="640" loading="lazy" /><figcaption>ホームページ（パソコンで見た画面）</figcaption></figure>
+              <figure className="phone-shot shop-main"><img src="/images/ai/matome/real_honey.jpg" alt="はちみつの商品ページをスマホで見た画面" width="860" height="1720" loading="lazy" /><figcaption>はちみつの商品ページ（実際の画面）</figcaption></figure>
+              <figure className="phone-shot shop-secondary"><img src="/images/ai/matome/real_form1.jpg" alt="業務用の問い合わせフォームの画面" width="860" height="1720" loading="lazy" /><figcaption>業務用の問い合わせフォーム</figcaption></figure>
+              <figure className="phone-shot shop-secondary"><img src="/images/ai/matome/real_form2.jpg" alt="業務用の問い合わせフォームの選ぶ項目の画面" width="860" height="1720" loading="lazy" /><figcaption>選ぶだけの項目</figcaption></figure>
+            </div>
+          </article>
+
+          <article className="work work-tools">
+            <p className="work-record">仕事の記録 / 06</p>
+            <p className="work-stamp">使用中</p>
+            <p className="work-client">うちで作って、使っているもの</p>
+            <h3>営業・納品・ネット販売の道具を、自分で作って毎日使用。</h3>
+            <p className="work-body">自分の仕事に合わせて、道具を作って毎日使っています。お客さんの仕事に合わせて、同じように作ることもできます。</p>
+            <div className="work-shots tool-shots">
+              <div className="tool-card">
+                <p className="tool-name">営業ツール</p>
+                <p className="tool-description">営業先の一覧と、電話の記録をまとめます。</p>
+                <figure className="browser-shot"><img src="/images/ai/tools/sales-list.jpg" alt="営業ツールの画面" loading="lazy" /></figure>
+              </div>
+              <div className="tool-card">
+                <p className="tool-name">納品ツール</p>
+                <p className="tool-description">お店への納品と回収の数を記録します。</p>
+                <figure className="browser-shot"><img src="/images/ai/tools/delivery.jpg" alt="納品ツールの画面" loading="lazy" /></figure>
+              </div>
+              <div className="tool-card">
+                <p className="tool-name">オンラインツール</p>
+                <p className="tool-description">ネット注文の一覧を読み込むと、販売の登録と発送の管理の表に反映されます。</p>
+                <figure className="browser-shot"><img src="/images/ai/tools/online.jpg" alt="オンラインツールの画面" loading="lazy" /></figure>
+              </div>
+              <div className="tool-card">
+                <p className="tool-name">市場ツール</p>
+                <p className="tool-description">市場への出荷と仕入れを記録します。</p>
+                <figure className="browser-shot"><img src="/images/ai/tools/market.jpg" alt="市場ツールの画面" loading="lazy" /></figure>
+              </div>
+            </div>
+            <p className="work-caption">画面は、掲載用のサンプルデータを入れたものです。</p>
+          </article>
+          <article className="work work-castle">
+            <p className="work-record">仕事の記録 / 07</p>
+            <p className="work-stamp">公開済み</p>
+            <p className="work-client">個人の方</p>
+            <h3>会員だけが見られる、城めぐりの記録サイト。</h3>
+            <p className="work-body">ログインした人だけが見られる形で、城めぐりの記録サイトを作りました。行った城の記録と写真をまとめられます。御城印を探すページもあります。公式サイトの新着は1時間に1回自動で確かめて、スマホへ通知します。手元の写真や旅の履歴を取り込む場所もあります。</p>
+            <p className="members-chip"><span className="members-lock" aria-hidden="true" />ログインした人だけ</p>
+            <div className="castle-shots">
+              <figure className="browser-shot castle-lead"><img src="/images/ai/matome/castle_visits.jpg" width="860" height="766" alt="城と訪問記録の画面" loading="lazy" /><figcaption>城と訪問の記録</figcaption></figure>
+              <figure className="browser-shot"><img src="/images/ai/matome/castle_goshuin.jpg" width="1251" height="875" alt="御城印を探す画面" loading="lazy" /><figcaption>御城印を探す</figcaption></figure>
+              <figure className="browser-shot"><img src="/images/ai/matome/castle_news.jpg" width="1257" height="856" alt="新着のお知らせの画面" loading="lazy" /><figcaption>新着のお知らせ</figcaption></figure>
+              <figure className="browser-shot"><img src="/images/ai/matome/castle_notice.jpg" width="1243" height="660" alt="スマホへの通知を受け取る画面" loading="lazy" /><figcaption>スマホへの通知</figcaption></figure>
+              <figure className="browser-shot"><img src="/images/ai/matome/castle_data.jpg" width="1248" height="758" alt="写真と資料を取り込む画面" loading="lazy" /><figcaption>写真と資料の取り込み</figcaption></figure>
+            </div>
+            <p className="work-caption">実際の画面です。</p>
+          </article>
+        </div>
+      </section>
+
+      <aside className="cta-band">
+        <p className="cta-band-title">うちの店だと、どうなるだろう。<br />そう思ったら、聞かせてください。</p>
+        <p className="cta-wrap"><a className="cta" href="https://lin.ee/WfeFzfF" target="_blank" rel="noopener noreferrer">LINEで無料相談する（60分）</a></p>
+        <p className="cta-sub">電話でも大丈夫です　<a className="tel" href="tel:07084348124">070-8434-8124</a></p>
+      </aside>
+
+      <section className="services" id="services">
+        <div className="section-heading"><p className="section-label" aria-hidden="true">POINT</p><h2>まとめて引き受けること</h2></div>
+        <p className="service-note">全部でなくて大丈夫です。<span className="mk">必要なものだけ</span>選べます。料金は、頼むものごとに見積もります。</p>
+        <ul className="service-list">
+          <li className="point-row">
+            <div className="point-visual point-pair">
+              <figure className="phone-shot"><img src="/images/ai/matome/real_sukusuku_top.jpg" alt="すくすく助産院さまのホームページをスマホで見た画面" width="860" height="1720" loading="lazy" /><figcaption>すくすく助産院さまのホームページ（予約ボタンを設置）</figcaption></figure>
+              <figure className="phone-shot phone-secondary"><img src="/images/ai/matome/site_home.jpg" alt="安藤青果のホームページをスマホで見た画面" width="780" height="1040" loading="lazy" /><figcaption>うち自身のホームページ</figcaption></figure>
+              <span className="visual-tag" aria-hidden="true">WEB</span>
+            </div>
+            <div className="point-text"><p className="point-number" aria-hidden="true"><span>POINT</span><span>01</span></p>
+            <h3>ホームページ</h3>
+            <p>新しく作る。今あるものを直す。スマホで見やすい形にします。</p>
+            </div>
+          </li>
+          <li className="point-row">
+            <div className="point-visual">
+              <figure className="phone-shot"><img src="/images/ai/matome/real_stores.jpg" alt="すくすく助産院さまの予約ページの画面" width="860" height="1720" loading="lazy" /><figcaption>すくすく助産院さまの予約ページ（実際の画面）</figcaption></figure>
+              <span className="visual-tag" aria-hidden="true">RESERVATION</span>
+            </div>
+            <div className="point-text"><p className="point-number" aria-hidden="true"><span>POINT</span><span>02</span></p>
+            <h3>予約の仕組み</h3>
+            <p>電話だけに頼らない受付を、既製のサービスを使って組みます。ホームページの予約ボタンやLINEのメニューから、予約のページへ進めるようにします。</p>
+            </div>
+          </li>
+          <li className="point-row">
+            <div className="point-visual">
+              <figure className="phone-shot"><img src="/images/ai/matome/real_line_car.jpg" alt="車屋さんのLINE公式アカウントの画面" width="869" height="1702" loading="lazy" /><figcaption>LINE公式アカウントのメニュー（実際の画面）</figcaption></figure>
+              <span className="visual-tag" aria-hidden="true">LINE</span>
+            </div>
+            <div className="point-text"><p className="point-number" aria-hidden="true"><span>POINT</span><span>03</span></p>
+            <h3>LINE公式アカウント</h3>
+            <p>開設と最初の設定をして、お知らせを配信できる形まで整えます。友だち追加のあいさつと、押すだけで進めるメニューも作ります。</p>
+            </div>
+          </li>
+          <li className="point-row">
+            <div className="point-visual">
+              <figure className="phone-shot"><img src="/images/ai/matome/real_threads_post.jpg" alt="ら～めん樹さまのThreadsの投稿の画面" width="860" height="1600" loading="lazy" /><figcaption>ら～めん樹さまの投稿（実際の画面）</figcaption></figure>
+              <span className="visual-tag" aria-hidden="true">SNS</span>
+            </div>
+            <div className="point-text"><p className="point-number" aria-hidden="true"><span>POINT</span><span>04</span></p>
+            <h3>SNSの投稿</h3>
+            <p>写真を送ってもらえば、文章づくりから投稿まで、こちらでやります。</p>
+            </div>
+          </li>
+          <li className="point-row">
+            <div className="point-visual">
+              <figure className="phone-shot"><img src="/images/ai/matome/real_honey.jpg" alt="はちみつの商品ページをスマホで見た画面" width="860" height="1720" loading="lazy" /><figcaption>うち自身のお店の商品ページ（実際の画面）</figcaption></figure>
+              <span className="visual-tag" aria-hidden="true">SHOP</span>
+            </div>
+            <div className="point-text"><p className="point-number" aria-hidden="true"><span>POINT</span><span>05</span></p>
+            <h3>小さなネットショップ</h3>
+            <p>数点から売れる、小さな売り場を作ります。</p>
+            </div>
+          </li>
+          <li className="point-row">
+            <div className="point-visual">
+              <div className="diagram-panel"><ul className="support-checklist"><li>更新</li><li>控え（バックアップ）の確認</li><li>文章や写真の差し替え</li></ul></div>
+              <span className="visual-tag" aria-hidden="true">SUPPORT</span>
+            </div>
+            <div className="point-text"><p className="point-number" aria-hidden="true"><span>POINT</span><span>06</span></p>
+            <h3>作ったあとの更新・手直し</h3>
+            <p>作って終わりにしません。更新、控え（バックアップ）の確認、文章や写真の差し替えをします。</p>
+            </div>
+          </li>
+        </ul>
+      </section>
+
+            <section className="about" id="about">
+        <div className="section-heading"><p className="section-label" aria-hidden="true">ABOUT</p><h2>窓口は、安藤です</h2></div>
+        <div className="about-layout">
+          <figure className="about-photo"><img src="/images/ai/matome/profile_ando_bee.jpg" width="800" height="1000" alt="巣箱の前で巣板を持つ安藤" loading="lazy" /></figure>
+        <div className="about-text">
+          <p className="about-name">安藤 匡志<span className="about-role">養蜂家／鳥取の青果卸「安藤青果」運営責任者</span></p>
+          <p>鳥取で農業と養蜂をやっています。現場の仕事をしながら、机の仕事も回す。その両方をやっているので、忙しいお店の事情に合わせた組み方を考えます。</p>
+          <h3>小さなお店でも頼みやすい理由</h3>
+          <p>作って終わりにせず、そのあとの直しまで、同じ窓口で受けます。打ち合わせは、いつもの言葉で大丈夫です。</p>
+        </div>
+        </div>
+      </section>
+
+      <section className="rules" id="rules">
+        <div className="section-heading"><p className="section-label" aria-hidden="true">REASON</p><h2>引き受けるときの決まり</h2></div>
+        <ul className="rule-list">
+          <li><span className="reason-number" aria-hidden="true">01</span><p>見積もりに「含むもの・含まないもの」を書きます（ページ数、直しの回数、写真と文章のご用意など）。</p></li>
+          <li><span className="reason-number" aria-hidden="true">02</span><p>ドメインとサーバー（ホームページの住所と置き場所）は、お客さまの名義にします。こちらの名義にはしません。</p></li>
+          <li><span className="reason-number" aria-hidden="true">03</span><p>今あるホームページを直すときは、作業の前に丸ごと控えます。変えた内容は記録してお渡しします。</p></li>
+          <li><span className="reason-number" aria-hidden="true">04</span><p>メールの設定には触りません。</p></li>
+          <li><span className="reason-number" aria-hidden="true">05</span><p>止まったときの連絡先と、いつまでに対応を始めるかを、先に決めておきます。</p></li>
+        </ul>
+        <div className="honest">
+          <h3>正直にお伝えすること</h3>
+          <ul>
+            <li>写真と文章は、お店でご用意いただくことがあります。</li>
+            <li>売上や来店数をお約束するものではありません。</li>
+          </ul>
+        </div>
+      </section>
+
+      <section className="steps" id="steps">
+        <div className="section-heading"><p className="section-label" aria-hidden="true">FLOW</p><h2>はじめ方</h2></div>
+        <ol className="step-list">
+          <li>
+            <h3>無料相談（60分）</h3>
+            <p>今、困っていることを、そのまま話してください。契約のことは、分からなくても一緒に確かめます。</p>
+          </li>
+          <li>
+            <h3>見積もり</h3>
+            <p>やること・やらないこと・金額を書いてお渡しします。</p>
+          </li>
+          <li>
+            <h3>合意したところから開始</h3>
+            <p>決めた内容と日にちで、始めます。</p>
+          </li>
+        </ol>
+      </section>
+
+      <section className="price" id="price">
+        <div className="section-heading"><p className="section-label" aria-hidden="true">PRICE</p><h2>料金について</h2></div>
+        <p className="price-lead">金額は、<span className="mk">内容を聞いてから</span>決めます。下の表は、作るときの費用の目安です。列ごとに、含む作業の範囲は違います。</p>
+        <div className="table-scroll">
+          <table className="market-table">
+            <thead><tr><th scope="col">頼むもの</th><th scope="col">フリーランスの場合（目安）</th><th scope="col">制作会社の場合（目安）</th><th scope="col"><span className="price-brand" aria-hidden="true">{BRAND}</span>うちの場合</th></tr></thead>
+            <tbody>
+              <tr><td data-label="頼むもの">ホームページの制作</td><td data-label="フリーランスの場合（目安）">10万〜60万円</td><td data-label="制作会社の場合（目安）">50万〜150万円</td><td data-label="うちの場合"><strong>3万〜5万円</strong></td></tr>
+              <tr><td data-label="頼むもの">LINE公式アカウントの構築</td><td data-label="フリーランスの場合（目安）">10万〜30万円</td><td data-label="制作会社の場合（目安）">50万〜150万円</td><td data-label="うちの場合"><strong>3万〜10万円</strong></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p className="price-maintenance"><strong>作ったあとの更新・手直しは、月1万〜3万円です。</strong>含む作業と回数は、見積もりに書きます。</p>
+        <p className="price-note">フリーランスと制作会社の金額は、公開されている記事から拾った目安です（2026年10月。atsoho.com、imitsu.jp）。内容や規模で変わるので、同じ条件で比べたものではありません。うちの金額は税込の案で、内容を聞いてから決めます。</p>
+        <p className="price-lead price-separate">ネットショップと予約の仕組みは、内容を聞いて見積もります。SNSの投稿は、月3万円（税込）からです。</p>
+        <p className="price-sns-more"><Link href="/ai/sns">SNSの投稿の料金をくわしく見る</Link></p>
+      </section>
+
+      <aside className="cta-band">
+        <p className="cta-band-title">金額は、話を聞いてからお伝えします。<br />相談だけでも大丈夫です。</p>
+        <p className="cta-wrap"><a className="cta" href="https://lin.ee/WfeFzfF" target="_blank" rel="noopener noreferrer">LINEで無料相談する（60分）</a></p>
+        <p className="cta-sub">電話でも大丈夫です　<a className="tel" href="tel:07084348124">070-8434-8124</a></p>
+      </aside>
+
+      <section className="faq" id="faq">
+        <div className="section-heading"><p className="section-label" aria-hidden="true">Q&A</p><h2>よくある質問</h2></div>
+        <dl className="faq-list">
+          <dt>今の業者さんとの契約が残っています。相談できますか。</dt>
+          <dd>はい。契約の名義と期間を、一緒に確かめるところから始めます。今の契約を、こちらから勝手に変えることはありません。</dd>
+          <dt>パソコンが苦手です。</dt>
+          <dd>大丈夫です。専門の言葉はできるだけ使わず、使うときは説明します。「ここを直したい」と、いつもの言葉で言ってください。</dd>
+          <dt>頼めば、売上は上がりますか。</dt>
+          <dd>お約束はできません。できるのは、頼み先をひとつにして、直したいときにすぐ頼める状態を作ることです。</dd>
+          <dt>鳥取の外からでも頼めますか。</dt>
+          <dd>鳥取の近くのお店を優先していますが、オンラインでのやり取りなら、どこからでもご相談いただけます。</dd>
+        </dl>
+      </section>
+
+      <section className="final-cta" id="contact">
+        <div className="section-heading"><p className="section-label" aria-hidden="true">CONTACT</p><h2>まずは、今の状況を聞かせてください</h2></div>
+        <p className="final-lead">60分・無料。お困りごとを聞いて、できること・できないことをお伝えします。</p>
+        <div className="contact-box">
+          <figure className="qr"><img src="/images/ai/matome/qr_line.png" alt="公式LINEのQRコード" width="400" height="400" loading="lazy" /><figcaption>公式LINE　@500ngbml</figcaption></figure>
+          <div className="contact-actions">
+            <p className="cta-wrap"><a className="cta" href="https://lin.ee/WfeFzfF" target="_blank" rel="noopener noreferrer">LINEで無料相談する（60分）</a></p>
+            <p className="cta-sub">電話でも大丈夫です　<a className="tel" href="tel:07084348124">070-8434-8124</a><span className="tel-hours">月〜土 9:00〜18:00（日曜・祝日は休み）</span></p>
+          </div>
+        </div>
+        <p className="tagline">{BRAND_SUB}</p>
+      </section>
+
+      </main>
+
+      <footer className="site-footer">
+        <p className="footer-shop">野菜やはちみつを売っている、うち自身のお店です。<Link href="/">安藤青果のホームページ（ando-seika.com）</Link></p>
+        <p><span className="brand-name">{BRAND}</span><small className="brand-sub">{BRAND_SUB}</small></p>
+        <p className="footer-legal"><Link href="/tokusho">特定商取引法に基づく表示</Link><Link href="/privacy">プライバシーポリシー</Link></p>
+      </footer>
+      <FlyingBee />
+    </div>
+  );
 }
