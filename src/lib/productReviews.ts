@@ -1,6 +1,11 @@
 import { google } from "googleapis";
 
 export const REVIEW_SHEET = "商品レビュー";
+export const REVIEW_REWARD_POINTS = 100;
+
+export function isSameReviewAuthorAndProduct(review: Pick<ProductReview, "email" | "productId">, email: string, productId: string) {
+  return review.email.trim().toLowerCase() === email.trim().toLowerCase() && review.productId === productId;
+}
 
 export type ProductReview = {
   id: string;

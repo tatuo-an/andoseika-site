@@ -68,7 +68,7 @@ export function ProductReviews({ productId }: { productId: string }) {
         </div>}
       <div className="rounded-xl border border-stone-200 bg-stone-50 p-5 md:p-6 mt-8">
         <h3 className="font-bold text-lg text-stone-900 mb-2">レビューを書く</h3>
-        <p className="text-sm text-stone-600 mb-4">ログイン後、配達完了した注文の注文番号を入力してください。注文番号は<Link href="/mypage" className="text-primary underline">マイページ</Link>で確認できます。投稿は承認後に公開されます。</p>
+        <p className="text-sm text-stone-600 mb-4">レビューは1人につき1商品1回まで。承認・公開後に100ポイントを付与します。ログイン後、配達完了した注文の注文番号を入力してください。注文番号は<Link href="/mypage" className="text-primary underline">マイページ</Link>で確認できます。</p>
         <form onSubmit={submit} className="space-y-4">
           <label className="block text-sm font-medium text-stone-700">注文番号
             <input required maxLength={17} pattern="ORD-[0-9]{8}-[0-9]{4}" placeholder="ORD-20261013-1234" value={orderNumber} onChange={e => setOrderNumber(e.target.value)} className="mt-1 block w-full rounded-lg border border-stone-300 bg-white p-3" />
