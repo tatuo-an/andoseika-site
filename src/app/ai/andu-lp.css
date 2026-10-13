@@ -561,3 +561,7 @@
 @media (min-width: 1024px) {
   .andu-lp .work-shots.tool-shots { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
 }
+
+.andu-lp .price-sns-more { margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--rule); font-size: 16px; line-height: 1.8; }
+.andu-lp .price-sns-more a { display: inline-block; margin-top: 6px; color: var(--green); font-weight: 700; text-decoration: underline; text-underline-offset: 4px; }
+.andu-lp .price-sns-more a::after { content: " →"; }

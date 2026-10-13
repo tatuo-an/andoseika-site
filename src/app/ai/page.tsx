@@ -458,6 +458,7 @@ export default function AiPage() {
             <h4 className="price-monthly-name">SNSの運用代行</h4>
             <p className="price-monthly-amount"><strong>月3万〜10万円</strong></p>
             <p>写真を送ってもらえば、文章づくりから投稿まで。投稿の本数と内容で決まります。</p>
+            <p className="price-sns-more">プランは月3万円・5万円・10万円の3つです。中身は、別のページでくわしく案内しています。<Link href="/ai/sns">SNS運用代行のページを見る</Link></p>
           </div>
         </div>
         <p className="price-lead price-separate">予約の仕組みと、ネットショップだけのご依頼は、内容を聞いて見積もります。</p>
