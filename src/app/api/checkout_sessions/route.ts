@@ -7,6 +7,7 @@ import { computeCartPricing, type InvItem, type ShippingRow } from "@/lib/pricin
 import { getActiveSeasonalSale } from "@/lib/seasonalSales";
 import { getInventoryRows } from "@/lib/inventorySheet";
 import { withRetry } from "@/lib/sheetsRetry";
+import { getStoreBaseUrl } from "@/lib/storeUrl";
 
 const stripe = process.env.STRIPE_SECRET_KEY
     ? new Stripe(process.env.STRIPE_SECRET_KEY, {
@@ -20,14 +21,6 @@ type CartItem = {
     price: number;
     quantity: number;
 };
-
-function getBaseUrl(req: NextRequest) {
-    return (
-        req.headers.get("origin") ||
-        process.env.NEXT_PUBLIC_URL ||
-        new URL(req.url).origin
-    );
-}
 
 function getSheets() {
     const authClient = new google.auth.GoogleAuth({
@@ -166,8 +159,14 @@ export async function POST(req: NextRequest) {
             desiredDeliveryTime?: string;
         };
 
-        if (!cartDetails || Object.keys(cartDetails).length === 0) {
+        if (!cartDetails || typeof cartDetails !== "object" || Array.isArray(cartDetails) || Object.keys(cartDetails).length === 0) {
             return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
+        }
+        const entries = Object.entries(cartDetails);
+        if (entries.length > 50 || entries.some(([id, item]) =>
+            !id || id.length > 100 || !item || !Number.isSafeInteger(item.quantity) || item.quantity < 1 || item.quantity > 1000
+        )) {
+            return NextResponse.json({ error: "Invalid cart" }, { status: 400 });
         }
 
         // 通知先（LINE/メール）特定のため、ログイン中のメールを取得
@@ -186,9 +185,9 @@ export async function POST(req: NextRequest) {
             fetchSeasonalDiscountPercent(),
         ]);
 
-        const cartLines = Object.entries(cartDetails).map(([id, item]) => ({
+        const cartLines = entries.map(([id, item]) => ({
             id,
-            quantity: Math.max(1, Math.floor(item.quantity)),
+            quantity: item.quantity,
         }));
         const unknownItem = cartLines.find((line) => !inventory.some((v) => v.id === line.id && v.price !== null));
         if (unknownItem) {
@@ -247,7 +246,7 @@ export async function POST(req: NextRequest) {
             }
         }
 
-        const baseUrl = getBaseUrl(req);
+        const baseUrl = getStoreBaseUrl();
         const legalDisclosureUrl = new URL("/tokusho", baseUrl).toString();
         const cartArr = Object.values(cartDetails);
         const toAbsoluteUrl = (img: string) => img.startsWith("http") ? img : new URL(img, baseUrl).toString();

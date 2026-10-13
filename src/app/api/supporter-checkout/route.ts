@@ -3,6 +3,7 @@ import Stripe from "stripe";
 import { auth } from "@/auth";
 import { TIERS, type TierKey } from "@/lib/tiers";
 import { google } from "googleapis";
+import { getStoreBaseUrl } from "@/lib/storeUrl";
 
 const PLAN_LIMITS: Record<string, number> = { minori: 10, partner: 5 };
 
@@ -50,14 +51,6 @@ const stripe = process.env.STRIPE_SECRET_KEY
     ? new Stripe(process.env.STRIPE_SECRET_KEY)
     : null;
 
-function getBaseUrl(req: NextRequest) {
-    return (
-        req.headers.get("origin") ||
-        process.env.NEXT_PUBLIC_URL ||
-        new URL(req.url).origin
-    );
-}
-
 export async function POST(req: NextRequest) {
     try {
         if (!stripe) {
@@ -84,7 +77,7 @@ export async function POST(req: NextRequest) {
 
         const selectedPlan = PLANS[plan];
         const price = TIERS[plan].price;
-        const baseUrl = getBaseUrl(req);
+        const baseUrl = getStoreBaseUrl();
         const legalDisclosureUrl = new URL("/tokusho", baseUrl).toString();
 
         const stripeSession = await stripe.checkout.sessions.create({

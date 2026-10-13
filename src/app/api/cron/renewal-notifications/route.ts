@@ -42,13 +42,10 @@ function appendNotified(notifiedField: string, kind: "30d" | "7d", todayYMD: str
 }
 
 export async function GET(req: NextRequest) {
-  // Vercel Cron 認証（CRON_SECRET 環境変数があれば検証）
   const expected = process.env.CRON_SECRET;
-  if (expected) {
-    const authHeader = req.headers.get("authorization") ?? "";
-    if (authHeader !== `Bearer ${expected}`) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  const authHeader = req.headers.get("authorization") ?? "";
+  if (!expected || authHeader !== `Bearer ${expected}`) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const sheets = getSheets();

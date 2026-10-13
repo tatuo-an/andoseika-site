@@ -136,8 +136,14 @@ export async function POST(req: NextRequest) {
             pointsToUse?: number;
         };
 
-        if (!cartDetails || Object.keys(cartDetails).length === 0) {
+        if (!cartDetails || typeof cartDetails !== "object" || Array.isArray(cartDetails) || Object.keys(cartDetails).length === 0) {
             return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
+        }
+        const entries = Object.entries(cartDetails);
+        if (entries.length > 50 || entries.some(([id, item]) =>
+            !id || id.length > 100 || !item || !Number.isSafeInteger(item.quantity) || item.quantity < 1 || item.quantity > 1000
+        )) {
+            return NextResponse.json({ error: "Invalid cart" }, { status: 400 });
         }
 
         const nextAuthSession = await auth();
@@ -151,9 +157,9 @@ export async function POST(req: NextRequest) {
             fetchSeasonalDiscountPercent(),
         ]);
 
-        const cartLines = Object.entries(cartDetails).map(([id, item]) => ({
+        const cartLines = entries.map(([id, item]) => ({
             id,
-            quantity: Math.max(1, Math.floor(item.quantity)),
+            quantity: item.quantity,
         }));
 
         const pricing = computeCartPricing({
