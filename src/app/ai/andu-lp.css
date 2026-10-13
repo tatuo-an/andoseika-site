@@ -565,3 +565,10 @@
 .andu-lp .price-sns-more { margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--rule); font-size: 16px; line-height: 1.8; }
 .andu-lp .price-sns-more a { display: inline-block; margin-top: 6px; color: var(--green); font-weight: 700; text-decoration: underline; text-underline-offset: 4px; }
 .andu-lp .price-sns-more a::after { content: " →"; }
+
+.andu-lp .legal { padding: 40px 24px; background: var(--paper); border-top: 1px solid var(--rule); }
+.andu-lp .legal > * { max-width: 880px; margin-inline: auto; }
+.andu-lp .legal h2 { margin-bottom: 14px; color: var(--green); font-size: 18px; font-weight: 700; }
+.andu-lp .legal ul { display: grid; gap: 8px; padding-left: 1.2em; list-style: disc; color: var(--ink); font-size: 15px; line-height: 1.8; }
+.andu-lp .legal a { color: var(--green); text-decoration: underline; text-underline-offset: 3px; }
+.andu-lp .legal-links { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-top: 16px; font-size: 15px; }

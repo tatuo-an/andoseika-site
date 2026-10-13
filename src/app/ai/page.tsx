@@ -52,8 +52,8 @@ export default function AiPage() {
           <div className="hero-proof">
             <p className="hero-proof-title">実際にやった仕事</p>
             <ul className="hero-proof-list">
-              <li>すくすく助産院さまの予約を、LINEのやり取りから予約のページへ</li>
-              <li>ら～めん樹さまのSNSの投稿を、お店の代わりに</li>
+              <li>米子市の助産院さまの予約を、LINEのやり取りから予約のページへ</li>
+              <li>倉吉市のラーメン店さんのSNSの投稿を、お店の代わりに</li>
               <li>車屋さんのLINEと、車の紹介サイトを作成</li>
               <li>うち自身のホームページとネット販売を、自分で作って運営</li>
             </ul>
@@ -137,7 +137,7 @@ export default function AiPage() {
           <article className="work work-main">
             <p className="work-record">仕事の記録 / 01</p>
             <p className="work-stamp">公開済み<span className="work-date">2026年9月</span></p>
-            <p className="work-client">すくすく助産院さま</p>
+            <p className="work-client">米子市の助産院さま</p>
             <h3>LINEで1件ずつ受けていた予約を、予約のページに。</h3>
             <dl className="work-flow">
               <dt>前</dt>
@@ -149,8 +149,8 @@ export default function AiPage() {
             </dl>
             <div className="mini-flow booking-flow"><span className="diagram-box">ホームページ</span><span className="flow-arrow" aria-hidden="true">→</span><span className="diagram-box">予約のページ</span><span className="flow-arrow" aria-hidden="true">←</span><span className="diagram-box">公式LINE</span></div>
             <div className="work-shots">
-              <figure className="phone-shot"><img src="/images/ai/matome/real_stores.jpg" alt="すくすく助産院さまの予約ページの画面" width="860" height="1720" loading="lazy" /><figcaption>予約のページ</figcaption></figure>
-              <figure className="phone-shot"><img src="/images/ai/matome/real_sukusuku_top.jpg" alt="すくすく助産院さまのホームページをスマホで見た画面" width="860" height="1720" loading="lazy" /><figcaption>ホームページの予約ボタン</figcaption></figure>
+              <figure className="phone-shot"><img src="/images/ai/matome/real_stores_m.jpg" alt="米子市の助産院さまの予約ページの画面" width="860" height="1720" loading="lazy" /><figcaption>予約のページ</figcaption></figure>
+              <figure className="phone-shot"><img src="/images/ai/matome/real_sukusuku_top_m.jpg" alt="米子市の助産院さまのホームページをスマホで見た画面" width="860" height="1720" loading="lazy" /><figcaption>ホームページの予約ボタン</figcaption></figure>
             </div>
             {SHOW_DRAFT && (<p className="voice-slot todo" data-draft="voice">（お客さまの言葉は、ご本人の了承をいただいてから、ここに載せます）</p>)}
           </article>
@@ -158,12 +158,12 @@ export default function AiPage() {
           <article className="work">
             <p className="work-record">仕事の記録 / 02</p>
             <p className="work-stamp">担当中</p>
-            <p className="work-client">ら～めん樹さま（倉吉市）</p>
+            <p className="work-client">倉吉市の某ラーメン店さん</p>
             <h3>SNSの投稿を、お店の代わりに。</h3>
             <p className="work-body">Threadsの運用を担当しています。美容室のSNSの運用もお受けしています。</p>
             <div className="work-shots">
-              <figure className="phone-shot"><img src="/images/ai/matome/threads_ramen.jpg" alt="ら～めん樹さまのThreadsのプロフィール画面" width="860" height="1520" loading="lazy" /><figcaption>プロフィール</figcaption></figure>
-              <figure className="phone-shot"><img src="/images/ai/matome/real_threads_post.jpg" alt="ら～めん樹さまのThreadsの投稿の画面" width="860" height="1600" loading="lazy" /><figcaption>はじめての投稿</figcaption></figure>
+              <figure className="phone-shot"><img src="/images/ai/matome/threads_ramen_m.jpg" alt="倉吉市のラーメン店さんのThreadsのプロフィール画面" width="860" height="1520" loading="lazy" /><figcaption>プロフィール</figcaption></figure>
+              <figure className="phone-shot"><img src="/images/ai/matome/real_threads_post_m.jpg" alt="倉吉市のラーメン店さんのThreadsの投稿の画面" width="860" height="1600" loading="lazy" /><figcaption>はじめての投稿</figcaption></figure>
             </div>
             {SHOW_DRAFT && (<p className="voice-slot todo" data-draft="voice">（お客さまの言葉は、ご本人の了承をいただいてから、ここに載せます）</p>)}
           </article>
@@ -171,12 +171,12 @@ export default function AiPage() {
           <article className="work">
             <p className="work-record">仕事の記録 / 03</p>
             <p className="work-stamp">公開済み</p>
-            <p className="work-client">車屋さん（まさ｜中古車紹介）</p>
+            <p className="work-client">車屋さん</p>
             <h3>LINEの窓口と、車の紹介サイトを作成。</h3>
             <p className="work-body">LINE公式アカウントを整え、友だち追加のあいさつと、「紹介中の車」「購入相談」「相談の流れ」の3つのメニューを作りました。紹介中の車を載せるサイトも作り、LINEからそのまま見られるようにしています。</p>
             <div className="work-shots">
-              <figure className="phone-shot"><img src="/images/ai/matome/real_line_car.jpg" alt="車屋さんのLINE公式アカウントの画面" width="869" height="1702" loading="lazy" /><figcaption>LINE公式アカウント（実際の画面）</figcaption></figure>
-              <figure className="phone-shot"><img src="/images/ai/matome/real_car.jpg" alt="車の紹介サイトをスマホで見た画面" width="860" height="1720" loading="lazy" /><figcaption>車の紹介サイト（実際の画面）</figcaption></figure>
+              <figure className="phone-shot"><img src="/images/ai/matome/real_line_car_m.jpg" alt="車屋さんのLINE公式アカウントの画面" width="869" height="1702" loading="lazy" /><figcaption>LINE公式アカウント（実際の画面）</figcaption></figure>
+              <figure className="phone-shot"><img src="/images/ai/matome/real_car_m.jpg" alt="車の紹介サイトをスマホで見た画面" width="860" height="1720" loading="lazy" /><figcaption>車の紹介サイト（実際の画面）</figcaption></figure>
             </div>
             {SHOW_DRAFT && (<p className="voice-slot todo" data-draft="voice">（お客さまの言葉は、ご本人の了承をいただいてから、ここに載せます）</p>)}
           </article>
@@ -184,7 +184,7 @@ export default function AiPage() {
           <article className="work work-timecard">
             <p className="work-record">仕事の記録 / 04</p>
             <p className="work-stamp">導入済み</p>
-            <p className="work-client">一般社団法人 結夢（ドリーム）さま</p>
+            <p className="work-client">就労継続支援B型の事業所さま</p>
             <h3>手入力だったタイムカードを、写真を撮るだけに。</h3>
             <p className="work-body">就労支援の事業所さんで、事務の仕事を楽にするお手伝いをしました。これまで手で入力していたタイムカードは、写真を撮るだけで表に反映されます。時間の合計と金額の計算まで、自動で出ます。</p>
             <figure className="work-diagram">
@@ -307,7 +307,7 @@ export default function AiPage() {
         <ul className="service-list">
           <li className="point-row">
             <div className="point-visual point-pair">
-              <figure className="phone-shot"><img src="/images/ai/matome/real_sukusuku_top.jpg" alt="すくすく助産院さまのホームページをスマホで見た画面" width="860" height="1720" loading="lazy" /><figcaption>すくすく助産院さまのホームページ（予約ボタンを設置）</figcaption></figure>
+              <figure className="phone-shot"><img src="/images/ai/matome/real_sukusuku_top_m.jpg" alt="米子市の助産院さまのホームページをスマホで見た画面" width="860" height="1720" loading="lazy" /><figcaption>米子市の助産院さまのホームページ（予約ボタンを設置）</figcaption></figure>
               <figure className="phone-shot phone-secondary"><img src="/images/ai/matome/site_home.jpg" alt="安藤青果のホームページをスマホで見た画面" width="780" height="1040" loading="lazy" /><figcaption>うち自身のホームページ</figcaption></figure>
               <span className="visual-tag" aria-hidden="true">WEB</span>
             </div>
@@ -318,7 +318,7 @@ export default function AiPage() {
           </li>
           <li className="point-row">
             <div className="point-visual">
-              <figure className="phone-shot"><img src="/images/ai/matome/real_stores.jpg" alt="すくすく助産院さまの予約ページの画面" width="860" height="1720" loading="lazy" /><figcaption>すくすく助産院さまの予約ページ（実際の画面）</figcaption></figure>
+              <figure className="phone-shot"><img src="/images/ai/matome/real_stores_m.jpg" alt="米子市の助産院さまの予約ページの画面" width="860" height="1720" loading="lazy" /><figcaption>米子市の助産院さまの予約ページ（実際の画面）</figcaption></figure>
               <span className="visual-tag" aria-hidden="true">RESERVATION</span>
             </div>
             <div className="point-text"><p className="point-number" aria-hidden="true"><span>POINT</span><span>02</span></p>
@@ -328,7 +328,7 @@ export default function AiPage() {
           </li>
           <li className="point-row">
             <div className="point-visual">
-              <figure className="phone-shot"><img src="/images/ai/matome/real_line_car.jpg" alt="車屋さんのLINE公式アカウントの画面" width="869" height="1702" loading="lazy" /><figcaption>LINE公式アカウントのメニュー（実際の画面）</figcaption></figure>
+              <figure className="phone-shot"><img src="/images/ai/matome/real_line_car_m.jpg" alt="車屋さんのLINE公式アカウントの画面" width="869" height="1702" loading="lazy" /><figcaption>LINE公式アカウントのメニュー（実際の画面）</figcaption></figure>
               <span className="visual-tag" aria-hidden="true">LINE</span>
             </div>
             <div className="point-text"><p className="point-number" aria-hidden="true"><span>POINT</span><span>03</span></p>
@@ -338,7 +338,7 @@ export default function AiPage() {
           </li>
           <li className="point-row">
             <div className="point-visual">
-              <figure className="phone-shot"><img src="/images/ai/matome/real_threads_post.jpg" alt="ら～めん樹さまのThreadsの投稿の画面" width="860" height="1600" loading="lazy" /><figcaption>ら～めん樹さまの投稿（実際の画面）</figcaption></figure>
+              <figure className="phone-shot"><img src="/images/ai/matome/real_threads_post_m.jpg" alt="倉吉市のラーメン店さんのThreadsの投稿の画面" width="860" height="1600" loading="lazy" /><figcaption>倉吉市のラーメン店さんの投稿（実際の画面）</figcaption></figure>
               <span className="visual-tag" aria-hidden="true">SNS</span>
             </div>
             <div className="point-text"><p className="point-number" aria-hidden="true"><span>POINT</span><span>04</span></p>
@@ -495,6 +495,16 @@ export default function AiPage() {
           </div>
         </div>
         <p className="tagline">{BRAND_SUB}</p>
+      </section>
+
+            <section className="legal" id="legal">
+        <h2>お約束と、個人情報の扱い</h2>
+        <ul>
+          <li>ご相談でお預かりしたお名前・連絡先・お店の情報は、<Link href="/privacy">プライバシーポリシー</Link>に沿って扱います。</li>
+          <li>ご依頼の内容・金額・範囲は、見積もりに書いてお渡しします。合意してから始めます。</li>
+          <li>実績の画面は、お客さまが分からないように、一部を隠して載せています。</li>
+        </ul>
+        <p className="legal-links"><Link href="/terms">サイトの利用規約</Link><Link href="/privacy">プライバシーポリシー</Link><Link href="/tokusho">特定商取引法に基づく表示</Link></p>
       </section>
 
       </main>
