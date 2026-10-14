@@ -48,14 +48,14 @@ export default function AiPage() {
         <div className="hero-text">
           <p className="eyebrow">鳥取の会社・お店の方へ</p>
           <h1><span className="ib">そのホームページ、</span><br /><span className="ib"><span className="mk">動いていますか？</span></span></h1>
-          <p className="hero-lead">管理費は毎月払っているのに、直したい所はそのまま。ホームページも、ネットショップも、公式LINEも。窓口をひとつにして、作ったあとの管理まで月1万〜3万円でお受けします。</p>
+          <p className="hero-lead">管理費は毎月払っているのに、直したい所はそのまま。ホームページも、ネットショップも、公式LINEも、窓口をひとつに。作ったあとの更新・手直しは、頼む場合は月1万〜3万円です（作るときの費用は別）。</p>
           <div className="hero-proof">
             <p className="hero-proof-title">実際にやった仕事</p>
             <ul className="hero-proof-list">
-              <li>某助産院さまの予約を、LINEのやり取りから予約のページへ</li>
-              <li>某ラーメン店さまのSNSの投稿を、お店の代わりに</li>
-              <li>車屋さんのLINEと、車の紹介サイトを作成</li>
-              <li>うち自身のホームページとネット販売を、自分で作って運営</li>
+              <li><strong>某助産院さま</strong>｜LINEの予約を、予約のページへ</li>
+              <li><strong>某ラーメン店さま</strong>｜SNSの投稿を、お店の代わりに</li>
+              <li><strong>車屋さん</strong>｜LINEと、車の紹介サイト</li>
+              <li><strong>うち自身</strong>｜ホームページとネット販売を運営</li>
             </ul>
             <p className="hero-proof-more"><a href="#works">くわしく見る</a></p>
           </div>
@@ -73,20 +73,18 @@ export default function AiPage() {
           <p className="cta-band-title">友だち追加のあと、「相談したい」とひとこと送ってください。</p>
           <p className="cta-wrap"><a className="cta" href="https://lin.ee/WfeFzfF" target="_blank" rel="noopener noreferrer">LINEで無料相談する（60分）</a></p>
           <p className="cta-sub">電話でも大丈夫です　<a className="tel" href="tel:07084348124">070-8434-8124</a><span className="tel-hours">月〜土 9:00〜18:00（日曜・祝日は休み）</span></p>
-          <p className="cta-note">日にちと方法は、そのあと相談して決めます。</p>
       </aside>
 
       <section className="worries" id="worries">
         <div className="worry-panel">
         <div className="section-heading"><p className="section-label" aria-hidden="true">TROUBLE</p><h2>毎月の管理費、<br /><span className="ib">何に払っているか</span><span className="ib">分かりますか</span></h2></div>
         <ul className="worry-list">
-          <li>ホームページの保守料や管理費を、毎月・毎年払い続けている</li>
-          <li>でも、何をしてもらっているのか、はっきり分からない</li>
+          <li>何の分か分からない管理費を、毎月払い続けている</li>
           <li>営業時間や値段を直したいだけなのに、頼むたびに別の料金がかかる</li>
-          <li>ホームページ・予約・LINE・ネットショップで、頼み先も支払いもばらばら</li>
+          <li>ホームページ・予約・LINE・ネットショップで、頼み先がばらばら</li>
         </ul>
         <p className="worry-close">ホームページ、ネットショップ、公式LINE。それぞれの会社に、月1万〜5万円ずつ払っていませんか。年にすると、まとまった金額です。</p>
-        <p className="worry-close">うちは、作ったあとの更新・手直しを<span className="mk">月1万〜3万円</span>でお受けします。どこまで含むかは、見積もりに書いてお渡しします。ホームページもLINEも予約もネットショップも、窓口は安藤ひとつです。</p>
+        <p className="worry-close">うちは、作ったあとの更新・手直しを<span className="mk">月1万〜3万円</span>でお受けします。どこまで含むかは、見積もりに書きます。窓口は安藤ひとつです。</p>
         </div>
       </section>
 
@@ -102,36 +100,12 @@ export default function AiPage() {
           <svg className="bundle-lines" viewBox="0 0 240 192" preserveAspectRatio="none" focusable="false" aria-hidden="true"><path d="M0 24 C110 24 105 96 160 96 M0 72 C110 72 110 96 160 96 M0 120 C110 120 110 96 160 96 M0 168 C110 168 105 96 160 96 M160 96 H232 M224 88 L232 96 L224 104"/><circle cx="160" cy="96" r="3"/></svg>
           <svg className="bundle-lines-mobile" viewBox="0 0 320 64" preserveAspectRatio="none" focusable="false" aria-hidden="true"><path d="M80 0 V16 Q80 30 100 30 H140 Q160 30 160 48 M240 0 V16 Q240 30 220 30 H180 Q160 30 160 48 M160 48 V62" /><circle cx="160" cy="58" r="4" /></svg><span className="bundle-out">窓口はひとつ</span>
         </div>
-        <div className="hero-menu">
-          <p className="hero-menu-title">頼めること</p>
-          <ul className="hero-menu-list">
-            <li>ホームページ</li>
-            <li>予約の仕組み</li>
-            <li><span className="menu-label">LINE公式</span><span className="menu-label">アカウント</span></li>
-            <li>SNSの投稿</li>
-            <li><span className="menu-label">小さな</span><span className="menu-label">ネットショップ</span></li>
-            <li><span className="menu-label">作ったあとの</span><span className="menu-label">更新・手直し</span></li>
-          </ul>
-        </div>
-        <ol className="change-list">
-          <li>
-            <p className="before">頼み先がいくつもある</p>
-            <span className="change-arrow" aria-hidden="true">↓</span><p className="after"><span className="mk">窓口はひとつ</span>。「これ、どこに聞けばいい？」がなくなります。</p>
-          </li>
-          <li>
-            <p className="before">直したいのに、止まったまま</p>
-            <span className="change-arrow" aria-hidden="true">↓</span><p className="after">営業時間や値段の差し替えを、<span className="mk">いつもの言葉で</span>頼めます。</p>
-          </li>
-          <li>
-            <p className="before">毎月の管理費が、何の分か分からない</p>
-            <span className="change-arrow" aria-hidden="true">↓</span><p className="after">見積もりに<span className="mk">含むもの・含まないもの</span>を書いてお渡しします。</p>
-          </li>
-        </ol>
+        <p className="change-one">「これ、どこに聞けばいい？」が、なくなります。</p>
       </section>
 
 <section className="works" id="works">
         <div className="section-heading"><p className="section-label" aria-hidden="true">WORKS</p><h2>実際にやった仕事</h2></div>
-        <p className="works-lead">地元のお店や事業所で、実際にお受けした仕事です。</p>
+        <p className="works-lead">お店から頼まれた仕事と、自分で作って使っているものです。</p>
         <div className="work-list">
 
           <article className="work work-main">
@@ -302,82 +276,101 @@ export default function AiPage() {
       </aside>
 
       <section className="services" id="services">
-        <div className="section-heading"><p className="section-label" aria-hidden="true">POINT</p><h2>まとめて引き受けること</h2></div>
-        <p className="service-note">全部でなくて大丈夫です。<span className="mk">必要なものだけ</span>選べます。料金は、頼むものごとに見積もります。</p>
+        <div className="section-heading"><p className="section-label" aria-hidden="true">POINT</p><h2>頼めること</h2></div>
+        <p className="service-note">全部でなくて大丈夫です。<span className="mk">必要なものだけ</span>選べます。</p>
         <ul className="service-list">
-          <li className="point-row">
-            <div className="point-visual point-pair">
-              <figure className="phone-shot"><img src="/images/ai/matome/real_sukusuku_top_m2.jpg" alt="某助産院さまのホームページをスマホで見た画面" width="860" height="1720" loading="lazy" /><figcaption>某助産院さまのホームページ（予約ボタンを設置）</figcaption></figure>
-              <figure className="phone-shot phone-secondary"><img src="/images/ai/matome/site_home.jpg" alt="安藤青果のホームページをスマホで見た画面" width="780" height="1040" loading="lazy" /><figcaption>うち自身のホームページ</figcaption></figure>
-              <span className="visual-tag" aria-hidden="true">WEB</span>
-            </div>
-            <div className="point-text"><p className="point-number" aria-hidden="true"><span>POINT</span><span>01</span></p>
+          <li className="service-tile">
+            <span className="service-number" aria-hidden="true">01</span>
             <h3>ホームページ</h3>
-            <p>新しく作る。今あるものを直す。スマホで見やすい形にします。</p>
-            </div>
+            <p>新しく作る。今あるものを直す。</p>
           </li>
-          <li className="point-row">
-            <div className="point-visual">
-              <figure className="phone-shot"><img src="/images/ai/matome/real_stores_m2.jpg" alt="某助産院さまの予約ページの画面" width="860" height="1720" loading="lazy" /><figcaption>某助産院さまの予約ページ（実際の画面）</figcaption></figure>
-              <span className="visual-tag" aria-hidden="true">RESERVATION</span>
-            </div>
-            <div className="point-text"><p className="point-number" aria-hidden="true"><span>POINT</span><span>02</span></p>
+          <li className="service-tile">
+            <span className="service-number" aria-hidden="true">02</span>
             <h3>予約の仕組み</h3>
-            <p>電話だけに頼らない受付を、既製のサービスを使って組みます。ホームページの予約ボタンやLINEのメニューから、予約のページへ進めるようにします。</p>
-            </div>
+            <p>電話だけに頼らない受付に。</p>
           </li>
-          <li className="point-row">
-            <div className="point-visual">
-              <figure className="phone-shot"><img src="/images/ai/matome/real_line_car_m2.jpg" alt="車屋さんのLINE公式アカウントの画面" width="869" height="1702" loading="lazy" /><figcaption>LINE公式アカウントのメニュー（実際の画面）</figcaption></figure>
-              <span className="visual-tag" aria-hidden="true">LINE</span>
-            </div>
-            <div className="point-text"><p className="point-number" aria-hidden="true"><span>POINT</span><span>03</span></p>
+          <li className="service-tile">
+            <span className="service-number" aria-hidden="true">03</span>
             <h3>LINE公式アカウント</h3>
-            <p>開設と最初の設定をして、お知らせを配信できる形まで整えます。友だち追加のあいさつと、押すだけで進めるメニューも作ります。</p>
-            </div>
+            <p>開設から、メニューづくりまで。</p>
           </li>
-          <li className="point-row">
-            <div className="point-visual">
-              <figure className="phone-shot"><img src="/images/ai/matome/real_threads_post_m2.jpg" alt="某ラーメン店さまのThreadsの投稿の画面" width="860" height="1600" loading="lazy" /><figcaption>某ラーメン店さまの投稿（実際の画面）</figcaption></figure>
-              <span className="visual-tag" aria-hidden="true">SNS</span>
-            </div>
-            <div className="point-text"><p className="point-number" aria-hidden="true"><span>POINT</span><span>04</span></p>
+          <li className="service-tile">
+            <span className="service-number" aria-hidden="true">04</span>
             <h3>SNSの投稿</h3>
-            <p>写真を送ってもらえば、文章づくりから投稿まで、こちらでやります。</p>
-            </div>
+            <p>写真を送るだけ。投稿はこちらで。</p>
           </li>
-          <li className="point-row">
-            <div className="point-visual">
-              <figure className="phone-shot"><img src="/images/ai/matome/real_honey.jpg" alt="はちみつの商品ページをスマホで見た画面" width="860" height="1720" loading="lazy" /><figcaption>うち自身のお店の商品ページ（実際の画面）</figcaption></figure>
-              <span className="visual-tag" aria-hidden="true">SHOP</span>
-            </div>
-            <div className="point-text"><p className="point-number" aria-hidden="true"><span>POINT</span><span>05</span></p>
+          <li className="service-tile">
+            <span className="service-number" aria-hidden="true">05</span>
             <h3>小さなネットショップ</h3>
-            <p>数点から売れる、小さな売り場を作ります。</p>
-            </div>
+            <p>数点から売れる売り場を。</p>
           </li>
-          <li className="point-row">
-            <div className="point-visual">
-              <div className="diagram-panel"><ul className="support-checklist"><li>更新</li><li>控え（バックアップ）の確認</li><li>文章や写真の差し替え</li></ul></div>
-              <span className="visual-tag" aria-hidden="true">SUPPORT</span>
-            </div>
-            <div className="point-text"><p className="point-number" aria-hidden="true"><span>POINT</span><span>06</span></p>
+          <li className="service-tile">
+            <span className="service-number" aria-hidden="true">06</span>
             <h3>作ったあとの更新・手直し</h3>
-            <p>作って終わりにしません。更新、控え（バックアップ）の確認、文章や写真の差し替えをします。</p>
-            </div>
+            <p>作って終わりにしません。</p>
           </li>
         </ul>
       </section>
 
-            <section className="about" id="about">
+      <section className="price" id="price">
+        <div className="section-heading"><p className="section-label" aria-hidden="true">PRICE</p><h2>料金について</h2></div>
+        <p className="price-lead">金額は、<span className="mk">内容を聞いてから</span>決めます。目安は次のとおりです。</p>
+        <h3 className="price-step">作るとき（1回だけ）</h3>
+        <p className="price-scope">下の表は、作るときの費用の目安です。列ごとに、含む作業の範囲は違います。</p>
+        <div className="table-scroll">
+          <table className="market-table">
+            <thead><tr><th scope="col">頼むもの</th><th scope="col">フリーランスの場合（目安）</th><th scope="col">制作会社の場合（目安）</th><th scope="col"><span className="price-brand" aria-hidden="true">{BRAND}</span>うちの場合</th></tr></thead>
+            <tbody>
+              <tr><td data-label="頼むもの">ホームページの制作</td><td data-label="フリーランスの場合（目安）">10万〜60万円</td><td data-label="制作会社の場合（目安）">50万〜150万円</td><td data-label="うちの場合"><strong>3万〜5万円</strong></td></tr>
+              <tr><td data-label="頼むもの">LINE公式アカウントの構築</td><td data-label="フリーランスの場合（目安）">10万〜30万円</td><td data-label="制作会社の場合（目安）">50万〜150万円</td><td data-label="うちの場合"><strong>3万〜5万円</strong></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p className="price-note">フリーランスと制作会社の金額は、公開されている記事から拾った目安です（2026年10月。atsoho.com、imitsu.jp）。内容や規模で変わるので、同じ条件で比べたものではありません。うちの金額は税込の目安で、内容を聞いてから決めます。</p>
+        <div className="price-pack">
+          <p className="price-pack-tag">まとめて頼むなら</p>
+          <h3 className="price-pack-name">オールインパック</h3>
+          <div className="price-pack-body">
+            <p className="price-pack-amount"><strong>10万円</strong><span className="price-pack-once">払うのは最初の1回だけ</span></p>
+            <ul className="price-pack-list">
+              <li>ホームページの制作</li>
+              <li>小さなネットショップ</li>
+              <li>LINE公式アカウントの構築</li>
+            </ul>
+          </div>
+          <p className="price-pack-scope">この3つを、まとめて作ります。小さなお店向けの内容で、ページ数や商品の数は、見積もりに書いてお渡しします。</p>
+          <p className="price-pack-note">作ったあとの更新・手直しは、頼む場合だけ、別に月1万〜3万円です。SNSの運用は入りません。</p>
+        </div>
+        <h3 className="price-step">頼んだ場合に、毎月かかるもの</h3>
+        <div className="price-monthly">
+          <div className="price-monthly-item">
+            <h4 className="price-monthly-name">作ったあとの更新・手直し</h4>
+            <p className="price-monthly-amount"><strong>月1万〜3万円</strong></p>
+            <p>更新、控え（バックアップ）の確認、文章や写真の差し替え。含む作業と回数は、見積もりに書きます。</p>
+          </div>
+          <div className="price-monthly-item">
+            <h4 className="price-monthly-name">SNSの運用代行</h4>
+            <p className="price-monthly-amount"><strong>月3万〜10万円</strong></p>
+            <p>写真を送ってもらえば、文章づくりから投稿まで。投稿の本数と内容で決まります。</p>
+            <p className="price-sns-more">プランは月3万円・5万円・10万円の3つです。中身は、別のページでくわしく案内しています。<Link href="/ai/sns">SNS運用代行のページを見る</Link></p>
+          </div>
+        </div>
+        <p className="price-lead price-separate">予約の仕組みと、ネットショップだけのご依頼は、内容を聞いて見積もります。</p>
+      </section>
+
+      <aside className="cta-band">
+        <p className="cta-band-title">金額は、話を聞いてからお伝えします。<br />相談だけでも大丈夫です。</p>
+        <p className="cta-wrap"><a className="cta" href="https://lin.ee/WfeFzfF" target="_blank" rel="noopener noreferrer">LINEで無料相談する（60分）</a></p>
+        <p className="cta-sub">電話でも大丈夫です　<a className="tel" href="tel:07084348124">070-8434-8124</a></p>
+      </aside>
+
+      <section className="about" id="about">
         <div className="section-heading"><p className="section-label" aria-hidden="true">ABOUT</p><h2>窓口は、安藤です</h2></div>
         <div className="about-layout">
           <figure className="about-photo"><img src="/images/ai/matome/profile_ando_bee.jpg" width="800" height="1000" alt="巣箱の前で巣板を持つ安藤" loading="lazy" /></figure>
         <div className="about-text">
           <p className="about-name">安藤 匡志<span className="about-role">養蜂家／鳥取の青果卸「安藤青果」運営責任者</span></p>
           <p>鳥取で農業と養蜂をやっています。現場の仕事をしながら、机の仕事も回す。その両方をやっているので、忙しいお店の事情に合わせた組み方を考えます。</p>
-          <h3>小さなお店でも頼みやすい理由</h3>
-          <p>作って終わりにせず、そのあとの直しまで、同じ窓口で受けます。打ち合わせは、いつもの言葉で大丈夫です。</p>
         </div>
         </div>
       </section>
@@ -385,9 +378,9 @@ export default function AiPage() {
       <section className="rules" id="rules">
         <div className="section-heading"><p className="section-label" aria-hidden="true">REASON</p><h2>引き受けるときの決まり</h2></div>
         <ul className="rule-list">
-          <li><span className="reason-number" aria-hidden="true">01</span><p>見積もりに「含むもの・含まないもの」を書きます（ページ数、直しの回数、写真と文章のご用意など）。</p></li>
+          <li><span className="reason-number" aria-hidden="true">01</span><p>見積もりに「含むもの・含まないもの」を書きます。</p></li>
           <li><span className="reason-number" aria-hidden="true">02</span><p>ドメインとサーバー（ホームページの住所と置き場所）は、お客さまの名義にします。こちらの名義にはしません。</p></li>
-          <li><span className="reason-number" aria-hidden="true">03</span><p>今あるホームページを直すときは、作業の前に丸ごと控えます。変えた内容は記録してお渡しします。</p></li>
+          <li><span className="reason-number" aria-hidden="true">03</span><p>今あるホームページを直すときは、先に丸ごと控えます。変えた内容は記録してお渡しします。</p></li>
           <li><span className="reason-number" aria-hidden="true">04</span><p>メールの設定には触りません。</p></li>
           <li><span className="reason-number" aria-hidden="true">05</span><p>止まったときの連絡先と、いつまでに対応を始めるかを、先に決めておきます。</p></li>
         </ul>
@@ -417,58 +410,6 @@ export default function AiPage() {
           </li>
         </ol>
       </section>
-
-      <section className="price" id="price">
-        <div className="section-heading"><p className="section-label" aria-hidden="true">PRICE</p><h2>料金について</h2></div>
-        <p className="price-lead">金額は、<span className="mk">内容を聞いてから</span>決めます。目安は次のとおりです。</p>
-        <h3 className="price-step">作るとき（1回だけ）</h3>
-        <p className="price-scope">下の表は、作るときの費用の目安です。列ごとに、含む作業の範囲は違います。</p>
-        <div className="table-scroll">
-          <table className="market-table">
-            <thead><tr><th scope="col">頼むもの</th><th scope="col">フリーランスの場合（目安）</th><th scope="col">制作会社の場合（目安）</th><th scope="col"><span className="price-brand" aria-hidden="true">{BRAND}</span>うちの場合</th></tr></thead>
-            <tbody>
-              <tr><td data-label="頼むもの">ホームページの制作</td><td data-label="フリーランスの場合（目安）">10万〜60万円</td><td data-label="制作会社の場合（目安）">50万〜150万円</td><td data-label="うちの場合"><strong>3万〜5万円</strong></td></tr>
-              <tr><td data-label="頼むもの">LINE公式アカウントの構築</td><td data-label="フリーランスの場合（目安）">10万〜30万円</td><td data-label="制作会社の場合（目安）">50万〜150万円</td><td data-label="うちの場合"><strong>3万〜5万円</strong></td></tr>
-            </tbody>
-          </table>
-        </div>
-        <p className="price-note">フリーランスと制作会社の金額は、公開されている記事から拾った目安です（2026年10月。atsoho.com、imitsu.jp）。内容や規模で変わるので、同じ条件で比べたものではありません。うちの金額は税込の目安で、内容を聞いてから決めます。</p>
-        <div className="price-pack">
-          <p className="price-pack-tag">まとめて頼むなら</p>
-          <h3 className="price-pack-name">オールインパック</h3>
-          <div className="price-pack-body">
-            <p className="price-pack-amount"><strong>10万円</strong></p>
-            <ul className="price-pack-list">
-              <li>ホームページの制作</li>
-              <li>小さなネットショップ</li>
-              <li>LINE公式アカウントの構築</li>
-            </ul>
-          </div>
-          <p className="price-pack-scope">3つをまとめて作ります。小さなお店向けの内容で、ページ数や商品の数は、見積もりに書いてお渡しします。</p>
-          <p className="price-pack-note">SNSの運用は入りません（下の、毎月の料金です）。</p>
-        </div>
-        <h3 className="price-step">毎月かかるもの</h3>
-        <div className="price-monthly">
-          <div className="price-monthly-item">
-            <h4 className="price-monthly-name">作ったあとの更新・手直し</h4>
-            <p className="price-monthly-amount"><strong>月1万〜3万円</strong></p>
-            <p>更新、控え（バックアップ）の確認、文章や写真の差し替え。含む作業と回数は、見積もりに書きます。</p>
-          </div>
-          <div className="price-monthly-item">
-            <h4 className="price-monthly-name">SNSの運用代行</h4>
-            <p className="price-monthly-amount"><strong>月3万〜10万円</strong></p>
-            <p>写真を送ってもらえば、文章づくりから投稿まで。投稿の本数と内容で決まります。</p>
-            <p className="price-sns-more">プランは月3万円・5万円・10万円の3つです。中身は、別のページでくわしく案内しています。<Link href="/ai/sns">SNS運用代行のページを見る</Link></p>
-          </div>
-        </div>
-        <p className="price-lead price-separate">予約の仕組みと、ネットショップだけのご依頼は、内容を聞いて見積もります。</p>
-      </section>
-
-      <aside className="cta-band">
-        <p className="cta-band-title">金額は、話を聞いてからお伝えします。<br />相談だけでも大丈夫です。</p>
-        <p className="cta-wrap"><a className="cta" href="https://lin.ee/WfeFzfF" target="_blank" rel="noopener noreferrer">LINEで無料相談する（60分）</a></p>
-        <p className="cta-sub">電話でも大丈夫です　<a className="tel" href="tel:07084348124">070-8434-8124</a></p>
-      </aside>
 
       <section className="faq" id="faq">
         <div className="section-heading"><p className="section-label" aria-hidden="true">Q&A</p><h2>よくある質問</h2></div>
