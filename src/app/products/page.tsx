@@ -2,7 +2,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import Link from "next/link";
 import Image from "next/image";
-import { client } from "@/lib/microcms";
+import { client, isMicroCmsProductsEnabled } from "@/lib/microcms";
 import { Product } from "@/types/microcms";
 import { Metadata } from "next";
 import localProducts from "@/data/products.json";
@@ -71,11 +71,13 @@ async function getInventoryMap(): Promise<InventoryResult> {
 }
 
 async function getProducts(): Promise<Product[]> {
-  try {
-    const data = await client.getList<Product>({ endpoint: "products", queries: { orders: "order", limit: 100 } });
-    if (data.contents.length > 0) return data.contents;
-  } catch (error) {
-    console.error("Failed to fetch products from MicroCMS:", error);
+  if (isMicroCmsProductsEnabled) {
+    try {
+      const data = await client.getList<Product>({ endpoint: "products", queries: { orders: "order", limit: 100 } });
+      if (data.contents.length > 0) return data.contents;
+    } catch (error) {
+      console.error("Failed to fetch products from MicroCMS:", error);
+    }
   }
   return localProducts as Product[];
 }

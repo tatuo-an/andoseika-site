@@ -6,7 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { ChevronLeft, Heart } from "lucide-react";
 import { google } from "googleapis";
-import { client } from "@/lib/microcms";
+import { client, isMicroCmsProductsEnabled } from "@/lib/microcms";
 import { Product } from "@/types/microcms";
 import localProducts from "@/data/products.json";
 import { BADGE_COLORS, DEFAULT_BADGE_COLOR } from "@/lib/badges";
@@ -78,6 +78,7 @@ async function getInventory(): Promise<InventoryRow[]> {
 }
 
 async function getProducts(): Promise<Product[]> {
+    if (!isMicroCmsProductsEnabled) return localProducts as Product[];
     try {
         const data = await client.getList<Product>({ endpoint: "products", queries: { limit: 100 } });
         if (data.contents.length > 0) return data.contents;

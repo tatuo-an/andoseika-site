@@ -3,7 +3,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import Link from "next/link";
 import { ArrowLeft, Check, Truck, CalendarCheck } from "lucide-react";
-import { client } from "@/lib/microcms";
+import { client, isMicroCmsProductsEnabled } from "@/lib/microcms";
 import { Product } from "@/types/microcms";
 import { AddToCartButton } from "@/components/products/AddToCartButton";
 import { ProductImageSlideshow } from "@/components/products/ProductImageSlideshow";
@@ -218,7 +218,7 @@ async function buildVariations(familyRows: SheetRow[]): Promise<VariationInfo[]>
     // シートに価格がないものはMicroCMSから取得
     const needFetch = familyRows.filter(r => r.price === null);
     let microPrices: Record<string, number> = {};
-    if (needFetch.length > 0) {
+    if (isMicroCmsProductsEnabled && needFetch.length > 0) {
         try {
             const data = await client.getList<Product>({ endpoint: "products", queries: { limit: 100 } });
             microPrices = Object.fromEntries(data.contents.map(p => [p.id, p.price]));
@@ -244,9 +244,11 @@ async function buildVariations(familyRows: SheetRow[]): Promise<VariationInfo[]>
 async function getProduct(id: string): Promise<Product | null> {
     let data: Product | null = null;
     const localProductList = localProducts as Product[];
-    try {
-        data = await client.get<Product>({ endpoint: "products", contentId: id });
-    } catch { /* ignore */ }
+    if (isMicroCmsProductsEnabled) {
+        try {
+            data = await client.get<Product>({ endpoint: "products", contentId: id });
+        } catch { /* ignore */ }
+    }
 
     if (data) {
         if (!data.image) {

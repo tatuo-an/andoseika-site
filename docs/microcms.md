@@ -53,9 +53,11 @@
 ```bash
 MICROCMS_SERVICE_DOMAIN=your-service-domain
 MICROCMS_API_KEY=your-api-key
+MICROCMS_PRODUCTS_ENABLED=true
 ```
 
 ### データ取得ロジック
+- `MICROCMS_PRODUCTS_ENABLED=true` の場合だけMicroCMSの商品APIを使用します。未設定または `false` の場合は、商品在庫シートとローカルの `src/data/products.json` を使用します。
 - **商品詳細ページ**: MicroCMSからデータを取得し、存在しない場合はローカルの `src/data/products.json` をフォールバックとして使用します。
 - **商品一覧ページ**: MicroCMSのデータを優先して表示します。
 

@@ -5,7 +5,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import Link from "next/link";
 import { ShoppingBag, Users, Package, MessageCircle, Heart, Tag, CalendarDays } from "lucide-react";
-import { client } from "@/lib/microcms";
+import { client, isMicroCmsProductsEnabled } from "@/lib/microcms";
 import { Product } from "@/types/microcms";
 import localProducts from "@/data/products.json";
 import { AdminPanel } from "@/components/admin/AdminPanel";
@@ -116,6 +116,7 @@ async function getShipping() {
 }
 
 async function getProducts(): Promise<Product[]> {
+    if (!isMicroCmsProductsEnabled) return localProducts as Product[];
     try {
         const data = await client.getList<Product>({
             endpoint: "products",

@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
-import { client } from "@/lib/microcms";
+import { client, isMicroCmsProductsEnabled } from "@/lib/microcms";
 import type { Product } from "@/types/microcms";
+import localProducts from "@/data/products.json";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://ando-seika.vercel.app";
 
@@ -39,11 +40,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }));
 
   try {
-    const data = await client.getList<Product>({
-      endpoint: "products",
-      queries: { limit: 100, fields: "id,updatedAt,revisedAt,publishedAt" },
-    });
-    const productPages: MetadataRoute.Sitemap = data.contents.map((product) => ({
+    let products = localProducts as Product[];
+    if (isMicroCmsProductsEnabled) {
+      const data = await client.getList<Product>({
+        endpoint: "products",
+        queries: { limit: 100, fields: "id,updatedAt,revisedAt,publishedAt" },
+      });
+      if (data.contents.length > 0) products = data.contents;
+    }
+    const productPages: MetadataRoute.Sitemap = products.map((product) => ({
       url: new URL(`/products/${product.id}`, SITE_URL).toString(),
       lastModified: product.updatedAt ?? product.revisedAt ?? product.publishedAt ?? now,
       changeFrequency: "weekly",

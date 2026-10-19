@@ -66,14 +66,22 @@ async function ensureSheet(sheets: ReturnType<typeof getSheets>): Promise<Season
 export async function GET() {
     try {
         const sheets = getSheets();
+        const seeded = await ensureSheet(sheets);
+        if (seeded.length > 0) return NextResponse.json({ sales: seeded });
+
         const res = await sheets.spreadsheets.values.get({
             spreadsheetId: SPREADSHEET_ID,
             range: `${SHEET_NAME}!A:E`,
         });
         const rows = res.data.values ?? [];
         if (rows.length <= 1) {
-            const seeded = await ensureSheet(sheets);
-            if (seeded.length > 0) return NextResponse.json({ sales: seeded });
+            await sheets.spreadsheets.values.update({
+                spreadsheetId: SPREADSHEET_ID,
+                range: `${SHEET_NAME}!A2`,
+                valueInputOption: "RAW",
+                requestBody: { values: salesToRows(DEFAULT_SEASONAL_SALES) },
+            });
+            return NextResponse.json({ sales: DEFAULT_SEASONAL_SALES });
         }
         const sales = rowsToSales(rows.slice(1));
         return NextResponse.json({ sales });

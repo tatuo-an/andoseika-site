@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, ChevronRight, ShoppingBasket, Leaf, Heart, Building2, Package, Truck, ShieldCheck, AlertTriangle, HeartHandshake, Sprout } from "lucide-react";
 import { CommunityScroller } from "@/components/community/CommunityScroller";
-import { client } from "@/lib/microcms";
+import { client, isMicroCmsProductsEnabled } from "@/lib/microcms";
 import { Product } from "@/types/microcms";
 import { getEffectiveSalePercent, calcSalePrice } from "@/lib/sale";
 import { fetchActiveSeasonalSale } from "@/lib/seasonalSales";
@@ -31,12 +31,12 @@ function toTaxIncluded(price: number, cost: number | null): number {
 
 async function getTopProducts(seasonalDiscountPercent: number): Promise<{ id: string; name: string; image: string; price: number; onSale: boolean }[]> {
   try {
-    let products: Product[] = [];
-    try {
-      const data = await client.getList<Product>({ endpoint: "products", queries: { orders: "order", limit: 100 } });
-      products = data.contents.length > 0 ? data.contents : (localProducts as Product[]);
-    } catch {
-      products = localProducts as Product[];
+    let products = localProducts as Product[];
+    if (isMicroCmsProductsEnabled) {
+      try {
+        const data = await client.getList<Product>({ endpoint: "products", queries: { orders: "order", limit: 100 } });
+        products = data.contents.length > 0 ? data.contents : products;
+      } catch { /* local fallback */ }
     }
 
     const rows = await getInventoryRows();
@@ -92,12 +92,12 @@ async function getTopProducts(seasonalDiscountPercent: number): Promise<{ id: st
 
 async function getPreorderProducts(): Promise<{ id: string; name: string; image: string; price: number | null }[]> {
   try {
-    let products: Product[] = [];
-    try {
-      const data = await client.getList<Product>({ endpoint: "products", queries: { orders: "order", limit: 100 } });
-      products = data.contents.length > 0 ? data.contents : (localProducts as Product[]);
-    } catch {
-      products = localProducts as Product[];
+    let products = localProducts as Product[];
+    if (isMicroCmsProductsEnabled) {
+      try {
+        const data = await client.getList<Product>({ endpoint: "products", queries: { orders: "order", limit: 100 } });
+        products = data.contents.length > 0 ? data.contents : products;
+      } catch { /* local fallback */ }
     }
     const rows = await getInventoryRows();
     const productMap = Object.fromEntries(products.map((p) => [p.id, p]));

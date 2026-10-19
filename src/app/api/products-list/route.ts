@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { google } from "googleapis";
-import { client } from "@/lib/microcms";
+import { client, isMicroCmsProductsEnabled } from "@/lib/microcms";
 import { Product } from "@/types/microcms";
 import localProducts from "@/data/products.json";
 import { getEffectiveSalePercent, calcSalePrice } from "@/lib/sale";
@@ -51,11 +51,13 @@ export async function GET() {
         }));
 
         // MicroCMS取得
-        let products: Product[] = [];
-        try {
-            const data = await client.getList<Product>({ endpoint: "products", queries: { orders: "order", limit: 100 } });
-            products = data.contents.length > 0 ? data.contents : (localProducts as Product[]);
-        } catch { products = localProducts as Product[]; }
+        let products = localProducts as Product[];
+        if (isMicroCmsProductsEnabled) {
+            try {
+                const data = await client.getList<Product>({ endpoint: "products", queries: { orders: "order", limit: 100 } });
+                products = data.contents.length > 0 ? data.contents : products;
+            } catch { /* local fallback */ }
+        }
         const productMap = Object.fromEntries(products.map(p => [p.id, p]));
 
         // ファミリーは代表のみ返す
