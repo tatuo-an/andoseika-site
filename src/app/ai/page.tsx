@@ -12,7 +12,7 @@ const BRAND = "AND U";
 const BRAND_SUB = "願いが叶う";
 
 const title = `ホームページもLINEも、頼み先をひとつに｜${BRAND}`;
-const description = "鳥取の会社・お店の方へ。ホームページ・予約の仕組み・LINE公式アカウント・SNSの投稿・小さなネットショップを、作るところから手直しまで、ひとつの窓口で引き受けます。まずは60分の無料相談から。";
+const description = "鳥取の会社・お店の方へ。ホームページ制作・ネットショップ開設・LINE公式アカウント構築は各3万〜5万円、業務ツール制作は1万円から（税抜）。SNS運用と作ったあとの手直しも、ひとつの窓口で。まずは60分の無料相談から。";
 
 export const metadata: Metadata = {
   title: { absolute: title },
@@ -48,7 +48,7 @@ export default function AiPage() {
         <div className="hero-text">
           <p className="eyebrow">鳥取の会社・お店の方へ</p>
           <h1><span className="ib">そのホームページ、</span><br /><span className="ib"><span className="mk">動いていますか？</span></span></h1>
-          <p className="hero-lead">管理費は毎月払っているのに、直したい所はそのまま。ホームページも、ネットショップも、公式LINEも、窓口をひとつに。作ったあとの更新・手直しは、頼む場合は月1万〜3万円です（作るときの費用は別）。</p>
+          <p className="hero-lead">管理費は毎月払っているのに、直したい所はそのまま。ホームページも、ネットショップも、公式LINEも、窓口をひとつに。作ったあとの更新・手直しは、頼む場合は月1万〜3万円（税抜）です（作るときの費用は別）。</p>
           <div className="hero-proof">
             <p className="hero-proof-title">実際にやった仕事</p>
             <ul className="hero-proof-list">
@@ -84,7 +84,7 @@ export default function AiPage() {
           <li>ホームページ・予約・LINE・ネットショップで、頼み先がばらばら</li>
         </ul>
         <p className="worry-close">ホームページ、ネットショップ、公式LINE。それぞれの会社に、月1万〜5万円ずつ払っていませんか。年にすると、まとまった金額です。</p>
-        <p className="worry-close">うちは、作ったあとの更新・手直しを<span className="mk">月1万〜3万円</span>でお受けします。どこまで含むかは、見積もりに書きます。窓口は安藤ひとつです。</p>
+        <p className="worry-close">うちは、作ったあとの更新・手直しを<span className="mk">月1万〜3万円（税抜）</span>でお受けします。どこまで含むかは、見積もりに書きます。窓口は安藤ひとつです。</p>
         </div>
       </section>
 
@@ -220,17 +220,26 @@ export default function AiPage() {
             </div>
           </article>
 
-          <article className="work work-tools">
+          <article className="work work-tools" id="tool-examples">
             <p className="work-record">仕事の記録 / 06</p>
             <p className="work-stamp">使用中</p>
             <p className="work-client">うちで作って、使っているもの</p>
-            <h3>営業・納品・ネット販売の道具を、自分で作って毎日使用。</h3>
+            <h3>営業・納品・給与集計。自分の仕事で使う道具を、制作。</h3>
             <p className="work-body">自分の仕事に合わせて、道具を作って毎日使っています。お客さんの仕事に合わせて、同じように作ることもできます。</p>
             <div className="work-shots tool-shots">
               <div className="tool-card">
                 <p className="tool-name">営業ツール</p>
-                <p className="tool-description">営業先の一覧と、電話の記録をまとめます。</p>
+                <p className="tool-description">営業先の名前・電話番号と、対応状況を一覧に。検索や更新の流れを試せます。</p>
                 <figure className="browser-shot"><img src="/images/ai/tools/sales-list.jpg" alt="営業ツールの画面" loading="lazy" /></figure>
+                <Link className="tool-demo-link" href="/ai/demo#sales">営業ツールのデモを試す <span aria-hidden="true">→</span></Link>
+              </div>
+              <div className="tool-card">
+                <p className="tool-name">給与の集計ツール</p>
+                <p className="tool-description">作業の数量や勤務時間から、金額を集計。デモでは勤務時間と時給を変えて試せます。</p>
+                <div className="tool-demo-preview" aria-label="給与集計デモの見本">
+                  <span>勤務時間 × 時給</span><strong>120時間 × 1,400円</strong><span>スタッフAの集計額</span><b>168,000円</b><small>架空のサンプルデータ</small>
+                </div>
+                <Link className="tool-demo-link" href="/ai/demo#payroll">給与集計のデモを試す <span aria-hidden="true">→</span></Link>
               </div>
               <div className="tool-card">
                 <p className="tool-name">納品ツール</p>
@@ -248,7 +257,7 @@ export default function AiPage() {
                 <figure className="browser-shot"><img src="/images/ai/tools/market.jpg" alt="市場ツールの画面" loading="lazy" /></figure>
               </div>
             </div>
-            <p className="work-caption">画面は、掲載用のサンプルデータを入れたものです。</p>
+            <p className="work-caption">画面・デモはサンプルデータです。デモは操作体験用で、実際の給与情報・営業先とはつながっていません。</p>
           </article>
           <article className="work work-castle">
             <p className="work-record">仕事の記録 / 07</p>
@@ -281,81 +290,85 @@ export default function AiPage() {
         <ul className="service-list">
           <li className="service-tile">
             <span className="service-number" aria-hidden="true">01</span>
-            <h3>ホームページ</h3>
+            <h3>ホームページの制作</h3>
             <p>新しく作る。今あるものを直す。</p>
+            <p className="service-price">3万〜5万円<span>（税抜）</span></p>
           </li>
           <li className="service-tile">
             <span className="service-number" aria-hidden="true">02</span>
-            <h3>予約の仕組み</h3>
-            <p>電話だけに頼らない受付に。</p>
+            <h3>ネットショップの開設</h3>
+            <p>商品の登録から、販売を始める準備まで。</p>
+            <p className="service-price">3万〜5万円<span>（税抜）</span></p>
           </li>
           <li className="service-tile">
             <span className="service-number" aria-hidden="true">03</span>
-            <h3>LINE公式アカウント</h3>
+            <h3>LINE公式アカウントの構築</h3>
             <p>開設から、メニューづくりまで。</p>
-          </li>
-          <li className="service-tile">
-            <span className="service-number" aria-hidden="true">04</span>
-            <h3>SNSの投稿</h3>
-            <p>写真を送るだけ。投稿はこちらで。</p>
-          </li>
-          <li className="service-tile">
-            <span className="service-number" aria-hidden="true">05</span>
-            <h3>小さなネットショップ</h3>
-            <p>数点から売れる売り場を。</p>
-          </li>
-          <li className="service-tile">
-            <span className="service-number" aria-hidden="true">06</span>
-            <h3>作ったあとの更新・手直し</h3>
-            <p>作って終わりにしません。</p>
+            <p className="service-price">3万〜5万円<span>（税抜）</span></p>
           </li>
         </ul>
+        <p className="service-note">ページ数・商品数・設定の範囲を確認して、見積もりをお出しします。</p>
+        <div className="custom-tool-service" id="tool-service">
+          <div>
+            <p className="custom-tool-label">毎日の事務も、相談できます</p>
+            <h3>業務ツールの制作</h3>
+            <p>給与の集計、営業先のリスト、注文の転記。「いつも同じ作業をしている」を、仕事に合う道具にします。</p>
+          </div>
+          <div className="custom-tool-action">
+            <p className="service-price">1万円〜<span>（税抜）</span></p>
+            <a className="tool-demo-link" href="#tool-examples">使っている道具・デモを見る <span aria-hidden="true">→</span></a>
+          </div>
+          <p className="custom-tool-note">1万円〜は、入力と集計など機能を絞った小さなツールの目安です。複数サービスとの連携・定期更新などは、内容に応じてお見積もり。外部サービスの利用料や保守が必要な場合も、事前にお伝えします。</p>
+        </div>
+        <p className="service-note">毎日の発信は<Link href="/ai/sns">SNS運用代行</Link>へ。作ったあとの更新・手直しもお受けしています。</p>
       </section>
 
       <section className="price" id="price">
         <div className="section-heading"><p className="section-label" aria-hidden="true">PRICE</p><h2>料金について</h2></div>
-        <p className="price-lead">金額は、<span className="mk">内容を聞いてから</span>決めます。目安は次のとおりです。</p>
+        <p className="price-lead">金額は、<span className="mk">内容を聞いてから</span>決めます。当方の料金はすべて税抜です。</p>
         <h3 className="price-step">作るとき（1回だけ）</h3>
-        <p className="price-scope">下の表は、作るときの費用の目安です。列ごとに、含む作業の範囲は違います。</p>
+        <p className="price-scope">作るときの費用の目安です。ページ数・商品数・設定の範囲は、お見積もりで先にお伝えします。</p>
         <div className="table-scroll">
           <table className="market-table">
-            <thead><tr><th scope="col">頼むもの</th><th scope="col">フリーランスの場合（目安）</th><th scope="col">制作会社の場合（目安）</th><th scope="col"><span className="price-brand" aria-hidden="true">{BRAND}</span>うちの場合</th></tr></thead>
+            <thead><tr><th scope="col">頼むもの</th><th scope="col">制作する内容</th><th scope="col">料金の目安（税抜）</th></tr></thead>
             <tbody>
-              <tr><td data-label="頼むもの">ホームページの制作</td><td data-label="フリーランスの場合（目安）">10万〜60万円</td><td data-label="制作会社の場合（目安）">50万〜150万円</td><td data-label="うちの場合"><strong>3万〜5万円</strong></td></tr>
-              <tr><td data-label="頼むもの">LINE公式アカウントの構築</td><td data-label="フリーランスの場合（目安）">10万〜30万円</td><td data-label="制作会社の場合（目安）">50万〜150万円</td><td data-label="うちの場合"><strong>3万〜5万円</strong></td></tr>
+              <tr><td data-label="頼むもの">ホームページの制作</td><td data-label="制作する内容">お店・サービスの紹介、問い合わせへの案内</td><td data-label="料金の目安（税抜）"><strong>3万〜5万円</strong></td></tr>
+              <tr><td data-label="頼むもの">ネットショップの開設</td><td data-label="制作する内容">販売ページの準備、商品の登録、決済の設定</td><td data-label="料金の目安（税抜）"><strong>3万〜5万円</strong></td></tr>
+              <tr><td data-label="頼むもの">LINE公式アカウントの構築</td><td data-label="制作する内容">アカウント開設、あいさつ文、メニューづくり</td><td data-label="料金の目安（税抜）"><strong>3万〜5万円</strong></td></tr>
             </tbody>
           </table>
         </div>
-        <p className="price-note">フリーランスと制作会社の金額は、公開されている記事から拾った目安です（2026年10月。atsoho.com、imitsu.jp）。内容や規模で変わるので、同じ条件で比べたものではありません。うちの金額は税込の目安で、内容を聞いてから決めます。</p>
+        <p className="price-note">基本の範囲を超える機能や連携は、別途お見積もりします。サーバー・ドメイン・外部サービスなどの利用料が必要な場合も、事前にお伝えします。</p>
+        <p className="tool-price-note"><strong>業務ツール制作は1万円〜（税抜）。</strong>機能を絞った集計ツールから、仕事に合わせて作ります。<a href="#tool-service">制作の範囲を見る</a></p>
         <div className="price-pack">
           <p className="price-pack-tag">まとめて頼むなら</p>
           <h3 className="price-pack-name">オールインパック</h3>
           <div className="price-pack-body">
-            <p className="price-pack-amount"><strong>10万円</strong><span className="price-pack-once">払うのは最初の1回だけ</span></p>
+            <p className="price-pack-amount"><strong>10万円</strong><span className="price-pack-once">税抜・制作費は最初の1回</span></p>
             <ul className="price-pack-list">
               <li>ホームページの制作</li>
-              <li>小さなネットショップ</li>
+              <li>ネットショップの開設</li>
               <li>LINE公式アカウントの構築</li>
             </ul>
           </div>
           <p className="price-pack-scope">この3つを、まとめて作ります。小さなお店向けの内容で、ページ数や商品の数は、見積もりに書いてお渡しします。</p>
-          <p className="price-pack-note">作ったあとの更新・手直しは、頼む場合だけ、別に月1万〜3万円です。SNSの運用は入りません。</p>
+          <p className="price-pack-note">作ったあとの更新・手直しは、頼む場合だけ、別に月1万〜3万円（税抜）です。SNSの運用は入りません。</p>
         </div>
         <h3 className="price-step">頼んだ場合に、毎月かかるもの</h3>
         <div className="price-monthly">
           <div className="price-monthly-item">
             <h4 className="price-monthly-name">作ったあとの更新・手直し</h4>
-            <p className="price-monthly-amount"><strong>月1万〜3万円</strong></p>
+            <p className="price-monthly-amount"><strong>月1万〜3万円</strong>（税抜）</p>
             <p>更新、控え（バックアップ）の確認、文章や写真の差し替え。含む作業と回数は、見積もりに書きます。</p>
           </div>
           <div className="price-monthly-item">
             <h4 className="price-monthly-name">SNSの運用代行</h4>
-            <p className="price-monthly-amount"><strong>月3万〜10万円</strong></p>
-            <p>写真を送ってもらえば、文章づくりから投稿まで。投稿の本数と内容で決まります。</p>
-            <p className="price-sns-more">プランは月3万円・5万円・10万円の3つです。中身は、別のページでくわしく案内しています。<Link href="/ai/sns">SNS運用代行のページを見る</Link></p>
+            <p className="price-monthly-amount"><strong>月3万〜10万円</strong>（税抜）</p>
+            <p>写真を送ってもらえば、文章づくりから投稿まで。ライト・スタンダードは1日1投稿。スタンダードは公式LINEの週1回程度の配信も含みます。</p>
+            <p className="price-sns-more">プランは月3万円・5万円・10万円の3つです（すべて税抜）。中身は、別のページでくわしく案内しています。<Link href="/ai/sns">SNS運用代行のページを見る</Link></p>
           </div>
         </div>
-        <p className="price-lead price-separate">予約の仕組みと、ネットショップだけのご依頼は、内容を聞いて見積もります。</p>
+        <p className="price-lead price-separate">予約の仕組みや、基本の範囲を超える制作は、内容を聞いて見積もります。金額はすべて税抜で、消費税は別途かかります。</p>
       </section>
 
       <aside className="cta-band">

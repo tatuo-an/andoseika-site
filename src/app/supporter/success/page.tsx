@@ -12,12 +12,12 @@ const PLAN_LABELS: Record<string, string> = {
     premium: "プレミアム（松）",
 };
 
-export default function SupporterSuccessPage({
+export default async function SupporterSuccessPage({
     searchParams,
 }: {
-    searchParams: { plan?: string };
+    searchParams: Promise<{ plan?: string }>;
 }) {
-    const plan = searchParams.plan || "standard";
+    const plan = (await searchParams).plan || "standard";
     const planLabel = PLAN_LABELS[plan] || plan;
 
     return (

@@ -26,9 +26,9 @@ export function AiTimeSupport() {
               <h3>時間制サポート</h3>
               <p>まずは初回60分の無料相談で、頼みたい仕事を聞かせてください。作業内容と見込み時間を確認してから、パックをお選びいただけます。</p>
               <div className="andu-prices">
-                <div><h4>5時間</h4><p className="andu-amount">3万円<span>（税込）</span></p><p>1時間あたり6,000円</p></div>
-                <div><h4>10時間</h4><p className="andu-amount">5万円<span>（税込）</span></p><p>1時間あたり5,000円</p></div>
-                <div><h4>20時間</h4><p className="andu-amount">10万円<span>（税込）</span></p><p>1時間あたり5,000円</p></div>
+                <div><h4>5時間</h4><p className="andu-amount">3万円<span>（税抜）</span></p><p>1時間あたり6,000円（税抜）</p></div>
+                <div><h4>10時間</h4><p className="andu-amount">5万円<span>（税抜）</span></p><p>1時間あたり5,000円（税抜）</p></div>
+                <div><h4>20時間</h4><p className="andu-amount">10万円<span>（税抜）</span></p><p>1時間あたり5,000円（税抜）</p></div>
               </div>
               <p className="andu-small">月額料金ではありません。相談・打ち合わせ・準備・設定・制作・動作確認・修正の実作業時間を合算します。AIが無人で処理する待ち時間は含めません。初回無料相談の60分はパックから差し引きません。</p>
               <p className="andu-small">作業時間と残り時間をお伝えし、追加の作業が必要になる前にご相談します。AIツールの利用料・交通費は別途。ご利用期間は、作業内容に合わせて契約前に決めます。</p>

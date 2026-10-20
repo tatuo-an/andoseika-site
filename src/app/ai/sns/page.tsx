@@ -21,11 +21,11 @@ export const metadata: Metadata = {
             "SNS運用代行・公式LINE構築 AND U｜写真を送るだけ、あとはこちらで回します",
     },
     description:
-        "鳥取の店舗向けSNS運用代行・公式LINE構築。写真を送るだけで、投稿とLINE配信をこちらが毎日回します。実測29.2万表示の実績あり。AND U（アンドユー）の無料相談で、今の状況をお聞かせください。",
+        "鳥取の店舗向けSNS運用代行・公式LINE構築。写真を送るだけで、毎日のSNS投稿と、プランに応じたLINE配信をお任せいただけます。実測29.2万表示の実績あり。AND U（アンドユー）の無料相談で、今の状況をお聞かせください。",
     openGraph: {
         title: "SNS運用代行・公式LINE構築 AND U｜写真を送るだけ、あとはこちらで回します",
         description:
-            "鳥取の店舗向けSNS運用代行・公式LINE構築。写真を送るだけで、投稿とLINE配信をこちらが毎日回します。実測29.2万表示の実績あり。",
+            "鳥取の店舗向けSNS運用代行・公式LINE構築。写真を送るだけで、毎日のSNS投稿と、プランに応じたLINE配信をお任せいただけます。実測29.2万表示の実績あり。",
         images: [
             {
                 url: "/images/about/founders.jpg",
@@ -116,11 +116,11 @@ const FAQ_ITEMS = [
     },
     {
         q: "SNSアカウントを持っていなくても頼めますか",
-        a: "はい。新規開設からお受けします。その場合のみ初期設定費＋3万円をいただきます。開設直後のアカウントは慎重に扱う必要があるため、最初の1週間はこちらが手動で丁寧に運用します。",
+        a: "はい。新規開設からお受けします。その場合のみ初期設定費＋3万円（税抜）をいただきます。開設直後のアカウントは慎重に扱う必要があるため、最初の1週間はこちらが手動で丁寧に運用します。",
     },
     {
         q: "買い切りの場合、納品後の費用はかかりますか",
-        a: "当社への毎月の支払いはありません。仕組みを動かすAIツールの利用料（月3,000円ほど）だけ、お店でのご契約が必要です。不具合対応や修正のご依頼があった場合は、都度お見積りで別途料金をいただきます。",
+        a: "当方への毎月の支払いはありません。投稿やLINE配信に使う外部サービスの利用料が必要な場合は、ご契約前に内容と金額をお伝えします。納品後の不具合対応や修正のご依頼は、都度お見積もりになります。",
     },
     {
         q: "写真はスマホで撮ったものでいいですか",
@@ -151,11 +151,12 @@ const PLAN_TABLE_HEADERS: {
     { key: "full", name: "おまかせフル", price: "10万円" },
 ];
 
-type PlanRow = { label: string; light: boolean; standard: boolean; full: boolean };
+type PlanValue = boolean | string;
+type PlanRow = { label: string; light: PlanValue; standard: PlanValue; full: PlanValue };
 
 const CAN_DO_ROWS: PlanRow[] = [
-    { label: "毎日の投稿代行（1日2投稿）", light: true, standard: true, full: true },
-    { label: "公式LINE配信", light: false, standard: true, full: true },
+    { label: "毎日の投稿代行", light: "1日1投稿", standard: "1日1投稿", full: "1日2投稿" },
+    { label: "公式LINE配信", light: false, standard: "週1回程度", full: true },
     { label: "月1数字報告", light: false, standard: true, full: true },
     { label: "コメント対応", light: false, standard: false, full: true },
     { label: "キャンペーン企画", light: false, standard: false, full: true },
@@ -239,7 +240,7 @@ function PlanCompareTable({ title, rows }: { title: string; rows: PlanRow[] }) {
                                 >
                                     {plan.name}
                                 </p>
-                                <p className="text-[11px] font-normal text-stone-500">{plan.price}</p>
+                                <p className="text-xs font-normal text-stone-500">{plan.price}<br />税抜・月額</p>
                             </th>
                         ))}
                     </tr>
@@ -254,17 +255,17 @@ function PlanCompareTable({ title, rows }: { title: string; rows: PlanRow[] }) {
                                 {row.label}
                             </th>
                             <td className="p-1.5 md:p-2 text-center text-stone-700">
-                                {row.light ? "○" : <span className="text-stone-300">—</span>}
+                                {typeof row.light === "string" ? row.light : row.light ? "○" : <span className="text-stone-500">—</span>}
                             </td>
                             <td
                                 className={`p-1.5 md:p-2 text-center font-bold text-primary border-x-2 border-primary bg-primary/5 ${
                                     i === rows.length - 1 ? "border-b-2" : ""
                                 }`}
                             >
-                                {row.standard ? "○" : <span className="text-stone-300">—</span>}
+                                {typeof row.standard === "string" ? row.standard : row.standard ? "○" : <span className="text-stone-500">—</span>}
                             </td>
                             <td className="p-1.5 md:p-2 text-center text-stone-700">
-                                {row.full ? "○" : <span className="text-stone-300">—</span>}
+                                {typeof row.full === "string" ? row.full : row.full ? "○" : <span className="text-stone-500">—</span>}
                             </td>
                         </tr>
                     ))}
@@ -593,7 +594,7 @@ export default function AiConsultingPage() {
                 </section>
 
                 {/* 5. 料金 */}
-                <section className="py-16 md:py-20 bg-stone-100">
+                <section className="py-16 md:py-20 bg-stone-100" id="pricing">
                     <div className="container mx-auto px-4 md:px-6 max-w-5xl">
                         <div className="text-center mb-8 max-w-2xl mx-auto">
                             <h2 className="text-2xl md:text-3xl font-bold text-stone-900 font-heading">
@@ -621,6 +622,7 @@ export default function AiConsultingPage() {
                             </Link>
                         </div>
 
+                        <p className="text-stone-600 text-sm mb-4 text-center">このページの当方の料金はすべて税抜です。消費税は別途かかります。</p>
                         <p className="text-stone-700 text-sm mb-2 text-center">
                             相談のあとは、月額プランからお選びいただけます。
                         </p>
@@ -628,16 +630,16 @@ export default function AiConsultingPage() {
                             SNSアカウントをすでにお持ちの場合、初期構築費は不要です（月額に含まれています）。
                         </p>
                         <p className="text-stone-600 text-sm mb-4 text-center">
-                            新規でアカウント開設が必要な場合のみ、初期設定費＋3万円をいただきます（アカウント開設と、安全に育てるための初週の手動運用まで込み）。
+                            新規でアカウント開設が必要な場合のみ、初期設定費＋3万円（税抜）をいただきます（アカウント開設と、安全に育てるための初週の手動運用まで込み）。
                         </p>
 
                         <div className="grid md:grid-cols-3 gap-4">
                             <div className="bg-white rounded-2xl border border-stone-200 p-6">
                                 <p className="text-sm font-bold text-stone-900 mb-1">ライト</p>
                                 <p className="text-2xl font-bold text-stone-900 mb-2">
-                                    3<span className="text-sm font-normal text-stone-500 ml-1">万円（税込・月額）</span>
+                                    3<span className="text-sm font-normal text-stone-500 ml-1">万円（税抜・月額）</span>
                                 </p>
-                                <p className="text-stone-600 text-sm">投稿代行のみ</p>
+                                <p className="text-stone-600 text-sm">毎日の投稿代行（1日1投稿）</p>
                             </div>
                             <div className="bg-primary/5 rounded-2xl border-2 border-primary p-6 relative">
                                 <span className="inline-block bg-primary text-white text-sm font-bold px-3 py-1 rounded-full mb-2">
@@ -645,9 +647,9 @@ export default function AiConsultingPage() {
                                 </span>
                                 <p className="text-sm font-bold text-primary mb-1">スタンダード</p>
                                 <p className="text-2xl font-bold text-stone-900 mb-2">
-                                    5<span className="text-sm font-normal text-stone-500 ml-1">万円（税込・月額）</span>
+                                    5<span className="text-sm font-normal text-stone-500 ml-1">万円（税抜・月額）</span>
                                 </p>
-                                <p className="text-stone-700 text-sm mb-4">LINE配信＋月1報告つき</p>
+                                <p className="text-stone-700 text-sm mb-4">毎日の投稿代行（1日1投稿）<br />公式LINE配信は週1回程度<br />月1回の数字報告つき</p>
                                 <Link
                                     href="/contact/personal?subject=sns-line"
                                     className="inline-flex items-center justify-center w-full bg-primary hover:bg-primary-dark text-white font-bold py-2.5 px-4 rounded-full text-sm transition-all"
@@ -659,7 +661,7 @@ export default function AiConsultingPage() {
                                 <p className="text-sm font-bold text-stone-900 mb-1">おまかせフル</p>
                                 <p className="text-2xl font-bold text-stone-900 mb-2">
                                     10
-                                    <span className="text-sm font-normal text-stone-500 ml-1">万円（税込・月額）</span>
+                                    <span className="text-sm font-normal text-stone-500 ml-1">万円（税抜・月額）</span>
                                 </p>
                                 <p className="text-stone-600 text-sm">企画・コメント対応まで全部</p>
                             </div>
@@ -690,11 +692,11 @@ export default function AiConsultingPage() {
                                 <p className="text-2xl font-bold text-stone-900 mb-2">
                                     10
                                     <span className="text-sm font-normal text-stone-500 ml-1">
-                                        万円（税込・買い切り）
+                                        万円（税抜・買い切り）
                                     </span>
                                 </p>
                                 <p className="text-stone-700 text-sm leading-relaxed mb-4">
-                                    SNSアカウント設計と公式LINE構築を一式で仕上げて納品します。月額契約は不要です。
+                                    SNSアカウントと公式LINEを整え、毎日の投稿が自動で回る仕組みを作ります。使い方の説明まで含む、月額契約不要のプランです。
                                 </p>
 
                                 <p className="text-sm font-bold text-stone-500 mb-2">含まれるもの</p>
@@ -702,9 +704,7 @@ export default function AiConsultingPage() {
                                     {[
                                         "SNSアカウントの設計・プロフィール文づくり",
                                         "公式LINEの開設・あいさつ配信・リッチメニュー",
-                                        "毎日の投稿が自動で回る仕組みの構築",
-                                        "店頭のLINE登録案内の作成",
-                                        "初週の投稿づくり",
+                                        "毎日の投稿が自動で回る仕組みの構築・使い方の説明",
                                     ].map((text) => (
                                         <li
                                             key={text}
@@ -716,18 +716,20 @@ export default function AiConsultingPage() {
                                     ))}
                                 </ul>
 
+                                <p className="text-stone-700 text-sm leading-relaxed mb-4">用意した投稿文・写真を、決めた日時に投稿できるよう設定します。投稿内容の準備・確認、予約の追加や変更の方法もご説明します。対応するSNSと投稿形式は、無料相談で確認します。</p>
+
                                 <div className="border-t border-stone-100 pt-3 space-y-2">
                                     <p className="text-stone-600 text-sm leading-relaxed">
                                         作った仕組みは、納品後もずっとお店のものです。
                                     </p>
                                     <p className="text-stone-600 text-sm leading-relaxed">
-                                        ※仕組みを動かすためのAIツールの利用料（月3,000円ほど・お店でのご契約）が別途かかります。いちばん安いプランで足りる設計にし、契約のお手伝いもこちらでやります。
+                                        投稿やLINE配信に使う外部サービスの利用料は別途です。利用するサービスと費用は、ご契約前にご説明します。
                                     </p>
                                     <p className="text-stone-600 text-sm leading-relaxed">
                                         納品後の不具合対応・修正のご依頼は、都度お見積り（別途料金）になります。
                                     </p>
                                     <p className="text-stone-600 text-sm leading-relaxed">
-                                        あとから月3万円の運用サポート（ライトプラン）を追加することもできます。
+                                        あとから月3万円（税抜）の運用サポート（ライトプラン）を追加することもできます。
                                     </p>
                                 </div>
                             </div>
