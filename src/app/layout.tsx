@@ -50,6 +50,7 @@ import { SessionProvider } from "@/components/providers/SessionProvider";
 import { ChatWidget } from "@/components/ChatWidget";
 import { GuestBanner } from "@/components/GuestBanner";
 import { LineFriendBanner } from "@/components/LineFriendBanner";
+import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 
 export default function RootLayout({
   children,
@@ -62,6 +63,7 @@ export default function RootLayout({
         className={`${zenKaku.variable} ${outfit.variable} antialiased`}
       >
         <SessionProvider>
+          <GoogleAnalytics />
           <GuestBanner />
           <LineFriendBanner />
           <CartProvider>
