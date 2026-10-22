@@ -18,14 +18,14 @@
     "@vercel/blob": "^2.4.0",
     "clsx": "^2.1.1",
     "dotenv": "^17.2.3",
-    "form-data": "^4.0.5",
+    "form-data": "^4.0.6",
     "googleapis": "^171.4.0",
     "lucide-react": "^0.555.0",
     "microcms-js-sdk": "^3.2.0",
-    "next": "^16.2.1",
-    "next-auth": "^5.0.0-beta.31",
+    "next": "^16.4.2",
+    "next-auth": "^5.0.0-beta.32",
     "node-fetch": "^3.3.2",
-    "nodemailer": "^7.0.13",
+    "nodemailer": "^10.2.0",
     "openai": "^6.45.0",
     "react": "19.2.0",
     "react-dom": "19.2.0",
@@ -34,13 +34,19 @@
     "tailwind-merge": "^3.4.0",
     "use-shopping-cart": "^3.2.0"
   },
+  "overrides": {
+    "nodemailer": "$nodemailer",
+    "use-shopping-cart": {
+      "uuid": "^11.1.1"
+    }
+  },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.0.5",
+    "eslint-config-next": "16.4.2",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
