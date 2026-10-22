@@ -298,7 +298,7 @@ export default function AiPage() {
               <div><dt>SNSの仕組みを買い切り<small>SNS設計・公式LINE構築・投稿の仕組みと説明</small></dt><dd>10万円</dd></div>
             </dl>
           </div>
-          <div className="price-group price-monthly">
+          <div className="price-group price-recurring">
             <p className="price-type">継続・月額</p>
             <h3>運用を頼むとき · 月額</h3>
             <dl className="price-rows">

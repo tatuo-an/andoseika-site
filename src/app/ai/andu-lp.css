@@ -7,9 +7,9 @@
 .andu-lp .security-reference p { font-size: 16px; font-weight: 700; line-height: 1.8; }
 .andu-lp .security-reference small { display: block; margin-top: 8px; font-size: 12px; line-height: 1.8; color: #56615b; }
 .andu-lp .price-group.price-once { background: #fffaf0; border-top: 6px solid #a56925; }
-.andu-lp .price-group.price-monthly { background: #eaf2ec; border-top: 6px solid var(--green); }
+.andu-lp .price-group.price-recurring { background: #eaf2ec; border-top: 6px solid var(--green); }
 .andu-lp .price-type { margin-bottom: 8px; color: #77501e; font-size: 14px; font-weight: 700; letter-spacing: .08em; }
-.andu-lp .price-monthly .price-type { color: var(--green); }
+.andu-lp .price-recurring .price-type { color: var(--green); }
 .andu-lp .price-bundle { margin: 12px 0 28px; padding: 24px 18px; background: var(--green); color: #fff; text-align: center; }
 .andu-lp .price-bundle > p { font-size: 16px; }
 .andu-lp .price-bundle .price-bundle-before { margin-top: 10px; font-size: 13px; }
