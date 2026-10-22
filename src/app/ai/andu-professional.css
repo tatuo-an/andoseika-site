@@ -1,0 +1,175 @@
+/* AND U only. The agricultural site and the separate SNS page retain their own designs. */
+.andu-lp.andu-professional {
+  --paper: #f5f5f2; --ink: #252b2b; --muted: #606968; --rule: #d7dcda;
+  --green: #335c53; --dark: #202728; --pale-green: #edf2f0; --amber: #d7dcda; --stamp: #606968;
+  --gutter: 24px;
+  font-weight: 400;
+}
+.andu-professional main > section { padding-block: 72px; }
+.andu-professional h2 { font-size: clamp(27px, 2.6vw, 36px); letter-spacing: .015em; line-height: 1.6; }
+.andu-professional .section-label { font: 500 12px/1.5 var(--font-outfit), sans-serif; letter-spacing: .17em; margin-bottom: 16px; color: var(--muted); }
+.andu-professional .section-label::before, .andu-professional .section-label::after { display: none; }
+.andu-professional .site-header { background: #fff; padding-block: 18px; padding-inline: max(var(--gutter), calc((100% - var(--wide)) / 2)); }
+.andu-professional .brand-name { font-size: 29px; font-weight: 500; letter-spacing: .13em; }
+.andu-professional .brand-sub { font-size: 11px; letter-spacing: .04em; color: var(--muted); }
+.andu-professional .header-nav a { color: var(--ink); font-size: 14px; font-weight: 500; }
+.andu-professional .header-cta { padding: 10px 22px; border: 1px solid var(--dark); border-radius: 2px; background: var(--dark); color: #fff; }
+.andu-professional .header-cta:hover { background: var(--green); border-color: var(--green); }
+.andu-professional main > .hero { display: grid; grid-template-columns: minmax(0, 1fr) 380px; align-items: center; gap: 64px; padding-block: 80px; background: var(--dark); color: #fff; overflow: hidden; }
+.andu-professional .hero::before, .andu-professional .hero::after { display: none; }
+.andu-professional .eyebrow { color: #d7dcda; font-size: 14px; font-weight: 500; letter-spacing: .04em; margin: 0 0 32px; }
+.andu-professional .hero-overline { color: #bdc9c4; font: 400 12px/1.6 var(--font-outfit), sans-serif; letter-spacing: .16em; margin-bottom: 16px; }
+.andu-professional .security-headline { font-size: clamp(34px, 3.5vw, 50px); line-height: 1.55; font-weight: 700; letter-spacing: -.025em; }
+.andu-professional .mk { background: none; padding: 0; color: inherit; }
+.andu-professional .hero-lead { font-size: 16px; line-height: 2; color: #d7dcda; margin-top: 28px; max-width: 36em; }
+.andu-professional .hero-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 16px 24px; margin-top: 32px; }
+.andu-professional .cta { width: auto; min-height: 56px; max-width: 100%; gap: 32px; padding: 16px 24px; border: 1px solid var(--green); border-radius: 2px; background: var(--green); color: #fff; box-shadow: none; font-size: 16px; font-weight: 700; transition: background-color 160ms ease-out, border-color 160ms ease-out; }
+.andu-professional .cta:hover { background: var(--dark); border-color: var(--dark); transform: none; box-shadow: none; }
+.andu-professional .hero .cta, .andu-professional .cta-band .cta, .andu-professional .final-cta .cta { background: #fff; color: var(--ink); border-color: #fff; }
+.andu-professional .hero .cta:hover, .andu-professional .cta-band .cta:hover, .andu-professional .final-cta .cta:hover { background: #edf2f0; border-color: #edf2f0; }
+.andu-professional .hero-secondary { display: inline-flex; align-items: center; min-height: 48px; gap: 12px; color: #fff; font-size: 14px; text-decoration: none; border-bottom: 1px solid #74827d; }
+.andu-professional .hero-consultation-note { color: #bdc9c4; margin-top: 16px; font-size: 12px; line-height: 1.8; }
+.andu-professional .hero a:focus-visible { outline-color: #fff; }
+.andu-professional .hero-service-guide { padding: 32px; background: #fff; color: var(--ink); border-top: 3px solid #8b9f96; }
+.andu-professional .guide-label { color: var(--muted); font-size: 13px; margin-bottom: 16px; }
+.andu-professional .hero-service-guide h2 { font-size: 29px; line-height: 1.6; margin-bottom: 24px; font-weight: 500; }
+.andu-professional .guide-list li { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 12px; padding: 20px 0; border-top: 1px solid var(--rule); }
+.andu-professional .guide-list li > span { color: var(--green); font: 500 13px/1.8 var(--font-outfit), sans-serif; }
+.andu-professional .guide-list h3 { font-size: 16px; margin: 0 0 6px; }
+.andu-professional .guide-list p { font-size: 13px; color: var(--muted); line-height: 1.8; }
+.andu-professional .guide-link { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 48px; border-top: 1px solid var(--rule); font-size: 13px; text-decoration: none; }
+.andu-professional .hero-service-guide a:focus-visible { outline-color: var(--green); }
+.andu-professional .professional-notice { display: flex; align-items: center; gap: 16px 32px; flex-wrap: wrap; padding: 24px max(var(--gutter), calc((100% - var(--wide)) / 2)); background: #fff; border-bottom: 1px solid var(--rule); font-size: 13px; }
+.andu-professional .notice-label { font: 500 11px/1.7 var(--font-outfit), sans-serif; letter-spacing: .08em; color: var(--green); }
+.andu-professional .professional-notice p { flex: 1; }
+.andu-professional .professional-notice time { display: inline-block; margin-right: 12px; color: var(--muted); font-family: var(--font-outfit), sans-serif; }
+.andu-professional .professional-notice a { display: inline-flex; align-items: center; gap: 16px; min-height: 44px; }
+.andu-professional .hero-contact { display: none; }
+.andu-professional .worries { background: var(--paper); }
+.andu-professional .worry-panel { max-width: none; }
+.andu-professional .worry-list { gap: 0; border-top: 1px solid var(--rule); }
+.andu-professional .worry-list li, .andu-professional .worry-list li:first-child { padding: 20px 0 20px 36px; border: 0; border-bottom: 1px solid var(--rule); background: transparent; color: var(--ink); font-size: 18px; font-weight: 500; box-shadow: none; }
+.andu-professional .worry-list li::before, .andu-professional .worry-list li:first-child::before { top: 26px; left: 0; width: 18px; height: 18px; transform: none; border-radius: 0; background: transparent; }
+.andu-professional .worry-list li::after, .andu-professional .worry-list li:first-child::after { display: none; }
+.andu-professional .worry-close { margin: 28px 0 0; font-size: 16px; color: var(--muted); }
+.andu-professional .security-news { background: #fff; border-block: 1px solid var(--rule); }
+.andu-professional .security-date { color: var(--muted); }
+.andu-professional .security-news h2 { font-size: 27px; }
+.andu-professional .security-source a { display: inline-flex; align-items: center; min-height: 44px; }
+.andu-professional .security-reference { max-width: 100%; margin-top: 24px; padding: 0; border: 0; border-top: 1px solid var(--rule); background: transparent; }
+.andu-professional .security-reference summary { min-height: 48px; padding: 12px 0; cursor: pointer; font-size: 14px; color: var(--muted); }
+.andu-professional .security-reference p { font-size: 14px; font-weight: 400; }
+.andu-professional .security-support { background: var(--paper); }
+.andu-professional .security-steps { margin-top: 40px; }
+.andu-professional .security-step-number { color: var(--green); font-size: 28px; }
+.andu-professional .security-steps h3 { font-size: 20px; }
+.andu-professional .security-scope, .andu-professional .security-price-note { border: 1px solid var(--rule); border-left-width: 1px; background: #fff; }
+.andu-professional .security-honesty, .andu-professional .security-caption { color: var(--muted); }
+.andu-professional .works { background: #fff; }
+.andu-professional .work-list { gap: 32px; }
+.andu-professional .work { box-shadow: none; border: 1px solid var(--rule); border-top: 2px solid var(--green); padding: 32px; }
+.andu-professional .work:hover { transform: none; }
+.andu-professional .work-record { color: var(--muted); font-size: 12px; letter-spacing: .08em; }
+.andu-professional .work-stamp { top: 27px; right: 24px; width: auto; height: auto; min-height: 28px; padding: 4px 10px; gap: 8px; flex-direction: row; border: 1px solid var(--rule); border-radius: 2px; color: var(--muted); font-size: 12px; font-weight: 500; transform: none; }
+.andu-professional .work-client { min-height: 0; margin: 28px 0 20px; color: var(--ink); font-size: 17px; }
+.andu-professional .work h3 { font-size: 23px; line-height: 1.7; }
+.andu-professional .work-shots figure::after, .andu-professional .work-shots figure::before { display: none; }
+.andu-professional .work-shots figure, .andu-professional .work-shots img { transform: none; box-shadow: none; }
+.andu-professional .work-shots img { border-color: var(--rule); }
+.andu-professional .services { background: var(--paper); }
+.andu-professional .service-tile { background: #fff; border-color: var(--rule); border-top-width: 1px; padding: 24px; }
+.andu-professional .service-number { color: var(--muted); }
+.andu-professional .service-tile h3 { color: var(--ink); }
+.andu-professional .custom-tool-service { border-color: var(--rule); border-left-width: 1px; }
+.andu-professional .custom-tool-label, .andu-professional .tool-demo-preview b { color: var(--green); }
+.andu-professional .tool-demo-preview { background: var(--pale-green); }
+.andu-professional .price-group { padding: 28px; border-color: var(--rule); }
+.andu-professional .price-group.price-once { background: #f6f3ed; border-top: 3px solid #756449; }
+.andu-professional .price-group.price-recurring { background: #edf2f0; border-top: 3px solid var(--green); }
+.andu-professional .price-type { color: #756449; }
+.andu-professional .price-rows > div { border-color: var(--rule); padding-block: 20px; }
+.andu-professional .price-rows dd { color: var(--ink); font-size: 21px; }
+.andu-professional .price-bundle { background: var(--dark); padding: 28px 20px; }
+.andu-professional .price-bundle strong { font-family: var(--font-outfit), var(--font-zen-kaku), sans-serif; }
+.andu-professional .cta-band { background: var(--dark); padding-block: 40px; }
+.andu-professional .cta-band-title { font-size: 22px; font-weight: 500; }
+.andu-professional .about { background: var(--paper); color: var(--ink); }
+.andu-professional .about .section-label { color: var(--muted); }
+.andu-professional .about-layout { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 48px; align-items: start; }
+.andu-professional .about-photo { width: 100%; max-width: 240px; margin: 0; padding: 0; border: 0; transform: none; }
+.andu-professional .about-photo::before, .andu-professional .about-photo::after { display: none; }
+.andu-professional .about-photo img { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; border-radius: 2px; border: 0; box-shadow: none; }
+.andu-professional .about-name { padding: 0 0 24px; border: 0; border-bottom: 1px solid var(--rule); background: transparent; margin: 0 0 24px; font-size: 28px; }
+.andu-professional .about-role { font-size: 14px; color: var(--muted); }
+.andu-professional .about-background { margin-top: 20px; font-size: 15px; color: var(--muted); }
+.andu-professional .about-link { display: inline-flex; align-items: center; min-height: 44px; margin-top: 20px; font-size: 14px; }
+.andu-professional .reason-number { font-size: 28px; font-weight: 500; }
+.andu-professional .step-list li::before { border-radius: 2px; border: 1px solid var(--rule); background: #fff; font-weight: 500; }
+.andu-professional .steps { background: var(--paper); }
+.andu-professional .faq { background: #fff; }
+.andu-professional .final-cta { background: var(--dark); }
+.andu-professional .tagline { font-size: 13px; letter-spacing: .1em; font-weight: 400; }
+.andu-professional .site-footer { background: var(--paper); }
+.andu-professional .footer-shop { font-size: 13px; }
+.andu-professional .footer-shop a { margin-left: 12px; }
+.andu-professional .inline-demo { border-color: var(--rule); border-radius: 2px; }
+.andu-professional .inline-demo > summary { color: var(--green); font-size: 16px; }
+.andu-professional .inline-demo > summary:hover { background: var(--pale-green); }
+.andu-professional :where(a, button, summary):focus-visible { outline: 3px solid var(--green); outline-offset: 4px; }
+@media (min-width: 800px) {
+  .andu-professional main > section { padding-block: 80px; }
+  .andu-professional .worry-list { grid-template-columns: 1fr; }
+  .andu-professional .worry-list li:first-child { grid-column: auto; }
+}
+@media (max-width: 1050px) {
+  .andu-professional main > .hero { grid-template-columns: minmax(0, 1fr) 330px; gap: 40px; }
+  .andu-professional .hero-service-guide { padding: 24px; }
+  .andu-professional .security-headline { font-size: 38px; }
+}
+@media (max-width: 799px) {
+  .andu-professional main > section { padding-block: 56px; }
+  .andu-professional .site-header { padding-block: 14px; gap: 16px; }
+  .andu-professional .brand-name { font-size: 25px; }
+  .andu-professional .brand-sub { font-size: 10px; }
+  .andu-professional .header-cta { font-size: 12px; padding: 10px 12px; min-height: 44px; }
+  .andu-professional main > .hero { grid-template-columns: minmax(0, 1fr); gap: 40px; padding-block: 48px; }
+  .andu-professional .security-headline { font-size: clamp(27px, 7.9vw, 46px); line-height: 1.6; }
+  .andu-professional .eyebrow { font-size: 12px; margin-bottom: 24px; }
+  .andu-professional .hero-overline { font-size: 10px; letter-spacing: .1em; }
+  .andu-professional .hero-lead { font-size: 15px; margin-top: 24px; }
+  .andu-professional .hero-actions { gap: 12px; }
+  .andu-professional .hero-actions .cta { width: 100%; justify-content: space-between; }
+  .andu-professional .hero-secondary { margin-inline: auto; }
+  .andu-professional .hero-service-guide { padding: 28px; }
+  .andu-professional .hero-service-guide h2 { font-size: 25px; }
+  .andu-professional .professional-notice { display: block; padding-block: 24px; }
+  .andu-professional .professional-notice p { margin-block: 10px 6px; }
+  .andu-professional .professional-notice time { display: block; }
+  .andu-professional .worry-list li, .andu-professional .worry-list li:first-child { font-size: 16px; }
+  .andu-professional .security-news h2 { font-size: 25px; }
+  .andu-professional .work { padding: 24px 20px; }
+  .andu-professional .work-stamp { top: 22px; right: 16px; font-size: 11px; padding-inline: 8px; }
+  .andu-professional .work-date { font-size: 10px; }
+  .andu-professional .work h3 { font-size: 21px; }
+  .andu-professional .price-groups { grid-template-columns: minmax(0, 1fr); }
+  .andu-professional .price-group { padding: 24px 20px; }
+  .andu-professional .price-rows dt { font-size: 15px; }
+  .andu-professional .price-rows dd { font-size: 18px; }
+  .andu-professional .about-layout { grid-template-columns: minmax(0, 1fr); gap: 28px; }
+  .andu-professional .about-photo { max-width: 160px; }
+  .andu-professional .about-name { font-size: 26px; }
+  .andu-professional .cta { width: 100%; padding-inline: 16px; font-size: 15px; }
+  .andu-professional .cta-band-title { font-size: 20px; }
+  .andu-professional .footer-shop a { margin-left: 0; }
+}
+@media (max-width: 359px) {
+  .andu-lp.andu-professional { --gutter: 18px; }
+  .andu-professional .brand-sub { font-size: 9px; }
+  .andu-professional .header-cta { padding-inline: 10px; }
+  .andu-professional .hero-service-guide { padding: 24px 20px; }
+  .andu-professional .price-group { padding-inline: 16px; }
+  .andu-professional .price-rows > div { gap: 8px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .andu-professional *, .andu-professional *::before, .andu-professional *::after { scroll-behavior: auto; transition: none; animation: none; }
+}

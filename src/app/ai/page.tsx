@@ -1,19 +1,19 @@
 /* eslint-disable @next/next/no-img-element */
 import type { Metadata } from "next";
 import Link from "next/link";
-import { FlyingBee } from "@/components/home/FlyingBee";
 import { InlineDemo } from "@/components/ai/InlineDemo";
 import { BASIC_MEDIA, EXTRA_MEDIA, SNS_PLANS } from "@/lib/andu-plans";
 import "./andu-lp.css";
 import "./demo/demo.css";
 import "@/components/ai/inline-demos.css";
+import "./andu-professional.css";
 
 // 下書きの仮表示（確認中のカード・お客さまの声の枠・下書きの帯）。公開する版では false のまま
 const SHOW_DRAFT = false;
 
 // 屋号（決まったら、ここの2行だけ直せば、ページ全体と題名が変わる）
 const BRAND = "AND U";
-const BRAND_SUB = "願いが叶う";
+const BRAND_SUB = "Web制作・移行・運用サポート";
 
 const title = `ホームページのセキュリティ・Cloudflare移行のご相談｜${BRAND}`;
 const description = "ホームページの更新やセキュリティ、誰に頼めばよいか分からない鳥取の会社・お店の方へ。Cloudflareを使う移行・作り直しから、ホームページ・ネットショップ制作、公開後の管理までご相談ください。まずは60分の無料相談から。";
@@ -24,23 +24,20 @@ export const metadata: Metadata = {
   openGraph: {
     title,
     description,
-    images: [{
-      url: "/images/ai/ando-beekeeping.jpg",
-      alt: "巣板を持つ安藤",
-    }],
+    images: [{ url: "/ai/opengraph-image", alt: "AND U｜Web制作・移行・運用サポート" }],
   },
 };
 
 export default function AiPage() {
   return (
-    <div className="andu-lp">
+    <div className="andu-lp andu-professional">
       {SHOW_DRAFT && (<p className="draft-note">下書きです（未公開）。屋号・料金・「確認中」の所は、確認のうえ確定します。</p>)}
 
       <header className="site-header">
         <p className="brand"><span className="brand-name">{BRAND}</span><span className="brand-sub">{BRAND_SUB}</span></p>
         <nav className="header-nav" aria-label="ページ内の案内">
           <a href="#security-support">見直しの進め方</a>
-          <a href="#works">実際にやった仕事</a>
+          <a href="#works">制作・運用実績</a>
           <a href="#price">料金</a>
         </nav>
         <a className="header-cta" href="https://lin.ee/WfeFzfF" target="_blank" rel="noopener noreferrer">LINEで無料相談</a>
@@ -50,31 +47,26 @@ export default function AiPage() {
 
       <section className="hero" id="top">
         <div className="hero-text">
-          <p className="eyebrow">鳥取の会社・お店の方へ</p>
-          <p className="security-alert">PHPの重大な脆弱性、公式発表。<br />WordPressをお使いの方も、確認を。</p>
+          <p className="eyebrow">鳥取の事業者のための、Web制作・運用サポート</p>
+          <p className="hero-overline" aria-hidden="true">WEBSITE CARE &amp; DEVELOPMENT</p>
           <h1 className="security-headline"><span className="ib">そのWordPress、</span><br /><span className="mk">セキュリティ対策は</span><br /><span className="ib">大丈夫ですか？</span></h1>
-          <p className="hero-lead">WordPressやPHPの更新、誰が見ていますか。今のサイトを確かめ、Cloudflareを使う移行・作り直しから、公開後の管理まで。ホームページもネットショップも、窓口は安藤ひとつです。<a href="#price">料金の目安を見る</a></p>
-          <p className="security-hero-source">2026年10月21日のPHP公式発表を確認。PHPの問題はWordPressだけに限りません。<a href="#security-news">発表内容と、確認すること →</a></p>
-          <aside className="security-reference"><p>更新が少ない会社・お店のサイトは、静的サイトへの移行も選択肢に。</p><small>イケハヤさんの公開配信でも紹介された考え方です（要約）。<a href="https://ihayato.substack.com/p/wordpresscloudflare-or-emdash?showTranscript=true" target="_blank" rel="noopener noreferrer">参考配信・5:34頃〜</a>。当サービスへの推薦・提携を示すものではありません。</small></aside>
-          <div className="hero-proof">
-            <p className="hero-proof-title">ホームページ・予約・SNSの制作と運用</p>
-            <ul className="hero-proof-list">
-              <li><strong>某助産院さま</strong>｜LINEの予約を、予約のページへ</li>
-              <li><strong>某ラーメン店さま</strong>｜SNSの投稿を、お店の代わりに</li>
-              <li><strong>車屋さん</strong>｜LINEと、車の紹介サイト</li>
-              <li><strong>うち自身</strong>｜ホームページとネット販売を運営</li>
-            </ul>
-            <p className="hero-proof-more"><a href="#works">くわしく見る</a></p>
-          </div>
-          <ul className="hero-badges"><li>相談は無料</li><li>60分</li><li>売り込みなし</li></ul>
-          <p className="cta-wrap hero-cta-sp"><a className="cta" href="https://lin.ee/WfeFzfF" target="_blank" rel="noopener noreferrer">LINEで無料相談する（60分）</a></p>
+          <p className="hero-lead">更新の状況、バックアップ、困ったときの連絡先。<br />見えにくい管理を整理し、必要な移行・制作から公開後の運用まで、相談できる窓口をつくります。</p>
+          <div className="hero-actions"><a className="cta" href="https://lin.ee/WfeFzfF" target="_blank" rel="noopener noreferrer">無料相談を申し込む <span aria-hidden="true">↗</span></a><a className="hero-secondary" href="#works">制作・運用実績を見る <span aria-hidden="true">↓</span></a></div>
+          <p className="hero-consultation-note">初回60分・無料 ／ まずはサイトのURLだけでご相談いただけます。</p>
         </div>
-        <div className="hero-visual">
-          <span className="hero-watermark" aria-hidden="true">{BRAND}</span>
-          <figure className="hero-photo"><img src="/images/ai/ando-beekeeping.jpg" alt="巣板を持つ安藤" fetchPriority="high" /><figcaption className="hero-who">窓口は、安藤 匡志です。</figcaption></figure>
-          <span className="bee" aria-hidden="true"><img src="/images/bee/flying-bee-v3.png" alt="" aria-hidden="true" width="384" height="384" /></span>
-        </div>
+        <aside className="hero-service-guide" aria-labelledby="hero-guide-title">
+          <p className="guide-label">ご相談から、公開後まで</p>
+          <h2 id="hero-guide-title">管理の内容を、<br />見える形に。</h2>
+          <ol className="guide-list">
+            <li><span aria-hidden="true">01</span><div><h3>現在の状態を整理</h3><p>更新・契約・担当者を確認します。</p></div></li>
+            <li><span aria-hidden="true">02</span><div><h3>必要な構成をご提案</h3><p>移行・制作の範囲と費用を明確に。</p></div></li>
+            <li><span aria-hidden="true">03</span><div><h3>公開後の役割を決定</h3><p>管理の対象・頻度・連絡先を決めます。</p></div></li>
+          </ol>
+          <a className="guide-link" href="#rules">お引き受けする際の方針 <span aria-hidden="true">→</span></a>
+        </aside>
       </section>
+
+      <aside className="professional-notice"><span className="notice-label">SECURITY INFORMATION</span><p><time dateTime="2026-10-21">2026.10.21</time> PHPの重大な脆弱性に対する修正版が公開されました。</p><a href="#security-news">公式情報と確認事項 <span aria-hidden="true">→</span></a></aside>
 
       <aside className="cta-band hero-contact">
           <p className="cta-band-title">まずはサイトのURLと、気になっていることを送ってください。</p>
@@ -94,11 +86,12 @@ export default function AiPage() {
         </div>
       </section>
 
-      <section className="security-news" aria-labelledby="security-news-heading">
+      <section className="security-news" id="security-news" aria-labelledby="security-news-heading">
         <div className="security-news-heading"><p className="security-date">2026年10月22日確認 · 公式発表から</p><h2 id="security-news-heading">いま、更新状況を<br className="security-sp-break" />確かめておきたい理由。</h2></div>
         <p>2026年10月21日、PHPから重大な脆弱性2件の修正版が公開されました。WordPress公式も、サーバーのPHPを確認し、更新するよう案内しています。</p>
         <p>WordPress本体だけを更新すれば済む、という話ではありません。利用中のサーバーで対応済みか、まずは管理会社への確認が必要です。</p>
         <p className="security-source"><a href="https://www.php.net/archive/2026.php#2026-10-21-5" target="_blank" rel="noopener noreferrer">PHP公式の発表 ↗</a><a href="https://wordpress.org/news/2026/10/critical-php-security-release/" target="_blank" rel="noopener noreferrer">WordPress公式の案内 ↗</a></p>
+        <details className="security-reference"><summary>サイトの構成を見直す際の参考情報</summary><p>更新が少ない会社・お店のサイトは、静的サイトへの移行も選択肢に。</p><small>イケハヤさんの公開配信で紹介された考え方の要約です。<a href="https://ihayato.substack.com/p/wordpresscloudflare-or-emdash?showTranscript=true" target="_blank" rel="noopener noreferrer">参考配信・5:34頃〜</a>。当サービスへの推薦・提携を示すものではありません。</small></details>
       </section>
 
       <section className="security-support" id="security-support">
@@ -115,7 +108,7 @@ export default function AiPage() {
       </section>
 
 <section className="works" id="works">
-        <div className="section-heading"><p className="section-label" aria-hidden="true">WORKS</p><h2>実際にやった仕事</h2></div>
+        <div className="section-heading"><p className="section-label" aria-hidden="true">WORKS</p><h2>制作・運用実績</h2></div>
         <p className="works-lead">お店から頼まれた仕事と、自分で作って使っているものです。</p>
         <div className="work-list">
 
@@ -327,12 +320,14 @@ export default function AiPage() {
       </aside>
 
       <section className="about" id="about">
-        <div className="section-heading"><p className="section-label" aria-hidden="true">ABOUT</p><h2>窓口は、安藤です</h2></div>
+        <div className="section-heading"><p className="section-label" aria-hidden="true">YOUR CONTACT</p><h2>ご相談から、公開後まで。<br />窓口は、安藤です。</h2></div>
         <div className="about-layout">
           <figure className="about-photo"><img src="/images/ai/matome/profile_ando_bee.jpg" width="800" height="1000" alt="巣箱の前で巣板を持つ安藤" loading="lazy" /></figure>
         <div className="about-text">
-          <p className="about-name">安藤 匡志<span className="about-role">養蜂家／鳥取の青果卸「安藤青果」運営責任者</span></p>
-          <p>鳥取で農業と養蜂をやっています。現場の仕事をしながら、机の仕事も回す。その両方をやっているので、忙しいお店の事情に合わせた組み方を考えます。</p>
+          <p className="about-name">安藤 匡志<span className="about-role">AND U 制作・運用の相談窓口</span></p>
+          <p>自社のホームページ・ネット販売の運営と、お店の予約受付・LINE・SNSの制作や運用に取り組んでいます。ご相談内容を伺い、作るものと管理する範囲を、見積もりにまとめてお渡しします。</p>
+          <p className="about-background">鳥取で「安藤青果」を運営し、農業・養蜂にも携わっています。事業を続ける立場から、日々の更新や管理の負担を一緒に整理します。</p>
+          <a className="about-link" href="#rules">管理と引き渡しについての方針を見る →</a>
         </div>
         </div>
       </section>
@@ -416,11 +411,10 @@ export default function AiPage() {
       </main>
 
       <footer className="site-footer">
-        <p className="footer-shop">野菜やはちみつを売っている、うち自身のお店です。<Link href="/">安藤青果のホームページ（ando-seika.com）</Link></p>
+        <p className="footer-shop">運営：安藤青果 <Link href="/">事業者ホームページ（ando-seika.com）</Link></p>
         <p><span className="brand-name">{BRAND}</span><small className="brand-sub">{BRAND_SUB}</small></p>
         <p className="footer-legal"><Link href="/tokusho">特定商取引法に基づく表示</Link><Link href="/privacy">プライバシーポリシー</Link></p>
       </footer>
-      <FlyingBee />
     </div>
   );
 }
