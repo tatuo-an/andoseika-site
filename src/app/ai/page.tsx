@@ -51,8 +51,11 @@ export default function AiPage() {
       <section className="hero" id="top">
         <div className="hero-text">
           <p className="eyebrow">鳥取の会社・お店の方へ</p>
-          <h1 className="security-headline"><span className="ib">そのホームページ、</span><br /><span className="mk">セキュリティ対策は</span><br /><span className="ib">大丈夫ですか？</span></h1>
+          <p className="security-alert">PHPの重大な脆弱性、公式発表。<br />WordPressをお使いの方も、確認を。</p>
+          <h1 className="security-headline"><span className="ib">そのWordPress、</span><br /><span className="mk">セキュリティ対策は</span><br /><span className="ib">大丈夫ですか？</span></h1>
           <p className="hero-lead">WordPressやPHPの更新、誰が見ていますか。今のサイトを確かめ、Cloudflareを使う移行・作り直しから、公開後の管理まで。ホームページもネットショップも、窓口は安藤ひとつです。<a href="#price">料金の目安を見る</a></p>
+          <p className="security-hero-source">2026年10月21日のPHP公式発表を確認。PHPの問題はWordPressだけに限りません。<a href="#security-news">発表内容と、確認すること →</a></p>
+          <aside className="security-reference"><p>更新が少ない会社・お店のサイトは、静的サイトへの移行も選択肢に。</p><small>イケハヤさんの公開配信でも紹介された考え方です（要約）。<a href="https://ihayato.substack.com/p/wordpresscloudflare-or-emdash?showTranscript=true" target="_blank" rel="noopener noreferrer">参考配信・5:34頃〜</a>。当サービスへの推薦・提携を示すものではありません。</small></aside>
           <div className="hero-proof">
             <p className="hero-proof-title">ホームページ・予約・SNSの制作と運用</p>
             <ul className="hero-proof-list">
@@ -277,26 +280,32 @@ export default function AiPage() {
       <section className="price price-compact" id="price">
         <div className="section-heading"><p className="section-label" aria-hidden="true">PRICE</p><h2>料金について</h2></div>
         <p className="price-lead">移行・管理は、今の機能と必要な作業を確認して見積もります。<strong>表示はすべて税抜</strong>です。</p>
-        <div className="security-price-note"><h3>サイトの確認・Cloudflare移行・保守管理</h3><p>詳しい調査、移行、管理の費用は個別にお見積もりします。下の制作料金や更新・手直しの料金に、セキュリティ対応すべてが含まれるわけではありません。</p><p>無料相談は60分の状況整理です。脆弱性診断、侵入調査、緊急復旧、24時間の監視は含みません。必要な場合は専門の対応先への相談をご案内します。</p></div>
+        <div className="security-price-note"><h3>移行も、制作も。必要なところから。</h3><p>ウェブサーバーの移行は下記の料金から。Cloudflareへの移行可否や、残す機能を確認してお見積もりします。保守管理は作業・回数を決めて別にご契約いただく形です。</p><p>無料相談は60分の状況整理です。脆弱性診断、侵入調査、緊急復旧、24時間の監視は含みません。必要な場合は専門の対応先への相談をご案内します。</p></div>
         <div className="price-groups">
-          <div className="price-group">
+          <div className="price-group price-once">
+            <p className="price-type">単発・買い切り</p>
             <h3>作るとき · 1回だけ</h3>
             <dl className="price-rows">
-              <div><dt>ホームページの制作</dt><dd>3万〜5万円</dd></div>
-              <div><dt>ネットショップの開設</dt><dd>3万〜5万円</dd></div>
-              <div><dt>LINE公式アカウントの構築</dt><dd>3万〜5万円</dd></div>
+              <div><dt>ウェブサーバーの移行<small>Cloudflareへの移行など</small></dt><dd>3万円〜</dd></div>
+              <div><dt>ホームページの制作</dt><dd>3万円〜</dd></div>
+              <div><dt>ネットショップの開設</dt><dd>3万円〜</dd></div>
+              <div><dt>LINE公式アカウントの構築</dt><dd>3万円〜</dd></div>
+            </dl>
+            <div className="price-bundle"><p>上の4つを、まとめてご依頼なら</p><p className="price-bundle-before">個別の最低目安：3万円 × 4つ ＝ 12万円〜</p><h4>4つ合わせて<br /><strong>10万円</strong>で買い切り</h4><small>税抜。制作・設定の範囲はご契約前に決めます。外部サービス利用料・公開後の保守管理は別途。</small></div>
+            <h4 className="price-other-title">こちらも単発で頼めます</h4>
+            <dl className="price-rows">
               <div><dt>業務ツールの制作<small>給与の集計・営業先リスト・注文の転記など。<br /><a href="#tool-examples">道具・デモを見る →</a></small></dt><dd>1万円〜</dd></div>
-              <div><dt>Webの3つをまとめて制作<small>ホームページ・ネットショップ・公式LINE</small></dt><dd>10万円</dd></div>
               <div><dt>SNSの仕組みを買い切り<small>SNS設計・公式LINE構築・投稿の仕組みと説明</small></dt><dd>10万円</dd></div>
             </dl>
           </div>
-          <div className="price-group">
+          <div className="price-group price-monthly">
+            <p className="price-type">継続・月額</p>
             <h3>運用を頼むとき · 月額</h3>
             <dl className="price-rows">
               <div><dt>更新・手直し<small>必要な場合のみ</small></dt><dd>1万〜3万円</dd></div>
-              {SNS_PLANS.map(plan => <div key={plan.key}><dt>SNS {plan.name}<small>{plan.media}（計{plan.total}媒体）<br />{plan.frequency}{plan.key === "standard" && "・LINEを選ぶ場合は週1回程度"}</small></dt><dd>{plan.price}</dd></div>)}
+              {SNS_PLANS.map(plan => <div key={plan.key}><dt>SNS {plan.name}<small>{plan.media}（{plan.key === "full" ? "最大" : "計"}{plan.total}媒体）<br />{plan.frequency}{plan.key === "standard" && "・LINEを選ぶ場合は週1回程度"}</small></dt><dd>{plan.price}</dd></div>)}
             </dl>
-            <p className="price-media-note">ライトは{BASIC_MEDIA.join("・")}の3媒体。スタンダード・おまかせフルは{EXTRA_MEDIA}から選べます。LINE配信も選んだ媒体数に含みます。</p>
+            <p className="price-media-note">ライトは{BASIC_MEDIA.join("・")}の3媒体。スタンダードはその3媒体＋希望2媒体の計5媒体、おまかせフルは基本3媒体を含めて最大10媒体です。追加は{EXTRA_MEDIA}から、対応可否を確認して選びます。LINE配信も選んだ媒体数に含みます。</p>
             <Link className="price-detail-link" href="/ai/sns">SNSのプラン・提供内容を詳しく見る <span aria-hidden="true">→</span></Link>
           </div>
         </div>
@@ -304,7 +313,7 @@ export default function AiPage() {
           <summary>料金に含まれる範囲と、別にかかるもの</summary>
           <ul>
             <li>制作はページ数・商品数・設定・直しの回数を確認して、見積もりに含む範囲を書きます。業務ツールの連携・定期更新・保守、予約の仕組みなどは内容別のお見積もりです。</li>
-            <li>Webのまとめて制作にSNS運用は含みません。SNS買い切りはアカウント設計、公式LINE構築、毎日の投稿が回る仕組みと使い方の説明まで。投稿文・写真の準備や予約の変更方法もご案内します。買い切り後の修正は都度お見積もりです。</li>
+            <li>4つまとめて10万円の対象は、ウェブサーバーの移行・ホームページの制作・ネットショップの開設・LINE公式アカウントの構築です。SNS運用は含みません。SNS買い切りはアカウント設計、公式LINE構築、毎日の投稿が回る仕組みと使い方の説明まで。投稿文・写真の準備や予約の変更方法もご案内します。買い切り後の修正は都度お見積もりです。</li>
             <li>月額の更新・手直しは、更新、控えの確認、文章・写真の差し替え。作業と回数を見積もりに書きます。SNS月額は3か月を1つの区切りとし、新規アカウント開設が必要な場合のみ初期設定費＋3万円です。</li>
             <li>サーバー・ドメイン・投稿やLINE配信などの外部サービス利用料が必要な場合は、ご契約前に内容と金額をお伝えします。消費税は別途かかります。</li>
           </ul>

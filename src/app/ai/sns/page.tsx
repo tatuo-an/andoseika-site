@@ -113,7 +113,7 @@ const PLAN_STEPS = [
 const FAQ_ITEMS = [
     {
         q: "どの媒体を運用してもらえますか",
-        a: `ライトは${BASIC_MEDIA.join("・")}の基本3媒体です。スタンダードは好きな媒体を2つ、おまかせフルは好きな媒体を4つ選べます。候補は${EXTRA_MEDIA}です。LINE配信を選ぶ場合も1媒体に数え、スタンダードのLINE配信は週1回程度です。`,
+        a: `ライトは${BASIC_MEDIA.join("・")}の基本3媒体です。スタンダードはライトの3媒体に好きな媒体を2つ加えた計5媒体です。おまかせフルは基本3媒体を含めて最大10媒体（追加は最大7媒体）です。追加は基本3媒体以外の${EXTRA_MEDIA}から、対応可否を確認して選びます。LINE配信を選ぶ場合も1媒体に数え、スタンダードのLINE配信は週1回程度です。`,
     },
     {
         q: "契約の縛りはありますか",
@@ -164,8 +164,9 @@ const CAN_DO_ROWS: PlanRow[] = [
 ];
 
 const TARGET_MEDIA_ROWS: PlanRow[] = [
-    { label: "対象媒体", light: BASIC_MEDIA.join("・"), standard: "好きな媒体を2つ", full: "好きな媒体を4つ" },
-    { label: "媒体数", light: "3媒体（固定）", standard: "2媒体（選択）", full: "4媒体（選択）" },
+    { label: "基本3媒体", light: BASIC_MEDIA.join("・"), standard: BASIC_MEDIA.join("・"), full: BASIC_MEDIA.join("・") },
+    { label: "追加で選べる媒体", light: "なし", standard: "好きな媒体を2つ", full: "好きな媒体を最大7つ" },
+    { label: "対象媒体の合計", light: "3媒体（固定）", standard: "5媒体", full: "最大10媒体" },
 ];
 
 function BigCta({ label = "無料相談に申し込む" }: { label?: string }) {
@@ -646,7 +647,7 @@ export default function AiConsultingPage() {
                                 <p className="text-2xl font-bold text-stone-900 mb-2">
                                     5<span className="text-sm font-normal text-stone-500 ml-1">万円（税抜・月額）</span>
                                 </p>
-                                <p className="text-stone-700 text-sm mb-4">好きな媒体を2つ<br />毎日の投稿代行（1日1投稿）<br />LINEを選ぶ場合は週1回程度<br />月1回の数字報告つき</p>
+                                <p className="text-stone-700 text-sm mb-4">ライトの3媒体＋好きな媒体を2つ（計5媒体）<br />毎日の投稿代行（1日1投稿）<br />LINEを選ぶ場合は週1回程度<br />月1回の数字報告つき</p>
                                 <Link
                                     href="/contact/personal?subject=sns-line"
                                     className="inline-flex items-center justify-center w-full bg-primary hover:bg-primary-dark text-white font-bold py-2.5 px-4 rounded-full text-sm transition-all"
@@ -660,7 +661,7 @@ export default function AiConsultingPage() {
                                     10
                                     <span className="text-sm font-normal text-stone-500 ml-1">万円（税抜・月額）</span>
                                 </p>
-                                <p className="text-stone-600 text-sm">好きな媒体を4つ<br />毎日の投稿代行（1日2投稿）<br />企画・コメント対応まで全部</p>
+                                <p className="text-stone-600 text-sm">基本3媒体を含めて最大10媒体<br />毎日の投稿代行（1日2投稿）<br />企画・コメント対応まで全部</p>
                             </div>
                         </div>
 
@@ -670,7 +671,7 @@ export default function AiConsultingPage() {
                         <div className="space-y-4">
                             <PlanCompareTable title="できること" rows={CAN_DO_ROWS} />
                             <PlanCompareTable title="対象媒体" rows={TARGET_MEDIA_ROWS} />
-                            <p className="text-sm text-stone-600 leading-relaxed">スタンダード・おまかせフルは{EXTRA_MEDIA}から選べます。例：スタンダードならInstagram＋ブログ、おまかせフルならThreads＋TikTok＋YouTube＋LINE配信。LINE配信も選んだ媒体数に含みます。LINEの配信回数は上の表のとおりです。</p>
+                            <p className="text-sm text-stone-600 leading-relaxed">追加媒体は基本3媒体以外の{EXTRA_MEDIA}から選べます。例：スタンダードならFacebook・Instagram・Threadsに、X＋ブログを追加して計5媒体。おまかせフルは基本3媒体＋希望最大7媒体で、合計10媒体までです。基本3媒体と重複させず、対応する媒体を事前に確認します。LINE配信も選んだ媒体数に含みます。LINEの配信回数は上の表のとおりです。</p>
                         </div>
 
                         <p className="text-stone-600 text-sm mt-6 text-center">

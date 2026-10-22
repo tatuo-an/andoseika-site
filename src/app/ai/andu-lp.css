@@ -1,5 +1,22 @@
 /* All layout, typography and motion are scoped to this landing page. */
 .andu-lp .security-headline { text-wrap: initial; }
+.andu-lp .security-alert { margin: 0 0 18px; padding: 12px 16px; border-left: 5px solid #9b3926; background: #f9e9e2; color: #733020; font-size: 18px; font-weight: 700; line-height: 1.7; }
+.andu-lp .security-hero-source { margin-top: 12px; max-width: 620px; color: #56615b; font-size: 13px; line-height: 1.8; }
+.andu-lp .security-hero-source a { display: inline-block; }
+.andu-lp .security-reference { margin-top: 20px; padding: 16px 18px; max-width: 620px; border-left: 3px solid var(--green); background: #fff; }
+.andu-lp .security-reference p { font-size: 16px; font-weight: 700; line-height: 1.8; }
+.andu-lp .security-reference small { display: block; margin-top: 8px; font-size: 12px; line-height: 1.8; color: #56615b; }
+.andu-lp .price-group.price-once { background: #fffaf0; border-top: 6px solid #a56925; }
+.andu-lp .price-group.price-monthly { background: #eaf2ec; border-top: 6px solid var(--green); }
+.andu-lp .price-type { margin-bottom: 8px; color: #77501e; font-size: 14px; font-weight: 700; letter-spacing: .08em; }
+.andu-lp .price-monthly .price-type { color: var(--green); }
+.andu-lp .price-bundle { margin: 12px 0 28px; padding: 24px 18px; background: var(--green); color: #fff; text-align: center; }
+.andu-lp .price-bundle > p { font-size: 16px; }
+.andu-lp .price-bundle .price-bundle-before { margin-top: 10px; font-size: 13px; }
+.andu-lp .price-bundle h4 { margin: 12px 0; font-size: 24px; line-height: 1.6; }
+.andu-lp .price-bundle strong { color: #ffe39c; font-size: clamp(38px, 4vw, 54px); }
+.andu-lp .price-bundle small { display: block; font-size: 12px; line-height: 1.8; }
+.andu-lp .price-other-title { margin: 0 0 12px; font-size: 17px; }
 .andu-lp main > .security-news { background: var(--green); color: #fff; }
 .andu-lp .security-news h2 { margin: 12px 0 20px; color: #fff; font-size: 26px; }
 .andu-lp .security-date { font-size: 13px; letter-spacing: .04em; }

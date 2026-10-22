@@ -190,11 +190,13 @@ test('sample demo modules have no backend, persistence, tracking or notification
     assert.doesNotMatch(source,/\bfetch\s*\(|XMLHttpRequest|localStorage|sessionStorage|indexedDB|navigator\.|Notification\.|process\.env|https?:\/\//,name);
   }
 });
-test('media source consistency: standard chooses 2 and full chooses 4 including LINE', () => {
+test('media source consistency: standard adds 2 to light, full includes up to 10, LINE counts', () => {
   for(const file of ['src/app/ai/page.tsx','src/app/ai/sns/page.tsx']) {
     const source=fs.readFileSync(path.join(root,file),'utf8');
     assert.match(source,/LINE配信も選んだ媒体数に含みます|LINE配信を選ぶ場合も1媒体に数え/);
-    assert.doesNotMatch(source,/計5媒体|計7媒体|基本3媒体以外|基本3媒体＋希望/);
+    assert.match(source,/計5媒体/);
+    assert.match(source,/最大10媒体/);
+    assert.doesNotMatch(source,/計2媒体|計4媒体|計7媒体|好きな媒体を4つ/);
     assert.doesNotMatch(source,/label: "X"|label: "YouTube"|TARGET_SNS_ROWS/);
   }
 });
