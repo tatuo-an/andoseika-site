@@ -15,7 +15,7 @@
 .andu-lp.andu-professional .header-nav a { color: var(--ink); font-size: 14px; font-weight: 500; }
 .andu-lp.andu-professional .header-cta { padding: 10px 22px; border: 1px solid var(--dark); border-radius: 2px; background: var(--dark); color: #fff; }
 .andu-lp.andu-professional .header-cta:hover { background: var(--green); border-color: var(--green); }
-.andu-lp.andu-professional main > .hero { display: grid; grid-template-columns: minmax(0, 1fr) 380px; align-items: center; gap: 64px; padding-block: 80px; background: var(--dark); color: #fff; overflow: hidden; }
+.andu-lp.andu-professional main > .hero { display: grid; grid-template-columns: minmax(0, 1fr) 380px; align-items: center; gap: 64px; max-width: none; margin: 0; padding: 80px max(var(--gutter), calc((100% - var(--wide)) / 2)); background: var(--dark); color: #fff; overflow: hidden; }
 .andu-lp.andu-professional .hero::before, .andu-lp.andu-professional .hero::after { display: none; }
 .andu-lp.andu-professional .eyebrow { color: #d7dcda; font-size: 14px; font-weight: 500; letter-spacing: .04em; margin: 0 0 32px; }
 .andu-lp.andu-professional .hero-overline { color: #bdc9c4; font: 400 12px/1.6 var(--font-outfit), sans-serif; letter-spacing: .16em; margin-bottom: 16px; }
@@ -56,6 +56,7 @@
 .andu-lp.andu-professional .security-date { color: var(--muted); }
 .andu-lp.andu-professional .security-news h2 { font-size: 27px; color: var(--ink); }
 .andu-lp.andu-professional .security-news .security-source a { color: var(--green); display: inline-flex; align-items: center; min-height: 44px; }
+.andu-lp.andu-professional .security-news a:focus-visible, .andu-lp.andu-professional .site-footer a:focus-visible { outline-color: var(--green); }
 .andu-lp.andu-professional .security-reference { max-width: 100%; margin-top: 24px; padding: 0; border: 0; border-top: 1px solid var(--rule); background: transparent; }
 .andu-lp.andu-professional .security-reference summary { min-height: 48px; padding: 12px 0; cursor: pointer; font-size: 14px; color: var(--muted); }
 .andu-lp.andu-professional .security-reference p { font-size: 14px; font-weight: 400; }
