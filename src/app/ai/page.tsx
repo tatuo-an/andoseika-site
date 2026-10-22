@@ -17,7 +17,7 @@ const BRAND = "AND U";
 const BRAND_SUB = "Web制作・移行・運用サポート";
 
 const title = `サイトの管理見直し・WordPressからの移行｜${BRAND}`;
-const description = "鳥取の会社・お店のサイト管理を、分かりやすく。無料の診断ツールで公開情報を確認し、サイト管理を見直すきっかけに。WordPressからの移行、ホームページ・ネットショップ制作、公開後の運用もお手伝いします。ご相談は初回60分無料です。";
+const description = "鳥取の会社・お店のサイト管理を、分かりやすく。無料の点検キットで通信・サイトの作り方・サーバーの手がかりを確認。気になる点はAND Uへ移行・対応をご相談いただけます。WordPress以外のサイトも対象。ご相談は初回60分無料です。";
 
 export const metadata: Metadata = {
   title: { absolute: title },
@@ -50,7 +50,7 @@ export default function AiPage() {
         <div className="hero-text">
           <p className="eyebrow">鳥取の事業者のための、Web制作・運用サポート</p>
           <p className="hero-overline" aria-hidden="true">WEBSITE CARE &amp; DEVELOPMENT</p>
-          <h1 className="security-headline">サイトの安全診断<span className="check-free">（無料）</span></h1>
+          <h1 className="security-headline">サイトの現状点検<span className="check-free">（無料）</span></h1>
           <p className="hero-lead">サイトの状態を知るところから。<br />URLから公開情報を確かめ、管理を見直すきっかけに。</p>
           <p className="hero-consultation-note">WordPressからの引っ越し・ホームページ制作・ネットショップ開設も、ご相談いただけます。</p>
         </div>
