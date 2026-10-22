@@ -2,6 +2,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { InlineDemo } from "@/components/ai/InlineDemo";
+import { SiteSafetyCheck } from "@/components/ai/SiteSafetyCheck";
 import { BASIC_MEDIA, EXTRA_MEDIA, SNS_PLANS } from "@/lib/andu-plans";
 import "./andu-lp.css";
 import "./demo/demo.css";
@@ -15,8 +16,8 @@ const SHOW_DRAFT = false;
 const BRAND = "AND U";
 const BRAND_SUB = "Web制作・移行・運用サポート";
 
-const title = `ホームページのセキュリティ・Cloudflare移行のご相談｜${BRAND}`;
-const description = "ホームページの更新やセキュリティ、誰に頼めばよいか分からない鳥取の会社・お店の方へ。Cloudflareを使う移行・作り直しから、ホームページ・ネットショップ制作、公開後の管理までご相談ください。まずは60分の無料相談から。";
+const title = `サイトの管理見直し・WordPressからの移行｜${BRAND}`;
+const description = "鳥取の会社・お店のサイト管理を、分かりやすく。WordPressからの移行、ホームページ・ネットショップ制作、公開後の運用をお手伝いします。サイトの安全診断（無料）は準備中。移行・制作のご相談は初回60分無料です。";
 
 export const metadata: Metadata = {
   title: { absolute: title },
@@ -45,28 +46,16 @@ export default function AiPage() {
 
       <main>
 
-      <section className="hero" id="top">
+      <section className="hero hero-with-check" id="top">
         <div className="hero-text">
           <p className="eyebrow">鳥取の事業者のための、Web制作・運用サポート</p>
           <p className="hero-overline" aria-hidden="true">WEBSITE CARE &amp; DEVELOPMENT</p>
-          <h1 className="security-headline"><span className="ib">そのWordPress、</span><br /><span className="mk">セキュリティ対策は</span><br /><span className="ib">大丈夫ですか？</span></h1>
-          <p className="hero-lead">更新の状況、バックアップ、困ったときの連絡先。<br />見えにくい管理を整理し、必要な移行・制作から公開後の運用まで、相談できる窓口をつくります。</p>
-          <div className="hero-actions"><a className="cta" href="https://lin.ee/WfeFzfF" target="_blank" rel="noopener noreferrer">無料相談を申し込む <span aria-hidden="true">↗</span></a><a className="hero-secondary" href="#works">制作・運用実績を見る <span aria-hidden="true">↓</span></a></div>
-          <p className="hero-consultation-note">初回60分・無料 ／ まずはサイトのURLだけでご相談いただけます。</p>
+          <h1 className="security-headline">サイトの安全診断<span className="check-free">（無料）</span></h1>
+          <p className="hero-lead">サイトの状態を知るところから。<br />URLから公開情報を確かめ、管理を見直すための診断を準備しています。</p>
+          <p className="hero-consultation-note">WordPressからの引っ越し・ホームページ制作・ネットショップ開設も、ご相談いただけます。</p>
         </div>
-        <aside className="hero-service-guide" aria-labelledby="hero-guide-title">
-          <p className="guide-label">ご相談から、公開後まで</p>
-          <h2 id="hero-guide-title">管理の内容を、<br />見える形に。</h2>
-          <ol className="guide-list">
-            <li><span aria-hidden="true">01</span><div><h3>現在の状態を整理</h3><p>更新・契約・担当者を確認します。</p></div></li>
-            <li><span aria-hidden="true">02</span><div><h3>必要な構成をご提案</h3><p>移行・制作の範囲と費用を明確に。</p></div></li>
-            <li><span aria-hidden="true">03</span><div><h3>公開後の役割を決定</h3><p>管理の対象・頻度・連絡先を決めます。</p></div></li>
-          </ol>
-          <a className="guide-link" href="#rules">お引き受けする際の方針 <span aria-hidden="true">→</span></a>
-        </aside>
+        <SiteSafetyCheck />
       </section>
-
-      <aside className="professional-notice"><span className="notice-label">SECURITY INFORMATION</span><p><time dateTime="2026-10-21">2026.10.21</time> PHPの重大な脆弱性に対する修正版が公開されました。</p><a href="#security-news">公式情報と確認事項 <span aria-hidden="true">→</span></a></aside>
 
       <aside className="cta-band hero-contact">
           <p className="cta-band-title">まずはサイトのURLと、気になっていることを送ってください。</p>
@@ -84,14 +73,6 @@ export default function AiPage() {
           </ul>
           <p className="worry-close">専門の言葉を覚えてから、相談する必要はありません。今のサイトと管理の状況を、一緒に整理します。</p>
         </div>
-      </section>
-
-      <section className="security-news" id="security-news" aria-labelledby="security-news-heading">
-        <div className="security-news-heading"><p className="security-date">2026年10月22日確認 · 公式発表から</p><h2 id="security-news-heading">いま、更新状況を<br className="security-sp-break" />確かめておきたい理由。</h2></div>
-        <p>2026年10月21日、PHPから重大な脆弱性2件の修正版が公開されました。WordPress公式も、サーバーのPHPを確認し、更新するよう案内しています。</p>
-        <p>WordPress本体だけを更新すれば済む、という話ではありません。利用中のサーバーで対応済みか、まずは管理会社への確認が必要です。</p>
-        <p className="security-source"><a href="https://www.php.net/archive/2026.php#2026-10-21-5" target="_blank" rel="noopener noreferrer">PHP公式の発表 ↗</a><a href="https://wordpress.org/news/2026/10/critical-php-security-release/" target="_blank" rel="noopener noreferrer">WordPress公式の案内 ↗</a></p>
-        <details className="security-reference"><summary>サイトの構成を見直す際の参考情報</summary><p>更新が少ない会社・お店のサイトは、静的サイトへの移行も選択肢に。</p><small>イケハヤさんの公開配信で紹介された考え方の要約です。<a href="https://ihayato.substack.com/p/wordpresscloudflare-or-emdash?showTranscript=true" target="_blank" rel="noopener noreferrer">参考配信・5:34頃〜</a>。当サービスへの推薦・提携を示すものではありません。</small></details>
       </section>
 
       <section className="security-support" id="security-support">
@@ -279,7 +260,7 @@ export default function AiPage() {
             <p className="price-type">単発・買い切り</p>
             <h3>作るとき · 1回だけ</h3>
             <dl className="price-rows">
-              <div><dt>ウェブサーバーの移行<small>Cloudflareへの移行など</small></dt><dd>3万円〜</dd></div>
+              <div id="wordpress-migration-price"><dt>ウェブサーバーの移行<small>WordPressからの引っ越し・Cloudflareへの移行など</small></dt><dd>3万円〜</dd></div>
               <div><dt>ホームページの制作</dt><dd>3万円〜</dd></div>
               <div><dt>ネットショップの開設</dt><dd>3万円〜</dd></div>
               <div><dt>LINE公式アカウントの構築</dt><dd>3万円〜</dd></div>

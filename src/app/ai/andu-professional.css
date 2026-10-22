@@ -175,3 +175,37 @@
 @media (prefers-reduced-motion: reduce) {
   .andu-lp.andu-professional *, .andu-lp.andu-professional *::before, .andu-lp.andu-professional *::after { scroll-behavior: auto; transition: none; animation: none; }
 }
+
+/* Free check: a non-interactive placeholder until the kit handoff arrives. */
+.andu-lp.andu-professional main > .hero-with-check { grid-template-columns: minmax(0, 1fr) 420px; gap: 48px; padding-block: 64px; }
+.andu-lp.andu-professional .hero-with-check .security-headline { font-size: clamp(30px, 3.2vw, 46px); line-height: 1.5; }
+.andu-lp.andu-professional .check-free { display: block; font-size: .66em; font-weight: 500; margin-top: 8px; }
+.andu-lp.andu-professional .site-check { min-width: 0; padding: 28px; background: #fff; color: var(--ink); border-top: 3px solid #8b9f96; }
+.andu-lp.andu-professional .site-check-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+.andu-lp.andu-professional .site-check-heading h2 { margin: 0; font-size: 19px; line-height: 1.6; }
+.andu-lp.andu-professional .site-check-badge { padding: 3px 8px; background: var(--pale-green); color: var(--green); font-size: 11px; font-weight: 500; }
+.andu-lp.andu-professional .site-check label { display: block; margin-bottom: 8px; font-size: 13px; font-weight: 500; }
+.andu-lp.andu-professional .site-check input { display: block; width: 100%; min-width: 0; height: 48px; border: 1px solid #b8c3bf; border-radius: 2px; background: #f6f7f6; color: var(--muted); padding: 0 14px; font: inherit; font-size: 16px; opacity: 1; }
+.andu-lp.andu-professional .site-check input::placeholder { color: #68726f; opacity: 1; }
+.andu-lp.andu-professional .site-check button { display: block; width: 100%; min-height: 48px; margin-top: 12px; border: 0; border-radius: 2px; background: #dfe5e2; color: #495b54; font: inherit; font-size: 16px; font-weight: 700; cursor: not-allowed; opacity: 1; }
+.andu-lp.andu-professional .site-check-status { margin-top: 16px; font-size: 12px; line-height: 1.8; color: var(--muted); }
+.andu-lp.andu-professional .site-check-status p + p { margin-top: 4px; }
+.andu-lp.andu-professional .site-check-migration { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 56px; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--rule); color: var(--green); font-size: 14px; font-weight: 700; text-decoration: none; }
+.andu-lp.andu-professional .site-check-migration small { display: block; margin-top: 4px; color: var(--muted); font-size: 12px; font-weight: 400; }
+.andu-lp.andu-professional .site-check a:focus-visible { outline-color: var(--green); }
+.andu-lp.andu-professional #wordpress-migration-price { scroll-margin-top: 112px; }
+@media (max-width: 1050px) and (min-width: 800px) {
+  .andu-lp.andu-professional main > .hero-with-check { grid-template-columns: minmax(0, 1fr) 360px; gap: 32px; }
+}
+@media (max-width: 799px) {
+  .andu-lp.andu-professional main > .hero-with-check { grid-template-columns: minmax(0, 1fr); gap: 24px; padding-block: 28px; }
+  .andu-lp.andu-professional .hero-with-check .eyebrow { margin-bottom: 12px; font-size: 11px; }
+  .andu-lp.andu-professional .hero-with-check .hero-overline { display: none; }
+  .andu-lp.andu-professional .hero-with-check .security-headline { font-size: clamp(25px, 7.2vw, 38px); }
+  .andu-lp.andu-professional .hero-with-check .check-free { display: inline; font-size: .56em; margin: 0; }
+  .andu-lp.andu-professional .hero-with-check .hero-lead { margin-top: 12px; font-size: 14px; line-height: 1.9; }
+  .andu-lp.andu-professional .hero-with-check .hero-consultation-note { margin-top: 10px; font-size: 11px; }
+  .andu-lp.andu-professional .site-check { padding: 20px; }
+  .andu-lp.andu-professional .site-check-heading { margin-bottom: 16px; }
+  .andu-lp.andu-professional .site-check-heading h2 { font-size: 17px; }
+}
