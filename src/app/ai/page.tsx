@@ -2,7 +2,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { FlyingBee } from "@/components/home/FlyingBee";
+import { InlineDemo } from "@/components/ai/InlineDemo";
+import { BASIC_MEDIA, EXTRA_MEDIA, SNS_PLANS } from "@/lib/andu-plans";
 import "./andu-lp.css";
+import "./demo/demo.css";
+import "@/components/ai/inline-demos.css";
 
 // 下書きの仮表示（確認中のカード・お客さまの声の枠・下書きの帯）。公開する版では false のまま
 const SHOW_DRAFT = false;
@@ -11,8 +15,8 @@ const SHOW_DRAFT = false;
 const BRAND = "AND U";
 const BRAND_SUB = "願いが叶う";
 
-const title = `ホームページもLINEも、頼み先をひとつに｜${BRAND}`;
-const description = "鳥取の会社・お店の方へ。ホームページ制作・ネットショップ開設・LINE公式アカウント構築は各3万〜5万円、業務ツール制作は1万円から（税抜）。SNS運用と作ったあとの手直しも、ひとつの窓口で。まずは60分の無料相談から。";
+const title = `ホームページのセキュリティ・Cloudflare移行のご相談｜${BRAND}`;
+const description = "ホームページの更新やセキュリティ、誰に頼めばよいか分からない鳥取の会社・お店の方へ。Cloudflareを使う移行・作り直しから、ホームページ・ネットショップ制作、公開後の管理までご相談ください。まずは60分の無料相談から。";
 
 export const metadata: Metadata = {
   title: { absolute: title },
@@ -35,7 +39,7 @@ export default function AiPage() {
       <header className="site-header">
         <p className="brand"><span className="brand-name">{BRAND}</span><span className="brand-sub">{BRAND_SUB}</span></p>
         <nav className="header-nav" aria-label="ページ内の案内">
-          <a href="#services">頼めること</a>
+          <a href="#security-support">見直しの進め方</a>
           <a href="#works">実際にやった仕事</a>
           <a href="#price">料金</a>
         </nav>
@@ -47,10 +51,10 @@ export default function AiPage() {
       <section className="hero" id="top">
         <div className="hero-text">
           <p className="eyebrow">鳥取の会社・お店の方へ</p>
-          <h1><span className="ib">そのホームページ、</span><br /><span className="ib"><span className="mk">動いていますか？</span></span></h1>
-          <p className="hero-lead">管理費は毎月払っているのに、直したい所はそのまま。ホームページも、ネットショップも、公式LINEも、窓口をひとつに。作ったあとの更新・手直しは、頼む場合は月1万〜3万円（税抜）です（作るときの費用は別）。</p>
+          <h1 className="security-headline"><span className="ib">そのホームページ、</span><br /><span className="mk">セキュリティ対策は</span><br /><span className="ib">大丈夫ですか？</span></h1>
+          <p className="hero-lead">WordPressやPHPの更新、誰が見ていますか。今のサイトを確かめ、Cloudflareを使う移行・作り直しから、公開後の管理まで。ホームページもネットショップも、窓口は安藤ひとつです。<a href="#price">料金の目安を見る</a></p>
           <div className="hero-proof">
-            <p className="hero-proof-title">実際にやった仕事</p>
+            <p className="hero-proof-title">ホームページ・予約・SNSの制作と運用</p>
             <ul className="hero-proof-list">
               <li><strong>某助産院さま</strong>｜LINEの予約を、予約のページへ</li>
               <li><strong>某ラーメン店さま</strong>｜SNSの投稿を、お店の代わりに</li>
@@ -70,37 +74,41 @@ export default function AiPage() {
       </section>
 
       <aside className="cta-band hero-contact">
-          <p className="cta-band-title">友だち追加のあと、「相談したい」とひとこと送ってください。</p>
+          <p className="cta-band-title">まずはサイトのURLと、気になっていることを送ってください。</p>
           <p className="cta-wrap"><a className="cta" href="https://lin.ee/WfeFzfF" target="_blank" rel="noopener noreferrer">LINEで無料相談する（60分）</a></p>
           <p className="cta-sub">電話でも大丈夫です　<a className="tel" href="tel:07084348124">070-8434-8124</a><span className="tel-hours">月〜土 9:00〜18:00（日曜・祝日は休み）</span></p>
       </aside>
 
       <section className="worries" id="worries">
         <div className="worry-panel">
-        <div className="section-heading"><p className="section-label" aria-hidden="true">TROUBLE</p><h2>毎月の管理費、<br /><span className="ib">何に払っているか</span><span className="ib">分かりますか</span></h2></div>
-        <ul className="worry-list">
-          <li>何の分か分からない管理費を、毎月払い続けている</li>
-          <li>営業時間や値段を直したいだけなのに、頼むたびに別の料金がかかる</li>
-          <li>ホームページ・予約・LINE・ネットショップで、頼み先がばらばら</li>
-        </ul>
-        <p className="worry-close">ホームページ、ネットショップ、公式LINE。それぞれの会社に、月1万〜5万円ずつ払っていませんか。年にすると、まとまった金額です。</p>
-        <p className="worry-close">うちは、作ったあとの更新・手直しを<span className="mk">月1万〜3万円（税抜）</span>でお受けします。どこまで含むかは、見積もりに書きます。窓口は安藤ひとつです。</p>
+          <div className="section-heading"><p className="section-label" aria-hidden="true">CHECK</p><h2>作ったあとの管理、<br />誰が担当していますか</h2></div>
+          <ul className="worry-list">
+            <li>WordPressの更新通知が出ているけれど、触ってよいか分からない</li>
+            <li>管理費は払っている。でも、何を確認してもらっているか分からない</li>
+            <li>バックアップがあるか、止まったときに誰に連絡するか、分からない</li>
+          </ul>
+          <p className="worry-close">専門の言葉を覚えてから、相談する必要はありません。今のサイトと管理の状況を、一緒に整理します。</p>
         </div>
       </section>
 
-      <div className="solution-ribbon"><p><span className="ib">それ、<span className="mk">まとめて</span></span><span className="ib">おまかせください。</span></p></div>
+      <section className="security-news" aria-labelledby="security-news-heading">
+        <div className="security-news-heading"><p className="security-date">2026年10月22日確認 · 公式発表から</p><h2 id="security-news-heading">いま、更新状況を<br className="security-sp-break" />確かめておきたい理由。</h2></div>
+        <p>2026年10月21日、PHPから重大な脆弱性2件の修正版が公開されました。WordPress公式も、サーバーのPHPを確認し、更新するよう案内しています。</p>
+        <p>WordPress本体だけを更新すれば済む、という話ではありません。利用中のサーバーで対応済みか、まずは管理会社への確認が必要です。</p>
+        <p className="security-source"><a href="https://www.php.net/archive/2026.php#2026-10-21-5" target="_blank" rel="noopener noreferrer">PHP公式の発表 ↗</a><a href="https://wordpress.org/news/2026/10/critical-php-security-release/" target="_blank" rel="noopener noreferrer">WordPress公式の案内 ↗</a></p>
+      </section>
 
-      <section className="change" id="change">
-        <div className="section-heading"><p className="section-label" aria-hidden="true">SOLUTION</p><h2>困ったら、ここに1本。<br />そう言える相手ができます</h2></div>
-        <div className="bundle" aria-hidden="true">
-          <span className="bundle-in">ホームページ</span>
-          <span className="bundle-in">LINE・SNS</span>
-          <span className="bundle-in">予約</span>
-          <span className="bundle-in">ネットショップ</span>
-          <svg className="bundle-lines" viewBox="0 0 240 192" preserveAspectRatio="none" focusable="false" aria-hidden="true"><path d="M0 24 C110 24 105 96 160 96 M0 72 C110 72 110 96 160 96 M0 120 C110 120 110 96 160 96 M0 168 C110 168 105 96 160 96 M160 96 H232 M224 88 L232 96 L224 104"/><circle cx="160" cy="96" r="3"/></svg>
-          <svg className="bundle-lines-mobile" viewBox="0 0 320 64" preserveAspectRatio="none" focusable="false" aria-hidden="true"><path d="M80 0 V16 Q80 30 100 30 H140 Q160 30 160 48 M240 0 V16 Q240 30 220 30 H180 Q160 30 160 48 M160 48 V62" /><circle cx="160" cy="58" r="4" /></svg><span className="bundle-out">窓口はひとつ</span>
-        </div>
-        <p className="change-one">「これ、どこに聞けばいい？」が、なくなります。</p>
+      <section className="security-support" id="security-support">
+        <div className="section-heading"><p className="section-label" aria-hidden="true">SUPPORT</p><h2>「よく分からない」を、<br />頼める窓口に。</h2></div>
+        <p className="security-intro">今のサイトを確かめ、必要なら作り直す。<br />公開したあとの担当まで、最初に決めます。</p>
+        <ol className="security-steps">
+          <li><span className="security-step-number" aria-hidden="true">01</span><h3>まず、今の状態を整理。</h3><p>何で作られているか。更新やバックアップは誰の担当か。無料相談ではURLと分かる範囲の情報から整理し、詳しい確認が必要なところをお伝えします。</p></li>
+          <li><span className="security-step-number" aria-hidden="true">02</span><h3>Cloudflareを使う構成へ。</h3><p>紹介ページを中心としたサイトなら、公開側でWordPressやPHPを動かさない構成を検討できます。今の機能を確かめ、Cloudflareでの作り直し・移行をご提案します。</p></li>
+          <li><span className="security-step-number" aria-hidden="true">03</span><h3>公開後の担当も、明確に。</h3><p>どの仕組みを管理するか、確認の頻度、バックアップ、止まったときの連絡先。引き受ける範囲を見積もりに書き、安藤が窓口になります。</p></li>
+        </ol>
+        <div className="security-scope"><h3>お店の機能に合わせて、移行方法を決めます。</h3><p>ホームページ・ネットショップの制作は、これまでどおりお受けします。予約・フォーム・会員機能・決済がある場合は、そのまま移せるとは限りません。必要な機能と、作り直す範囲を先に確かめます。</p><p className="security-honesty">Cloudflareの利用だけで、すべての危険がなくなるわけではありません。使う仕組みの更新や認証の管理は必要です。移行しないほうがよい場合も、その理由をお伝えします。</p><p className="security-source"><a href="https://developers.cloudflare.com/pages/how-to/deploy-a-wordpress-site/" target="_blank" rel="noopener noreferrer">Cloudflare公式：WordPressの静的化と制限 ↗</a></p></div>
+        <p className="cta-wrap"><a className="cta" href="https://lin.ee/WfeFzfF" target="_blank" rel="noopener noreferrer">サイトのURLを送って無料相談（60分）</a></p>
+        <p className="security-caption">最初の相談に、パスワードは必要ありません。</p>
       </section>
 
 <section className="works" id="works">
@@ -127,6 +135,7 @@ export default function AiPage() {
               <figure className="phone-shot"><img src="/images/ai/matome/real_sukusuku_top_m2.jpg" alt="某助産院さまのホームページをスマホで見た画面" width="860" height="1720" loading="lazy" /><figcaption>ホームページの予約ボタン</figcaption></figure>
             </div>
             {SHOW_DRAFT && (<p className="voice-slot todo" data-draft="voice">（お客さまの言葉は、ご本人の了承をいただいてから、ここに載せます）</p>)}
+            <InlineDemo kind="booking" label="予約の操作見本" />
           </article>
 
           <article className="work">
@@ -140,6 +149,7 @@ export default function AiPage() {
               <figure className="phone-shot"><img src="/images/ai/matome/real_threads_post_m2.jpg" alt="某ラーメン店さまのThreadsの投稿の画面" width="860" height="1600" loading="lazy" /><figcaption>はじめての投稿</figcaption></figure>
             </div>
             {SHOW_DRAFT && (<p className="voice-slot todo" data-draft="voice">（お客さまの言葉は、ご本人の了承をいただいてから、ここに載せます）</p>)}
+            <InlineDemo kind="sns" label="SNS投稿の見本" />
           </article>
 
           <article className="work">
@@ -153,6 +163,7 @@ export default function AiPage() {
               <figure className="phone-shot"><img src="/images/ai/matome/real_car_m2.jpg" alt="車の紹介サイトをスマホで見た画面" width="860" height="1720" loading="lazy" /><figcaption>車の紹介サイト（実際の画面）</figcaption></figure>
             </div>
             {SHOW_DRAFT && (<p className="voice-slot todo" data-draft="voice">（お客さまの言葉は、ご本人の了承をいただいてから、ここに載せます）</p>)}
+            <InlineDemo kind="car" label="車の紹介と問い合わせの見本" />
           </article>
 
           <article className="work work-timecard">
@@ -204,6 +215,7 @@ export default function AiPage() {
               <figcaption className="work-caption">イメージです（見本のデータ）。</figcaption>
             </figure>
             {SHOW_DRAFT && (<p className="voice-slot todo" data-draft="voice">（お客さまの言葉は、ご本人の了承をいただいてから、ここに載せます）</p>)}
+            <InlineDemo kind="timecard" label="タイムカード集計の見本" />
           </article>
 
           <article className="work">
@@ -218,6 +230,7 @@ export default function AiPage() {
               <figure className="phone-shot shop-secondary"><img src="/images/ai/matome/real_form1.jpg" alt="業務用の問い合わせフォームの画面" width="860" height="1720" loading="lazy" /><figcaption>業務用の問い合わせフォーム</figcaption></figure>
               <figure className="phone-shot shop-secondary"><img src="/images/ai/matome/real_form2.jpg" alt="業務用の問い合わせフォームの選ぶ項目の画面" width="860" height="1720" loading="lazy" /><figcaption>選ぶだけの項目</figcaption></figure>
             </div>
+            <InlineDemo kind="shop" label="ネットショップの見本" />
           </article>
 
           <article className="work work-tools" id="tool-examples">
@@ -226,36 +239,12 @@ export default function AiPage() {
             <p className="work-client">うちで作って、使っているもの</p>
             <h3>営業・納品・給与集計。自分の仕事で使う道具を、制作。</h3>
             <p className="work-body">自分の仕事に合わせて、道具を作って毎日使っています。お客さんの仕事に合わせて、同じように作ることもできます。</p>
-            <div className="work-shots tool-shots">
-              <div className="tool-card">
-                <p className="tool-name">営業ツール</p>
-                <p className="tool-description">営業先の名前・電話番号と、対応状況を一覧に。検索や更新の流れを試せます。</p>
-                <figure className="browser-shot"><img src="/images/ai/tools/sales-list.jpg" alt="営業ツールの画面" loading="lazy" /></figure>
-                <Link className="tool-demo-link" href="/ai/demo#sales">営業ツールのデモを試す <span aria-hidden="true">→</span></Link>
-              </div>
-              <div className="tool-card">
-                <p className="tool-name">給与の集計ツール</p>
-                <p className="tool-description">作業の数量や勤務時間から、金額を集計。デモでは勤務時間と時給を変えて試せます。</p>
-                <div className="tool-demo-preview" aria-label="給与集計デモの見本">
-                  <span>勤務時間 × 時給</span><strong>120時間 × 1,400円</strong><span>スタッフAの集計額</span><b>168,000円</b><small>架空のサンプルデータ</small>
-                </div>
-                <Link className="tool-demo-link" href="/ai/demo#payroll">給与集計のデモを試す <span aria-hidden="true">→</span></Link>
-              </div>
-              <div className="tool-card">
-                <p className="tool-name">納品ツール</p>
-                <p className="tool-description">お店への納品と回収の数を記録します。</p>
-                <figure className="browser-shot"><img src="/images/ai/tools/delivery.jpg" alt="納品ツールの画面" loading="lazy" /></figure>
-              </div>
-              <div className="tool-card">
-                <p className="tool-name">オンラインツール</p>
-                <p className="tool-description">ネット注文の一覧を読み込むと、販売の登録と発送の管理の表に反映されます。</p>
-                <figure className="browser-shot"><img src="/images/ai/tools/online.jpg" alt="オンラインツールの画面" loading="lazy" /></figure>
-              </div>
-              <div className="tool-card">
-                <p className="tool-name">市場ツール</p>
-                <p className="tool-description">市場への出荷と仕入れを記録します。</p>
-                <figure className="browser-shot"><img src="/images/ai/tools/market.jpg" alt="市場ツールの画面" loading="lazy" /></figure>
-              </div>
+            <div className="inline-tool-list">
+              <div><h4>営業ツール</h4><p>営業先を探して、対応状況を記録。情報更新の見本も試せます。</p><InlineDemo kind="sales" label="営業ツール" /></div>
+              <div><h4>給与の集計ツール</h4><p>勤務時間と時給を変えると、金額と合計が変わります。</p><InlineDemo kind="payroll" label="給与集計" /></div>
+              <div><h4>納品ツール</h4><p>納品と回収の数を記録し、差し引きを確かめます。</p><InlineDemo kind="delivery" label="納品と回収" /></div>
+              <div><h4>オンラインツール</h4><p>注文の一覧を取り込んで、発送準備の状況を確認します。</p><InlineDemo kind="online" label="注文と発送準備" /></div>
+              <div><h4>市場ツール</h4><p>市場への出荷と仕入れを分けて記録し、金額を集計します。</p><InlineDemo kind="market" label="市場の出荷・仕入れ" /></div>
             </div>
             <p className="work-caption">画面・デモはサンプルデータです。デモは操作体験用で、実際の給与情報・営業先とはつながっていません。</p>
           </article>
@@ -266,14 +255,15 @@ export default function AiPage() {
             <h3>会員だけが見られる、城めぐりの記録サイト。</h3>
             <p className="work-body">ログインした人だけが見られる形で、城めぐりの記録サイトを作りました。行った城の記録と写真をまとめられます。御城印を探すページもあります。公式サイトの新着を定期的に確かめる機能と、スマホで通知を受け取る設定もあります。手元の写真や旅の履歴を取り込む場所もあります。</p>
             <p className="members-chip"><span className="members-lock" aria-hidden="true" />ログインした人だけ</p>
-            <div className="castle-shots">
+            <InlineDemo kind="castle" label="城めぐりの記録サイト" />
+            <details className="work-screen-gallery"><summary>実際の画面も見る</summary><div className="castle-shots">
               <figure className="browser-shot castle-lead"><img src="/images/ai/matome/castle_visits.jpg" width="860" height="766" alt="城と訪問記録の画面" loading="lazy" /><figcaption>城と訪問の記録</figcaption></figure>
               <figure className="browser-shot"><img src="/images/ai/matome/castle_goshuin.jpg" width="1251" height="875" alt="御城印を探す画面" loading="lazy" /><figcaption>御城印を探す</figcaption></figure>
               <figure className="browser-shot"><img src="/images/ai/matome/castle_news.jpg" width="1257" height="856" alt="新着のお知らせの画面" loading="lazy" /><figcaption>新着のお知らせ</figcaption></figure>
               <figure className="browser-shot"><img src="/images/ai/matome/castle_notice.jpg" width="1243" height="660" alt="スマホへの通知を受け取る画面" loading="lazy" /><figcaption>スマホへの通知</figcaption></figure>
               <figure className="browser-shot"><img src="/images/ai/matome/castle_data.jpg" width="1248" height="758" alt="写真と資料を取り込む画面" loading="lazy" /><figcaption>写真と資料の取り込み</figcaption></figure>
             </div>
-            <p className="work-caption">実際の画面です。</p>
+            </details><p className="work-caption">掲載画面は実際のもの、操作見本は架空のデータです。</p>
           </article>
         </div>
       </section>
@@ -284,91 +274,41 @@ export default function AiPage() {
         <p className="cta-sub">電話でも大丈夫です　<a className="tel" href="tel:07084348124">070-8434-8124</a></p>
       </aside>
 
-      <section className="services" id="services">
-        <div className="section-heading"><p className="section-label" aria-hidden="true">POINT</p><h2>頼めること</h2></div>
-        <p className="service-note">全部でなくて大丈夫です。<span className="mk">必要なものだけ</span>選べます。</p>
-        <ul className="service-list">
-          <li className="service-tile">
-            <span className="service-number" aria-hidden="true">01</span>
-            <h3>ホームページの制作</h3>
-            <p>新しく作る。今あるものを直す。</p>
-            <p className="service-price">3万〜5万円<span>（税抜）</span></p>
-          </li>
-          <li className="service-tile">
-            <span className="service-number" aria-hidden="true">02</span>
-            <h3>ネットショップの開設</h3>
-            <p>商品の登録から、販売を始める準備まで。</p>
-            <p className="service-price">3万〜5万円<span>（税抜）</span></p>
-          </li>
-          <li className="service-tile">
-            <span className="service-number" aria-hidden="true">03</span>
-            <h3>LINE公式アカウントの構築</h3>
-            <p>開設から、メニューづくりまで。</p>
-            <p className="service-price">3万〜5万円<span>（税抜）</span></p>
-          </li>
-        </ul>
-        <p className="service-note">ページ数・商品数・設定の範囲を確認して、見積もりをお出しします。</p>
-        <div className="custom-tool-service" id="tool-service">
-          <div>
-            <p className="custom-tool-label">毎日の事務も、相談できます</p>
-            <h3>業務ツールの制作</h3>
-            <p>給与の集計、営業先のリスト、注文の転記。「いつも同じ作業をしている」を、仕事に合う道具にします。</p>
-          </div>
-          <div className="custom-tool-action">
-            <p className="service-price">1万円〜<span>（税抜）</span></p>
-            <a className="tool-demo-link" href="#tool-examples">使っている道具・デモを見る <span aria-hidden="true">→</span></a>
-          </div>
-          <p className="custom-tool-note">1万円〜は、入力と集計など機能を絞った小さなツールの目安です。複数サービスとの連携・定期更新などは、内容に応じてお見積もり。外部サービスの利用料や保守が必要な場合も、事前にお伝えします。</p>
-        </div>
-        <p className="service-note">毎日の発信は<Link href="/ai/sns">SNS運用代行</Link>へ。作ったあとの更新・手直しもお受けしています。</p>
-      </section>
-
-      <section className="price" id="price">
+      <section className="price price-compact" id="price">
         <div className="section-heading"><p className="section-label" aria-hidden="true">PRICE</p><h2>料金について</h2></div>
-        <p className="price-lead">金額は、<span className="mk">内容を聞いてから</span>決めます。当方の料金はすべて税抜です。</p>
-        <h3 className="price-step">作るとき（1回だけ）</h3>
-        <p className="price-scope">作るときの費用の目安です。ページ数・商品数・設定の範囲は、お見積もりで先にお伝えします。</p>
-        <div className="table-scroll">
-          <table className="market-table">
-            <thead><tr><th scope="col">頼むもの</th><th scope="col">制作する内容</th><th scope="col">料金の目安（税抜）</th></tr></thead>
-            <tbody>
-              <tr><td data-label="頼むもの">ホームページの制作</td><td data-label="制作する内容">お店・サービスの紹介、問い合わせへの案内</td><td data-label="料金の目安（税抜）"><strong>3万〜5万円</strong></td></tr>
-              <tr><td data-label="頼むもの">ネットショップの開設</td><td data-label="制作する内容">販売ページの準備、商品の登録、決済の設定</td><td data-label="料金の目安（税抜）"><strong>3万〜5万円</strong></td></tr>
-              <tr><td data-label="頼むもの">LINE公式アカウントの構築</td><td data-label="制作する内容">アカウント開設、あいさつ文、メニューづくり</td><td data-label="料金の目安（税抜）"><strong>3万〜5万円</strong></td></tr>
-            </tbody>
-          </table>
-        </div>
-        <p className="price-note">基本の範囲を超える機能や連携は、別途お見積もりします。サーバー・ドメイン・外部サービスなどの利用料が必要な場合も、事前にお伝えします。</p>
-        <p className="tool-price-note"><strong>業務ツール制作は1万円〜（税抜）。</strong>機能を絞った集計ツールから、仕事に合わせて作ります。<a href="#tool-service">制作の範囲を見る</a></p>
-        <div className="price-pack">
-          <p className="price-pack-tag">まとめて頼むなら</p>
-          <h3 className="price-pack-name">オールインパック</h3>
-          <div className="price-pack-body">
-            <p className="price-pack-amount"><strong>10万円</strong><span className="price-pack-once">税抜・制作費は最初の1回</span></p>
-            <ul className="price-pack-list">
-              <li>ホームページの制作</li>
-              <li>ネットショップの開設</li>
-              <li>LINE公式アカウントの構築</li>
-            </ul>
+        <p className="price-lead">移行・管理は、今の機能と必要な作業を確認して見積もります。<strong>表示はすべて税抜</strong>です。</p>
+        <div className="security-price-note"><h3>サイトの確認・Cloudflare移行・保守管理</h3><p>詳しい調査、移行、管理の費用は個別にお見積もりします。下の制作料金や更新・手直しの料金に、セキュリティ対応すべてが含まれるわけではありません。</p><p>無料相談は60分の状況整理です。脆弱性診断、侵入調査、緊急復旧、24時間の監視は含みません。必要な場合は専門の対応先への相談をご案内します。</p></div>
+        <div className="price-groups">
+          <div className="price-group">
+            <h3>作るとき · 1回だけ</h3>
+            <dl className="price-rows">
+              <div><dt>ホームページの制作</dt><dd>3万〜5万円</dd></div>
+              <div><dt>ネットショップの開設</dt><dd>3万〜5万円</dd></div>
+              <div><dt>LINE公式アカウントの構築</dt><dd>3万〜5万円</dd></div>
+              <div><dt>業務ツールの制作<small>給与の集計・営業先リスト・注文の転記など。<br /><a href="#tool-examples">道具・デモを見る →</a></small></dt><dd>1万円〜</dd></div>
+              <div><dt>Webの3つをまとめて制作<small>ホームページ・ネットショップ・公式LINE</small></dt><dd>10万円</dd></div>
+              <div><dt>SNSの仕組みを買い切り<small>SNS設計・公式LINE構築・投稿の仕組みと説明</small></dt><dd>10万円</dd></div>
+            </dl>
           </div>
-          <p className="price-pack-scope">この3つを、まとめて作ります。小さなお店向けの内容で、ページ数や商品の数は、見積もりに書いてお渡しします。</p>
-          <p className="price-pack-note">作ったあとの更新・手直しは、頼む場合だけ、別に月1万〜3万円（税抜）です。SNSの運用は入りません。</p>
-        </div>
-        <h3 className="price-step">頼んだ場合に、毎月かかるもの</h3>
-        <div className="price-monthly">
-          <div className="price-monthly-item">
-            <h4 className="price-monthly-name">作ったあとの更新・手直し</h4>
-            <p className="price-monthly-amount"><strong>月1万〜3万円</strong>（税抜）</p>
-            <p>更新、控え（バックアップ）の確認、文章や写真の差し替え。含む作業と回数は、見積もりに書きます。</p>
-          </div>
-          <div className="price-monthly-item">
-            <h4 className="price-monthly-name">SNSの運用代行</h4>
-            <p className="price-monthly-amount"><strong>月3万〜10万円</strong>（税抜）</p>
-            <p>写真を送ってもらえば、文章づくりから投稿まで。ライト・スタンダードは1日1投稿。スタンダードは公式LINEの週1回程度の配信も含みます。</p>
-            <p className="price-sns-more">プランは月3万円・5万円・10万円の3つです（すべて税抜）。中身は、別のページでくわしく案内しています。<Link href="/ai/sns">SNS運用代行のページを見る</Link></p>
+          <div className="price-group">
+            <h3>運用を頼むとき · 月額</h3>
+            <dl className="price-rows">
+              <div><dt>更新・手直し<small>必要な場合のみ</small></dt><dd>1万〜3万円</dd></div>
+              {SNS_PLANS.map(plan => <div key={plan.key}><dt>SNS {plan.name}<small>{plan.media}（計{plan.total}媒体）<br />{plan.frequency}{plan.key === "standard" && "・LINEを選ぶ場合は週1回程度"}</small></dt><dd>{plan.price}</dd></div>)}
+            </dl>
+            <p className="price-media-note">ライトは{BASIC_MEDIA.join("・")}の3媒体。スタンダード・おまかせフルは{EXTRA_MEDIA}から選べます。LINE配信も選んだ媒体数に含みます。</p>
+            <Link className="price-detail-link" href="/ai/sns">SNSのプラン・提供内容を詳しく見る <span aria-hidden="true">→</span></Link>
           </div>
         </div>
-        <p className="price-lead price-separate">予約の仕組みや、基本の範囲を超える制作は、内容を聞いて見積もります。金額はすべて税抜で、消費税は別途かかります。</p>
+        <details className="price-conditions">
+          <summary>料金に含まれる範囲と、別にかかるもの</summary>
+          <ul>
+            <li>制作はページ数・商品数・設定・直しの回数を確認して、見積もりに含む範囲を書きます。業務ツールの連携・定期更新・保守、予約の仕組みなどは内容別のお見積もりです。</li>
+            <li>Webのまとめて制作にSNS運用は含みません。SNS買い切りはアカウント設計、公式LINE構築、毎日の投稿が回る仕組みと使い方の説明まで。投稿文・写真の準備や予約の変更方法もご案内します。買い切り後の修正は都度お見積もりです。</li>
+            <li>月額の更新・手直しは、更新、控えの確認、文章・写真の差し替え。作業と回数を見積もりに書きます。SNS月額は3か月を1つの区切りとし、新規アカウント開設が必要な場合のみ初期設定費＋3万円です。</li>
+            <li>サーバー・ドメイン・投稿やLINE配信などの外部サービス利用料が必要な場合は、ご契約前に内容と金額をお伝えします。消費税は別途かかります。</li>
+          </ul>
+        </details>
       </section>
 
       <aside className="cta-band">
@@ -392,10 +332,10 @@ export default function AiPage() {
         <div className="section-heading"><p className="section-label" aria-hidden="true">REASON</p><h2>引き受けるときの決まり</h2></div>
         <ul className="rule-list">
           <li><span className="reason-number" aria-hidden="true">01</span><p>見積もりに「含むもの・含まないもの」を書きます。</p></li>
-          <li><span className="reason-number" aria-hidden="true">02</span><p>ドメインとサーバー（ホームページの住所と置き場所）は、お客さまの名義にします。こちらの名義にはしません。</p></li>
+          <li><span className="reason-number" aria-hidden="true">02</span><p>ドメイン（ホームページの住所）は、お客さまの名義にします。Cloudflareの管理方法・アクセス権・解約時の引き渡しは、始める前に決めます。</p></li>
           <li><span className="reason-number" aria-hidden="true">03</span><p>今あるホームページを直すときは、先に丸ごと控えます。変えた内容は記録してお渡しします。</p></li>
           <li><span className="reason-number" aria-hidden="true">04</span><p>メールの設定には触りません。</p></li>
-          <li><span className="reason-number" aria-hidden="true">05</span><p>止まったときの連絡先と、いつまでに対応を始めるかを、先に決めておきます。</p></li>
+          <li><span className="reason-number" aria-hidden="true">05</span><p>管理する対象、確認の頻度、バックアップの方法、止まったときの連絡先と対応を始める目安を、先に決めておきます。</p></li>
         </ul>
         <div className="honest">
           <h3>正直にお伝えすること</h3>
@@ -411,11 +351,11 @@ export default function AiPage() {
         <ol className="step-list">
           <li>
             <h3>無料相談（60分）</h3>
-            <p>今、困っていることを、そのまま話してください。契約のことは、分からなくても一緒に確かめます。</p>
+            <p>サイトのURLと、更新・管理で気になることを聞かせてください。管理画面のパスワードは送らなくて大丈夫です。</p>
           </li>
           <li>
             <h3>見積もり</h3>
-            <p>やること・やらないこと・金額を書いてお渡しします。</p>
+            <p>機能・管理する範囲・切り替え手順・費用を書いてお渡しします。</p>
           </li>
           <li>
             <h3>合意したところから開始</h3>
@@ -427,12 +367,15 @@ export default function AiPage() {
       <section className="faq" id="faq">
         <div className="section-heading"><p className="section-label" aria-hidden="true">Q&A</p><h2>よくある質問</h2></div>
         <dl className="faq-list">
+          <dt>Cloudflareに移せば、セキュリティ対策は終わりですか。</dt><dd>終わりではありません。WordPressやPHPを公開側で使わない構成にできる場合は、その部分の管理負担を減らせます。ただし、使う仕組みの更新、認証、設定、データの保管は引き続き必要です。侵入や停止が起きないことを保証するものではありません。</dd>
+          <dt>どんなWordPressサイトでも移せますか。</dt><dd>先に機能を確認します。会員・予約・問い合わせ・決済などは、別の仕組みへの置き換えが必要な場合があります。ドメイン・メール・検索からの入口も確認し、移行する範囲と切り替え手順を決めます。</dd>
+          <dt>すでに不正アクセスを受けているかもしれません。</dt><dd>緊急の侵入調査や復旧を行うサービスではありません。まず契約中のサーバー会社や専門の対応先に連絡してください。復旧後の作り直しや管理体制の見直しは、ご相談いただけます。</dd>
           <dt>今の業者さんとの契約が残っています。相談できますか。</dt>
           <dd>はい。契約の名義と期間を、一緒に確かめるところから始めます。今の契約を、こちらから勝手に変えることはありません。</dd>
           <dt>パソコンが苦手です。</dt>
           <dd>大丈夫です。専門の言葉はできるだけ使わず、使うときは説明します。「ここを直したい」と、いつもの言葉で言ってください。</dd>
           <dt>頼めば、売上は上がりますか。</dt>
-          <dd>お約束はできません。できるのは、頼み先をひとつにして、直したいときにすぐ頼める状態を作ることです。</dd>
+          <dd>お約束はできません。できるのは、サイトの作りと管理の担当を整理し、更新・手直しを頼める窓口を作ることです。</dd>
           <dt>鳥取の外からでも頼めますか。</dt>
           <dd>鳥取の近くのお店を優先していますが、オンラインでのやり取りなら、どこからでもご相談いただけます。</dd>
         </dl>

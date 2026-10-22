@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { ShoppingCart, Menu, User, X } from "lucide-react";
 import { useShoppingCart } from "use-shopping-cart";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CartModal } from "@/components/cart/CartModal";
 import { OnlineTracker } from "@/components/layout/OnlineTracker";
 import { AnnouncementMarquee } from "@/components/AnnouncementMarquee";
@@ -24,12 +24,23 @@ export function Header() {
     const { cartCount } = useShoppingCart();
     const [isCartOpen, setIsCartOpen] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const menuButtonRef = useRef<HTMLButtonElement>(null);
+    useEffect(() => {
+        if (!isMenuOpen) return;
+        const previousOverflow = document.body.style.overflow;
+        const menuButton = menuButtonRef.current;
+        document.body.style.overflow = "hidden";
+        return () => {
+            document.body.style.overflow = previousOverflow;
+            menuButton?.focus();
+        };
+    }, [isMenuOpen]);
 
     return (
         <>
             <OnlineTracker />
             <header className="sticky top-0 z-50 w-full border-b border-stone-200 bg-white/80 backdrop-blur-md">
-                <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
+                <div className="container mx-auto flex min-h-16 items-center justify-between gap-3 px-4 md:px-6">
                     <Link href="/" className="flex items-center gap-2">
                         <span className="font-heading text-2xl font-bold tracking-wider text-primary">
                             &YOU
@@ -40,17 +51,13 @@ export function Header() {
                         </div>
                     </Link>
 
-                    <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-stone-600">
-                        {NAV_ITEMS.map((item) => (
-                            <Link
-                                key={item.href}
-                                href={item.href}
-                                className={item.highlight ? "text-primary font-bold hover:text-primary/80 transition-colors" : "hover:text-primary transition-colors"}
-                            >
-                                {item.label}
-                            </Link>
-                        ))}
-                    </nav>
+                    <div className="hidden lg:flex flex-col items-end text-xs text-stone-600 gap-1">
+                        <p>ホームページ作成・ネットショップ開設をご希望の方へ</p>
+                        <div className="flex gap-4 font-bold text-primary">
+                            <Link href="/ai" className="hover:underline">制作・業務のご相談 →</Link>
+                            <Link href="/ai/sns" className="hover:underline">SNS代行 →</Link>
+                        </div>
+                    </div>
 
                     <div className="flex items-center gap-4">
                         <Link
@@ -73,13 +80,23 @@ export function Header() {
                             <span className="text-[10px] text-stone-500 font-medium">カート</span>
                         </button>
                         <button
+                            ref={menuButtonRef}
                             onClick={() => setIsMenuOpen(true)}
-                            className="md:hidden p-2 hover:bg-stone-100 rounded-full transition-colors"
+                            aria-expanded={isMenuOpen}
+                            aria-controls="site-mobile-menu"
+                            className="lg:hidden p-2 hover:bg-stone-100 rounded-full transition-colors"
                         >
                             <Menu className="h-5 w-5 text-stone-600" />
                             <span className="sr-only">メニュー</span>
                         </button>
                     </div>
+                </div>
+                <nav aria-label="メインメニュー" className="hidden lg:flex flex-wrap justify-center gap-x-1 border-t border-stone-100 px-4 py-1 text-sm">
+                    {NAV_ITEMS.map(item => <Link key={item.href} href={item.href} className={`rounded-md px-3 py-2 hover:bg-primary/5 transition-colors ${item.highlight ? "font-bold text-primary" : "text-stone-600"}`}>{item.label}</Link>)}
+                </nav>
+                <div className="lg:hidden flex items-center justify-center gap-4 border-t border-stone-100 bg-stone-50 px-3 py-2 text-xs font-bold text-primary">
+                    <Link href="/ai" className="py-1 hover:underline">ホームページ・ネットショップ →</Link>
+                    <Link href="/ai/sns" className="py-1 hover:underline">SNS代行 →</Link>
                 </div>
             </header>
 
@@ -87,12 +104,20 @@ export function Header() {
 
             {/* モバイルメニュー */}
             {isMenuOpen && (
-                <div className="fixed inset-0 z-[100] md:hidden">
+                <div className="fixed inset-0 z-[100] lg:hidden">
                     <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setIsMenuOpen(false)} />
-                    <div className="absolute right-0 top-0 h-full w-full max-w-xs bg-white shadow-2xl flex flex-col animate-slide-in-right">
+                    <div id="site-mobile-menu" role="dialog" aria-modal="true" aria-label="メニュー" onKeyDown={event => {
+                        if (event.key === "Escape") setIsMenuOpen(false);
+                        if (event.key !== "Tab") return;
+                        const controls = event.currentTarget.querySelectorAll<HTMLElement>("a[href],button");
+                        const first = controls[0];
+                        const last = controls[controls.length - 1];
+                        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+                        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+                    }} className="absolute right-0 top-0 h-full w-full max-w-xs bg-white shadow-2xl flex flex-col animate-slide-in-right">
                         <div className="p-4 border-b border-stone-100 flex items-center justify-between bg-stone-50">
                             <span className="font-bold text-stone-900">メニュー</span>
-                            <button onClick={() => setIsMenuOpen(false)} className="p-2 hover:bg-stone-200 rounded-full transition-colors">
+                            <button autoFocus aria-label="メニューを閉じる" onClick={() => setIsMenuOpen(false)} className="p-2 hover:bg-stone-200 rounded-full transition-colors">
                                 <X className="h-5 w-5 text-stone-500" />
                             </button>
                         </div>
@@ -111,6 +136,11 @@ export function Header() {
                                     {item.label}
                                 </Link>
                             ))}
+                            <div className="mt-4 border-t border-stone-200 pt-4">
+                                <p className="px-4 text-xs text-stone-500">ホームページ作成・ネットショップ開設のご相談</p>
+                                <Link href="/ai" onClick={() => setIsMenuOpen(false)} className="block px-4 py-3 font-bold text-primary">制作・業務のご相談 →</Link>
+                                <Link href="/ai/sns" onClick={() => setIsMenuOpen(false)} className="block px-4 py-3 font-bold text-primary">SNS代行 →</Link>
+                            </div>
                         </nav>
                     </div>
                 </div>

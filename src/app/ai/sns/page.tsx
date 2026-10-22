@@ -1,3 +1,4 @@
+import { BASIC_MEDIA, EXTRA_MEDIA, SNS_PLANS } from "@/lib/andu-plans";
 import { AiTimeSupport } from "@/components/ai/AiTimeSupport";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
@@ -111,6 +112,10 @@ const PLAN_STEPS = [
 
 const FAQ_ITEMS = [
     {
+        q: "どの媒体を運用してもらえますか",
+        a: `ライトは${BASIC_MEDIA.join("・")}の基本3媒体です。スタンダードは好きな媒体を2つ、おまかせフルは好きな媒体を4つ選べます。候補は${EXTRA_MEDIA}です。LINE配信を選ぶ場合も1媒体に数え、スタンダードのLINE配信は週1回程度です。`,
+    },
+    {
         q: "契約の縛りはありますか",
         a: "月額プランは3ヶ月を1つの区切りとしています。3ヶ月経過したあとは、いつでも解約いただけます。",
     },
@@ -145,31 +150,22 @@ const PLAN_TABLE_HEADERS: {
     name: string;
     price: string;
     featured?: boolean;
-}[] = [
-    { key: "light", name: "ライト", price: "3万円" },
-    { key: "standard", name: "スタンダード", price: "5万円", featured: true },
-    { key: "full", name: "おまかせフル", price: "10万円" },
-];
+}[] = SNS_PLANS.map(plan => ({ key: plan.key, name: plan.name, price: plan.price, featured: plan.key === "standard" }));
 
 type PlanValue = boolean | string;
 type PlanRow = { label: string; light: PlanValue; standard: PlanValue; full: PlanValue };
 
 const CAN_DO_ROWS: PlanRow[] = [
     { label: "毎日の投稿代行", light: "1日1投稿", standard: "1日1投稿", full: "1日2投稿" },
-    { label: "公式LINE配信", light: false, standard: "週1回程度", full: true },
+    { label: "LINE配信を選んだ場合", light: false, standard: "週1回程度", full: "対応" },
     { label: "月1数字報告", light: false, standard: true, full: true },
     { label: "コメント対応", light: false, standard: false, full: true },
     { label: "キャンペーン企画", light: false, standard: false, full: true },
 ];
 
-const TARGET_SNS_ROWS: PlanRow[] = [
-    { label: "Facebook", light: true, standard: true, full: true },
-    { label: "Instagram", light: true, standard: true, full: true },
-    { label: "Threads", light: true, standard: true, full: true },
-    { label: "X", light: false, standard: true, full: true },
-    { label: "YouTube", light: false, standard: true, full: true },
-    { label: "ブログ（noteなど）", light: false, standard: false, full: true },
-    { label: "TikTok・LinkedIn（ご希望で）", light: false, standard: false, full: true },
+const TARGET_MEDIA_ROWS: PlanRow[] = [
+    { label: "対象媒体", light: BASIC_MEDIA.join("・"), standard: "好きな媒体を2つ", full: "好きな媒体を4つ" },
+    { label: "媒体数", light: "3媒体（固定）", standard: "2媒体（選択）", full: "4媒体（選択）" },
 ];
 
 function BigCta({ label = "無料相談に申し込む" }: { label?: string }) {
@@ -234,11 +230,12 @@ function PlanCompareTable({ title, rows }: { title: string; rows: PlanRow[] }) {
                                     </span>
                                 )}
                                 <p
-                                    className={`text-xs sm:text-sm whitespace-nowrap tracking-tight font-bold leading-tight ${
+                                    className={`text-xs sm:text-sm break-words tracking-tight font-bold leading-tight ${
                                         plan.featured ? "text-primary" : "text-stone-700"
                                     }`}
                                 >
-                                    {plan.name}
+                                    <span className="sm:hidden">{plan.key === "standard" ? <>スタン<br />ダード</> : plan.key === "full" ? <>おまかせ<br />フル</> : plan.name}</span>
+                                    <span className="hidden sm:inline">{plan.name}</span>
                                 </p>
                                 <p className="text-xs font-normal text-stone-500">{plan.price}<br />税抜・月額</p>
                             </th>
@@ -639,7 +636,7 @@ export default function AiConsultingPage() {
                                 <p className="text-2xl font-bold text-stone-900 mb-2">
                                     3<span className="text-sm font-normal text-stone-500 ml-1">万円（税抜・月額）</span>
                                 </p>
-                                <p className="text-stone-600 text-sm">毎日の投稿代行（1日1投稿）</p>
+                                <p className="text-stone-600 text-sm">{BASIC_MEDIA.join("・")}（3媒体）<br />毎日の投稿代行（1日1投稿）</p>
                             </div>
                             <div className="bg-primary/5 rounded-2xl border-2 border-primary p-6 relative">
                                 <span className="inline-block bg-primary text-white text-sm font-bold px-3 py-1 rounded-full mb-2">
@@ -649,7 +646,7 @@ export default function AiConsultingPage() {
                                 <p className="text-2xl font-bold text-stone-900 mb-2">
                                     5<span className="text-sm font-normal text-stone-500 ml-1">万円（税抜・月額）</span>
                                 </p>
-                                <p className="text-stone-700 text-sm mb-4">毎日の投稿代行（1日1投稿）<br />公式LINE配信は週1回程度<br />月1回の数字報告つき</p>
+                                <p className="text-stone-700 text-sm mb-4">好きな媒体を2つ<br />毎日の投稿代行（1日1投稿）<br />LINEを選ぶ場合は週1回程度<br />月1回の数字報告つき</p>
                                 <Link
                                     href="/contact/personal?subject=sns-line"
                                     className="inline-flex items-center justify-center w-full bg-primary hover:bg-primary-dark text-white font-bold py-2.5 px-4 rounded-full text-sm transition-all"
@@ -663,7 +660,7 @@ export default function AiConsultingPage() {
                                     10
                                     <span className="text-sm font-normal text-stone-500 ml-1">万円（税抜・月額）</span>
                                 </p>
-                                <p className="text-stone-600 text-sm">企画・コメント対応まで全部</p>
+                                <p className="text-stone-600 text-sm">好きな媒体を4つ<br />毎日の投稿代行（1日2投稿）<br />企画・コメント対応まで全部</p>
                             </div>
                         </div>
 
@@ -672,7 +669,8 @@ export default function AiConsultingPage() {
                         </p>
                         <div className="space-y-4">
                             <PlanCompareTable title="できること" rows={CAN_DO_ROWS} />
-                            <PlanCompareTable title="対象SNS" rows={TARGET_SNS_ROWS} />
+                            <PlanCompareTable title="対象媒体" rows={TARGET_MEDIA_ROWS} />
+                            <p className="text-sm text-stone-600 leading-relaxed">スタンダード・おまかせフルは{EXTRA_MEDIA}から選べます。例：スタンダードならInstagram＋ブログ、おまかせフルならThreads＋TikTok＋YouTube＋LINE配信。LINE配信も選んだ媒体数に含みます。LINEの配信回数は上の表のとおりです。</p>
                         </div>
 
                         <p className="text-stone-600 text-sm mt-6 text-center">

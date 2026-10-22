@@ -541,6 +541,19 @@ export default async function Home() {
             </div>
           </div>
         </section>
+        <section aria-labelledby="business-service-heading" className="border-t border-stone-200 bg-stone-100 py-10 md:py-14">
+          <div className="container mx-auto max-w-5xl px-4 md:px-6 md:flex md:items-center md:justify-between md:gap-8">
+            <div>
+              <p className="text-xs font-bold tracking-widest text-primary mb-3">お店・会社の方へ</p>
+              <h2 id="business-service-heading" className="text-xl md:text-2xl font-bold leading-relaxed text-stone-900">ホームページ作成・ネットショップ開設・<br className="hidden md:block" />SNS代行のご相談はこちら</h2>
+              <p className="mt-3 text-sm leading-relaxed text-stone-600">仕事の困りごとを、安藤に相談してみませんか。最初の1時間は無料です。</p>
+            </div>
+            <div className="mt-6 md:mt-0 flex shrink-0 flex-col gap-3">
+              <Link href="/ai" className="rounded-full bg-primary px-6 py-3 text-center text-sm font-bold text-white hover:bg-primary-dark">ホームページ・ネットショップの相談 →</Link>
+              <Link href="/ai/sns" className="rounded-full border border-primary px-6 py-3 text-center text-sm font-bold text-primary hover:bg-primary/5">SNS代行の相談 →</Link>
+            </div>
+          </div>
+        </section>
       </main>
 
       <Footer />

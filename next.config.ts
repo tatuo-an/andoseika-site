@@ -12,7 +12,7 @@ const CSP = [
   "font-src 'self' data:",
   // rondo.ando-seika.workers.dev は /newsletter.html のメール登録送信先(Rondo)
   "connect-src 'self' https://api.stripe.com https://m.stripe.network https://js.stripe.com https://syndication.twitter.com https://cdn.syndication.twimg.com https://rondo.ando-seika.workers.dev",
-  "frame-src https://js.stripe.com https://checkout.stripe.com https://hooks.stripe.com https://www.youtube-nocookie.com https://www.youtube.com https://platform.twitter.com https://syndication.twitter.com https://challenges.cloudflare.com",
+  "frame-src https://js.stripe.com https://checkout.stripe.com https://hooks.stripe.com https://www.youtube-nocookie.com https://www.youtube.com https://platform.twitter.com https://syndication.twitter.com https://www.threads.com https://challenges.cloudflare.com",
   "form-action 'self'",
   "frame-ancestors 'none'",
   "base-uri 'self'",

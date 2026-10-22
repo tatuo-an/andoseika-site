@@ -32,7 +32,7 @@ export default function ToolDemoPage() {
           <h2>いつもの作業を、聞かせてください。</h2>
           <p>業務ツール制作は1万円〜（税抜）。機能を絞った小さなツールから、必要な範囲でお見積もりします。</p>
           <a className="demo-primary" href="https://lin.ee/WfeFzfF" target="_blank" rel="noopener noreferrer">LINEで無料相談する（60分） <span aria-hidden="true">↗</span></a>
-          <Link className="demo-back" href="/ai#services">制作メニューと料金を見る</Link>
+          <Link className="demo-back" href="/ai#price">制作メニューと料金を見る</Link>
         </aside>
       </div>
       <footer className="demo-footer">AND U <span>仕事に合わせて、道具をつくる。</span><Link href="/privacy">プライバシーポリシー</Link></footer>

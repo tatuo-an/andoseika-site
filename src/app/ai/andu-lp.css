@@ -1,4 +1,38 @@
 /* All layout, typography and motion are scoped to this landing page. */
+.andu-lp .security-headline { text-wrap: initial; }
+.andu-lp main > .security-news { background: var(--green); color: #fff; }
+.andu-lp .security-news h2 { margin: 12px 0 20px; color: #fff; font-size: 26px; }
+.andu-lp .security-date { font-size: 13px; letter-spacing: .04em; }
+.andu-lp .security-news > p { max-width: 780px; font-size: 16px; line-height: 1.9; }
+.andu-lp .security-news > p + p { margin-top: 16px; }
+.andu-lp .security-source { display: flex; flex-wrap: wrap; gap: 8px 24px; margin-top: 20px; font-size: 14px; }
+.andu-lp .security-source a { display: inline-flex; align-items: center; min-height: 44px; text-decoration: underline; overflow-wrap: anywhere; }
+.andu-lp .security-news .security-source a { color: #fff; }
+.andu-lp .security-news a:focus-visible { outline-color: #fff; }
+.andu-lp .security-sp-break { display: none; }
+.andu-lp .security-intro { max-width: 760px; font-size: 20px; }
+.andu-lp .security-steps { display: grid; gap: 28px; list-style: none; margin: 36px 0; padding: 0; }
+.andu-lp .security-steps li { min-width: 0; border-top: 2px solid var(--green); padding-top: 20px; }
+.andu-lp .security-step-number { display: block; margin-bottom: 10px; color: var(--green); font-family: var(--font-outfit), sans-serif; font-size: 38px; font-weight: 500; }
+.andu-lp .security-steps h3 { margin-bottom: 12px; font-size: 21px; }
+.andu-lp .security-steps p { font-size: 16px; line-height: 1.9; }
+.andu-lp .security-scope { max-width: 880px; border-left: 4px solid var(--green); padding: 24px; margin: 32px auto; background: #fff; }
+.andu-lp .security-scope h3 { margin-bottom: 12px; font-size: 20px; }
+.andu-lp .security-scope p { font-size: 16px; line-height: 1.9; }
+.andu-lp .security-honesty { margin-top: 16px; }
+.andu-lp .security-caption { margin-top: 12px; text-align: center; font-size: 14px; }
+.andu-lp .security-price-note { margin: 28px 0; padding: 24px; border: 1px solid var(--rule); background: var(--pale-green); }
+.andu-lp .security-price-note h3 { margin-bottom: 10px; font-size: 21px; }
+.andu-lp .security-price-note p { font-size: 16px; line-height: 1.9; }
+.andu-lp .security-price-note p + p { margin-top: 14px; }
+@media (min-width: 900px) {
+  .andu-lp .security-steps { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 36px; }
+}
+@media (max-width: 400px) {
+  .andu-lp .security-headline { font-size: 26px; }
+  .andu-lp .security-scope, .andu-lp .security-price-note { padding: 18px; }
+  .andu-lp .security-sp-break { display: initial; }
+}
 .andu-lp p.service-price, .andu-lp .service-tile p.service-price { margin-top:16px; font-size:25px; line-height:1.5; font-weight:700; color:#1F5A40; font-variant-numeric:tabular-nums; }
 .andu-lp .service-list + .service-note { margin-top:16px; font-size:14px; color:#56615B; }
 .andu-lp .service-price span { display:inline-block; font-size:14px; font-weight:500; }

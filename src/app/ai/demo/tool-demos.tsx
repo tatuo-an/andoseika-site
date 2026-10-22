@@ -1,25 +1,21 @@
 "use client";
 
 import { useState } from "react";
-
-const yen = (value: number) => `${value.toLocaleString("ja-JP")}円`;
-const PAYROLL_SAMPLE = [
-  { name: "スタッフA", hours: "120", rate: "1400" },
-  { name: "スタッフB", hours: "88.5", rate: "1300" },
-  { name: "スタッフC", hours: "64", rate: "1200" },
-];
+import { PAYROLL_SAMPLE, money as yen, numberValue, payrollTotals } from "@/components/ai/demo-models";
 
 function validNumber(value: string, max: number, integer = false) {
-  const number = Number(value);
-  return value.trim() !== "" && Number.isFinite(number) && number >= 0 && number <= max && (!integer || Number.isInteger(number));
+  return numberValue(value, max, integer) !== null;
 }
 
-export function PayrollDemo() {
+export function PayrollDemo({ embedded = false }: { embedded?: boolean } = {}) {
+  const Heading = embedded ? "h4" : "h2";
+  const ToolbarHeading = embedded ? "h5" : "h3";
   const [rows, setRows] = useState(PAYROLL_SAMPLE);
   const [message, setMessage] = useState("まず、スタッフAの勤務時間を変えてみてください。");
-  const valid = rows.every(row => validNumber(row.hours, 744) && validNumber(row.rate, 100000, true));
-  const totalHours = rows.reduce((sum, row) => sum + Number(row.hours), 0);
-  const total = rows.reduce((sum, row) => sum + Math.round(Number(row.hours) * Number(row.rate)), 0);
+  const totals = payrollTotals(rows);
+  const valid = totals !== null;
+  const totalHours = totals?.hours ?? 0;
+  const total = totals?.amount ?? 0;
   function update(index: number, field: "hours" | "rate", value: string) {
     setRows(previous => previous.map((row, rowIndex) => rowIndex === index ? { ...row, [field]: value } : row));
     setMessage("入力した数字で、自動的に集計しています。");
@@ -27,11 +23,11 @@ export function PayrollDemo() {
   return (
     <section className="demo-section" id="payroll" aria-labelledby="payroll-title">
       <div className="demo-section-heading">
-        <div><p className="demo-number">DEMO 01</p><h2 id="payroll-title">勤務時間から、給与を集計。</h2><p>表の数字を変えると、スタッフごとの金額と合計が変わります。</p></div>
+        <div><p className="demo-number">給与集計</p><Heading id="payroll-title">勤務時間から、給与を集計。</Heading><p>表の数字を変えると、スタッフごとの金額と合計が変わります。</p></div>
         <span className="demo-sample-label">サンプルデータ</span>
       </div>
       <div className="demo-workspace">
-        <div className="demo-toolbar"><h3>今月の勤務集計</h3><button type="button" className="demo-secondary" onClick={() => { setRows(PAYROLL_SAMPLE); setMessage("最初のサンプルに戻しました。"); }}>サンプルに戻す</button></div>
+        <div className="demo-toolbar"><ToolbarHeading>今月の勤務集計</ToolbarHeading><button type="button" className="demo-secondary" onClick={() => { setRows(PAYROLL_SAMPLE); setMessage("最初のサンプルに戻しました。"); }}>サンプルに戻す</button></div>
         <div className="demo-table-scroll" role="region" aria-label="勤務集計の表" tabIndex={0}>
           <table className="demo-table payroll-table">
             <thead><tr><th scope="col">スタッフ</th><th scope="col">勤務時間</th><th scope="col">時給（円）</th><th scope="col">集計額</th></tr></thead>
@@ -47,7 +43,7 @@ export function PayrollDemo() {
             })}</tbody>
           </table>
         </div>
-        {!valid && <p className="demo-error" id="payroll-error" role="alert">勤務時間は0〜744、時給は0〜100,000の整数で入力してください。空欄がある間は合計を表示しません。</p>}
+        {!valid && <p className="demo-error" id="payroll-error" role="alert">勤務時間は0〜744（小数第2位まで）、時給は0〜100,000の整数で入力してください。空欄がある間は合計を表示しません。</p>}
         <div className="demo-total" aria-live="polite" aria-atomic="true"><div><span>3名の集計額</span><strong>{valid ? yen(total) : "入力を確認してください"}</strong></div><p>勤務時間の合計 <b>{valid ? `${Number(totalHours.toFixed(2)).toLocaleString("ja-JP")}時間` : "—"}</b></p></div>
         <p className="demo-feedback" role="status">{message}</p>
       </div>
@@ -66,7 +62,9 @@ const SALES_SAMPLE = [
 ];
 const STATUS_OPTIONS = ["未対応", "連絡済み", "相談中"];
 
-export function SalesDemo() {
+export function SalesDemo({ embedded = false }: { embedded?: boolean } = {}) {
+  const Heading = embedded ? "h4" : "h2";
+  const ToolbarHeading = embedded ? "h5" : "h3";
   const [rows, setRows] = useState(SALES_SAMPLE);
   const [query, setQuery] = useState("");
   const [industry, setIndustry] = useState("すべて");
@@ -76,7 +74,7 @@ export function SalesDemo() {
   const normalizedQuery = query.trim().normalize("NFKC").toLowerCase();
   const filtered = rows.filter(row => `${row.name} ${row.area} ${row.phone}`.normalize("NFKC").toLowerCase().includes(normalizedQuery) && (industry === "すべて" || row.industry === industry) && (status === "すべて" || row.status === status));
   function refresh() {
-    setRows(previous => [...previous.map(row => row.id === 1 ? { ...row, area: "北エリア", updated: "情報更新" } : row), { id: 6, name: "サンプル食堂F", industry: "飲食", area: "北エリア", phone: "000-0000-0006", status: "未対応", updated: "新着" }]);
+    setRows(previous => previous.some(row => row.id === 6) ? previous : [...previous.map(row => row.id === 1 ? { ...row, area: "北エリア", updated: "情報更新" } : row), { id: 6, name: "サンプル食堂F", industry: "飲食", area: "北エリア", phone: "000-0000-0006", status: "未対応", updated: "新着" }]);
     setRefreshed(true);
     setMessage("更新の見本：新しい営業先を1件追加し、商店Aのエリアを更新しました。対応状況は引き継いでいます。外部サイトへの接続はしていません。");
   }
@@ -84,11 +82,11 @@ export function SalesDemo() {
   return (
     <section className="demo-section" id="sales" aria-labelledby="sales-title">
       <div className="demo-section-heading">
-        <div><p className="demo-number">DEMO 02</p><h2 id="sales-title">営業先を探して、対応を記録。</h2><p>電話番号をひとつの一覧に。情報が増えても、対応の記録はそのまま。</p></div>
+        <div><p className="demo-number">営業先管理</p><Heading id="sales-title">営業先を探して、対応を記録。</Heading><p>電話番号をひとつの一覧に。情報が増えても、対応の記録はそのまま。</p></div>
         <span className="demo-sample-label">架空の店舗・電話番号</span>
       </div>
       <div className="demo-workspace">
-        <div className="demo-toolbar"><div><h3>営業先リスト</h3><p>{rows.length}件登録 · 未対応 {rows.filter(row => row.status === "未対応").length}件</p></div><div className="demo-button-group"><button className="demo-secondary" type="button" onClick={() => { setRows(SALES_SAMPLE); clearFilters(); setRefreshed(false); setMessage("最初のサンプルに戻しました。"); }}>サンプルに戻す</button><button className="demo-primary" type="button" disabled={refreshed} onClick={refresh}>{refreshed ? "更新の見本を反映済み" : "情報更新を試す"}</button></div></div>
+        <div className="demo-toolbar"><div><ToolbarHeading>営業先リスト</ToolbarHeading><p>{rows.length}件登録 · 未対応 {rows.filter(row => row.status === "未対応").length}件</p></div><div className="demo-button-group"><button className="demo-secondary" type="button" onClick={() => { setRows(SALES_SAMPLE); clearFilters(); setRefreshed(false); setMessage("最初のサンプルに戻しました。"); }}>サンプルに戻す</button><button className="demo-primary" type="button" disabled={refreshed} onClick={refresh}>{refreshed ? "更新の見本を反映済み" : "情報更新を試す"}</button></div></div>
         <div className="demo-filters">
           <label htmlFor="sales-query">名前・エリア・電話番号<input id="sales-query" type="search" value={query} placeholder="例：商店、東エリア" onChange={event => setQuery(event.target.value)} /></label>
           <label htmlFor="sales-industry">業種<select id="sales-industry" value={industry} onChange={event => setIndustry(event.target.value)}>{["すべて", "小売", "飲食", "製造"].map(value => <option key={value}>{value}</option>)}</select></label>

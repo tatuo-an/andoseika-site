@@ -1,0 +1,79 @@
+/* Local changes: preserve the published page's palette, fonts and outer layout. */
+.andu-lp .price-groups { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:24px; margin-top:28px; align-items:start; }
+.andu-lp .price-group { min-width:0; padding:24px; background:#fff; border:1px solid #CFD3C8; }
+.andu-lp .price-group h3 { margin-bottom:20px; font-size:21px; }
+.andu-lp .price-rows > div { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:12px; border-top:1px solid #CFD3C8; padding:16px 0; align-items:start; }
+.andu-lp .price-rows dt { min-width:0; font-size:17px; font-weight:700; }
+.andu-lp .price-rows dd { color:#1F5A40; font-size:20px; font-weight:700; font-variant-numeric:tabular-nums; white-space:nowrap; }
+.andu-lp .price-rows small { display:block; margin-top:6px; color:#56615B; font-size:15px; font-weight:400; line-height:1.8; }
+.andu-lp .price-media-note { font-size:15px; color:#56615B; line-height:1.8; margin-top:12px; }
+.andu-lp .price-detail-link { display:flex; gap:12px; align-items:center; min-height:48px; padding-top:12px; margin-top:12px; font-weight:700; font-size:16px; }
+.andu-lp .price-conditions { margin-top:24px; padding:16px 0; border-block:1px solid #CFD3C8; }
+.andu-lp .price-conditions summary,.andu-lp .work-screen-gallery summary { min-height:44px; padding:8px 0; font-size:17px; font-weight:700; cursor:pointer; }
+.andu-lp .price-conditions ul { display:grid; gap:12px; padding:16px 0 0 1.3em; list-style:disc; font-size:16px; }
+.andu-lp .price-conditions summary:focus-visible,.andu-lp .work-screen-gallery summary:focus-visible { outline:3px solid #1F5A40; outline-offset:4px; }
+.andu-lp .inline-tool-list { display:grid; gap:24px; margin-top:32px; }
+.andu-lp .inline-tool-list > div { border-top:1px solid #CFD3C8; padding-top:20px; min-width:0; }
+.andu-lp .inline-tool-list h4 { font-size:20px; font-weight:700; margin-bottom:8px; }
+.andu-lp .inline-tool-list > div > p { font-size:17px; }
+.andu-lp .work-screen-gallery { margin-top:24px; }
+.andu-lp .inline-demo { margin-top:24px; border:1px solid #CFD3C8; background:#fff; border-radius:6px; overflow-wrap:anywhere; }
+.andu-lp .inline-demo > summary { display:flex; align-items:center; justify-content:space-between; gap:20px; min-height:56px; padding:16px 20px; font-size:17px; font-weight:700; color:#1F5A40; cursor:pointer; list-style:none; }
+.andu-lp .inline-demo > summary::-webkit-details-marker { display:none; }
+.andu-lp .inline-demo > summary:hover { background:#F3F4EF; }
+.andu-lp .inline-demo > summary:focus-visible { outline:3px solid #1F5A40; outline-offset:4px; }
+.andu-lp .inline-demo-indicator { position:relative; width:16px; height:16px; flex-shrink:0; }
+.andu-lp .inline-demo-indicator::before,.andu-lp .inline-demo-indicator::after { content:''; position:absolute; background:currentColor; }
+.andu-lp .inline-demo-indicator::before { left:0; top:7px; width:16px; height:2px; }
+.andu-lp .inline-demo-indicator::after { top:0; left:7px; height:16px; width:2px; }
+.andu-lp .inline-demo[open] > summary { border-bottom:1px solid #CFD3C8; }
+.andu-lp .inline-demo[open] .inline-demo-indicator::after { display:none; }
+.andu-lp .inline-demo-body { padding:24px; background:#F3F4EF; font-size:17px; min-width:0; line-height:1.8; }
+.andu-lp .inline-demo-notice { margin-bottom:24px; font-size:15px; color:#56615B; max-width:48em; }
+.andu-lp .inline-demo .demo-section { padding-top:0; }
+.andu-lp .inline-demo :where(h4,h5) { font-weight:700; line-height:1.6; margin:0; }
+.andu-lp .inline-demo h4 { font-size:22px; }
+.andu-lp .inline-demo h5 { font-size:18px; }
+.andu-lp .inline-demo .demo-section-heading { display:block; }
+.andu-lp .inline-demo .demo-section-heading h4 { margin-bottom:12px; }
+.andu-lp .inline-demo .demo-sample-label { display:inline-block; margin-top:12px; font-size:14px; }
+.andu-lp .inline-demo .demo-footnote,.andu-lp .inline-demo .demo-use-case { font-size:15px; line-height:1.8; }
+.andu-lp .inline-demo :where(input,select,textarea) { width:100%; min-width:0; min-height:44px; padding:10px 12px; border:1px solid #7E8B82; border-radius:4px; background:#fff; color:#17211C; font:inherit; font-size:17px; }
+.andu-lp .inline-demo input[aria-invalid=true] { border:2px solid #963C27; }
+.andu-lp .inline-demo textarea { resize:vertical; }
+.andu-lp .inline-demo :where(button,a) { min-height:44px; font-size:16px; line-height:1.6; }
+.andu-lp .inline-demo .inline-view-buttons button[aria-pressed=true] { color:#fff; background:#1F5A40; }
+.andu-lp .inline-demo button:disabled { opacity:.7; }
+.andu-lp .inline-workspace { display:grid; gap:20px; min-width:0; }
+.andu-lp .inline-toolbar { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:16px; }
+.andu-lp .inline-fields { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr)); gap:16px; }
+.andu-lp .inline-fields label,.andu-lp .inline-label { display:grid; gap:6px; min-width:0; font-size:16px; }
+.andu-lp .inline-label { max-width:100%; }
+.andu-lp .inline-item-list { display:grid; gap:16px; }
+.andu-lp .inline-item { display:grid; gap:16px; padding:20px; background:#fff; border:1px solid #CFD3C8; min-width:0; }
+.andu-lp .inline-split { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; }
+.andu-lp .inline-view-buttons { display:flex; flex-wrap:wrap; gap:8px; }
+.andu-lp .inline-check { display:flex; align-items:center; gap:12px; font-size:17px; min-height:44px; }
+.andu-lp .inline-demo input[type=checkbox] { width:24px; min-height:24px; height:24px; accent-color:#1F5A40; }
+.andu-lp .inline-result { display:flex; flex-wrap:wrap; justify-content:space-between; gap:12px; font-size:17px; font-variant-numeric:tabular-nums; }
+.andu-lp .inline-result strong { font-size:24px; color:#1F5A40; }
+.andu-lp .inline-totals { display:grid; gap:12px; font-size:18px; font-variant-numeric:tabular-nums; }
+.andu-lp .inline-preview-text { white-space:pre-wrap; }
+.andu-lp .inline-footnote { color:#56615B; border-top:1px solid #CFD3C8; padding-top:16px; font-size:15px; }
+.andu-lp .inline-notification { padding:16px; border-left:3px solid #1F5A40; background:#E4ECE5; }
+.andu-lp .inline-muted { color:#56615B; font-size:16px; font-weight:400; }
+@media (max-width:760px) {
+ .andu-lp .price-groups { grid-template-columns:minmax(0,1fr); }
+ .andu-lp .price-group { padding:20px 16px; }
+ .andu-lp .price-rows > div { grid-template-columns:minmax(0,1fr) auto; gap:8px; }
+ .andu-lp .price-rows dd { font-size:18px; }
+ .andu-lp .inline-demo > summary { padding:16px; }
+ .andu-lp .inline-demo-body { padding:20px 16px; }
+ .andu-lp .inline-item { padding:16px; }
+ .andu-lp .inline-demo .demo-toolbar { padding:16px; flex-wrap:wrap; }
+ .andu-lp .inline-demo .demo-filters { padding-inline:16px; }
+ .andu-lp .inline-demo .demo-total { padding:16px; }
+ .andu-lp .inline-demo .demo-button-group { width:100%; }
+ .andu-lp .inline-demo .demo-button-group button { flex:1; }
+}
+@media (prefers-reduced-motion:reduce) { .andu-lp .inline-demo * { transition:none!important; scroll-behavior:auto!important; } }
