@@ -12,7 +12,7 @@ export function SiteSafetyCheck() {
         <p>公開情報から状態を確認し、気になる点はAND Uに相談できます。サイト全体の安全性を保証する点検ではありません。</p>
       </div>
       <a className="site-check-migration" href="#wordpress-migration-price">
-        <span>AND Uに引っ越しを頼む<small>移行の料金・ご相談について</small></span>
+        <span>AND Uに引っ越しを頼む<small>基本3万円〜／Cloudflare標準10万円（税抜）</small></span>
         <span aria-hidden="true">↓</span>
       </a>
     </aside>

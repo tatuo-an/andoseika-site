@@ -254,18 +254,18 @@ export default function AiPage() {
       <section className="price price-compact" id="price">
         <div className="section-heading"><p className="section-label" aria-hidden="true">PRICE</p><h2>料金について</h2></div>
         <p className="price-lead">移行・管理は、今の機能と必要な作業を確認して見積もります。<strong>表示はすべて税抜</strong>です。</p>
-        <div className="security-price-note"><h3>移行も、制作も。必要なところから。</h3><p>ウェブサーバーの移行は下記の料金から。Cloudflareへの移行可否や、残す機能を確認してお見積もりします。保守管理は作業・回数を決めて別にご契約いただく形です。</p><p>無料相談は60分の状況整理です。脆弱性診断、侵入調査、緊急復旧、24時間の監視は含みません。必要な場合は専門の対応先への相談をご案内します。</p></div>
+        <div className="security-price-note" id="wordpress-migration-price"><h3>移行の基本対応は3万円〜。<br />Cloudflare移行の標準プランは10万円。</h3><p>いずれも税抜です。標準プランは、現状の確認から移行・設定・公開確認まで。サイトの機能と作業範囲を確認してお見積もりします。メール・予約・決済などの引き継ぎ範囲も事前に決めます。</p><p>外部サービス利用料と公開後の保守管理は別途。保守管理は作業・回数を決めてご契約いただく形です。</p><p>無料相談は60分の状況整理です。脆弱性診断、侵入調査、緊急復旧、24時間の監視は含みません。必要な場合は専門の対応先への相談をご案内します。</p></div>
         <div className="price-groups">
           <div className="price-group price-once">
             <p className="price-type">単発・買い切り</p>
             <h3>作るとき · 1回だけ</h3>
             <dl className="price-rows">
-              <div id="wordpress-migration-price"><dt>ウェブサーバーの移行<small>WordPressからの引っ越し・Cloudflareへの移行など</small></dt><dd>3万円〜</dd></div>
+              <div><dt>ウェブサーバー移行の基本対応<small>必要な作業と対応範囲に応じてお見積もり</small></dt><dd>3万円〜</dd></div>
               <div><dt>ホームページの制作</dt><dd>3万円〜</dd></div>
               <div><dt>ネットショップの開設</dt><dd>3万円〜</dd></div>
               <div><dt>LINE公式アカウントの構築</dt><dd>3万円〜</dd></div>
             </dl>
-            <div className="price-bundle"><p>上の4つを、まとめてご依頼なら</p><p className="price-bundle-before">個別の最低目安：3万円 × 4つ ＝ 12万円〜</p><h4>4つ合わせて<br /><strong>10万円</strong>で買い切り</h4><small>税抜。制作・設定の範囲はご契約前に決めます。外部サービス利用料・公開後の保守管理は別途。</small></div>
+            <div className="price-bundle"><p>上の基本メニュー4つを、まとめてご依頼なら</p><p className="price-bundle-before">個別の最低目安：3万円 × 4つ ＝ 12万円〜</p><h4>4つ合わせて<br /><strong>10万円</strong>で買い切り</h4><small>税抜。Cloudflare移行の標準プランは別メニューです。制作・設定の範囲はご契約前に決めます。外部サービス利用料・公開後の保守管理は別途。</small></div>
             <h4 className="price-other-title">こちらも単発で頼めます</h4>
             <dl className="price-rows">
               <div><dt>業務ツールの制作<small>給与の集計・営業先リスト・注文の転記など。<br /><a href="#tool-examples">道具・デモを見る →</a></small></dt><dd>1万円〜</dd></div>
@@ -287,7 +287,7 @@ export default function AiPage() {
           <summary>料金に含まれる範囲と、別にかかるもの</summary>
           <ul>
             <li>制作はページ数・商品数・設定・直しの回数を確認して、見積もりに含む範囲を書きます。業務ツールの連携・定期更新・保守、予約の仕組みなどは内容別のお見積もりです。</li>
-            <li>4つまとめて10万円の対象は、ウェブサーバーの移行・ホームページの制作・ネットショップの開設・LINE公式アカウントの構築です。SNS運用は含みません。SNS買い切りはアカウント設計、公式LINE構築、毎日の投稿が回る仕組みと使い方の説明まで。投稿文・写真の準備や予約の変更方法もご案内します。買い切り後の修正は都度お見積もりです。</li>
+            <li>4つまとめて10万円の対象は、ウェブサーバー移行の基本対応・ホームページの制作・ネットショップの開設・LINE公式アカウントの構築です。Cloudflare移行の標準プランとは別メニューで、SNS運用も含みません。SNS買い切りはアカウント設計、公式LINE構築、毎日の投稿が回る仕組みと使い方の説明まで。投稿文・写真の準備や予約の変更方法もご案内します。買い切り後の修正は都度お見積もりです。</li>
             <li>月額の更新・手直しは、更新、控えの確認、文章・写真の差し替え。作業と回数を見積もりに書きます。SNS月額は3か月を1つの区切りとし、新規アカウント開設が必要な場合のみ初期設定費＋3万円です。</li>
             <li>サーバー・ドメイン・投稿やLINE配信などの外部サービス利用料が必要な場合は、ご契約前に内容と金額をお伝えします。消費税は別途かかります。</li>
           </ul>
