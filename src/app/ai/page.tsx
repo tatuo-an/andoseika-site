@@ -254,7 +254,7 @@ export default function AiPage() {
       <section className="price price-compact" id="price">
         <div className="section-heading"><p className="section-label" aria-hidden="true">PRICE</p><h2>料金について</h2></div>
         <p className="price-lead">移行・管理は、今の機能と必要な作業を確認して見積もります。<strong>表示はすべて税抜</strong>です。</p>
-        <div className="security-price-note" id="wordpress-migration-price"><h3>移行の基本対応は3万円〜。<br />Cloudflare移行の標準プランは10万円。</h3><p>いずれも税抜です。標準プランは、現状の確認から移行・設定・公開確認まで。サイトの機能と作業範囲を確認してお見積もりします。メール・予約・決済などの引き継ぎ範囲も事前に決めます。</p><p>外部サービス利用料と公開後の保守管理は別途。保守管理は作業・回数を決めてご契約いただく形です。</p><p>無料相談は60分の状況整理です。脆弱性診断、侵入調査、緊急復旧、24時間の監視は含みません。必要な場合は専門の対応先への相談をご案内します。</p></div>
+        <div className="security-price-note" id="wordpress-migration-price"><h3>移行の基本対応は3万円〜。<br />Cloudflare移行の標準プランは10万円。</h3><p>いずれも税抜です。標準プランは、現状の確認から移行・設定・公開確認まで。サイトの機能と作業範囲を確認してお見積もりします。メール・予約・決済などの引き継ぎ範囲も事前に決めます。</p><p>引っ越し・点検の作業費は、最初に一度の初期費用として保守とは別になります。無料のサイト点検キットの利用料はかかりません。</p><p>外部サービス利用料も別途です。公開後の小さな修正は、下の<a href="#maintenance-plan">保守プラン</a>をご覧ください。</p><p>無料相談は60分の状況整理です。脆弱性診断、侵入調査、緊急復旧、24時間の監視は含みません。必要な場合は専門の対応先への相談をご案内します。</p></div>
         <div className="price-groups">
           <div className="price-group price-once">
             <p className="price-type">単発・買い切り</p>
@@ -275,8 +275,15 @@ export default function AiPage() {
           <div className="price-group price-recurring">
             <p className="price-type">継続・月額</p>
             <h3>運用を頼むとき · 月額</h3>
+            <div id="maintenance-plan" className="maintenance-plan">
+              <dl className="price-rows"><div><dt>保守<small>小さな修正・1プラン</small></dt><dd>10,000円</dd></div></dl>
+              <div className="maintenance-scope">
+                <p>LINEグループへ、依頼はいつでも送れます。修正は<strong>週1回まとめて（月4回）</strong>行います。即時対応ではありません。</p>
+                <p>1回の上限は<strong>30分か3件まで</strong>。文字・写真の差し替え、お知らせ更新などの小さな修正が対象です。</p>
+                <p>ページの追加・作り直しなど大きな作業は別見積。引っ越し・点検の初期費用は、保守に含みません。</p>
+              </div>
+            </div>
             <dl className="price-rows">
-              <div><dt>更新・手直し<small>必要な場合のみ</small></dt><dd>1万〜3万円</dd></div>
               {SNS_PLANS.map(plan => <div key={plan.key}><dt>SNS {plan.name}<small>{plan.media}（{plan.key === "full" ? "最大" : "計"}{plan.total}媒体）<br />{plan.frequency}{plan.key === "standard" && "・LINEを選ぶ場合は週1回程度"}</small></dt><dd>{plan.price}</dd></div>)}
             </dl>
             <p className="price-media-note">ライトは{BASIC_MEDIA.join("・")}の3媒体。スタンダードはその3媒体＋希望2媒体の計5媒体、おまかせフルは基本3媒体を含めて最大10媒体です。追加は{EXTRA_MEDIA}から、対応可否を確認して選びます。LINE配信も選んだ媒体数に含みます。</p>
@@ -288,7 +295,8 @@ export default function AiPage() {
           <ul>
             <li>制作はページ数・商品数・設定・直しの回数を確認して、見積もりに含む範囲を書きます。業務ツールの連携・定期更新・保守、予約の仕組みなどは内容別のお見積もりです。</li>
             <li>4つまとめて10万円の対象は、ウェブサーバー移行の基本対応・ホームページの制作・ネットショップの開設・LINE公式アカウントの構築です。Cloudflare移行の標準プランとは別メニューで、SNS運用も含みません。SNS買い切りはアカウント設計、公式LINE構築、毎日の投稿が回る仕組みと使い方の説明まで。投稿文・写真の準備や予約の変更方法もご案内します。買い切り後の修正は都度お見積もりです。</li>
-            <li>月額の更新・手直しは、更新、控えの確認、文章・写真の差し替え。作業と回数を見積もりに書きます。SNS月額は3か月を1つの区切りとし、新規アカウント開設が必要な場合のみ初期設定費＋3万円です。</li>
+            <li>サイトの保守は上記の小さな修正が対象です。ページの追加・作り直し、引っ越し・点検の作業は含みません。無料のサイト点検キットはそのまま無料で使えます。</li>
+            <li>SNS月額は3か月を1つの区切りとし、新規アカウント開設が必要な場合のみ初期設定費＋3万円です。</li>
             <li>サーバー・ドメイン・投稿やLINE配信などの外部サービス利用料が必要な場合は、ご契約前に内容と金額をお伝えします。消費税は別途かかります。</li>
           </ul>
         </details>

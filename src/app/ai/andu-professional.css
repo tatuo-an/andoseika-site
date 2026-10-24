@@ -90,6 +90,9 @@
 .andu-lp.andu-professional .price-type { color: #756449; }
 .andu-lp.andu-professional .price-rows > div { border-color: var(--rule); padding-block: 20px; }
 .andu-lp.andu-professional .price-rows dd { color: var(--ink); font-size: 21px; }
+.andu-lp.andu-professional .maintenance-plan { scroll-margin-top: 112px; }
+.andu-lp.andu-professional .maintenance-scope { margin: 0 0 24px; font-size: 14px; line-height: 1.9; }
+.andu-lp.andu-professional .maintenance-scope p + p { margin-top: 12px; }
 .andu-lp.andu-professional .price-bundle { background: var(--dark); padding: 28px 20px; }
 .andu-lp.andu-professional .price-bundle strong { color: #fff; font-family: var(--font-outfit), var(--font-zen-kaku), sans-serif; }
 .andu-lp.andu-professional .cta-band { background: var(--dark); padding-block: 40px; }
