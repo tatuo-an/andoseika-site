@@ -1,8 +1,8 @@
+import { AnduHeader, AnduFooter, AnduSocialProof } from "@/components/ai/AnduChrome";
+import "../andu-lp.css";
+import "../andu-professional.css";
 import { BASIC_MEDIA, EXTRA_MEDIA, SNS_PLANS } from "@/lib/andu-plans";
 import { AiTimeSupport } from "@/components/ai/AiTimeSupport";
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
-import { MobileStickyCta } from "@/components/ai/MobileStickyCta";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -85,8 +85,6 @@ const LECTURE_VIDEOS: { title: string; youtubeId: string }[] = [
 ];
 
 const [FIRST_LECTURE_VIDEO, ...REST_LECTURE_VIDEOS] = LECTURE_VIDEOS;
-
-const HERO_TAGS = ["鳥取の店舗向け", "写真を送るだけ", "SNS投稿とLINE配信まで"];
 
 const WORRY_ITEMS = [
     "営業が終わってから、今日の投稿を考える気力が残っていない",
@@ -174,7 +172,7 @@ function BigCta({ label = "無料相談に申し込む" }: { label?: string }) {
         <div className="text-center">
             <Link
                 href="/contact/personal?subject=sns-line"
-                className="inline-flex items-center bg-primary hover:bg-primary-dark text-white font-bold py-3.5 px-8 rounded-full transition-all transform hover:scale-105 shadow-lg"
+                className="cta"
             >
                 {label}
                 <ArrowRight className="ml-2 h-4 w-4" />
@@ -275,101 +273,20 @@ function PlanCompareTable({ title, rows }: { title: string; rows: PlanRow[] }) {
 
 export default function AiConsultingPage() {
     return (
-        <div className="min-h-screen flex flex-col font-sans bg-stone-50">
-            <Header />
+        <div className="andu-lp andu-professional andu-sns">
+            <AnduHeader current="sns" />
 
             <main className="flex-1">
-                {/* 1. ヒーロー（なぜ：思想＋CTA／写真は右カラム・md以上で2カラム） */}
-                <section className="relative py-16 md:py-24 bg-stone-100 overflow-hidden">
-                    <div className="absolute inset-0 opacity-5 bg-[radial-gradient(#444_1px,transparent_1px)] [background-size:16px_16px]"></div>
-                    <div className="container mx-auto px-4 md:px-6 relative z-10">
-                        <div className="max-w-5xl mx-auto grid md:grid-cols-2 md:gap-14 items-center">
-                            {/* 左: コピー＋CTA */}
-                            <div className="text-center md:text-left space-y-5">
-                                <span className="text-stone-500 font-bold tracking-widest uppercase text-sm">
-                                    AND U — SNS運用代行 × 公式LINE構築
-                                </span>
-                                <h1 className="text-3xl md:text-4xl font-bold text-stone-900 leading-[1.2] font-heading">
-                                    いいものを作っているのに、知られていない。
-                                    <br className="hidden md:block" />
-                                    それが一番もったいないと思っています。
-                                </h1>
-
-                                <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
-                                    {HERO_TAGS.map((tag) => (
-                                        <span
-                                            key={tag}
-                                            className="inline-flex items-center rounded-full border border-stone-300 bg-white px-3 py-1 text-sm font-medium text-stone-600"
-                                        >
-                                            {tag}
-                                        </span>
-                                    ))}
-                                </div>
-
-                                <p className="text-stone-700 text-base md:text-lg leading-relaxed">
-                                    写真を送るだけ。SNSと公式LINEは、ぜんぶこちらで回します。
-                                </p>
-                                <p className="text-stone-600 text-sm leading-relaxed">
-                                    安藤（ANDO）の名前には、最初から「AND」が入っています。あなたのお店と、一緒に。それでAND
-                                    Uです。
-                                </p>
-
-                                <div className="pt-2">
-                                    <div className="flex justify-center md:justify-start">
-                                        <Link
-                                            href="/contact/personal?subject=sns-line"
-                                            className="inline-flex items-center bg-primary hover:bg-primary-dark text-white font-bold py-4 px-8 rounded-full transition-all transform hover:scale-105 shadow-lg"
-                                        >
-                                            無料相談に申し込む
-                                            <ArrowRight className="ml-2 h-5 w-5" />
-                                        </Link>
-                                    </div>
-                                    <p className="text-stone-600 text-sm mt-3">
-                                        60分・オンライン可・売り込みはしません
-                                    </p>
-                                </div>
-                            </div>
-
-                            {/* 右: 顔写真＋実績のちいさな予告（md以上）／モバイルはCTAの下に積む */}
-                            <div className="mt-10 md:mt-0">
-                                <div className="flex items-center gap-4 bg-white rounded-2xl p-4 border border-stone-200 shadow-sm">
-                                    <div className="relative w-20 h-20 rounded-full overflow-hidden flex-shrink-0 bg-stone-100">
-                                        <Image
-                                            src="/images/about/founders.jpg"
-                                            alt="AND U運営責任者 安藤匡志"
-                                            fill
-                                            priority
-                                            className="object-cover"
-                                        />
-                                    </div>
-                                    <div>
-                                        <p className="font-bold text-stone-900">安藤 匡志</p>
-                                        <p className="text-sm text-stone-600">
-                                            養蜂家 / 鳥取の青果卸「安藤青果」運営責任者
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <div className="mt-4 grid grid-cols-2 gap-3">
-                                    <div className="bg-white rounded-2xl p-4 text-center border border-stone-200 shadow-sm">
-                                        <p className="font-heading font-bold text-primary text-2xl">
-                                            13,923<span className="text-sm text-stone-700 ml-0.5">人</span>
-                                        </p>
-                                        <p className="text-sm text-stone-500 mt-1">Xフォロワー</p>
-                                    </div>
-                                    <div className="bg-white rounded-2xl p-4 text-center border border-stone-200 shadow-sm">
-                                        <p className="font-heading font-bold text-primary text-2xl">
-                                            1.4万<span className="text-sm text-stone-700 ml-0.5">いいね</span>
-                                        </p>
-                                        <p className="text-sm text-stone-500 mt-1">Threads最高記録</p>
-                                    </div>
-                                </div>
-                                <p className="text-stone-600 text-sm text-center mt-3">
-                                    この運用を、あなたのお店の分まで代行します。
-                                </p>
-                            </div>
-                        </div>
+                <section className="hero sns-hero" id="top">
+                    <div className="hero-text">
+                        <p className="eyebrow">鳥取のお店の、SNS運用サポート</p>
+                        <p className="hero-overline" aria-hidden="true">DAILY SNS SUPPORT</p>
+                        <h1 className="security-headline">毎日の投稿、しんどくないですか。</h1>
+                        <p className="hero-lead">営業のあとに投稿を考えなくて大丈夫です。写真を送るだけで、毎日の投稿は僕が代わりにやります。</p>
+                        <AnduSocialProof />
+                        <p className="hero-actions"><a className="cta" href="https://lin.ee/WfeFzfF" target="_blank" rel="noopener noreferrer">LINEで無料相談する（60分）</a></p>
                     </div>
+                    <figure className="sns-hero-photo"><Image src="/images/ai/ando-beekeeping.jpg" alt="巣板を持つ安藤匡志" width={1280} height={1280} priority /><figcaption>安藤 匡志 / 安藤青果・AND U</figcaption></figure>
                 </section>
                 <div id="hero-end-sentinel" />
 
@@ -377,9 +294,7 @@ export default function AiConsultingPage() {
                 <section className="py-16 md:py-20 bg-white">
                     <div className="container mx-auto px-4 md:px-6 max-w-3xl">
                         <div className="text-center mb-8">
-                            <h2 className="text-2xl md:text-3xl font-bold text-stone-900 font-heading">
-                                こんな夜、ありませんか。
-                            </h2>
+                            <div className="section-heading"><p className="section-label" aria-hidden="true">CHECK</p><h2>こんな夜、ありませんか。</h2></div>
                         </div>
 
                         <ul className="grid gap-3 md:grid-cols-2">
@@ -400,13 +315,22 @@ export default function AiConsultingPage() {
                     </div>
                 </section>
 
+                <section className="works" id="works">
+                    <div className="section-heading"><p className="section-label" aria-hidden="true">WORKS</p><h2>お客さんの仕事の記録</h2></div>
+                    <article className="work">
+                        <p className="work-client">某ラーメン店さま</p><h3>SNSの投稿を、お店の代わりに。</h3>
+                        <p className="work-body">Threadsの運用を担当しています。美容室のSNSもお受けしています。</p>
+                        <div className="work-shots">
+                            <figure className="phone-shot"><Image src="/images/ai/matome/threads_ramen_m2.jpg" alt="ラーメン店のThreadsプロフィール" width={860} height={1520} /><figcaption>プロフィール</figcaption></figure>
+                            <figure className="phone-shot"><Image src="/images/ai/matome/real_threads_post_m2.jpg" alt="ラーメン店のThreads投稿" width={860} height={1600} /><figcaption>投稿の実物</figcaption></figure>
+                        </div>
+                    </article>
+                </section>
                 {/* 3. 証拠（なに：実演販売。実物のスクショと数字を1本のカードに一体化） */}
                 <section className="py-16 md:py-20 bg-stone-50">
                     <div className="container mx-auto px-4 md:px-6 max-w-2xl">
                         <div className="text-center mb-8">
-                            <h2 className="text-2xl md:text-3xl font-bold text-stone-900 font-heading mb-6">
-                                まず、自分の店で毎日やっています。
-                            </h2>
+                            <div className="section-heading"><p className="section-label" aria-hidden="true">OUR SHOP</p><h2>自分のお店で続けていること。</h2></div>
                             <p className="text-stone-700 leading-relaxed text-left md:text-center">
                                 デモではなく実物です。鳥取で農業と養蜂をやっている当方自身が、閉店後の1時間をスマホとにらめっこせずに過ごせる毎日を、先に体験しています。
                             </p>
@@ -441,7 +365,7 @@ export default function AiConsultingPage() {
                             </div>
                         </div>
 
-                        {/* 実物その2: Threadsでバズった投稿。739人の解説つき */}
+                        {/* 実物その2: Threadsの投稿と2026年10月26日のフォロワー数 */}
                         <div className="mx-auto max-w-md bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden mt-8">
                             <div className="p-6 md:p-8 flex justify-center bg-stone-50">
                                 <div className="w-[220px] rounded-2xl border-[6px] border-stone-900 shadow-xl overflow-hidden bg-stone-900">
@@ -470,19 +394,19 @@ export default function AiConsultingPage() {
 
                                 <div className="border-t border-stone-100 mt-6 pt-6 text-center">
                                     <p className="text-stone-600 text-sm mb-2">
-                                        この投稿を出したとき、Threadsのフォロワーは
+                                        Threadsのフォロワー（2026年10月26日）
                                     </p>
                                     <p className="font-heading font-bold text-primary text-4xl md:text-5xl">
-                                        739<span className="text-lg text-stone-800 ml-1">人</span>
+                                        76人から1,869<span className="text-lg text-stone-800 ml-1">人</span>
                                     </p>
                                     <p className="text-stone-700 text-sm md:text-base mt-4 leading-relaxed">
-                                        フォロワーが少なくても、中身と仕組みがあれば届きます。「うちはフォロワーがいないから」で終わらせなくて大丈夫です。
+                                        フォロワーが少なくても、中身と仕組みがあれば届きます。「自分のお店はフォロワーがいないから」で終わらせなくて大丈夫です。
                                     </p>
                                 </div>
                             </div>
                         </div>
 
-                        {/* 実物その3: Xプロフィール。実測13,923人（画面表示は1.3万）を実物で裏づけ */}
+                        {/* 実物その3: Xプロフィール。実測13,824人（画面表示は1.3万）を実物で裏づけ */}
                         <div className="mx-auto max-w-md bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden mt-8">
                             <div className="p-6 md:p-8 flex justify-center bg-stone-50">
                                 <div className="w-full rounded-2xl border-[6px] border-stone-900 shadow-xl overflow-hidden bg-stone-900">
@@ -500,10 +424,10 @@ export default function AiConsultingPage() {
 
                             <div className="p-6 md:p-8 border-t border-stone-100 text-center">
                                 <p className="font-heading font-bold text-primary text-4xl md:text-5xl">
-                                    13,923<span className="text-lg text-stone-800 ml-1">人</span>
+                                    13,824<span className="text-lg text-stone-800 ml-1">人</span>
                                 </p>
                                 <p className="text-stone-600 text-sm mt-2">
-                                    X（旧Twitter）のフォロワー・2026年8月時点
+                                    Xのフォロワー（2026年10月26日）
                                 </p>
                             </div>
                         </div>
@@ -526,7 +450,7 @@ export default function AiConsultingPage() {
                         </div>
 
                         <p className="text-stone-700 leading-relaxed mt-10 text-left md:text-center max-w-xl mx-auto">
-                            現在、地元のラーメン店と美容室のSNS運用を実際に担当しています。
+                            掲載している数字と画面は、自分のお店の運用記録です。お客さんの成果を示すものではありません。
                         </p>
 
                         {/* 差し込み予定: クライアント実績データ（本人確認済みの実数字が出たら追記。未検証の間は空欄のまま）
@@ -542,9 +466,7 @@ export default function AiConsultingPage() {
                 <section className="py-16 md:py-20 bg-white">
                     <div className="container mx-auto px-4 md:px-6 max-w-4xl">
                         <div className="text-center mb-8 max-w-2xl mx-auto">
-                            <h2 className="text-2xl md:text-3xl font-bold text-stone-900 font-heading mb-6">
-                                写真を送るだけ。あとはこちらで回します。
-                            </h2>
+                            <div className="section-heading"><p className="section-label" aria-hidden="true">SERVICE</p><h2>写真を送るだけ。あとはこちらで回します。</h2></div>
                             <p className="text-stone-700 leading-relaxed">
                                 SNS投稿代行と公式LINE構築を中心に、仕事の仕組みづくりもお手伝いしています。
                             </p>
@@ -595,9 +517,7 @@ export default function AiConsultingPage() {
                 <section className="py-16 md:py-20 bg-stone-100" id="pricing">
                     <div className="container mx-auto px-4 md:px-6 max-w-5xl">
                         <div className="text-center mb-8 max-w-2xl mx-auto">
-                            <h2 className="text-2xl md:text-3xl font-bold text-stone-900 font-heading">
-                                料金は、まずは無料相談から。
-                            </h2>
+                            <div className="section-heading"><p className="section-label" aria-hidden="true">PRICE</p><h2>料金は、まずは無料相談から。</h2></div>
                         </div>
 
                         <div className="max-w-2xl mx-auto bg-white rounded-2xl border border-stone-200 shadow-sm p-6 md:p-8 mb-10">
@@ -613,7 +533,7 @@ export default function AiConsultingPage() {
                             </p>
                             <Link
                                 href="/contact/personal?subject=sns-line"
-                                className="inline-flex items-center justify-center w-full bg-primary hover:bg-primary-dark text-white font-bold py-3.5 px-6 rounded-full transition-all"
+                                className="cta"
                             >
                                 無料相談に申し込む
                                 <ArrowRight className="ml-2 h-4 w-4" />
@@ -631,6 +551,7 @@ export default function AiConsultingPage() {
                             新規でアカウント開設が必要な場合のみ、初期設定費＋3万円（税抜）をいただきます（アカウント開設と、安全に育てるための初週の手動運用まで込み）。
                         </p>
 
+                        <p className="sns-fit">こんなお店に向いています：毎日の投稿に手が回らない飲食・小売のお店。向いていないもの：広告の運用だけを頼みたい場合。</p>
                         <div className="grid md:grid-cols-3 gap-4">
                             <div className="bg-white rounded-2xl border border-stone-200 p-6">
                                 <p className="text-sm font-bold text-stone-900 mb-1">ライト</p>
@@ -650,7 +571,7 @@ export default function AiConsultingPage() {
                                 <p className="text-stone-700 text-sm mb-4">ライトの3媒体＋好きな媒体を2つ（計5媒体）<br />毎日の投稿代行（1日1投稿）<br />LINEを選ぶ場合は週1回程度<br />月1回の数字報告つき</p>
                                 <Link
                                     href="/contact/personal?subject=sns-line"
-                                    className="inline-flex items-center justify-center w-full bg-primary hover:bg-primary-dark text-white font-bold py-2.5 px-4 rounded-full text-sm transition-all"
+                                    className="cta"
                                 >
                                     このプランで申し込む
                                 </Link>
@@ -740,9 +661,7 @@ export default function AiConsultingPage() {
                 <section className="py-16 md:py-20 bg-white">
                     <div className="container mx-auto px-4 md:px-6 max-w-4xl">
                         <div className="text-center mb-8 max-w-2xl mx-auto">
-                            <h2 className="text-2xl md:text-3xl font-bold text-stone-900 font-heading mb-6">
-                                正直に言うと、どのお店にも向くわけではありません。
-                            </h2>
+                            <div className="section-heading"><p className="section-label" aria-hidden="true">FIT</p><h2>正直に言うと、どのお店にも向くわけではありません。</h2></div>
                             <p className="text-stone-700 leading-relaxed">
                                 合うお店と、合わないお店があります。ここは飾らずに書きます。
                             </p>
@@ -807,9 +726,7 @@ export default function AiConsultingPage() {
                 <section className="py-16 md:py-20 bg-stone-50">
                     <div className="container mx-auto px-4 md:px-6 max-w-2xl">
                         <div className="text-center mb-8">
-                            <h2 className="text-2xl md:text-3xl font-bold text-stone-900 font-heading">
-                                始め方は3ステップです。
-                            </h2>
+                            <div className="section-heading"><p className="section-label" aria-hidden="true">FLOW</p><h2>始め方は3ステップです。</h2></div>
                         </div>
 
                         <ol className="bg-white rounded-2xl border border-stone-200 shadow-sm p-6 md:p-8">
@@ -839,9 +756,7 @@ export default function AiConsultingPage() {
                         <AiTimeSupport />
 
                         <div className="text-center mt-14 mb-8">
-                            <h2 className="text-2xl md:text-3xl font-bold text-stone-900 font-heading mb-6">
-                                動画講義 全10回（無料・各3〜4分）
-                            </h2>
+                            <div className="section-heading"><p className="section-label" aria-hidden="true">MOVIES</p><h2>動画講義 全10回（無料・各3〜4分）</h2></div>
                             <p className="text-stone-700 leading-relaxed">
                                 仕組み化診断のやり方と、自社での実例を、10本のショート講義にまとめました。
                                 第1回はこの場で見られます。
@@ -920,9 +835,7 @@ export default function AiConsultingPage() {
                 <section className="py-16 md:py-20 bg-stone-50">
                     <div className="container mx-auto px-4 md:px-6 max-w-2xl">
                         <div className="text-center mb-8">
-                            <h2 className="text-2xl md:text-3xl font-bold text-stone-900 font-heading">
-                                よくある質問
-                            </h2>
+                            <div className="section-heading"><p className="section-label" aria-hidden="true">Q&A</p><h2>よくある質問</h2></div>
                         </div>
 
                         <div className="space-y-6">
@@ -943,11 +856,9 @@ export default function AiConsultingPage() {
                 </section>
 
                 {/* 10. 最終CTA */}
-                <section className="py-16 md:py-20 bg-primary text-white">
+                <section className="final-cta">
                     <div className="container mx-auto px-4 md:px-6 text-center max-w-2xl">
-                        <h2 className="text-2xl md:text-3xl font-bold mb-6 font-heading">
-                            気になった方は、ご連絡ください
-                        </h2>
+                        <div className="section-heading"><p className="section-label" aria-hidden="true">CONTACT</p><h2>気になった方は、ご連絡ください</h2></div>
                         <p className="text-base md:text-lg mb-10 opacity-90 leading-relaxed">
                             スマホからのメッセージでも、電話でも構いません。
                             まずは今のSNSや仕事の悩みを聞かせてください。
@@ -956,7 +867,7 @@ export default function AiConsultingPage() {
                         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                             <Link
                                 href="/contact/personal?subject=sns-line"
-                                className="inline-flex items-center bg-white text-primary font-bold py-4 px-10 rounded-full transition-all transform hover:scale-105 shadow-lg"
+                                className="cta"
                             >
                                 無料相談に申し込む
                                 <ArrowRight className="ml-2 h-5 w-5" />
@@ -986,8 +897,8 @@ export default function AiConsultingPage() {
             </main>
 
             <div id="footer-sentinel" />
-            <Footer />
-            <MobileStickyCta />
+            <AnduFooter />
+
         </div>
     );
 }

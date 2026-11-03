@@ -1,6 +1,8 @@
 /* eslint-disable @next/next/no-img-element */
 import type { Metadata } from "next";
 import Link from "next/link";
+import { AnduHeader, AnduFooter, AnduSocialProof } from "@/components/ai/AnduChrome";
+
 import { InlineDemo } from "@/components/ai/InlineDemo";
 import { SiteSafetyCheck } from "@/components/ai/SiteSafetyCheck";
 import { BASIC_MEDIA, EXTRA_MEDIA, SNS_PLANS } from "@/lib/andu-plans";
@@ -34,15 +36,7 @@ export default function AiPage() {
     <div className="andu-lp andu-professional">
       {SHOW_DRAFT && (<p className="draft-note">下書きです（未公開）。屋号・料金・「確認中」の所は、確認のうえ確定します。</p>)}
 
-      <header className="site-header">
-        <p className="brand"><span className="brand-name">{BRAND}</span><span className="brand-sub">{BRAND_SUB}</span></p>
-        <nav className="header-nav" aria-label="ページ内の案内">
-          <a href="#security-support">見直しの進め方</a>
-          <a href="#works">制作・運用実績</a>
-          <a href="#price">料金</a>
-        </nav>
-        <a className="header-cta" href="https://lin.ee/WfeFzfF" target="_blank" rel="noopener noreferrer">LINEで無料相談</a>
-      </header>
+      <AnduHeader current="website" />
 
       <main>
 
@@ -90,10 +84,9 @@ export default function AiPage() {
 
 <section className="works" id="works">
         <div className="section-heading"><p className="section-label" aria-hidden="true">WORKS</p><h2>制作・運用実績</h2></div>
-        <p className="works-lead">お店から頼まれた仕事と、自分で作って使っているものです。</p>
+        <p className="works-lead">お客さんから頼まれた、予約・LINE・事務の仕事の記録です。</p>
         <div className="work-list">
-
-          <article className="work work-main">
+<article className="work work-main">
             <p className="work-record">仕事の記録 / 01</p>
             <p className="work-stamp">公開済み<span className="work-date">2026年9月</span></p>
             <p className="work-client">某助産院さま</p>
@@ -114,23 +107,8 @@ export default function AiPage() {
             {SHOW_DRAFT && (<p className="voice-slot todo" data-draft="voice">（お客さまの言葉は、ご本人の了承をいただいてから、ここに載せます）</p>)}
             <InlineDemo kind="booking" label="予約の操作見本" />
           </article>
-
-          <article className="work">
+<article className="work">
             <p className="work-record">仕事の記録 / 02</p>
-            <p className="work-stamp">担当中</p>
-            <p className="work-client">某ラーメン店さま</p>
-            <h3>SNSの投稿を、お店の代わりに。</h3>
-            <p className="work-body">Threadsの運用を担当しています。美容室のSNSの運用もお受けしています。</p>
-            <div className="work-shots">
-              <figure className="phone-shot"><img src="/images/ai/matome/threads_ramen_m2.jpg" alt="某ラーメン店さまのThreadsのプロフィール画面" width="860" height="1520" loading="lazy" /><figcaption>プロフィール</figcaption></figure>
-              <figure className="phone-shot"><img src="/images/ai/matome/real_threads_post_m2.jpg" alt="某ラーメン店さまのThreadsの投稿の画面" width="860" height="1600" loading="lazy" /><figcaption>はじめての投稿</figcaption></figure>
-            </div>
-            {SHOW_DRAFT && (<p className="voice-slot todo" data-draft="voice">（お客さまの言葉は、ご本人の了承をいただいてから、ここに載せます）</p>)}
-            <InlineDemo kind="sns" label="SNS投稿の見本" />
-          </article>
-
-          <article className="work">
-            <p className="work-record">仕事の記録 / 03</p>
             <p className="work-stamp">公開済み</p>
             <p className="work-client">車屋さん</p>
             <h3>LINEの窓口と、車の紹介サイトを作成。</h3>
@@ -142,9 +120,8 @@ export default function AiPage() {
             {SHOW_DRAFT && (<p className="voice-slot todo" data-draft="voice">（お客さまの言葉は、ご本人の了承をいただいてから、ここに載せます）</p>)}
             <InlineDemo kind="car" label="車の紹介と問い合わせの見本" />
           </article>
-
-          <article className="work work-timecard">
-            <p className="work-record">仕事の記録 / 04</p>
+<article className="work work-timecard">
+            <p className="work-record">仕事の記録 / 03</p>
             <p className="work-stamp">導入済み</p>
             <p className="work-client">就労継続支援B型の事業所さま</p>
             <h3>手入力だったタイムカードを、写真を撮るだけに。</h3>
@@ -194,13 +171,28 @@ export default function AiPage() {
             {SHOW_DRAFT && (<p className="voice-slot todo" data-draft="voice">（お客さまの言葉は、ご本人の了承をいただいてから、ここに載せます）</p>)}
             <InlineDemo kind="timecard" label="タイムカード集計の見本" />
           </article>
+</div>
+<div className="own-shop-proof"><h3>自分のお店で続けていること</h3><AnduSocialProof /></div>
+<h3 className="other-work-title">ほかの仕事</h3>
+<div className="other-works"><details className="other-work"><summary>某ラーメン店さま</summary><article className="work">
+<p className="work-record">仕事の記録 / 04</p>
 
-          <article className="work">
-            <p className="work-record">仕事の記録 / 05</p>
-            <p className="work-stamp">運営中</p>
-            <p className="work-client">うち自身のお店（AND YOU 安藤青果）</p>
+            <p className="work-client">某ラーメン店さま</p>
+            <h3>SNSの投稿を、お店の代わりに。</h3>
+            <p className="work-body">Threadsの運用を担当しています。美容室のSNSの運用もお受けしています。</p>
+            <div className="work-shots">
+              <figure className="phone-shot"><img src="/images/ai/matome/threads_ramen_m2.jpg" alt="某ラーメン店さまのThreadsのプロフィール画面" width="860" height="1520" loading="lazy" /><figcaption>プロフィール</figcaption></figure>
+              <figure className="phone-shot"><img src="/images/ai/matome/real_threads_post_m2.jpg" alt="某ラーメン店さまのThreadsの投稿の画面" width="860" height="1600" loading="lazy" /><figcaption>はじめての投稿</figcaption></figure>
+            </div>
+            {SHOW_DRAFT && (<p className="voice-slot todo" data-draft="voice">（お客さまの言葉は、ご本人の了承をいただいてから、ここに載せます）</p>)}
+            <InlineDemo kind="sns" label="SNS投稿の見本" />
+          </article></details>
+<details className="other-work"><summary>自分のお店（AND YOU 安藤青果）</summary><article className="work">
+<p className="work-record">仕事の記録 / 05</p>
+
+            <p className="work-client">自分のお店（AND YOU 安藤青果）</p>
             <h3>ホームページとネット販売を、自分で作って運営。</h3>
-            <p className="work-body">はちみつや野菜を売っている、うち自身のホームページです。商品のページも注文の受付も、自分で作って動かしています。飲食店や小売店からの、業務用の問い合わせフォームもあります。業種・欲しい商品・使う量などを、選ぶだけで送れる形です。毎日のSNSも自分で続けていて、Xのフォロワーは1.3万人です。</p>
+            <p className="work-body">はちみつや野菜を売っている、自分のホームページです。商品のページも注文の受付も、自分で作って動かしています。飲食店や小売店からの、業務用の問い合わせフォームもあります。業種・欲しい商品・使う量などを、選ぶだけで送れる形です。毎日のSNSも自分で続けています。</p>
             <div className="work-shots shop-shots">
               <figure className="browser-shot shop-desktop"><img src="/images/ai/matome/site_home_pc.jpg" alt="安藤青果のホームページをパソコンで見た画面" width="1280" height="640" loading="lazy" /><figcaption>ホームページ（パソコンで見た画面）</figcaption></figure>
               <figure className="phone-shot shop-main"><img src="/images/ai/matome/real_honey.jpg" alt="はちみつの商品ページをスマホで見た画面" width="860" height="1720" loading="lazy" /><figcaption>はちみつの商品ページ（実際の画面）</figcaption></figure>
@@ -208,12 +200,11 @@ export default function AiPage() {
               <figure className="phone-shot shop-secondary"><img src="/images/ai/matome/real_form2.jpg" alt="業務用の問い合わせフォームの選ぶ項目の画面" width="860" height="1720" loading="lazy" /><figcaption>選ぶだけの項目</figcaption></figure>
             </div>
             <InlineDemo kind="shop" label="ネットショップの見本" />
-          </article>
+          </article></details>
+<details className="other-work"><summary>自分で作って、使っているもの</summary><article className="work work-tools" id="tool-examples">
+<p className="work-record">仕事の記録 / 06</p>
 
-          <article className="work work-tools" id="tool-examples">
-            <p className="work-record">仕事の記録 / 06</p>
-            <p className="work-stamp">使用中</p>
-            <p className="work-client">うちで作って、使っているもの</p>
+            <p className="work-client">自分で作って、使っているもの</p>
             <h3>営業・納品・給与集計。自分の仕事で使う道具を、制作。</h3>
             <p className="work-body">自分の仕事に合わせて、道具を作って毎日使っています。お客さんの仕事に合わせて、同じように作ることもできます。</p>
             <div className="inline-tool-list">
@@ -224,10 +215,10 @@ export default function AiPage() {
               <div><h4>市場ツール</h4><p>市場への出荷と仕入れを分けて記録し、金額を集計します。</p><InlineDemo kind="market" label="市場の出荷・仕入れ" /></div>
             </div>
             <p className="work-caption">画面・デモはサンプルデータです。デモは操作体験用で、実際の給与情報・営業先とはつながっていません。</p>
-          </article>
-          <article className="work work-castle">
-            <p className="work-record">仕事の記録 / 07</p>
-            <p className="work-stamp">公開済み</p>
+          </article></details>
+<details className="other-work"><summary>個人の方</summary><article className="work work-castle">
+<p className="work-record">仕事の記録 / 07</p>
+
             <p className="work-client">個人の方</p>
             <h3>会員だけが見られる、城めぐりの記録サイト。</h3>
             <p className="work-body">ログインした人だけが見られる形で、城めぐりの記録サイトを作りました。行った城の記録と写真をまとめられます。御城印を探すページもあります。公式サイトの新着を定期的に確かめる機能と、スマホで通知を受け取る設定もあります。手元の写真や旅の履歴を取り込む場所もあります。</p>
@@ -241,12 +232,12 @@ export default function AiPage() {
               <figure className="browser-shot"><img src="/images/ai/matome/castle_data.jpg" width="1248" height="758" alt="写真と資料を取り込む画面" loading="lazy" /><figcaption>写真と資料の取り込み</figcaption></figure>
             </div>
             </details><p className="work-caption">掲載画面は実際のもの、操作見本は架空のデータです。</p>
-          </article>
+          </article></details>
         </div>
       </section>
 
       <aside className="cta-band">
-        <p className="cta-band-title">うちの店だと、どうなるだろう。<br />そう思ったら、聞かせてください。</p>
+        <p className="cta-band-title">自分のお店だと、どうなるだろう。<br />そう思ったら、聞かせてください。</p>
         <p className="cta-wrap"><a className="cta" href="https://lin.ee/WfeFzfF" target="_blank" rel="noopener noreferrer">LINEで無料相談する（60分）</a></p>
         <p className="cta-sub">電話でも大丈夫です　<a className="tel" href="tel:07084348124">070-8434-8124</a></p>
       </aside>
@@ -399,11 +390,7 @@ export default function AiPage() {
 
       </main>
 
-      <footer className="site-footer">
-        <p className="footer-shop">運営：安藤青果 <Link href="/">事業者ホームページ（ando-seika.com）</Link></p>
-        <p><span className="brand-name">{BRAND}</span><small className="brand-sub">{BRAND_SUB}</small></p>
-        <p className="footer-legal"><Link href="/tokusho">特定商取引法に基づく表示</Link><Link href="/privacy">プライバシーポリシー</Link></p>
-      </footer>
+      <AnduFooter />
     </div>
   );
 }

@@ -1,4 +1,4 @@
-/* AND U only. The agricultural site and the separate SNS page retain their own designs. */
+/* AND U only. Shared by the website and SNS service pages. */
 .andu-lp.andu-professional {
   --paper: #f5f5f2; --ink: #252b2b; --muted: #606968; --rule: #d7dcda;
   --green: #335c53; --dark: #202728; --pale-green: #edf2f0; --amber: #d7dcda; --stamp: #606968;
@@ -210,4 +210,45 @@
   .andu-lp.andu-professional .site-check { padding: 20px; }
   .andu-lp.andu-professional .site-check-heading { margin-bottom: 16px; }
   .andu-lp.andu-professional .site-check-heading h2 { font-size: 17px; }
+}
+/* Shared service navigation and SNS presentation. */
+.andu-lp.andu-professional .header-nav { display: flex; gap: 24px; align-items: center; }
+.andu-lp.andu-professional .header-nav a { display: inline-flex; align-items: center; min-height: 44px; border-bottom: 2px solid transparent; text-decoration: none; }
+.andu-lp.andu-professional .header-nav a[aria-current="page"] { color: var(--green); border-color: var(--green); font-weight: 700; }
+.andu-lp.andu-professional .service-promise { padding: 12px max(var(--gutter), calc((100% - var(--wide)) / 2)); background: var(--paper); border-bottom: 1px solid var(--rule); font-size: 12px; line-height: 1.8; }
+.andu-lp.andu-professional .social-proof { margin-top: 24px; font-size: 14px; line-height: 1.9; }
+.andu-lp.andu-professional .social-proof span { display: block; margin-top: 8px; font-size: 12px; }
+.andu-lp.andu-professional .own-shop-proof { margin-top: 40px; padding: 24px; background: var(--paper); border-left: 2px solid var(--green); }
+.andu-lp.andu-professional .other-work-title { margin-top: 40px; margin-bottom: 16px; }
+.andu-lp.andu-professional .other-work { border-bottom: 1px solid var(--rule); }
+.andu-lp.andu-professional .other-work > summary { padding: 18px 0; cursor: pointer; font-size: 15px; }
+.andu-lp.andu-professional .other-work .work { border: 0; background: var(--paper); margin-bottom: 20px; }
+.andu-lp.andu-professional .other-work .work h3 { font-size: 19px; }
+.andu-lp.andu-professional .other-work .work-client { margin-top: 0; }
+.andu-lp.andu-professional.andu-sns { --color-primary: var(--green); --color-primary-dark: var(--dark); }
+.andu-lp.andu-professional.andu-sns main > section:not(.hero):not(.final-cta) { background: var(--paper); }
+.andu-lp.andu-professional.andu-sns main > section:nth-of-type(even):not(.final-cta) { background: #fff; }
+.andu-lp.andu-professional.andu-sns section > .container { max-width: var(--wide); padding-inline: 0; }
+.andu-lp.andu-professional.andu-sns .section-heading { text-align: left; }
+.andu-lp.andu-professional.andu-sns [class*="rounded-2xl"] { border-radius: 2px; box-shadow: none; }
+.andu-lp.andu-professional.andu-sns [class*="border-stone"] { border-color: var(--rule); }
+.andu-lp.andu-professional.andu-sns [class*="text-primary"] { color: var(--green); }
+.andu-lp.andu-professional.andu-sns [class*="border-primary"] { border-color: var(--green); }
+.andu-lp.andu-professional.andu-sns [class~="bg-primary/5"] { background: var(--pale-green); }
+.andu-lp.andu-professional.andu-sns [class~="bg-primary"] { background: var(--green); }
+.andu-lp.andu-professional.andu-sns .sns-fit { margin: 24px 0; padding: 20px; background: #fff; border-left: 2px solid var(--green); font-size: 15px; }
+.andu-lp.andu-professional.andu-sns .sns-hero-photo img { aspect-ratio: 1; object-fit: cover; }
+.andu-lp.andu-professional.andu-sns .sns-hero-photo figcaption { margin-top: 12px; color: #d7dcda; font-size: 12px; }
+.andu-lp.andu-professional.andu-sns .work-shots { justify-content: flex-start; }
+.andu-lp.andu-professional.andu-sns .final-cta a { color: #fff; }
+.andu-lp.andu-professional.andu-sns .final-cta a.cta { color: var(--ink); }
+@media (max-width: 799px) {
+  .andu-lp.andu-professional .site-header { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 12px; }
+  .andu-lp.andu-professional .header-nav { grid-column: 1 / -1; grid-row: 2; gap: 28px; }
+  .andu-lp.andu-professional .header-cta { grid-column: 2; grid-row: 1; }
+  .andu-lp.andu-professional .brand-sub { font-size: 9px; letter-spacing: 0; }
+  .andu-lp.andu-professional.andu-sns .sns-hero-photo { max-width: 280px; }
+  .andu-lp.andu-professional.andu-sns .hero .security-headline { font-size: 30px; }
+  .andu-lp.andu-professional.andu-sns .cta { justify-content: center; }
+  .andu-lp.andu-professional.andu-sns table { font-size: 12px; }
 }
