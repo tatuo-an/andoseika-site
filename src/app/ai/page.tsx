@@ -201,7 +201,7 @@ export default function AiPage() {
             </div>
             <InlineDemo kind="shop" label="ネットショップの見本" />
           </article></details>
-<details className="other-work"><summary>自分で作って、使っているもの</summary><article className="work work-tools" id="tool-examples">
+<details className="other-work" id="tool-examples"><summary>自分で作って、使っているもの</summary><article className="work work-tools">
 <p className="work-record">仕事の記録 / 06</p>
 
             <p className="work-client">自分で作って、使っているもの</p>
