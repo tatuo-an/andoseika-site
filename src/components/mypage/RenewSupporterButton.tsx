@@ -31,10 +31,10 @@ export function RenewSupporterButton({
       } else if (data.url) {
         window.location.href = data.url;
       } else {
-        setError("決済画面を開けませんでした。しばらくしてお試しください。");
+        setError("決済画面を開けませんでした。しばらくしてから再度お試しください。");
       }
     } catch {
-      setError("エラーが発生しました。しばらくしてお試しください。");
+      setError("エラーが発生しました。しばらくしてから再度お試しください。");
     } finally {
       setLoading(false);
     }

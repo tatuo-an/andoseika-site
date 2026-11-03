@@ -29,7 +29,7 @@ export function XTimeline({ tweetUrls }: { tweetUrls: string[] }) {
         <div ref={containerRef} className="space-y-6">
             {tweetUrls.map((url) => (
                 <blockquote key={url} className="twitter-tweet" data-theme="light">
-                    <a href={url}>{url}</a>
+                    <a href={url} className="break-all">{url}</a>
                 </blockquote>
             ))}
             <Script

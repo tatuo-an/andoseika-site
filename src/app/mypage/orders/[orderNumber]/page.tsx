@@ -185,7 +185,7 @@ function UserCancelModal({ onConfirm, onCancel, loading, orderStatus }: {
                 📷 写真を選択
               </label>
               {compressing && (
-                <p className="text-xs mt-1 text-amber-600 font-medium">圧縮中...</p>
+                <p className="text-xs mt-1 text-amber-600 font-medium">圧縮中â¦</p>
               )}
               {imageFile && !compressing && (
                 <p className="text-xs mt-1 text-stone-400">
@@ -229,7 +229,7 @@ function UserCancelModal({ onConfirm, onCancel, loading, orderStatus }: {
             disabled={!canSubmit}
             className="flex-1 py-2.5 bg-red-500 text-white rounded-xl text-sm font-bold hover:bg-red-600 transition-colors disabled:opacity-50"
           >
-            {compressing ? "圧縮中..." : uploading ? "アップロード中..." : loading ? "処理中..." : isAfterReceive ? "報告する" : isShipping ? "問い合わせる" : "キャンセルする"}
+            {compressing ? "圧縮中â¦" : uploading ? "アップロード中â¦" : loading ? "処理中â¦" : isAfterReceive ? "報告する" : isShipping ? "問い合わせる" : "キャンセルする"}
           </button>
         </div>
       </div>
@@ -597,7 +597,7 @@ export default function OrderDetailPage() {
                     className="mt-5 w-full flex items-center justify-center gap-2 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors text-sm font-bold disabled:opacity-50"
                   >
                     <CheckCircle className="w-4 h-4" />
-                    {completing ? "処理中..." : "受取完了"}
+                    {completing ? "処理中â¦" : "受取完了"}
                   </button>
                 )}
                 {order.status === "delivered" && !order.complaint && (
@@ -664,7 +664,7 @@ export default function OrderDetailPage() {
                       disabled={surveyClaiming || !surveyPassword.trim()}
                       className="shrink-0 px-4 py-2 bg-purple-600 text-white rounded-xl text-sm font-bold hover:bg-purple-700 transition-colors disabled:opacity-50"
                     >
-                      {surveyClaiming ? "確認中..." : "送信"}
+                      {surveyClaiming ? "確認中â¦" : "送信"}
                     </button>
                   </div>
                   {surveyError && <p className="text-xs text-red-500 mt-2">{surveyError}</p>}
@@ -709,8 +709,8 @@ export default function OrderDetailPage() {
               <div className="bg-white rounded-2xl shadow-sm p-5 text-sm space-y-1">
                 <h3 className="font-bold text-stone-900 mb-2">配送情報</h3>
                 <p className="text-stone-600">{order.address}</p>
-                {order.desiredDate && <p className="text-stone-500">希望日: {order.desiredDate}</p>}
-                {order.desiredTime && order.desiredTime !== "指定なし" && <p className="text-stone-500">時間帯: {order.desiredTime}</p>}
+                {order.desiredDate && <p className="text-stone-500">希望日：{order.desiredDate}</p>}
+                {order.desiredTime && order.desiredTime !== "指定なし" && <p className="text-stone-500">時間帯：{order.desiredTime}</p>}
               </div>
 
 

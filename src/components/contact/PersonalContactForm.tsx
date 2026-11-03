@@ -143,7 +143,7 @@ export function PersonalContactForm({ defaultType, defaultMessage }: PersonalCon
                             className="mt-1 h-5 w-5 text-primary rounded border-stone-300 focus:ring-primary"
                         />
                         <span className="text-sm text-stone-600">
-                            <a href="#" className="text-primary hover:underline">プライバシーポリシー</a>
+                            <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">プライバシーポリシー</a>
                             に同意の上、送信します。
                         </span>
                     </label>
@@ -157,7 +157,7 @@ export function PersonalContactForm({ defaultType, defaultMessage }: PersonalCon
                         className="w-full bg-primary text-white font-bold py-4 rounded-full hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg flex items-center justify-center gap-2"
                     >
                         {isPending && <Loader2 className="h-5 w-5 animate-spin" />}
-                        {isPending ? "送信中..." : "送信する"}
+                        {isPending ? "送信中â¦" : "送信する"}
                     </button>
                 </div>
 

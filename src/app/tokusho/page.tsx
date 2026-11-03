@@ -3,7 +3,7 @@ import { Header } from "@/components/layout/Header";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "特定商取引法に基づく表示 | 安藤青果",
+  title: "特定商取引法に基づく表示",
   description: "安藤青果の特定商取引法に基づく表示ページです。",
 };
 

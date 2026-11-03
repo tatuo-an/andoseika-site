@@ -759,7 +759,7 @@ export default function StampPage() {
                                 href="/tokusho"
                                 className="inline-flex min-h-11 items-center underline underline-offset-4 hover:text-[#2B2118] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2B2118]"
                             >
-                                特定商取引法に基づく表記
+                                特定商取引法に基づく表示
                             </Link>
                         </p>
                     </div>

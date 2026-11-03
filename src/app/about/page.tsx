@@ -72,7 +72,7 @@ export default function AboutPage() {
                                         <p className="text-stone-600 leading-relaxed">
                                             父の背中を追いかけながら、新しい農業の形を模索しています。<br />
                                             地域との連携、福祉との連携。<br />
-                                            農業の可能性を広げ、次世代に繋いでいきます。
+                                            農業の可能性を広げ、次世代につないでいきます。
                                         </p>
                                     </div>
                                 </div>

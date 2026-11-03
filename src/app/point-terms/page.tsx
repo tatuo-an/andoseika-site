@@ -3,7 +3,7 @@ import { Footer } from "@/components/layout/Footer";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "ポイント利用条件 | 安藤青果",
+  title: "ポイント利用条件",
   description: "&YOU 安藤青果のポイント制度の利用条件をご案内します。",
 };
 

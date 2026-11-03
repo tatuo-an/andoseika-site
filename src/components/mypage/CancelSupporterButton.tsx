@@ -34,7 +34,7 @@ export function CancelSupporterButton({ redirectTo }: { tierName: string; redire
             disabled={loading}
             className="flex-1 py-2.5 rounded-xl bg-red-500 text-white text-sm font-bold hover:bg-red-600 disabled:opacity-50 transition-colors"
           >
-            {loading ? "処理中..." : "停止する"}
+            {loading ? "処理中â¦" : "停止する"}
           </button>
           <button
             onClick={() => setConfirm(false)}

@@ -3,7 +3,7 @@ import { Footer } from "@/components/layout/Footer";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "投稿ガイドライン | 安藤青果",
+  title: "投稿ガイドライン",
   description: "みんなの料理への投稿にあたってのガイドラインです。",
 };
 

@@ -24,15 +24,15 @@ type Order = {
   estimatedDate: string;
 };
 
-export function MyOrders() {
+export function MyOrders({ showAll = false }: { showAll?: boolean } = {}) {
   const [orders, setOrders] = useState<Order[] | null>(null);
 
   useEffect(() => {
-    fetch("/api/my/orders")
+    fetch(showAll ? "/api/my/orders?all=1" : "/api/my/orders")
       .then((r) => r.json())
       .then((d) => setOrders(d.orders ?? []))
       .catch(() => setOrders([]));
-  }, []);
+  }, [showAll]);
 
   if (orders === null) {
     return (
@@ -41,7 +41,7 @@ export function MyOrders() {
           <Package className="w-5 h-5 text-primary" />
           <h2 className="font-bold text-stone-900">注文・発送状況</h2>
         </div>
-        <p className="text-sm text-stone-400">読み込み中...</p>
+        <p className="text-sm text-stone-400">読み込み中â¦</p>
       </div>
     );
   }
@@ -80,7 +80,7 @@ export function MyOrders() {
               <p className="text-sm font-medium text-stone-800 line-clamp-1">{order.productNames}</p>
               {order.estimatedDate && (
                 <div className="mt-0.5">
-                  <p className="text-xs text-blue-600">お届け予定: {order.estimatedDate}</p>
+                  <p className="text-xs text-blue-600">お届け予定：{order.estimatedDate}</p>
                   <p className="text-[10px] text-stone-400">※発送は予告なく前倒しする場合があります</p>
                 </div>
               )}
@@ -92,7 +92,7 @@ export function MyOrders() {
           );
         })}
       </div>
-      {orders.length >= 5 && (
+      {!showAll && orders.length >= 5 && (
         <Link href="/mypage/orders" className="flex items-center gap-1 text-xs text-primary font-medium mt-3 hover:underline">
           すべて見る <ChevronRight className="w-3 h-3" />
         </Link>

@@ -5,7 +5,7 @@ import { XTimeline } from "@/components/sns/XTimeline";
 
 export const metadata: Metadata = {
     title: "たっちゃんの農園日記（X）",
-    description: "安藤青果 たっちゃんのXでの最新の投稿をご紹介します。畑の様子や収穫の様子など、日々の農園の出来事を発信しています。",
+    description: "安藤青果 たっちゃんのXでの最新の投稿をご紹介します。畑や収穫の様子など、日々の農園の出来事を発信しています。",
 };
 
 const X_USERNAME = "tacchannooen";
@@ -24,7 +24,7 @@ export default function SnsPage() {
                     <div className="container mx-auto px-4 md:px-6 max-w-3xl text-center space-y-4">
                         <h1 className="text-sm font-bold uppercase tracking-widest text-primary">つぶやき</h1>
                         <p className="text-stone-600 leading-relaxed">
-                            畑の様子や収穫の様子、日々の出来事をXで発信しています。<br />
+                            畑や収穫の様子、日々の出来事をXで発信しています。<br />
                             最新の投稿をこちらでご覧いただけます。
                         </p>
                         <a

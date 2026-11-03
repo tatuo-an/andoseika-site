@@ -75,7 +75,7 @@ function PostCard({ post, myEmail, onLike, onSave, onEdit, onDelete }: {
             />
             <div className="flex gap-2 mt-1.5">
               <button onClick={saveEdit} disabled={saving} className="flex items-center gap-1 px-3 py-1.5 bg-primary text-white text-xs font-bold rounded-lg disabled:opacity-50">
-                <Check className="w-3 h-3" />{saving ? "保存中..." : "保存"}
+                <Check className="w-3 h-3" />{saving ? "保存中â¦" : "保存"}
               </button>
               <button onClick={() => { setEditing(false); setEditText(post.caption); }} className="flex items-center gap-1 px-3 py-1.5 border border-stone-200 text-stone-500 text-xs rounded-lg">
                 <X className="w-3 h-3" />キャンセル
@@ -99,7 +99,7 @@ function PostCard({ post, myEmail, onLike, onSave, onEdit, onDelete }: {
             <button
               onClick={() => onSave(post.id)}
               disabled={!myEmail}
-              title={post.saved ? "保存済み" : "記録する"}
+              title={post.saved ? "記録済み" : "記録する"}
               className={`transition-colors ${post.saved ? "text-primary" : "text-stone-400 hover:text-primary"} disabled:opacity-40 disabled:cursor-not-allowed`}
             >
               <Bookmark className={`w-5 h-5 ${post.saved ? "fill-primary" : ""}`} />
@@ -222,7 +222,7 @@ function PostForm({ myEmail, myName, onPosted }: { myEmail: string; myName: stri
         <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
           <Camera className="w-4 h-4 text-primary" />
         </div>
-        <span className="text-sm text-stone-500 flex-1">料理写真を投稿する...</span>
+        <span className="text-sm text-stone-500 flex-1">料理写真を投稿するâ¦</span>
         <ChevronDown className={`w-4 h-4 text-stone-400 transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
 
@@ -292,7 +292,7 @@ function PostForm({ myEmail, myName, onPosted }: { myEmail: string; myName: stri
             disabled={!imageFile || selectedProducts.length === 0 || uploading}
             className="w-full py-3 bg-primary text-white font-bold rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-50"
           >
-            {uploading ? "投稿中..." : "投稿する"}
+            {uploading ? "投稿中â¦" : "投稿する"}
           </button>
         </div>
       )}

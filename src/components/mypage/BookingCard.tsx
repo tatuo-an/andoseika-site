@@ -162,7 +162,7 @@ export function BookingCard({ booking, isPast }: { booking: Booking; isPast: boo
             {cancelStep === "loading" && (
                 <div className="px-5 pb-5 flex items-center gap-2 text-sm text-stone-500">
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    キャンセル処理中...
+                    キャンセル処理中â¦
                 </div>
             )}
 

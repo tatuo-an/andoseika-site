@@ -167,7 +167,7 @@ export default async function MyPageSupporterPage() {
               } />
               {isSupporter && joinDateStr && (
                 <>
-                  <Row label="入村日" value={joinDateStr.replace(/-/g, "年").replace(/-/, "月") + "日"} />
+                  <Row label="入村日" value={(() => { const [y, m, d] = joinDateStr.split("-"); return `${y}年${Number(m)}月${Number(d)}日`; })()} />
                   {duration && <Row label="サポーター歴" value={duration} />}
                 </>
               )}

@@ -4,7 +4,7 @@ import { Footer } from "@/components/layout/Footer";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-    title: "プライバシーポリシー | 安藤青果",
+    title: "プライバシーポリシー",
     description: "安藤青果（&YOU）のプライバシーポリシーです。取得する情報・利用目的・外国第三者提供・開示請求の方法などを定めています。",
 };
 

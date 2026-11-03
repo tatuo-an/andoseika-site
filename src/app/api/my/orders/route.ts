@@ -4,7 +4,10 @@ import { auth } from "@/auth";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(req: Request) {
+  // ?all=1 のときは全件（/mypage/orders 用）。指定なしはマイページ用に最新5件。
+  const all = new URL(req.url).searchParams.get("all") === "1";
+
   const session = await auth();
   if (!session?.user?.email) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -37,8 +40,8 @@ export async function GET() {
       desiredDate: r[10] ?? "",
       estimatedDate: r[14] ?? "",
     }))
-    .reverse()
-    .slice(0, 5);
+    .reverse();
 
-  return NextResponse.json({ orders });
+  return NextResponse.json({ orders: all ? orders : orders.slice(0, 5) });
 }
+

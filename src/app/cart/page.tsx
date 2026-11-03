@@ -499,7 +499,7 @@ export default function CartPage() {
                             お届け先
                         </h2>
                         {!loaded ? (
-                            <p className="text-sm text-stone-400">読み込み中...</p>
+                            <p className="text-sm text-stone-400">読み込み中â¦</p>
                         ) : addresses.length === 0 ? (
                             <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 text-sm">
                                 <p className="text-orange-700 mb-2 font-medium">配送先が登録されていません</p>

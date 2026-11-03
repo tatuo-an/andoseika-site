@@ -69,10 +69,10 @@ export function SupporterPlanButton({
             } else if (data.url) {
                 window.location.href = data.url;
             } else {
-                setError("決済画面を開けませんでした。しばらくしてお試しください。");
+                setError("決済画面を開けませんでした。しばらくしてから再度お試しください。");
             }
         } catch {
-            setError("エラーが発生しました。しばらくしてお試しください。");
+            setError("エラーが発生しました。しばらくしてから再度お試しください。");
         } finally {
             setLoading(false);
         }
@@ -110,7 +110,7 @@ export function SupporterPlanButton({
                 {loading ? (
                     <>
                         <Loader2 className="h-4 w-4 animate-spin" />
-                        処理中...
+                        処理中â¦
                     </>
                 ) : skipMode ? (
                     "🧪 テスト申し込み"

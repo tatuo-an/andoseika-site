@@ -165,7 +165,7 @@ export function BookingCalendar({
                 {/* ヘッダー */}
                 <div className="p-5 border-b border-stone-100 bg-stone-50 rounded-t-2xl flex items-center justify-between">
                     <div>
-                        <h2 className="text-lg font-bold text-stone-900">{experienceName} の予約</h2>
+                        <h2 className="text-lg font-bold text-stone-900">{experienceName}の予約</h2>
                         <p className="text-xs text-stone-500 mt-0.5">所要時間 {durationMin}分 / 営業 9:00〜17:00 / 休憩 12:00〜13:00 / 予約は1週間先から</p>
                         {seasonLabel && (
                             <p className="text-xs text-amber-600 font-bold mt-0.5">予約受付期間：{seasonLabel}（期間外の日付は選択できません）</p>
@@ -383,7 +383,7 @@ export function BookingCalendar({
                                 className="flex-1 px-4 py-2.5 bg-primary text-white font-bold rounded-full hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm flex items-center justify-center gap-2"
                             >
                                 {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
-                                {submitting ? "送信中..." : "上記に同意して予約を確定する"}
+                                {submitting ? "送信中â¦" : "上記に同意して予約を確定する"}
                             </button>
                         </div>
                     </div>

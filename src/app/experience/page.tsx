@@ -70,7 +70,7 @@ export default function ExperiencePage() {
                         </h1>
                         <p className="text-lg text-stone-700 max-w-2xl mx-auto">
                             食べるだけじゃもったいない。<br />
-                            土に触れ、生き物に触れ、農家の日常をちょっとだけ覗いてみませんか？
+                            土に触れ、生き物に触れ、農家の日常をちょっとだけのぞいてみませんか？
                         </p>
                     </div>
                 </section>
@@ -196,7 +196,7 @@ export default function ExperiencePage() {
                             <h2 className="text-3xl font-bold text-stone-900">土まみれで宝探し！芋掘り体験</h2>
                             <p className="text-stone-600 leading-relaxed">
                                 鳥取の砂丘地帯で育った「里芋」や「長芋」を収穫します。
-                                土の中からゴロゴロと出てくるお芋に、大人も子供も大興奮。
+                                土の中からゴロゴロと出てくるお芋に、大人も子どもも大興奮。
                                 収穫したお芋は、量り売りでお持ち帰りいただけます。
                             </p>
 
@@ -248,7 +248,7 @@ export default function ExperiencePage() {
                                 <li>• 動きやすい服装と、汚れてもよい靴でお越しください</li>
                                 <li>• お子様の参加は保護者同伴をお願いします</li>
                                 <li>• 防護服を着用しますが、蜂に刺される可能性を完全になくすことはできません。蜂アレルギーのある方は参加をご遠慮ください</li>
-                                <li>• <strong>1歳未満のお子様は蜂蜜の試食ができません</strong>（乳児ボツリヌス症予防のため）。養蜂体験には参加いただけますが、試食はご遠慮ください</li>
+                                <li>• <strong>1歳未満のお子様は蜂蜜の試食ができません</strong>（乳児ボツリヌス症予防のため）。養蜂体験にはご参加いただけますが、試食はご遠慮ください</li>
                                 <li>• ご不明な点は<a href="https://lin.ee/xzQv9l5" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">LINE</a>またはお問い合わせフォームからご相談ください</li>
                             </ul>
                         </div>

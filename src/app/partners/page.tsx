@@ -5,7 +5,7 @@ import type { Metadata } from "next";
 import type { Partner } from "@/app/api/partners/route";
 
 export const metadata: Metadata = {
-  title: "取引先・ご利用店舗 | 安藤青果",
+  title: "取引先・ご利用店舗",
   description: "安藤青果の野菜・蜂蜜をご利用いただいているお店をご紹介します。",
 };
 

@@ -66,7 +66,7 @@ export function DeleteAccountButton() {
     return (
       <div className="flex items-center gap-2 text-sm text-stone-500">
         <Loader2 className="w-4 h-4 animate-spin" />
-        退会処理中...
+        退会処理中â¦
       </div>
     );
   }

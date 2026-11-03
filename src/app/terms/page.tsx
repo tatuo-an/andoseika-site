@@ -4,7 +4,7 @@ import { Footer } from "@/components/layout/Footer";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "利用規約 | 安藤青果",
+  title: "利用規約",
   description: "安藤青果（&YOU）のサービス利用規約です。会員登録・ポイント・料理投稿・安藤AIなどすべてのサービスに適用されます。",
 };
 

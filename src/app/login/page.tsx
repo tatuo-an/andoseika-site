@@ -16,7 +16,7 @@ export default function LoginPage() {
           <ul className="text-left text-sm text-stone-600 bg-stone-50 rounded-xl px-5 py-4 mb-6 space-y-1.5">
             <li>🎁 ポイントが貯まる・使える</li>
             <li>🛒 注文履歴・配送状況を確認できる</li>
-            <li>📅 体験農業・農場見学の予約ができる</li>
+            <li>📅 農業体験・農場見学の予約ができる</li>
             <li>🌿 サポーター会員へのアップグレードができる</li>
           </ul>
           <p className="text-xs text-stone-400 mb-5">

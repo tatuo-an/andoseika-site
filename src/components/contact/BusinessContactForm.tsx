@@ -243,7 +243,7 @@ export function BusinessContactForm() {
                         className="w-full bg-primary text-white font-bold py-4 rounded-full hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg flex items-center justify-center gap-2"
                     >
                         {isPending && <Loader2 className="h-5 w-5 animate-spin" />}
-                        {isPending ? "送信中..." : "相談内容を送信する"}
+                        {isPending ? "送信中â¦" : "相談内容を送信する"}
                     </button>
                 </div>
 

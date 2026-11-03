@@ -4,7 +4,7 @@ import { Footer } from "@/components/layout/Footer";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "安心・安全への取り組み | 安藤青果",
+  title: "安心・安全への取り組み",
   description: "安藤青果（&YOU）の個人情報保護・セキュリティ・AI利用・外部サービスへの取り組みをご説明します。",
 };
 
@@ -96,7 +96,7 @@ export default function SafetyPage() {
                       <span className="font-bold text-stone-800 text-sm">Googleログイン</span>
                     </div>
                     <p className="text-sm text-stone-600 leading-relaxed">
-                      Google アカウントで会員登録・ログインする際に利用します。当社が取得するのは、お客様のGoogleアカウントの名前・メールアドレスのみです。パスワードは当社に送信・保存されません。
+                      Googleアカウントで会員登録・ログインする際に利用します。当社が取得するのは、お客様のGoogleアカウントの名前・メールアドレスのみです。パスワードは当社に送信・保存されません。
                     </p>
                   </div>
 
